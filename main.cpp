@@ -5,7 +5,7 @@
 #include "mstch/mstch.hpp"
 #include "ext/format.h"
 
-#include <iostream>
+#include <fstream>
 
 using boost::filesystem::path;
 
@@ -42,12 +42,11 @@ int main() {
     fmt::print("\n\n"
           "Top block height      : {:d}\n", height);
 
-    std::string view {
-            "Blockchain height {{height}}\n\n"
-            "{{#blocks}}{{height}}: {{hash}} \n{{/blocks}}"
-    };
+    std::ifstream t("src/templates/index.html");
+    std::string index_tmpl_str((std::istreambuf_iterator<char>(t)),
+                                std::istreambuf_iterator<char>());
 
-    mstch::map context {
+     mstch::map context {
                     {"height",  fmt::format("{:d}", height)},
                     {"blocks",  mstch::array()}
     };
@@ -73,7 +72,7 @@ int main() {
 
     CROW_ROUTE(app, "/")
             ([&]() {
-                return mstch::render(view, context);
+                return mstch::render(index_tmpl_str, context);
             });
 
     app.port(8080).multithreaded().run();
