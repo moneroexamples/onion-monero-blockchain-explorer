@@ -60,7 +60,6 @@ namespace xmreg
     get_encrypted_payment_id(const transaction& tx,
                              crypto::hash8& payment_id);
 
-
 }
 
 template<>

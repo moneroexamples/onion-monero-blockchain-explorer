@@ -36,8 +36,8 @@ namespace xmreg
     {
         int db_flags = 0;
 
-        db_flags |= MDB_RDONLY;
-        db_flags |= MDB_NOLOCK;
+        //db_flags |= MDB_RDONLY;
+        //db_flags |= MDB_NOLOCK;
         db_flags |= MDB_NOSYNC;
 
         BlockchainDB* db = nullptr;
@@ -273,4 +273,27 @@ namespace xmreg
     {
         delete &m_blockchain_storage.get_db();
     }
+
+
+    bool
+    init_blockchain(const string& path,
+                    MicroCore& mcore,
+                    Blockchain*& core_storage)
+    {
+
+        // initialize the core using the blockchain path
+        if (!mcore.init(path))
+        {
+            cerr << "Error accessing blockchain." << endl;
+            return false;
+        }
+
+        // get the high level Blockchain object to interact
+        // with the blockchain lmdb database
+        core_storage = &(mcore.get_core());
+
+        return true;
+    }
+
+
 }

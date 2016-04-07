@@ -144,8 +144,6 @@ namespace xmreg
     array<size_t, 5>
     timestamp_difference(uint64_t t1, uint64_t t2);
 
-
-
 }
 
 #endif //XMREG01_TOOLS_H

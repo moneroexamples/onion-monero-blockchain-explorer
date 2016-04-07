@@ -17,38 +17,30 @@ namespace epee {
 }
 
 
-
 int main() {
 
     path blockchain_path {"/home/mwo/.bitmonero/lmdb"};
-
-    fmt::print("Blockchain path      : {}\n", blockchain_path);
 
      // enable basic monero log output
     xmreg::enable_monero_log();
 
     // create instance of our MicroCore
     xmreg::MicroCore mcore;
+    cryptonote::Blockchain* core_storage;
 
-    // initialize the core using the blockchain path
-    if (!mcore.init(blockchain_path.string()))
+    if (!xmreg::init_blockchain(blockchain_path.string(),
+                               mcore, core_storage))
     {
         cerr << "Error accessing blockchain." << endl;
         return 1;
     }
 
-    // get the high level cryptonote::Blockchain object to interact
-    // with the blockchain lmdb database
-    cryptonote::Blockchain& core_storage = mcore.get_core();
 
-
-    // get the current blockchain height. Just to check
-    // if it reads ok.
-    uint64_t height = core_storage.get_current_blockchain_height() - 1;
+    // get the current blockchain height. Just to check  if it reads ok.
+    uint64_t height = core_storage->get_current_blockchain_height() - 1;
 
     fmt::print("\n\n"
           "Top block height      : {:d}\n", height);
-
 
     std::string view {"Blockchain height {{height}}"};
 
