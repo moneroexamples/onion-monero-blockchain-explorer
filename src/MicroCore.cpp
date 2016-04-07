@@ -36,8 +36,8 @@ namespace xmreg
     {
         int db_flags = 0;
 
-        //db_flags |= MDB_RDONLY;
-        //db_flags |= MDB_NOLOCK;
+        db_flags |= MDB_RDONLY;
+        db_flags |= MDB_NOLOCK;
         db_flags |= MDB_NOSYNC;
 
         BlockchainDB* db = nullptr;

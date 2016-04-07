@@ -20,8 +20,7 @@ namespace epee {
 
 int main() {
 
-
-    path blockchain_path {"/home/mwo/.bitmonero/lmdb/"};
+    path blockchain_path {"/home/mwo/.bitmonero/lmdb"};
 
     fmt::print("Blockchain path      : {}\n", blockchain_path);
 
@@ -51,16 +50,10 @@ int main() {
           "Top block height      : {:d}\n", height);
 
 
+    std::string view {"Blockchain height {{height}}"};
 
-
-    std::string view{"{{#names}}Hi {{name}}!\n{{/names}}"};
-
-    mstch::map context{
-            {"names", mstch::array{
-                    mstch::map{{"name", std::string{"Chris"}}},
-                    mstch::map{{"name", std::string{"Mark"}}},
-                    mstch::map{{"name", std::string{"Scott"}}},
-            }}
+    mstch::map context {
+                    {"height",  fmt::format("{:d}", height)}
     };
 
     crow::SimpleApp app;
