@@ -42,11 +42,32 @@ int main() {
     fmt::print("\n\n"
           "Top block height      : {:d}\n", height);
 
-    std::string view {"Blockchain height {{height}}"};
+    std::string view {
+            "Blockchain height {{height}}\n\n"
+            "{{#blocks}}{{height}}: {{hash}} \n{{/blocks}}"
+    };
 
     mstch::map context {
-                    {"height",  fmt::format("{:d}", height)}
+                    {"height",  fmt::format("{:d}", height)},
+                    {"blocks",  mstch::array()}
     };
+
+    size_t no_of_last_blocks {10};
+
+    mstch::array& blocks = boost::get<mstch::array>(context["blocks"]);
+
+    for (size_t i = height; i > height -  no_of_last_blocks; --i)
+    {
+        //cryptonote::block blk;
+        //core_storage.get_block_by_hash(block_id, blk);
+
+        crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
+        blocks.push_back(mstch::map {
+                {"height", to_string(i)},
+                {"hash"  , fmt::format("{:s}", blk_hash)}
+        });
+    }
+
 
     crow::SimpleApp app;
 
