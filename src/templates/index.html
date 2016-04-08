@@ -6,11 +6,15 @@
 </head>
 <body>
 <div>
-    <h1>{{height}}</h1>
+    <h1>Detailed Monero blockchain explorer</h1>
+    <h2>Current height: {{height}}</h2>
     <div>
-        {{#blocks}}
-            {{height}}: {{hash}}
-        {{/blocks}}
+        <ul>
+            {{#blocks}}
+            <li> {{height}}: {{hash}} </li>
+            {{/blocks}}
+        </ul>
+
     </div>
 </div>
 </body>

@@ -334,4 +334,18 @@ namespace xmreg
     };
 
 
+    string
+    read(string filename)
+    {
+       if (!bf::exists(bf::path(filename)))
+       {
+           return string();
+       }
+
+        std::ifstream t("./templates/index.html");
+        return string(std::istreambuf_iterator<char>(t),
+                      std::istreambuf_iterator<char>());
+    }
+
+
 }

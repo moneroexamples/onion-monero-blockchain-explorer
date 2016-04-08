@@ -72,7 +72,6 @@ set_property(TARGET lmdb
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories("ext/mstch/include")
 
-
 # add ext/ subfolder
 add_subdirectory(ext/)
 
@@ -83,8 +82,24 @@ add_subdirectory(src/)
 set(SOURCE_FILES
         main.cpp)
 
+ADD_CUSTOM_TARGET(driver DEPENDS src/templates/index.html)
+
 add_executable(${PROJECT_NAME}
         ${SOURCE_FILES})
+
+#add_custom_command(OUTPUT template_folder
+#        COMMAND ${CMAKE_COMMAND} -E
+#            copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/src/templates" "${CMAKE_CURRENT_BINARY_DIR}"
+#        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/templates")
+#
+#add_custom_target(index_html
+#                       ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/templates")
+#
+#ADD_DEPENDENCIES(${PROJECT_NAME}
+#        index_html)
+
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/src/templates"
+        DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 
 target_link_libraries(${PROJECT_NAME}
         myxrm

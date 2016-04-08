@@ -42,16 +42,15 @@ int main() {
     fmt::print("\n\n"
           "Top block height      : {:d}\n", height);
 
-    std::ifstream t("src/templates/index.html");
-    std::string index_tmpl_str((std::istreambuf_iterator<char>(t)),
-                                std::istreambuf_iterator<char>());
+
+    std::string view = xmreg::read("./templates/index.html");
 
      mstch::map context {
                     {"height",  fmt::format("{:d}", height)},
                     {"blocks",  mstch::array()}
     };
 
-    size_t no_of_last_blocks {10};
+    size_t no_of_last_blocks {50};
 
     mstch::array& blocks = boost::get<mstch::array>(context["blocks"]);
 
@@ -72,7 +71,7 @@ int main() {
 
     CROW_ROUTE(app, "/")
             ([&]() {
-                return mstch::render(index_tmpl_str, context);
+                return mstch::render(view, context);
             });
 
     app.port(8080).multithreaded().run();
