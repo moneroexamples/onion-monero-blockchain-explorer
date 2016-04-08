@@ -1,6 +1,8 @@
 
 #include "src/MicroCore.h"
 
+#include "src/page.h"
+
 #include "ext/crow/crow.h"
 #include "mstch/mstch.hpp"
 #include "ext/format.h"
@@ -43,9 +45,11 @@ int main() {
           "Top block height      : {:d}\n", height);
 
 
-    std::string view = xmreg::read("./templates/index.html");
+    xmreg::page xmrblocks;
 
-     mstch::map context {
+    std::string view = xmrblocks.index();
+
+    mstch::map context {
                     {"height",  fmt::format("{:d}", height)},
                     {"blocks",  mstch::array()}
     };

@@ -12,7 +12,7 @@ set(SOURCE_FILES
 		MicroCore.cpp
 		tools.cpp
 		CmdLineOptions.cpp
-		tx_details.cpp)
+		tx_details.cpp page.cpp page.h)
 
 # make static library called libmyxrm
 # that we are going to link to
