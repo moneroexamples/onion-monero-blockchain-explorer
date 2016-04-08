@@ -1,21 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Monero blocks</title>
-</head>
-<body>
-<div>
-    <h1>Detailed Monero blockchain explorer</h1>
+
+    <h1>Hidden Monero blockchain explorer</h1>
     <h2>Current height: {{height}}</h2>
     <div>
         <ul>
-            {{#blocks}}
-            <li> {{height}}: {{hash}} </li>
-            {{/blocks}}
+            <table>
+                {{#blocks}}
+                <tr>
+                    <td>{{height}}</td>
+                    <td>{{timestamp}}</td>
+                    <td>{{hash}}</td>
+                    <td>{{notx}}</td>
+                </tr>
+                {{/blocks}}
+            </table>
+
         </ul>
 
     </div>
-</div>
-</body>
-</html>

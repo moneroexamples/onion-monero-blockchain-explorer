@@ -37,45 +37,14 @@ int main() {
         return 1;
     }
 
-
-    // get the current blockchain height. Just to check  if it reads ok.
-    uint64_t height = core_storage->get_current_blockchain_height() - 1;
-
-    fmt::print("\n\n"
-          "Top block height      : {:d}\n", height);
-
-
-    xmreg::page xmrblocks;
-
-    std::string view = xmrblocks.index();
-
-    mstch::map context {
-                    {"height",  fmt::format("{:d}", height)},
-                    {"blocks",  mstch::array()}
-    };
-
-    size_t no_of_last_blocks {50};
-
-    mstch::array& blocks = boost::get<mstch::array>(context["blocks"]);
-
-    for (size_t i = height; i > height -  no_of_last_blocks; --i)
-    {
-        //cryptonote::block blk;
-        //core_storage.get_block_by_hash(block_id, blk);
-
-        crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
-        blocks.push_back(mstch::map {
-                {"height", to_string(i)},
-                {"hash"  , fmt::format("{:s}", blk_hash)}
-        });
-    }
+    xmreg::page xmrblocks(&mcore, core_storage);
 
 
     crow::SimpleApp app;
 
     CROW_ROUTE(app, "/")
             ([&]() {
-                return mstch::render(view, context);
+                return xmrblocks.index();
             });
 
     app.port(8080).multithreaded().run();
