@@ -267,6 +267,128 @@ namespace xmreg
     }
 
 
+    uint64_t
+    sum_money_in_outputs(const transaction& tx)
+    {
+        uint64_t sum_xmr {0};
+
+        for (const tx_out& txout: tx.vout)
+        {
+            sum_xmr += txout.amount;
+        }
+
+        return sum_xmr;
+    }
+
+
+
+    uint64_t
+    sum_money_in_inputs(const transaction& tx)
+    {
+        uint64_t sum_xmr {0};
+
+        size_t input_no = tx.vin.size();
+
+        for (size_t i = 0; i < input_no; ++i)
+        {
+
+            if(tx.vin[i].type() != typeid(cryptonote::txin_to_key))
+            {
+                continue;
+            }
+
+            // get tx input key
+            const cryptonote::txin_to_key& tx_in_to_key
+                    = boost::get<cryptonote::txin_to_key>(tx.vin[i]);
+
+            sum_xmr += tx_in_to_key.amount;
+        }
+
+        return sum_xmr;
+    }
+
+    vector<pair<txout_to_key, uint64_t>>
+    get_ouputs(const transaction& tx)
+    {
+        vector<pair<txout_to_key, uint64_t>> outputs;
+
+        for (const tx_out& txout: tx.vout)
+        {
+            if (txout.target.type() != typeid(txout_to_key))
+            {
+                continue;
+            }
+
+            // get tx input key
+            const txout_to_key& txout_key
+                    = boost::get<cryptonote::txout_to_key>(txout.target);
+
+            outputs.push_back(make_pair(txout_key, txout.amount));
+        }
+
+        return outputs;
+
+
+    };
+
+    uint64_t
+    get_mixin_no(const transaction& tx)
+    {
+        uint64_t mixin_no {0};
+
+        size_t input_no = tx.vin.size();
+
+        for (size_t i = 0; i < input_no; ++i)
+        {
+
+            if(tx.vin[i].type() != typeid(cryptonote::txin_to_key))
+            {
+                continue;
+            }
+
+            // get tx input key
+            const txin_to_key& tx_in_to_key
+                    = boost::get<cryptonote::txin_to_key>(tx.vin[i]);
+
+            mixin_no = tx_in_to_key.key_offsets.size();
+
+            // look for first mixin number.
+            // all inputs in a single transaction have same number
+            if (mixin_no > 0)
+            {
+                break;
+            }
+        }
+
+        return mixin_no;
+    }
+
+
+    vector<txin_to_key>
+    get_key_images(const transaction& tx)
+    {
+        vector<txin_to_key> key_images;
+
+        size_t input_no = tx.vin.size();
+
+        for (size_t i = 0; i < input_no; ++i)
+        {
+
+            if(tx.vin[i].type() != typeid(txin_to_key))
+            {
+                continue;
+            }
+
+            // get tx input key
+            const txin_to_key& tx_in_to_key
+                    = boost::get<cryptonote::txin_to_key>(tx.vin[i]);
+
+            key_images.push_back(tx_in_to_key);
+        }
+
+        return key_images;
+    }
+
     /**
      * Rough estimate of block height from the time provided
      *

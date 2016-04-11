@@ -122,6 +122,21 @@ namespace xmreg
     get_blockchain_path(const boost::optional<string>& bc_path,
                         bf::path& blockchain_path);
 
+    uint64_t
+    sum_money_in_outputs(const transaction& tx);
+
+    uint64_t
+    sum_money_in_inputs(const transaction& tx);
+
+    uint64_t
+    get_mixin_no(const transaction& tx);
+
+    vector<pair<txout_to_key, uint64_t>>
+    get_ouputs(const transaction& tx);
+
+    vector<txin_to_key>
+            get_key_images(const transaction& tx);
+
 
     inline void
     enable_monero_log() {
