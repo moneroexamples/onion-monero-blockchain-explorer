@@ -47,6 +47,11 @@ int main() {
         return xmrblocks.index();
     });
 
+    CROW_ROUTE(app, "/autorefresh")
+    ([&]() {
+        bool refresh_page {true};
+        return xmrblocks.index(refresh_page);
+    });
 
     CROW_ROUTE(app, "/css/style.css")
     ([&]() {

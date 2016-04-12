@@ -51,7 +51,7 @@ namespace xmreg {
         }
 
         string
-        index()
+        index(bool refresh_page = false)
         {
             //get current server timestamp
             time_t server_timestamp = std::time(nullptr);
@@ -61,9 +61,10 @@ namespace xmreg {
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
-                    {"height",   fmt::format("{:d}", height)},
+                    {"refresh",          refresh_page},
+                    {"height",           fmt::format("{:d}", height)},
                     {"server_timestamp", xmreg::timestamp_to_str(server_timestamp)},
-                    {"blocks",  mstch::array()}
+                    {"blocks",           mstch::array()}
             };
 
             // number of last blocks to show
