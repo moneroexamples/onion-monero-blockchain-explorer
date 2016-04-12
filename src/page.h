@@ -128,7 +128,7 @@ namespace xmreg {
                 uint64_t sum_fees = sum_fees_in_txs(txs_in_blk);
 
                 // get mixin number in each transaction
-                vector<uint64_t> mixin_numbers = get_mixin_no_in_txs(txs_in_blk);
+                vector<uint64_t> mixin_numbers = xmreg::get_mixin_no_in_txs(txs_in_blk);
 
                 // find minimum and maxium mixin numbers
                 int mixin_min {-1};
@@ -236,16 +236,19 @@ namespace xmreg {
                 cryptonote::tx_info _tx_info = res.transactions.at(i);
 
                 // display basic info
-                fmt::print("Tx hash: {:s}\n", _tx_info.id_hash);
+                //fmt::print("Tx hash: {:s}\n", _tx_info.id_hash);
 
-                fmt::print("Fee: {:0.10f} xmr, size {:d} bytes\n",
-                      XMR_AMOUNT(_tx_info.fee),
-                      _tx_info.blob_size);
+               // fmt::print("Fee: {:0.10f} xmr, size {:d} bytes\n",
+                 //     XMR_AMOUNT(_tx_info.fee),
+                //      _tx_info.blob_size);
 
-                fmt::print("Receive time: {:s}\n",
-                      xmreg::timestamp_to_str(_tx_info.receive_time));
+               // fmt::print("Receive time: {:s}\n",
+               //       xmreg::timestamp_to_str(_tx_info.receive_time));
 
-                uint64_t sum_outputs = sum_xmr_outputs(_tx_info.json);
+                uint64_t sum_outputs = sum_xmr_outputs(_tx_info.tx_json);
+
+                // get mixin number in each transaction
+                vector<uint64_t> mixin_numbers = get_mixin_no_in_txs(_tx_info.tx_json);
 
                 // set output page template map
                 txs.push_back(mstch::map {
@@ -253,7 +256,7 @@ namespace xmreg {
                         {"hash"        , fmt::format("<{:s}>", _tx_info.id_hash)},
                         {"fee"         , fmt::format("{:0.4f}", XMR_AMOUNT(_tx_info.fee))},
                         {"xmr_outputs" , fmt::format("{:0.4f}", XMR_AMOUNT(sum_outputs))},
-                        {"mixin_range" , 0}
+                        {"mixin" , fmt::format("{:d}", mixin_numbers.at(0))}
                 });
             }
 
@@ -299,6 +302,45 @@ namespace xmreg {
             }
 
             return sum_xmr;
+        }
+
+        vector<uint64_t>
+        get_mixin_no_in_txs(const string& json_str)
+        {
+            vector<uint64_t> mixin_no;
+
+            rapidjson::Document json;
+
+            if (json.Parse(json_str.c_str()).HasParseError())
+            {
+                cerr << "Failed to parse JSON" << endl;
+                return mixin_no;
+            }
+
+            // get information about inputs
+            const rapidjson::Value& vin = json["vin"];
+
+            if (vin.IsArray())
+            {
+               // print("Input key images:\n");
+
+                for (rapidjson::SizeType i = 0; i < vin.Size(); ++i)
+                {
+                    if (vin[i].HasMember("key"))
+                    {
+                        const rapidjson::Value& key_img = vin[i]["key"];
+
+                        // print(" - {:s}, {:0.8f} xmr\n",
+                        //       key_img["k_image"].GetString(),
+                        //       XMR_AMOUNT(key_img["amount"].GetUint64()));
+
+
+                        mixin_no.push_back(key_img["key_offsets"].Size());
+                    }
+                }
+            }
+
+            return mixin_no;
         }
 
         string

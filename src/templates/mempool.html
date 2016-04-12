@@ -9,9 +9,8 @@
                 <td>timestamp</td>
                 <td>tx hash</td>
                 <td>tx fee</td>
-                <td>no_of_txs</td>
                 <td>xmr_outputs</td>
-                <td>mixin_range</td>
+                <td>mixin</td>
             </tr>
             {{#mempooltxs}}
             <tr>
@@ -20,7 +19,7 @@
                 <td>{{hash}}</td>
                 <td>{{fee}}</td>
                 <td>{{xmr_outputs}}</td>
-                <td>{{mixin_range}}</td>
+                <td>{{mixin}}</td>
             </tr>
             {{/mempooltxs}}
         </table>
