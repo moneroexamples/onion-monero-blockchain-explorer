@@ -67,7 +67,7 @@ namespace xmreg {
             };
 
             // number of last blocks to show
-            size_t no_of_last_blocks {150};
+            size_t no_of_last_blocks {100 + 1};
 
             // get reference to blocks template map to be field below
             mstch::array& blocks = boost::get<mstch::array>(context["blocks"]);
@@ -75,13 +75,13 @@ namespace xmreg {
             time_t prev_blk_timestamp {0};
 
             // iterate over last no_of_last_blocks of blocks
-            for (size_t i = height; i > height -  no_of_last_blocks; --i)
+            //for (size_t i = height; i > height -  no_of_last_blocks; --i)
+            for (size_t i = height - no_of_last_blocks; i <= height; ++i)
             {
                 // get block at the given height i
                 block blk;
 
                 mcore->get_block_by_height(i, blk);
-
 
                 // get block's hash
                 crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
@@ -96,11 +96,10 @@ namespace xmreg {
 
                     delta_minutes = delta_time[3];
                     delta_seconds = delta_time[4];
-
                 }
 
                 string timestamp_str = xmreg::timestamp_to_str(blk.timestamp)
-                                            + fmt::format(" (-{:02d}:{:02d})",
+                                            + fmt::format(" ({:02d}:{:02d})",
                                                delta_minutes, delta_seconds);
 
                 // get xmr in the block reward
@@ -140,7 +139,6 @@ namespace xmreg {
                     return fmt::format("{:d} - {:d}", mixin_min, mixin_max);
                 };
 
-
                 // set output page template map
                 blocks.push_back(mstch::map {
                         {"height"      , to_string(i)},
@@ -150,13 +148,21 @@ namespace xmreg {
                                                      XMR_AMOUNT(coinbase_tx[1]),
                                                      XMR_AMOUNT(sum_fees))},
                         {"notx"        , fmt::format("{:d}", blk.tx_hashes.size())},
-                        {"xmr_inputs"  , fmt::format("{:0.4f}", XMR_AMOUNT(sum_xmr_in_out[0]))},
-                        {"xmr_outputs" , fmt::format("{:0.4f}", XMR_AMOUNT(sum_xmr_in_out[1]))},
+                        {"xmr_inputs"  , fmt::format("{:0.4f}",
+                                                     XMR_AMOUNT(sum_xmr_in_out[0]))},
+                        {"xmr_outputs" , fmt::format("{:0.4f}",
+                                                     XMR_AMOUNT(sum_xmr_in_out[1]))},
                         {"mixin_range" , mstch::lambda {mixin_format}}
                 });
 
                 prev_blk_timestamp  = blk.timestamp;
             }
+
+            // reverse blocks and remove last (i.e., oldest)
+            // block. This is done so that time delats
+            // are easier to calcualte in the above for loop
+            std::reverse(blocks.begin(), blocks.end());
+            blocks.pop_back();
 
             // read index.html
             std::string index_html = xmreg::read(TMPL_INDEX);
