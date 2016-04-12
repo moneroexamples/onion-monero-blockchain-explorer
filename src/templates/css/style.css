@@ -3,3 +3,7 @@ tr {
     font-size  : 12px;
     height: 22px;
 }
+
+td {
+    text-align: center;
+}

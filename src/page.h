@@ -72,6 +72,8 @@ namespace xmreg {
             // get reference to blocks template map to be field below
             mstch::array& blocks = boost::get<mstch::array>(context["blocks"]);
 
+            time_t prev_blk_timestamp {0};
+
             // iterate over last no_of_last_blocks of blocks
             for (size_t i = height; i > height -  no_of_last_blocks; --i)
             {
@@ -80,8 +82,26 @@ namespace xmreg {
 
                 mcore->get_block_by_height(i, blk);
 
+
                 // get block's hash
                 crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
+
+                uint64_t delta_minutes {0};
+                uint64_t delta_seconds {0};
+
+                if (prev_blk_timestamp > 0)
+                {
+                    array<size_t, 5> delta_time = timestamp_difference(
+                                     prev_blk_timestamp, blk.timestamp);
+
+                    delta_minutes = delta_time[3];
+                    delta_seconds = delta_time[4];
+
+                }
+
+                string timestamp_str = xmreg::timestamp_to_str(blk.timestamp)
+                                            + fmt::format(" (-{:02d}:{:02d})",
+                                               delta_minutes, delta_seconds);
 
                 // get xmr in the block reward
                 array<uint64_t, 2> coinbase_tx = sum_money_in_tx(blk.miner_tx);
@@ -117,10 +137,11 @@ namespace xmreg {
                     return fmt::format("{:d} - {:d}", mixin_min, mixin_max);
                 };
 
+
                 // set output page template map
                 blocks.push_back(mstch::map {
                         {"height"      , to_string(i)},
-                        {"timestamp"   , xmreg::timestamp_to_str(blk.timestamp)},
+                        {"timestamp"   , timestamp_str},
                         {"hash"        , fmt::format("{:s}", blk_hash)},
                         {"block_reward", fmt::format("{:0.4f}", XMR_AMOUNT(coinbase_tx[1]))},
                         {"notx"        , fmt::format("{:d}", blk.tx_hashes.size())},
@@ -128,6 +149,8 @@ namespace xmreg {
                         {"xmr_outputs" , fmt::format("{:0.4f}", XMR_AMOUNT(sum_xmr_in_out[1]))},
                         {"mixin_range" , mstch::lambda {mixin_format}}
                 });
+
+                prev_blk_timestamp  = blk.timestamp;
             }
 
             // read index.html
