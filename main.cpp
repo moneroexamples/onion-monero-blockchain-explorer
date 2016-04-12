@@ -23,6 +23,22 @@ int main() {
 
     path blockchain_path {"/home/mwo/.bitmonero/lmdb"};
 
+
+    // change timezone to Universtal time zone
+    char old_tz[128];
+    const char *tz_org = getenv("TZ");
+
+    if (tz_org)
+    {
+        strcpy(old_tz, tz_org);
+    }
+
+    // set new timezone
+    std::string tz = "TZ=Coordinated Universal Time";
+    putenv(const_cast<char *>(tz.c_str()));
+    tzset(); // Initialize timezone data
+
+
      // enable basic monero log output
     xmreg::enable_monero_log();
 
@@ -60,6 +76,13 @@ int main() {
 
 
     app.port(8080).multithreaded().run();
+
+    // set timezone to orginal value
+    if (tz_org != 0)
+    {
+        setenv("TZ", old_tz, 1);
+        tzset();
+    }
 
     return 0;
 }
