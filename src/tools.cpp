@@ -336,6 +336,20 @@ namespace xmreg
     };
 
 
+    uint64_t
+    sum_fees_in_txs(const vector<transaction>& txs)
+    {
+        uint64_t fees_sum {0};
+
+        for (const transaction& tx: txs)
+        {
+            fees_sum += get_tx_fee(tx);
+        }
+
+        return fees_sum;
+    }
+
+
 
     vector<pair<txout_to_key, uint64_t>>
     get_ouputs(const transaction& tx)

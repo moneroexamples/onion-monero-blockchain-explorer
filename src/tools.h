@@ -139,6 +139,9 @@ namespace xmreg
     sum_money_in_txs(const vector<transaction>& txs);
 
     uint64_t
+    sum_fees_in_txs(const vector<transaction>& txs);
+
+    uint64_t
     get_mixin_no(const transaction& tx);
 
     vector<uint64_t>

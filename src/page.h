@@ -67,7 +67,7 @@ namespace xmreg {
             };
 
             // number of last blocks to show
-            size_t no_of_last_blocks {100};
+            size_t no_of_last_blocks {150};
 
             // get reference to blocks template map to be field below
             mstch::array& blocks = boost::get<mstch::array>(context["blocks"]);
@@ -113,6 +113,9 @@ namespace xmreg {
                 // sum xmr in the inputs and ouputs of all transactions
                 array<uint64_t, 2> sum_xmr_in_out = sum_money_in_txs(txs_in_blk);
 
+                // get sum of all transactions in the block
+                uint64_t sum_fees = sum_fees_in_txs(txs_in_blk);
+
                 // get mixin number in each transaction
                 vector<uint64_t> mixin_numbers = get_mixin_no_in_txs(txs_in_blk);
 
@@ -143,7 +146,9 @@ namespace xmreg {
                         {"height"      , to_string(i)},
                         {"timestamp"   , timestamp_str},
                         {"hash"        , fmt::format("{:s}", blk_hash)},
-                        {"block_reward", fmt::format("{:0.4f}", XMR_AMOUNT(coinbase_tx[1]))},
+                        {"block_reward", fmt::format("{:0.4f} ({:0.4f})",
+                                                     XMR_AMOUNT(coinbase_tx[1]),
+                                                     XMR_AMOUNT(sum_fees))},
                         {"notx"        , fmt::format("{:d}", blk.tx_hashes.size())},
                         {"xmr_inputs"  , fmt::format("{:0.4f}", XMR_AMOUNT(sum_xmr_in_out[0]))},
                         {"xmr_outputs" , fmt::format("{:0.4f}", XMR_AMOUNT(sum_xmr_in_out[1]))},
