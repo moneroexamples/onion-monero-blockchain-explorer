@@ -38,7 +38,11 @@ namespace xmreg
 
         //db_flags |= MDB_RDONLY;
         //db_flags |= MDB_NOLOCK;
-        db_flags |= MDB_NOSYNC;
+        //db_flags |= MDB_SYNC;
+
+        uint64_t DEFAULT_FLAGS = MDB_NOMETASYNC | MDB_NORDAHEAD;
+
+        db_flags = DEFAULT_FLAGS;
 
         BlockchainDB* db = nullptr;
         db = new BlockchainLMDB();

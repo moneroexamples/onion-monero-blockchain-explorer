@@ -61,8 +61,12 @@ namespace xmreg {
             //get current server timestamp
             time_t server_timestamp = std::time(nullptr);
 
+            core_storage->get_db().sync();
+
             // get the current blockchain height. Just to check  if it reads ok.
             uint64_t height = core_storage->get_current_blockchain_height() - 1;
+
+            fmt::print("Current height: {:d}\n", height);
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
