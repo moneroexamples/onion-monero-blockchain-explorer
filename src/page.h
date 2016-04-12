@@ -23,10 +23,11 @@
 
 #include<ctime>
 
-#define TMPL_DIR             "./templates"
-#define TMPL_INDEX  TMPL_DIR "/index.html"
-#define TMPL_HEADER TMPL_DIR "/header.html"
-#define TMPL_FOOTER TMPL_DIR "/footer.html"
+#define TMPL_DIR              "./templates"
+#define TMPL_INDEX   TMPL_DIR "/index.html"
+#define TMPL_MEMPOOL TMPL_DIR "/mempool.html"
+#define TMPL_HEADER  TMPL_DIR "/header.html"
+#define TMPL_FOOTER  TMPL_DIR "/footer.html"
 
 
 
@@ -35,6 +36,10 @@ namespace xmreg {
     using namespace cryptonote;
     using namespace crypto;
     using namespace std;
+
+    using request = cryptonote::COMMAND_RPC_GET_TRANSACTION_POOL::request;
+    using response = cryptonote::COMMAND_RPC_GET_TRANSACTION_POOL::response;
+    using http_simple_client = epee::net_utils::http::http_simple_client;
 
     class page {
 
@@ -165,14 +170,92 @@ namespace xmreg {
             std::reverse(blocks.begin(), blocks.end());
             blocks.pop_back();
 
+            string mempool_html = mempool();
+
+
+            context["mempool_info"] = mempool_html;
+               
+
             // read index.html
-            std::string index_html = xmreg::read(TMPL_INDEX);
+            string index_html = xmreg::read(TMPL_INDEX);
 
             // add header and footer
             string full_page = get_full_page(index_html);
 
             // render the page
             return mstch::render(full_page, context);
+        }
+
+
+        string
+        mempool()
+        {
+            string deamon_url {"http:://127.0.0.1:18081"};
+
+            // perform RPC call to deamon to get
+            // its transaction pull
+            boost::mutex m_daemon_rpc_mutex;
+
+            request req;
+            response res;
+
+            http_simple_client m_http_client;
+
+            m_daemon_rpc_mutex.lock();
+
+            bool r = epee::net_utils::invoke_http_json_remote_command2(
+                    deamon_url + "/get_transaction_pool",
+                    req, res, m_http_client, 200000);
+
+            m_daemon_rpc_mutex.unlock();
+
+            if (!r)
+            {
+                cerr << "Error connecting to Monero deamon at "
+                     << deamon_url << endl;
+                return "Error connecting to Monero deamon to get mempool";
+            }
+
+            // initalise page tempate map with basic info about blockchain
+            mstch::map context {
+                    {"mempool_size",  fmt::format("{:d}", res.transactions.size())},
+                    {"mempooltxs" ,   mstch::array()}
+            };
+
+            // get reference to blocks template map to be field below
+            mstch::array& txs = boost::get<mstch::array>(context["mempooltxs"]);
+
+            // for each transaction in the memory pool
+            for (size_t i = 0; i < res.transactions.size(); ++i)
+            {
+                // get transaction info of the tx in the mempool
+                cryptonote::tx_info _tx_info = res.transactions.at(i);
+
+                // display basic info
+                fmt::print("Tx hash: {:s}\n", _tx_info.id_hash);
+
+                fmt::print("Fee: {:0.10f} xmr, size {:d} bytes\n",
+                      XMR_AMOUNT(_tx_info.fee),
+                      _tx_info.blob_size);
+
+                fmt::print("Receive time: {:s}\n",
+                      xmreg::timestamp_to_str(_tx_info.receive_time));
+
+                // set output page template map
+                txs.push_back(mstch::map {
+                        {"timestamp"   , xmreg::timestamp_to_str(_tx_info.receive_time)},
+                        {"hash"        , fmt::format("<{:s}>", _tx_info.id_hash)},
+                        {"fee"         , fmt::format("{:0.4f}", XMR_AMOUNT(_tx_info.fee))},
+                        {"xmr_outputs" , fmt::format("{:0.4f}", 0.0)},
+                        {"mixin_range" , 0}
+                });
+            }
+
+            // read index.html
+            string mempool_html = xmreg::read(TMPL_MEMPOOL);
+
+            // render the page
+            return mstch::render(mempool_html, context);
         }
 
 

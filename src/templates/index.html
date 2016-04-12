@@ -9,9 +9,16 @@
             <a href="/autorefresh">Autorefresh OFF</a>
         {{/refresh}}
     </h2>
-    <div>
-        <ul>
-            <table>
+
+
+    {{{mempool_info}}}
+
+
+    <h2>100 recent blocks</h2>
+
+    <div class="center">
+
+            <table class="center">
                 <tr>
                     <td>height</td>
                     <td>timestamp_(Δ mm:ss)</td>
@@ -33,7 +40,5 @@
                 </tr>
                 {{/blocks}}
             </table>
-
-        </ul>
 
     </div>

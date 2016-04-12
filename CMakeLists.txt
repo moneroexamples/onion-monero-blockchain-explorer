@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 2.8)
 
 #list(INSERT
  #       CMAKE_MODULE_PATH 0 ${PROJECT_SOURCE_DIR}/cmake)

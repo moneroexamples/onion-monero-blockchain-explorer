@@ -1,3 +1,15 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.center {
+    margin: auto;
+    width: 96%;
+    border: 1px solid #73AD21;
+    padding: 10px;
+}
+
 tr {
     font-family: "Lucida Console", Monaco, monospace;
     font-size  : 12px;

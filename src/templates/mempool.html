@@ -1,0 +1,29 @@
+<h2>
+   Memory pool (size: {{mempool_size}})
+</h2>
+<div class="center">
+    
+      <table class="center">
+            <tr>
+                <td>height</td>
+                <td>timestamp</td>
+                <td>tx hash</td>
+                <td>tx fee</td>
+                <td>no_of_txs</td>
+                <td>xmr_outputs</td>
+                <td>mixin_range</td>
+            </tr>
+            {{#mempooltxs}}
+            <tr>
+                <td>N/A</td>
+                <td>{{timestamp}}</td>
+                <td>{{hash}}</td>
+                <td>{{fee}}</td>
+                <td>{{xmr_outputs}}</td>
+                <td>{{mixin_range}}</td>
+            </tr>
+            {{/mempooltxs}}
+        </table>
+
+
+</div>
