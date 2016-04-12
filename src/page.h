@@ -8,6 +8,7 @@
 
 
 #include "mstch/mstch.hpp"
+#include "rapidjson/document.h"
 #include "../ext/format.h"
 
 
@@ -17,7 +18,7 @@
 
 #include "MicroCore.h"
 #include "tools.h"
-
+#include "rpccalls.h"
 
 #include <algorithm>
 
@@ -46,6 +47,7 @@ namespace xmreg {
 
         MicroCore* mcore;
         Blockchain* core_storage;
+        rpccalls rpc;
 
     public:
 
@@ -61,17 +63,17 @@ namespace xmreg {
             //get current server timestamp
             time_t server_timestamp = std::time(nullptr);
 
-            core_storage->get_db().sync();
-
             // get the current blockchain height. Just to check  if it reads ok.
-            uint64_t height = core_storage->get_current_blockchain_height() - 1;
+           // uint64_t height = core_storage->get_current_blockchain_height() - 1;
+
+            uint64_t height = rpc.get_current_height() - 1;
 
             fmt::print("Current height: {:d}\n", height);
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"refresh",          refresh_page},
-                    {"height",           fmt::format("{:d}", height)},
+                    {"height",           fmt::format("{:d}", height + 1)},
                     {"server_timestamp", xmreg::timestamp_to_str(server_timestamp)},
                     {"blocks",           mstch::array()}
             };
@@ -176,9 +178,7 @@ namespace xmreg {
 
             string mempool_html = mempool();
 
-
             context["mempool_info"] = mempool_html;
-               
 
             // read index.html
             string index_html = xmreg::read(TMPL_INDEX);
@@ -245,12 +245,14 @@ namespace xmreg {
                 fmt::print("Receive time: {:s}\n",
                       xmreg::timestamp_to_str(_tx_info.receive_time));
 
+                uint64_t sum_outputs = sum_xmr_outputs(_tx_info.json);
+
                 // set output page template map
                 txs.push_back(mstch::map {
                         {"timestamp"   , xmreg::timestamp_to_str(_tx_info.receive_time)},
                         {"hash"        , fmt::format("<{:s}>", _tx_info.id_hash)},
                         {"fee"         , fmt::format("{:0.4f}", XMR_AMOUNT(_tx_info.fee))},
-                        {"xmr_outputs" , fmt::format("{:0.4f}", 0.0)},
+                        {"xmr_outputs" , fmt::format("{:0.4f}", XMR_AMOUNT(sum_outputs))},
                         {"mixin_range" , 0}
                 });
             }
@@ -264,6 +266,40 @@ namespace xmreg {
 
 
     private:
+
+        uint64_t
+        sum_xmr_outputs(const string& json_str)
+        {
+            uint64_t sum_xmr;
+
+            rapidjson::Document json;
+
+            if (json.Parse(json_str.c_str()).HasParseError())
+            {
+                cerr << "Failed to parse JSON" << endl;
+                return 0;
+            }
+
+
+            // get information about outputs
+            const rapidjson::Value& vout = json["vout"];
+
+            if (vout.IsArray())
+            {
+               // print("Outputs:\n");
+
+                for (rapidjson::SizeType i = 0; i < vout.Size(); ++i)
+                {
+                    //print(" - {:s}, {:0.8f} xmr\n",
+                      //    vout[i]["target"]["key"].GetString(),
+                      //    XMR_AMOUNT(vout[i]["amount"].GetUint64()));
+
+                    sum_xmr += vout[i]["amount"].GetUint64();
+                }
+            }
+
+            return sum_xmr;
+        }
 
         string
         get_full_page(string& middle)
