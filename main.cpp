@@ -43,9 +43,16 @@ int main() {
     crow::SimpleApp app;
 
     CROW_ROUTE(app, "/")
-            ([&]() {
-                return xmrblocks.index();
-            });
+    ([&]() {
+        return xmrblocks.index();
+    });
+
+
+    CROW_ROUTE(app, "/css/style.css")
+    ([&]() {
+        return xmreg::read("./templates/css/style.css");
+    });
+
 
     app.port(8080).multithreaded().run();
 

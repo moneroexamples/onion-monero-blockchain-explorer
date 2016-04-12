@@ -307,6 +307,36 @@ namespace xmreg
         return sum_xmr;
     }
 
+
+
+    array<uint64_t, 2>
+    sum_money_in_tx(const transaction& tx)
+    {
+        array<uint64_t, 2> sum_xmr;
+
+        sum_xmr[0] = sum_money_in_inputs(tx);
+        sum_xmr[1] = sum_money_in_outputs(tx);
+
+        return sum_xmr;
+    };
+
+
+    array<uint64_t, 2>
+    sum_money_in_txs(const vector<transaction>& txs)
+    {
+        array<uint64_t, 2> sum_xmr {0,0};
+
+        for (const transaction& tx: txs)
+        {
+            sum_xmr[0] += sum_money_in_inputs(tx);
+            sum_xmr[1] += sum_money_in_outputs(tx);
+        }
+
+        return sum_xmr;
+    };
+
+
+
     vector<pair<txout_to_key, uint64_t>>
     get_ouputs(const transaction& tx)
     {
@@ -358,6 +388,19 @@ namespace xmreg
             {
                 break;
             }
+        }
+
+        return mixin_no;
+    }
+
+    vector<uint64_t>
+    get_mixin_no_in_txs(const vector<transaction>& txs)
+    {
+        vector<uint64_t> mixin_no;
+
+        for (const transaction& tx: txs)
+        {
+            mixin_no.push_back(get_mixin_no(tx));
         }
 
         return mixin_no;
@@ -461,10 +504,11 @@ namespace xmreg
     {
        if (!bf::exists(bf::path(filename)))
        {
+           cerr << "File does not exist: " << filename << endl;
            return string();
        }
 
-        std::ifstream t("./templates/index.html");
+        std::ifstream t(filename);
         return string(std::istreambuf_iterator<char>(t),
                       std::istreambuf_iterator<char>());
     }

@@ -1,7 +1,13 @@
 cmake_minimum_required(VERSION 3.5)
 
+#list(INSERT
+ #       CMAKE_MODULE_PATH 0 ${PROJECT_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH
+        ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
 set(PROJECT_NAME
         crowxmr)
+
 
 project(${PROJECT_NAME})
 
@@ -82,24 +88,70 @@ add_subdirectory(src/)
 set(SOURCE_FILES
         main.cpp)
 
-ADD_CUSTOM_TARGET(driver DEPENDS src/templates/index.html)
+#ADD_CUSTOM_TARGET(driver DEPENDS src/templates/index.html)
 
 add_executable(${PROJECT_NAME}
         ${SOURCE_FILES})
 
-#add_custom_command(OUTPUT template_folder
-#        COMMAND ${CMAKE_COMMAND} -E
-#            copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/src/templates" "${CMAKE_CURRENT_BINARY_DIR}"
-#        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/templates")
+#add_custom_command(TARGET template_folder POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E  copy_directory
+#        "${CMAKE_CURRENT_SOURCE_DIR}/src/templates" "${CMAKE_CURRENT_BINARY_DIR}")
 #
-#add_custom_target(index_html
+#add_custom_target(template_folder
 #                       ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/templates")
 #
 #ADD_DEPENDENCIES(${PROJECT_NAME}
-#        index_html)
+#        template_folder)
 
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/src/templates"
-        DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+#file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/src/templates"
+#        DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+#
+#include(copy_files)
+#copy_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates/ *.html ${CMAKE_CURRENT_BINARY_DIR})
+#
+
+macro(configure_files srcDir destDir)
+    message(STATUS "Configuring directory ${destDir}")
+    make_directory(${destDir})
+
+    file(GLOB templateFiles RELATIVE ${srcDir} ${srcDir}/*)
+    foreach(templateFile ${templateFiles})
+        set(srcTemplatePath ${srcDir}/${templateFile})
+        if(NOT IS_DIRECTORY ${srcTemplatePath})
+            message(STATUS "Configuring file ${templateFile}")
+            configure_file(
+                    ${srcTemplatePath}
+                    ${destDir}/${templateFile}
+                    @ONLY)
+        endif(NOT IS_DIRECTORY ${srcTemplatePath})
+    endforeach(templateFile)
+endmacro(configure_files)
+
+configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates ${CMAKE_CURRENT_BINARY_DIR}/templates)
+configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates/css ${CMAKE_CURRENT_BINARY_DIR}/templates/css)
+
+#macro(copy_files GLOBPAT DESTINATION)
+#
+#    message(STATUS "Configuring directory ${DESTINATION}")
+#
+#    file(GLOB COPY_FILES
+#            RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+#            ${GLOBPAT})
+#    add_custom_target(copy ALL
+#            COMMENT "Copying files: ${GLOBPAT}")
+#
+#    foreach(FILENAME ${COPY_FILES})
+#        set(SRC "${CMAKE_CURRENT_SOURCE_DIR}/${FILENAME}")
+#        set(DST "${DESTINATION}/${FILENAME}")
+#
+#        add_custom_command(
+#                TARGET copy
+#                COMMAND ${CMAKE_COMMAND} -E copy ${SRC} ${DST}
+#        )
+#    endforeach(FILENAME)
+#endmacro(copy_files)
+#
+#copy_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates ${CMAKE_CURRENT_BINARY_DIR})
 
 target_link_libraries(${PROJECT_NAME}
         myxrm

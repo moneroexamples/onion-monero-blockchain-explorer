@@ -7,10 +7,14 @@
 
 #define PATH_SEPARARTOR '/'
 
+#define XMR_AMOUNT(value) \
+    static_cast<double>(value) / 1e12
+
 #include "monero_headers.h"
 #include "tx_details.h"
 
 #include "../ext/dateparser.h"
+#include "../ext/infix_iterator.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
@@ -128,14 +132,23 @@ namespace xmreg
     uint64_t
     sum_money_in_inputs(const transaction& tx);
 
+    array<uint64_t, 2>
+    sum_money_in_tx(const transaction& tx);
+
+    array<uint64_t, 2>
+    sum_money_in_txs(const vector<transaction>& txs);
+
     uint64_t
     get_mixin_no(const transaction& tx);
+
+    vector<uint64_t>
+    get_mixin_no_in_txs(const vector<transaction>& txs);
 
     vector<pair<txout_to_key, uint64_t>>
     get_ouputs(const transaction& tx);
 
     vector<txin_to_key>
-            get_key_images(const transaction& tx);
+    get_key_images(const transaction& tx);
 
 
     inline void
@@ -161,6 +174,22 @@ namespace xmreg
 
     string
     read(string filename);
+
+
+
+    /**
+     * prints an iterable such as vector
+     */
+    template<typename T>
+    void print_iterable(const T & elems) {
+
+        infix_ostream_iterator<typename T::value_type>
+                oiter(std::cout, ",");
+
+        std::cout << "[";
+        std::copy(elems.begin(), elems.end(),oiter);
+        std::cout << "]" << std::endl;
+    }
 
 }
 

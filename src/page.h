@@ -19,12 +19,16 @@
 #include "tools.h"
 
 
-#define TMPL_DIR              "./templates"
-#define TMPL_INDEX  TMPL_DIR  "/index.html"
-#define TMPL_HEADER TMPL_DIR  "/header.html"
-#define TMPL_FOOTER TMPL_DIR  "/footer.html"
+#include <algorithm>
 
-#define READ_TMPL(tmpl_path) xmreg::read(tmpl_path)
+#include<ctime>
+
+#define TMPL_DIR             "./templates"
+#define TMPL_INDEX  TMPL_DIR "/index.html"
+#define TMPL_HEADER TMPL_DIR "/header.html"
+#define TMPL_FOOTER TMPL_DIR "/footer.html"
+
+
 
 namespace xmreg {
 
@@ -49,50 +53,102 @@ namespace xmreg {
         string
         index()
         {
+            //get current server timestamp
+            time_t server_timestamp = std::time(nullptr);
+
             // get the current blockchain height. Just to check  if it reads ok.
             uint64_t height = core_storage->get_current_blockchain_height() - 1;
 
+            // initalise page tempate map with basic info about blockchain
             mstch::map context {
-                    {"height",  fmt::format("{:d}", height)},
+                    {"height",   fmt::format("{:d}", height)},
+                    {"server_timestamp", xmreg::timestamp_to_str(server_timestamp)},
                     {"blocks",  mstch::array()}
             };
 
-            size_t no_of_last_blocks {50};
+            // number of last blocks to show
+            size_t no_of_last_blocks {100};
 
+            // get reference to blocks template map to be field below
             mstch::array& blocks = boost::get<mstch::array>(context["blocks"]);
 
+            // iterate over last no_of_last_blocks of blocks
             for (size_t i = height; i > height -  no_of_last_blocks; --i)
             {
+                // get block at the given height i
                 block blk;
 
                 mcore->get_block_by_height(i, blk);
 
+                // get block's hash
                 crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
 
+                // get xmr in the block reward
+                array<uint64_t, 2> coinbase_tx = sum_money_in_tx(blk.miner_tx);
+
+                // get transactions in the block
+                const vector<cryptonote::transaction>& txs_in_blk =
+                            core_storage->get_db().get_tx_list(blk.tx_hashes);
+
+                // sum xmr in the inputs and ouputs of all transactions
+                array<uint64_t, 2> sum_xmr_in_out = sum_money_in_txs(txs_in_blk);
+
+                // get mixin number in each transaction
+                vector<uint64_t> mixin_numbers = get_mixin_no_in_txs(txs_in_blk);
+
+                // find minimum and maxium mixin numbers
+                int mixin_min {-1};
+                int mixin_max {-1};
+
+                if (!mixin_numbers.empty())
+                {
+                    mixin_min = static_cast<int>(
+                            *std::min_element(mixin_numbers.begin(), mixin_numbers.end()));
+                    mixin_max = static_cast<int>(
+                            *max_element(mixin_numbers.begin(), mixin_numbers.end()));
+                }
+
+                auto mixin_format = [=]() -> mstch::node
+                {
+                    if (mixin_min < 0)
+                    {
+                        return string("N/A");
+                    }
+                    return fmt::format("{:d} - {:d}", mixin_min, mixin_max);
+                };
+
+                // set output page template map
                 blocks.push_back(mstch::map {
-                        {"height"     , to_string(i)},
-                        {"timestamp"  , xmreg::timestamp_to_str(blk.timestamp)},
-                        {"hash"       , fmt::format("{:s}", blk_hash)},
-                        {"notx"       , fmt::format("{:d}", blk.tx_hashes.size())}
+                        {"height"      , to_string(i)},
+                        {"timestamp"   , xmreg::timestamp_to_str(blk.timestamp)},
+                        {"hash"        , fmt::format("{:s}", blk_hash)},
+                        {"block_reward", fmt::format("{:0.4f}", XMR_AMOUNT(coinbase_tx[1]))},
+                        {"notx"        , fmt::format("{:d}", blk.tx_hashes.size())},
+                        {"xmr_inputs"  , fmt::format("{:0.4f}", XMR_AMOUNT(sum_xmr_in_out[0]))},
+                        {"xmr_outputs" , fmt::format("{:0.4f}", XMR_AMOUNT(sum_xmr_in_out[1]))},
+                        {"mixin_range" , mstch::lambda {mixin_format}}
                 });
             }
 
+            // read index.html
+            std::string index_html = xmreg::read(TMPL_INDEX);
 
-            std::string view = READ_TMPL(TMPL_INDEX);
+            // add header and footer
+            string full_page = get_full_page(index_html);
 
-            string full_page = get_full_page(view);
-
-            return mstch::render(view, context);
+            // render the page
+            return mstch::render(full_page, context);
         }
 
 
     private:
+
         string
         get_full_page(string& middle)
         {
-            return READ_TMPL(TMPL_HEADER)
+            return xmreg::read(TMPL_HEADER)
                    + middle
-                   + READ_TMPL(TMPL_FOOTER);
+                   + xmreg::read(TMPL_FOOTER);
         }
 
     };
