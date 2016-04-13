@@ -11,7 +11,7 @@
     static_cast<double>(value) / 1e12
 
 #define REMOVE_HASH_BRAKETS(a_hash) \
-    a_hash.substr(1, a_hash.size()-1)
+    a_hash.substr(1, a_hash.size()-2)
 
 #include "monero_headers.h"
 #include "tx_details.h"
