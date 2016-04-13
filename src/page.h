@@ -245,7 +245,9 @@ namespace xmreg {
                // fmt::print("Receive time: {:s}\n",
                //       xmreg::timestamp_to_str(_tx_info.receive_time));
 
+                uint64_t sum_inputs = sum_xmr_inputs(_tx_info.tx_json);
                 uint64_t sum_outputs = sum_xmr_outputs(_tx_info.tx_json);
+
 
                 // get mixin number in each transaction
                 vector<uint64_t> mixin_numbers = get_mixin_no_in_txs(_tx_info.tx_json);
@@ -255,6 +257,7 @@ namespace xmreg {
                         {"timestamp"   , xmreg::timestamp_to_str(_tx_info.receive_time)},
                         {"hash"        , fmt::format("<{:s}>", _tx_info.id_hash)},
                         {"fee"         , fmt::format("{:0.4f}", XMR_AMOUNT(_tx_info.fee))},
+                        {"xmr_inputs" , fmt::format("{:0.4f}", XMR_AMOUNT(sum_inputs))},
                         {"xmr_outputs" , fmt::format("{:0.4f}", XMR_AMOUNT(sum_outputs))},
                         {"mixin" , fmt::format("{:d}", mixin_numbers.at(0))}
                 });
@@ -273,7 +276,7 @@ namespace xmreg {
         uint64_t
         sum_xmr_outputs(const string& json_str)
         {
-            uint64_t sum_xmr;
+            uint64_t sum_xmr {0};
 
             rapidjson::Document json;
 
@@ -298,6 +301,45 @@ namespace xmreg {
                       //    XMR_AMOUNT(vout[i]["amount"].GetUint64()));
 
                     sum_xmr += vout[i]["amount"].GetUint64();
+                }
+            }
+
+            return sum_xmr;
+        }
+
+        uint64_t
+        sum_xmr_inputs(const string& json_str)
+        {
+            uint64_t sum_xmr {0};
+
+            rapidjson::Document json;
+
+            if (json.Parse(json_str.c_str()).HasParseError())
+            {
+                cerr << "Failed to parse JSON" << endl;
+                return 0;
+            }
+
+
+            // get information about inputs
+            const rapidjson::Value& vin = json["vin"];
+
+            if (vin.IsArray())
+            {
+                // print("Input key images:\n");
+
+                for (rapidjson::SizeType i = 0; i < vin.Size(); ++i)
+                {
+                    if (vin[i].HasMember("key"))
+                    {
+                        const rapidjson::Value& key_img = vin[i]["key"];
+
+                        // print(" - {:s}, {:0.8f} xmr\n",
+                        //       key_img["k_image"].GetString(),
+                        //       XMR_AMOUNT(key_img["amount"].GetUint64()));
+
+                        sum_xmr += key_img["amount"].GetUint64();
+                    }
                 }
             }
 
