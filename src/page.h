@@ -98,6 +98,8 @@ namespace xmreg {
                 // get block's hash
                 crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
 
+                string blk_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", blk_hash));
+
                 uint64_t delta_hours   {0};
                 uint64_t delta_minutes {0};
                 uint64_t delta_seconds {0};
@@ -157,7 +159,7 @@ namespace xmreg {
                     {
                         return string("N/A");
                     }
-                    return fmt::format("{:d} - {:d}", mixin_min, mixin_max);
+                    return fmt::format("{:d}-{:d}", mixin_min, mixin_max);
                 };
 
                 uint64_t blk_size = get_object_blobsize(blk);
@@ -167,7 +169,7 @@ namespace xmreg {
                         {"height"      , to_string(i)},
                         {"timestamp"   , timestamp_str},
                         {"age"         , age_str},
-                        {"hash"        , fmt::format("{:s}", blk_hash)},
+                        {"hash"        , blk_hash_str},
                         {"block_reward", fmt::format("{:0.4f} ({:0.4f})",
                                                      XMR_AMOUNT(coinbase_tx[1]),
                                                      XMR_AMOUNT(sum_fees))},
@@ -243,11 +245,11 @@ namespace xmreg {
             // get reference to blocks template map to be field below
             mstch::array& txs = boost::get<mstch::array>(context["mempooltxs"]);
 
-            // std::sort(res.transactions.begin(), res.transactions.end(), 
-            //     [](const tx_info& _tx_info1, const tx_info& _tx_info2) 
-            //     {                      
+            // std::sort(res.transactions.begin(), res.transactions.end(),
+            //     [](const tx_info& _tx_info1, const tx_info& _tx_info2)
+            //     {
             //           return _tx_info1.receive_time > _tx_info2.receive_time;
-            //     });         
+            //     });
 
             // for each transaction in the memory pool
             for (size_t i = 0; i < res.transactions.size(); ++i)
@@ -261,13 +263,13 @@ namespace xmreg {
                 uint64_t delta_hours {delta_time[1]*24 + delta_time[2]};
 
                 string age_str = fmt::format("{:02d}:{:02d}:{:02d}",
-                                             delta_hours, 
+                                             delta_hours,
                                              delta_time[3], delta_time[4]);
 
                 if (delta_hours > 99)
                 {
                     age_str = fmt::format("{:03d}:{:02d}:{:02d}",
-                                             delta_hours, 
+                                             delta_hours,
                                              delta_time[3], delta_time[4]);
                 }
 
@@ -282,7 +284,7 @@ namespace xmreg {
                 txs.push_back(mstch::map {
                         {"timestamp"     , xmreg::timestamp_to_str(_tx_info.receive_time)},
                         {"age"           , age_str},
-                        {"hash"          , fmt::format("<{:s}>", _tx_info.id_hash)},
+                        {"hash"          , fmt::format("{:s}", _tx_info.id_hash)},
                         {"fee"           , fmt::format("{:0.4f}", XMR_AMOUNT(_tx_info.fee))},
                         {"xmr_inputs"    , fmt::format("{:0.2f}", XMR_AMOUNT(sum_inputs))},
                         {"xmr_outputs"   , fmt::format("{:0.2f}", XMR_AMOUNT(sum_outputs))},
