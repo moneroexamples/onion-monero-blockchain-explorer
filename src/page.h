@@ -48,6 +48,7 @@ namespace xmreg {
         MicroCore* mcore;
         Blockchain* core_storage;
         rpccalls rpc;
+        time_t server_timestamp;
 
     public:
 
@@ -61,7 +62,7 @@ namespace xmreg {
         index(bool refresh_page = false)
         {
             //get current server timestamp
-            time_t server_timestamp = std::time(nullptr);
+            server_timestamp = std::time(nullptr);
 
             // get the current blockchain height. Just to check  if it reads ok.
            // uint64_t height = core_storage->get_current_blockchain_height() - 1;
@@ -87,7 +88,6 @@ namespace xmreg {
             time_t prev_blk_timestamp {0};
 
             // iterate over last no_of_last_blocks of blocks
-            //for (size_t i = height; i > height -  no_of_last_blocks; --i)
             for (size_t i = height - no_of_last_blocks; i <= height; ++i)
             {
                 // get block at the given height i
@@ -98,14 +98,19 @@ namespace xmreg {
                 // get block's hash
                 crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
 
+                uint64_t delta_hours   {0};
                 uint64_t delta_minutes {0};
                 uint64_t delta_seconds {0};
 
                 if (prev_blk_timestamp > 0)
                 {
-                    array<size_t, 5> delta_time = timestamp_difference(
-                                     prev_blk_timestamp, blk.timestamp);
+//                    array<size_t, 5> delta_time = timestamp_difference(
+//                                     prev_blk_timestamp, blk.timestamp);
 
+                    array<size_t, 5> delta_time = timestamp_difference(
+                                      server_timestamp, blk.timestamp);
+
+                    delta_hours   = delta_time[2];
                     delta_minutes = delta_time[3];
                     delta_seconds = delta_time[4];
                 }
@@ -113,6 +118,10 @@ namespace xmreg {
                 string timestamp_str = xmreg::timestamp_to_str(blk.timestamp)
                                             + fmt::format(" ({:02d}:{:02d})",
                                                delta_minutes, delta_seconds);
+
+                string age_str = fmt::format("{:02d}:{:02d}:{:02d}",
+                                             delta_hours, delta_minutes,
+                                             delta_seconds);
 
                 // get xmr in the block reward
                 array<uint64_t, 2> coinbase_tx = sum_money_in_tx(blk.miner_tx);
@@ -157,6 +166,7 @@ namespace xmreg {
                 blocks.push_back(mstch::map {
                         {"height"      , to_string(i)},
                         {"timestamp"   , timestamp_str},
+                        {"age"         , age_str},
                         {"hash"        , fmt::format("{:s}", blk_hash)},
                         {"block_reward", fmt::format("{:0.4f} ({:0.4f})",
                                                      XMR_AMOUNT(coinbase_tx[1]),
@@ -233,21 +243,33 @@ namespace xmreg {
             // get reference to blocks template map to be field below
             mstch::array& txs = boost::get<mstch::array>(context["mempooltxs"]);
 
+            // std::sort(res.transactions.begin(), res.transactions.end(), 
+            //     [](const tx_info& _tx_info1, const tx_info& _tx_info2) 
+            //     {                      
+            //           return _tx_info1.receive_time > _tx_info2.receive_time;
+            //     });         
+
             // for each transaction in the memory pool
             for (size_t i = 0; i < res.transactions.size(); ++i)
             {
                 // get transaction info of the tx in the mempool
-                cryptonote::tx_info _tx_info = res.transactions.at(i);
+                tx_info _tx_info = res.transactions.at(i);
 
-                // display basic info
-                //fmt::print("Tx hash: {:s}\n", _tx_info.id_hash);
+                array<size_t, 5> delta_time = timestamp_difference(
+                                      server_timestamp, _tx_info.receive_time);
 
-               // fmt::print("Fee: {:0.10f} xmr, size {:d} bytes\n",
-                 //     XMR_AMOUNT(_tx_info.fee),
-                //      _tx_info.blob_size);
+                uint64_t delta_hours {delta_time[1]*24 + delta_time[2]};
 
-               // fmt::print("Receive time: {:s}\n",
-               //       xmreg::timestamp_to_str(_tx_info.receive_time));
+                string age_str = fmt::format("{:02d}:{:02d}:{:02d}",
+                                             delta_hours, 
+                                             delta_time[3], delta_time[4]);
+
+                if (delta_hours > 99)
+                {
+                    age_str = fmt::format("{:03d}:{:02d}:{:02d}",
+                                             delta_hours, 
+                                             delta_time[3], delta_time[4]);
+                }
 
                 uint64_t sum_inputs = sum_xmr_inputs(_tx_info.tx_json);
                 uint64_t sum_outputs = sum_xmr_outputs(_tx_info.tx_json);
@@ -258,13 +280,14 @@ namespace xmreg {
 
                 // set output page template map
                 txs.push_back(mstch::map {
-                        {"timestamp"   , xmreg::timestamp_to_str(_tx_info.receive_time)},
-                        {"hash"        , fmt::format("<{:s}>", _tx_info.id_hash)},
-                        {"fee"         , fmt::format("{:0.4f}", XMR_AMOUNT(_tx_info.fee))},
-                        {"xmr_inputs" , fmt::format("{:0.2f}", XMR_AMOUNT(sum_inputs))},
-                        {"xmr_outputs" , fmt::format("{:0.2f}", XMR_AMOUNT(sum_outputs))},
-                        {"mixin" , fmt::format("{:d}", mixin_numbers.at(0))},
-                        {"txsize", fmt::format("{:0.2f}", static_cast<double>(_tx_info.blob_size)/1024.0)}
+                        {"timestamp"     , xmreg::timestamp_to_str(_tx_info.receive_time)},
+                        {"age"           , age_str},
+                        {"hash"          , fmt::format("<{:s}>", _tx_info.id_hash)},
+                        {"fee"           , fmt::format("{:0.4f}", XMR_AMOUNT(_tx_info.fee))},
+                        {"xmr_inputs"    , fmt::format("{:0.2f}", XMR_AMOUNT(sum_inputs))},
+                        {"xmr_outputs"   , fmt::format("{:0.2f}", XMR_AMOUNT(sum_outputs))},
+                        {"mixin"         , fmt::format("{:d}", mixin_numbers.at(0))},
+                        {"txsize"        , fmt::format("{:0.2f}", static_cast<double>(_tx_info.blob_size)/1024.0)}
                 });
             }
 
@@ -277,6 +300,7 @@ namespace xmreg {
 
 
     private:
+
 
         uint64_t
         sum_xmr_outputs(const string& json_str)
