@@ -160,9 +160,9 @@ namespace xmreg {
                                                      XMR_AMOUNT(coinbase_tx[1]),
                                                      XMR_AMOUNT(sum_fees))},
                         {"notx"        , fmt::format("{:d}", blk.tx_hashes.size())},
-                        {"xmr_inputs"  , fmt::format("{:0.4f}",
+                        {"xmr_inputs"  , fmt::format("{:0.2f}",
                                                      XMR_AMOUNT(sum_xmr_in_out[0]))},
-                        {"xmr_outputs" , fmt::format("{:0.4f}",
+                        {"xmr_outputs" , fmt::format("{:0.2f}",
                                                      XMR_AMOUNT(sum_xmr_in_out[1]))},
                         {"mixin_range" , mstch::lambda {mixin_format}}
                 });
@@ -257,8 +257,8 @@ namespace xmreg {
                         {"timestamp"   , xmreg::timestamp_to_str(_tx_info.receive_time)},
                         {"hash"        , fmt::format("<{:s}>", _tx_info.id_hash)},
                         {"fee"         , fmt::format("{:0.4f}", XMR_AMOUNT(_tx_info.fee))},
-                        {"xmr_inputs" , fmt::format("{:0.4f}", XMR_AMOUNT(sum_inputs))},
-                        {"xmr_outputs" , fmt::format("{:0.4f}", XMR_AMOUNT(sum_outputs))},
+                        {"xmr_inputs" , fmt::format("{:0.2f}", XMR_AMOUNT(sum_inputs))},
+                        {"xmr_outputs" , fmt::format("{:0.2f}", XMR_AMOUNT(sum_outputs))},
                         {"mixin" , fmt::format("{:d}", mixin_numbers.at(0))}
                 });
             }
