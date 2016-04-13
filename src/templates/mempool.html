@@ -11,6 +11,7 @@
                 <td>tx fee</td>
                 <td>inputs/outputs</td>
                 <td>mixin</td>
+                <td>size [kbytes]</td>
             </tr>
             {{#mempooltxs}}
             <tr>
@@ -20,6 +21,7 @@
                 <td>{{fee}}</td>
                 <td>{{xmr_inputs}}/{{xmr_outputs}}</td>
                 <td>{{mixin}}</td>
+                <td>{{txsize}}</td>
             </tr>
             {{/mempooltxs}}
         </table>

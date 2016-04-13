@@ -151,6 +151,8 @@ namespace xmreg {
                     return fmt::format("{:d} - {:d}", mixin_min, mixin_max);
                 };
 
+                uint64_t blk_size = get_object_blobsize(blk);
+
                 // set output page template map
                 blocks.push_back(mstch::map {
                         {"height"      , to_string(i)},
@@ -164,10 +166,12 @@ namespace xmreg {
                                                      XMR_AMOUNT(sum_xmr_in_out[0]))},
                         {"xmr_outputs" , fmt::format("{:0.2f}",
                                                      XMR_AMOUNT(sum_xmr_in_out[1]))},
-                        {"mixin_range" , mstch::lambda {mixin_format}}
+                        {"mixin_range" , mstch::lambda {mixin_format}},
+                        {"blksize"     , fmt::format("{:0.2f}",
+                                                     static_cast<double>(blk_size) / 1024.0)}
                 });
 
-                prev_blk_timestamp  = blk.timestamp;
+                prev_blk_timestamp = blk.timestamp;
             }
 
             // reverse blocks and remove last (i.e., oldest)
@@ -259,7 +263,8 @@ namespace xmreg {
                         {"fee"         , fmt::format("{:0.4f}", XMR_AMOUNT(_tx_info.fee))},
                         {"xmr_inputs" , fmt::format("{:0.2f}", XMR_AMOUNT(sum_inputs))},
                         {"xmr_outputs" , fmt::format("{:0.2f}", XMR_AMOUNT(sum_outputs))},
-                        {"mixin" , fmt::format("{:d}", mixin_numbers.at(0))}
+                        {"mixin" , fmt::format("{:d}", mixin_numbers.at(0))},
+                        {"txsize", fmt::format("{:0.2f}", static_cast<double>(_tx_info.blob_size)/1024.0)}
                 });
             }
 
