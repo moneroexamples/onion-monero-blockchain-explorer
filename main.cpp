@@ -1,11 +1,9 @@
 
+#include "src/CmdLineOptions.h"
 #include "src/MicroCore.h"
-
 #include "src/page.h"
 
 #include "ext/crow/crow.h"
-#include "mstch/mstch.hpp"
-#include "ext/format.h"
 
 #include <fstream>
 
@@ -19,7 +17,25 @@ namespace epee {
 }
 
 
-int main() {
+int main(int ac, const char* av[]) {
+
+    // get command line options
+    xmreg::CmdLineOptions opts {ac, av};
+
+    auto help_opt = opts.get_option<bool>("help");
+
+    // if help was chosen, display help text and finish
+    if (*help_opt)
+    {
+        return 0;
+    }
+
+    auto port_opt      = opts.get_option<string>("port");
+    auto bc_path_opt   = opts.get_option<string>("bc-path");
+
+
+    uint16_t app_port = boost::lexical_cast<uint16_t>(*port_opt);
+
 
     path blockchain_path {"/home/mwo/.bitmonero/lmdb"};
 
@@ -75,7 +91,7 @@ int main() {
     });
 
 
-    app.port(8080).multithreaded().run();
+    app.port(app_port).multithreaded().run();
 
     // set timezone to orginal value
     if (tz_org != 0)

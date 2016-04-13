@@ -23,16 +23,12 @@ namespace xmreg
         desc.add_options()
                 ("help,h", value<bool>()->default_value(false)->implicit_value(true),
                  "produce help message")
-                ("txhash,t", value<string>(),
-                 "transaction hash")
-                ("viewkey,v", value<string>(),
-                 "private view key string")
-                ("address,a", value<string>(),
-                 "monero address string")
+                ("port,p", value<string>()->default_value("8081"),
+                 "default port")
                 ("bc-path,b", value<string>(),
                  "path to lmdb blockchain")
-                ("testnet",  value<bool>()->default_value(false)->implicit_value(true),
-                 "is the address from testnet network");
+                ("deamon-url,d", value<string>()->default_value("http:://127.0.0.1:18081"),
+                 "monero address string");
 
 
         store(command_line_parser(acc, avv)
