@@ -1,7 +1,18 @@
 
 <div class="center">
-    <h1 class="center">Hidden Monero Blockchain Explorer</h1>
-     <h3 style="font-size: 12px; margin-top: 0px">(no javascript - no web analytics trackers - no images - open sourced)</h3>
+    <h1 class="center">Onion Monero Blockchain Explorer</h1>
+     <h4 style="font-size: 15px; margin: 0px">(no javascript - no web analytics trackers - no images - open sourced)</h4>
+     <h3 style="font-size: 12px; margin-top: 20px">
+
+        Server time: {{server_timestamp}} | 
+
+        {{#refresh}}
+            <a href="/">Autorefresh is ON (10 s)</a>
+        {{/refresh}}
+        {{^refresh}}
+            <a href="/autorefresh">Autorefresh is OFF</a>
+        {{/refresh}}
+        </h3>
 </div>
 
 

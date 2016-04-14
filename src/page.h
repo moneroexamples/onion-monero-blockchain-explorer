@@ -53,7 +53,10 @@ namespace xmreg {
     public:
 
         page(MicroCore* _mcore, Blockchain* _core_storage)
-                :  mcore {_mcore}, core_storage {_core_storage}
+                : mcore {_mcore}, 
+                  core_storage {_core_storage}, 
+                  server_timestamp {std::time(nullptr)}
+
         {
 
         }
@@ -69,8 +72,6 @@ namespace xmreg {
 
             uint64_t height = rpc.get_current_height() - 1;
 
-            fmt::print("Current height: {:d}\n", height);
-
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"refresh",          refresh_page},
@@ -85,8 +86,6 @@ namespace xmreg {
             // get reference to blocks template map to be field below
             mstch::array& blocks = boost::get<mstch::array>(context["blocks"]);
 
-            time_t prev_blk_timestamp {0};
-
             // iterate over last no_of_last_blocks of blocks
             for (size_t i = height - no_of_last_blocks; i <= height; ++i)
             {
@@ -100,30 +99,15 @@ namespace xmreg {
 
                 string blk_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", blk_hash));
 
-                uint64_t delta_hours   {0};
-                uint64_t delta_minutes {0};
-                uint64_t delta_seconds {0};
-
-                if (prev_blk_timestamp > 0)
-                {
-//                    array<size_t, 5> delta_time = timestamp_difference(
-//                                     prev_blk_timestamp, blk.timestamp);
-
-                    array<size_t, 5> delta_time = timestamp_difference(
-                                      server_timestamp, blk.timestamp);
-
-                    delta_hours   = delta_time[2];
-                    delta_minutes = delta_time[3];
-                    delta_seconds = delta_time[4];
-                }
-
-                string timestamp_str = xmreg::timestamp_to_str(blk.timestamp)
-                                            + fmt::format(" ({:02d}:{:02d})",
-                                               delta_minutes, delta_seconds);
+                // calculate difference between server and block timestamps
+                array<size_t, 5> delta_time = timestamp_difference(
+                                              server_timestamp, blk.timestamp);
+       
+                string timestamp_str = xmreg::timestamp_to_str(blk.timestamp);
 
                 string age_str = fmt::format("{:02d}:{:02d}:{:02d}",
-                                             delta_hours, delta_minutes,
-                                             delta_seconds);
+                                             delta_time[2], delta_time[3],
+                                             delta_time[4]);
 
                 // get xmr in the block reward
                 array<uint64_t, 2> coinbase_tx = sum_money_in_tx(blk.miner_tx);
@@ -182,8 +166,6 @@ namespace xmreg {
                         {"blksize"     , fmt::format("{:0.2f}",
                                                      static_cast<double>(blk_size) / 1024.0)}
                 });
-
-                prev_blk_timestamp = blk.timestamp;
             }
 
             // reverse blocks and remove last (i.e., oldest)
@@ -192,8 +174,10 @@ namespace xmreg {
             std::reverse(blocks.begin(), blocks.end());
             blocks.pop_back();
 
+            // get memory pool rendered template    
             string mempool_html = mempool();
 
+            // append mempool_html to the index context map    
             context["mempool_info"] = mempool_html;
 
             // read index.html
@@ -236,7 +220,7 @@ namespace xmreg {
                 return "Error connecting to Monero deamon to get mempool";
             }
 
-            // initalise page tempate map with basic info about blockchain
+            // initalise page tempate map with basic info about mempool
             mstch::map context {
                     {"mempool_size",  fmt::format("{:d}", res.transactions.size())},
                     {"mempooltxs" ,   mstch::array()}
@@ -245,27 +229,27 @@ namespace xmreg {
             // get reference to blocks template map to be field below
             mstch::array& txs = boost::get<mstch::array>(context["mempooltxs"]);
 
-            // std::sort(res.transactions.begin(), res.transactions.end(),
-            //     [](const tx_info& _tx_info1, const tx_info& _tx_info2)
-            //     {
-            //           return _tx_info1.receive_time > _tx_info2.receive_time;
-            //     });
-
             // for each transaction in the memory pool
             for (size_t i = 0; i < res.transactions.size(); ++i)
             {
                 // get transaction info of the tx in the mempool
                 tx_info _tx_info = res.transactions.at(i);
 
+                // calculate difference between tx in mempool and server timestamps    
                 array<size_t, 5> delta_time = timestamp_difference(
-                                      server_timestamp, _tx_info.receive_time);
+                                              server_timestamp, 
+                                              _tx_info.receive_time);
 
+                // use only hours, so if we have days, add 
+                // it to hours
                 uint64_t delta_hours {delta_time[1]*24 + delta_time[2]};
 
                 string age_str = fmt::format("{:02d}:{:02d}:{:02d}",
                                              delta_hours,
                                              delta_time[3], delta_time[4]);
-
+                
+                // if more than 99 hourse, change formating 
+                // for the template    
                 if (delta_hours > 99)
                 {
                     age_str = fmt::format("{:03d}:{:02d}:{:02d}",
@@ -273,9 +257,9 @@ namespace xmreg {
                                              delta_time[3], delta_time[4]);
                 }
 
-                uint64_t sum_inputs = sum_xmr_inputs(_tx_info.tx_json);
+                // sum xmr in inputs and ouputs in the given tx                
+                uint64_t sum_inputs  = sum_xmr_inputs(_tx_info.tx_json);
                 uint64_t sum_outputs = sum_xmr_outputs(_tx_info.tx_json);
-
 
                 // get mixin number in each transaction
                 vector<uint64_t> mixin_numbers = get_mixin_no_in_txs(_tx_info.tx_json);
@@ -317,19 +301,17 @@ namespace xmreg {
                 return 0;
             }
 
-
             // get information about outputs
             const rapidjson::Value& vout = json["vout"];
 
             if (vout.IsArray())
             {
-               // print("Outputs:\n");
 
                 for (rapidjson::SizeType i = 0; i < vout.Size(); ++i)
                 {
                     //print(" - {:s}, {:0.8f} xmr\n",
-                      //    vout[i]["target"]["key"].GetString(),
-                      //    XMR_AMOUNT(vout[i]["amount"].GetUint64()));
+                    //    vout[i]["target"]["key"].GetString(),
+                    //    XMR_AMOUNT(vout[i]["amount"].GetUint64()));
 
                     sum_xmr += vout[i]["amount"].GetUint64();
                 }
@@ -350,7 +332,6 @@ namespace xmreg {
                 cerr << "Failed to parse JSON" << endl;
                 return 0;
             }
-
 
             // get information about inputs
             const rapidjson::Value& vin = json["vin"];
@@ -376,6 +357,7 @@ namespace xmreg {
 
             return sum_xmr;
         }
+
 
         vector<uint64_t>
         get_mixin_no_in_txs(const string& json_str)

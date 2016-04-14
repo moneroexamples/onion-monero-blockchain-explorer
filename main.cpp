@@ -11,7 +11,7 @@ using boost::filesystem::path;
 
 using namespace std;
 
-
+// needed for log system of momero
 namespace epee {
     unsigned int g_test_dbg_lock_sleep = 0;
 }
@@ -33,7 +33,7 @@ int main(int ac, const char* av[]) {
     auto port_opt      = opts.get_option<string>("port");
     auto bc_path_opt   = opts.get_option<string>("bc-path");
 
-
+    //cast port number in string to uint16
     uint16_t app_port = boost::lexical_cast<uint16_t>(*port_opt);
 
 
@@ -41,18 +41,18 @@ int main(int ac, const char* av[]) {
 
 
     // change timezone to Universtal time zone
-    char old_tz[128];
-    const char *tz_org = getenv("TZ");
+    // char old_tz[128];
+    // const char *tz_org = getenv("TZ");
 
-    if (tz_org)
-    {
-        strcpy(old_tz, tz_org);
-    }
+    // if (tz_org)
+    // {
+    //     strcpy(old_tz, tz_org);
+    // }
 
-    // set new timezone
-    std::string tz = "TZ=Coordinated Universal Time";
-    putenv(const_cast<char *>(tz.c_str()));
-    tzset(); // Initialize timezone data
+    // // set new timezone
+    // std::string tz = "TZ=Coordinated Universal Time";
+    // putenv(const_cast<char *>(tz.c_str()));
+    // tzset(); // Initialize timezone data
 
 
      // enable basic monero log output
@@ -69,10 +69,13 @@ int main(int ac, const char* av[]) {
         return 1;
     }
 
+    // create instance of page class which
+    // coins logic for the website
     xmreg::page xmrblocks(&mcore, core_storage);
 
-
+    // crow instance
     crow::SimpleApp app;
+
 
     CROW_ROUTE(app, "/")
     ([&]() {
@@ -90,15 +93,15 @@ int main(int ac, const char* av[]) {
         return xmreg::read("./templates/css/style.css");
     });
 
-
+    // run the crow http server
     app.port(app_port).multithreaded().run();
 
     // set timezone to orginal value
-    if (tz_org != 0)
-    {
-        setenv("TZ", old_tz, 1);
-        tzset();
-    }
+    // if (tz_org != 0)
+    // {
+    //     setenv("TZ", old_tz, 1);
+    //     tzset();
+    // }
 
     return 0;
 }
