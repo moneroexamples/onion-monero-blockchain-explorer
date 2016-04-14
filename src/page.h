@@ -74,7 +74,7 @@ namespace xmreg {
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"refresh",          refresh_page},
-                    {"height",           fmt::format("{:d}", height + 1)},
+                    {"height",           fmt::format("{:d}", height)},
                     {"server_timestamp", xmreg::timestamp_to_str(server_timestamp)},
                     {"blocks",           mstch::array()}
             };

@@ -1,20 +1,14 @@
 
-    <h1>Hidden Monero Blockchain Explorer</h1>
-    <h2>
-        Current height: {{height}} | Server time {{server_timestamp}} |
-        {{#refresh}}
-            <a href="/">Autorefresh is ON (20 s)</a>
-        {{/refresh}}
-        {{^refresh}}
-            <a href="/autorefresh">Autorefresh is OFF</a>
-        {{/refresh}}
-    </h2>
+<div class="center">
+    <h1 class="center">Hidden Monero Blockchain Explorer</h1>
+     <h3 style="font-size: 12px; margin-top: 0px">(no javascript - no web analytics trackers - no images - open sourced)</h3>
+</div>
 
 
     {{{mempool_info}}}
 
 
-    <h2>100 recent blocks</h2>
+    <h2>100 recent blocks<!--(height: {{height}})--></h2>
 
     <div class="center">
 
