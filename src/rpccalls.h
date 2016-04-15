@@ -90,9 +90,6 @@ namespace xmreg
 
             return true;
         }
-
-
-
     };
 
 
