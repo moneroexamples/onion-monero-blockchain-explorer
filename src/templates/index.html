@@ -4,7 +4,7 @@
      <h4 style="font-size: 15px; margin: 0px">(no javascript - no web analytics trackers - no images - open sourced)</h4>
      <h3 style="font-size: 12px; margin-top: 20px">
 
-        Server time: {{server_timestamp}} | 
+        Server time: {{server_timestamp}} |
 
         {{#refresh}}
             <a href="/">Autorefresh is ON (10 s)</a>
@@ -47,5 +47,13 @@
                 </tr>
                 {{/blocks}}
             </table>
+
+            <div class="center" style="text-align: center;">
+             {{#is_page_zero}}
+                <a href="/page/{{prev_page}}">previous page</a> |
+             {{/is_page_zero}}
+                current page: {{page_no}}/<a href="/page/{{total_page_no}}">{{total_page_no}}</a>
+                | <a href="/page/{{next_page}}">next page</a>
+            </div>
 
     </div>

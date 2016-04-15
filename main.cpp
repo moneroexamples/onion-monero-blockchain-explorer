@@ -82,10 +82,17 @@ int main(int ac, const char* av[]) {
         return xmrblocks.index();
     });
 
+
+    CROW_ROUTE(app, "/page/<uint>")
+    ([&](size_t page_no) {
+        return xmrblocks.index(page_no);
+    });
+
     CROW_ROUTE(app, "/autorefresh")
     ([&]() {
+        uint64_t page_no {0};
         bool refresh_page {true};
-        return xmrblocks.index(refresh_page);
+        return xmrblocks.index(page_no, refresh_page);
     });
 
     CROW_ROUTE(app, "/css/style.css")

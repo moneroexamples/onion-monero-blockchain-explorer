@@ -53,8 +53,8 @@ namespace xmreg {
     public:
 
         page(MicroCore* _mcore, Blockchain* _core_storage)
-                : mcore {_mcore}, 
-                  core_storage {_core_storage}, 
+                : mcore {_mcore},
+                  core_storage {_core_storage},
                   server_timestamp {std::time(nullptr)}
 
         {
@@ -62,10 +62,13 @@ namespace xmreg {
         }
 
         string
-        index(bool refresh_page = false)
+        index(uint64_t page_no = 0, bool refresh_page = false)
         {
             //get current server timestamp
             server_timestamp = std::time(nullptr);
+
+            // number of last blocks to show
+            uint64_t no_of_last_blocks {100 + 1};
 
             // get the current blockchain height. Just to check  if it reads ok.
            // uint64_t height = core_storage->get_current_blockchain_height() - 1;
@@ -74,20 +77,34 @@ namespace xmreg {
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
-                    {"refresh",          refresh_page},
-                    {"height",           fmt::format("{:d}", height)},
+                    {"refresh"         , refresh_page},
+                    {"height"          , fmt::format("{:d}", height)},
                     {"server_timestamp", xmreg::timestamp_to_str(server_timestamp)},
-                    {"blocks",           mstch::array()}
+                    {"blocks"          , mstch::array()},
+                    {"page_no"         , fmt::format("{:d}", page_no)},
+                    {"total_page_no"   , fmt::format("{:d}", height / (no_of_last_blocks))},
+                    {"is_page_zero"    , bool(page_no)},
+                    {"next_page"       , fmt::format("{:d}", page_no + 1)},
+                    {"prev_page"       , fmt::format("{:d}", (page_no > 0 ? page_no - 1 : 0))},
+
             };
 
-            // number of last blocks to show
-            size_t no_of_last_blocks {100 + 1};
 
             // get reference to blocks template map to be field below
             mstch::array& blocks = boost::get<mstch::array>(context["blocks"]);
 
+            uint64_t start_height = height - no_of_last_blocks * (page_no + 1);
+            uint64_t end_height   = height - no_of_last_blocks * (page_no);
+
+            start_height = start_height > 0      ? start_height : 0;
+            end_height   = end_height   < height ? end_height   : height;
+            start_height = start_height > end_height ? 0 : start_height;
+
+            cout << start_height << ", " << end_height << endl;
+
+
             // iterate over last no_of_last_blocks of blocks
-            for (size_t i = height - no_of_last_blocks; i <= height; ++i)
+            for (uint64_t i = start_height; i <= end_height; ++i)
             {
                 // get block at the given height i
                 block blk;
@@ -102,12 +119,27 @@ namespace xmreg {
                 // calculate difference between server and block timestamps
                 array<size_t, 5> delta_time = timestamp_difference(
                                               server_timestamp, blk.timestamp);
-       
+
                 string timestamp_str = xmreg::timestamp_to_str(blk.timestamp);
 
                 string age_str = fmt::format("{:02d}:{:02d}:{:02d}",
                                              delta_time[2], delta_time[3],
                                              delta_time[4]);
+
+                // if have days or yeras, change age format
+                if (delta_time[0] > 0)
+                {
+
+                   age_str = fmt::format("{:02d}:{:02d}:{:02d}:{:02d}:{:02d}",
+                                     delta_time[0], delta_time[1], delta_time[2],
+                                     delta_time[3], delta_time[4]);
+                }
+                else if (delta_time[1] > 0)
+                {
+                  age_str = fmt::format("{:02d}:{:02d}:{:02d}:{:02d}",
+                                               delta_time[1], delta_time[2],
+                                               delta_time[3], delta_time[4]);
+                }
 
                 // get xmr in the block reward
                 array<uint64_t, 2> coinbase_tx = sum_money_in_tx(blk.miner_tx);
@@ -172,12 +204,12 @@ namespace xmreg {
             // block. This is done so that time delats
             // are easier to calcualte in the above for loop
             std::reverse(blocks.begin(), blocks.end());
-            blocks.pop_back();
+            //blocks.pop_back();
 
-            // get memory pool rendered template    
+            // get memory pool rendered template
             string mempool_html = mempool();
 
-            // append mempool_html to the index context map    
+            // append mempool_html to the index context map
             context["mempool_info"] = mempool_html;
 
             // read index.html
@@ -235,21 +267,21 @@ namespace xmreg {
                 // get transaction info of the tx in the mempool
                 tx_info _tx_info = res.transactions.at(i);
 
-                // calculate difference between tx in mempool and server timestamps    
+                // calculate difference between tx in mempool and server timestamps
                 array<size_t, 5> delta_time = timestamp_difference(
-                                              server_timestamp, 
+                                              server_timestamp,
                                               _tx_info.receive_time);
 
-                // use only hours, so if we have days, add 
+                // use only hours, so if we have days, add
                 // it to hours
                 uint64_t delta_hours {delta_time[1]*24 + delta_time[2]};
 
                 string age_str = fmt::format("{:02d}:{:02d}:{:02d}",
                                              delta_hours,
                                              delta_time[3], delta_time[4]);
-                
-                // if more than 99 hourse, change formating 
-                // for the template    
+
+                // if more than 99 hourse, change formating
+                // for the template
                 if (delta_hours > 99)
                 {
                     age_str = fmt::format("{:03d}:{:02d}:{:02d}",
@@ -257,7 +289,7 @@ namespace xmreg {
                                              delta_time[3], delta_time[4]);
                 }
 
-                // sum xmr in inputs and ouputs in the given tx                
+                // sum xmr in inputs and ouputs in the given tx
                 uint64_t sum_inputs  = sum_xmr_inputs(_tx_info.tx_json);
                 uint64_t sum_outputs = sum_xmr_outputs(_tx_info.tx_json);
 
