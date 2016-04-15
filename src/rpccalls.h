@@ -23,9 +23,33 @@ namespace xmreg
     class rpccalls
     {
         string deamon_url {"http:://127.0.0.1:18081"};
-        uint64_t timeout_time {200000};
+        uint64_t timeout_time {20000};
+
+        epee::net_utils::http::url_content url;
+
+        http_simple_client m_http_client;
+        boost::mutex m_daemon_rpc_mutex;
+
+        string port;
 
     public:
+
+        rpccalls()
+        {
+            epee::net_utils::parse_url(deamon_url, url);
+
+            port = std::to_string(url.port);
+        }
+
+        bool
+        check_connection()
+        {
+            m_daemon_rpc_mutex.lock();
+
+            return m_http_client.connect(url.host,
+                                         port,
+                                         timeout_time);
+        }
 
         uint64_t
         get_current_height()
@@ -33,17 +57,11 @@ namespace xmreg
             COMMAND_RPC_GET_HEIGHT::request   req;
             COMMAND_RPC_GET_HEIGHT::response  res;
 
-            http_simple_client m_http_client;
-
-            // perform RPC call to deamon to get
-            // its transaction pull
-            boost::mutex m_daemon_rpc_mutex;
-
             m_daemon_rpc_mutex.lock();
 
             bool r = epee::net_utils::invoke_http_json_remote_command2(
                     deamon_url + "/getheight",
-                    req, res, m_http_client, 200000);
+                    req, res, m_http_client, timeout_time);
 
             m_daemon_rpc_mutex.unlock();
 
@@ -67,15 +85,11 @@ namespace xmreg
             COMMAND_RPC_GET_TRANSACTION_POOL::request  req;
             COMMAND_RPC_GET_TRANSACTION_POOL::response res;
 
-            http_simple_client m_http_client;
-
-            boost::mutex m_daemon_rpc_mutex;
-
             m_daemon_rpc_mutex.lock();
 
             bool r = epee::net_utils::invoke_http_json_remote_command2(
                     deamon_url + "/get_transaction_pool",
-                    req, res, m_http_client, 200000);
+                    req, res, m_http_client, timeout_time);
 
             m_daemon_rpc_mutex.unlock();
 

@@ -44,7 +44,6 @@ namespace xmreg {
 
     class page {
 
-
         MicroCore* mcore;
         Blockchain* core_storage;
         rpccalls rpc;
@@ -56,14 +55,22 @@ namespace xmreg {
                 : mcore {_mcore},
                   core_storage {_core_storage},
                   server_timestamp {std::time(nullptr)}
-
         {
-
         }
 
         string
         index(uint64_t page_no = 0, bool refresh_page = false)
         {
+
+            bool is_connected = rpc.check_connection();
+
+            cout << "check connection: " << is_connected << endl;
+
+            if (!is_connected)
+            {
+                return "Connection to the Monero demon does not exist or was lost!";
+            }
+
             //get current server timestamp
             server_timestamp = std::time(nullptr);
 
@@ -87,7 +94,6 @@ namespace xmreg {
                     {"is_page_zero"    , !bool(page_no)},
                     {"next_page"       , fmt::format("{:d}", page_no + 1)},
                     {"prev_page"       , fmt::format("{:d}", (page_no > 0 ? page_no - 1 : 0))},
-
             };
 
 
@@ -115,7 +121,11 @@ namespace xmreg {
                 // get block at the given height i
                 block blk;
 
-                mcore->get_block_by_height(i, blk);
+                if (!mcore->get_block_by_height(i, blk))
+                {
+                    cerr << "Cant get block: " << i << endl;
+                    continue;
+                }
 
                 // get block's hash
                 crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
@@ -238,7 +248,6 @@ namespace xmreg {
         string
         mempool()
         {
-
             std::vector<tx_info> mempool_txs;
 
             if (!rpc.get_mempool(mempool_txs))
@@ -312,7 +321,6 @@ namespace xmreg {
 
 
     private:
-
 
         uint64_t
         sum_xmr_outputs(const string& json_str)
