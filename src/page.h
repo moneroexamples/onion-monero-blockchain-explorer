@@ -126,7 +126,7 @@ namespace xmreg {
                                              delta_time[2], delta_time[3],
                                              delta_time[4]);
 
-                // if have days or yeras, change age format
+                // if have days or years, change age format
                 if (delta_time[0] > 0)
                 {
 
