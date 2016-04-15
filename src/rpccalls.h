@@ -59,32 +59,22 @@ namespace xmreg
             }
 
             return res.height;
-
         }
 
-        //@TODO not finished
-        vector<block>
-        get_blocks(uint64_t start_height)
-        {
+        bool
+        get_mempool(vector<tx_info>& mempool_txs) {
 
-            vector<block> blocks;
-
-            COMMAND_RPC_GET_BLOCKS_FAST::request req;
-            COMMAND_RPC_GET_BLOCKS_FAST::response res;
-
-            req.start_height = start_height;
-
+            COMMAND_RPC_GET_TRANSACTION_POOL::request  req;
+            COMMAND_RPC_GET_TRANSACTION_POOL::response res;
 
             http_simple_client m_http_client;
 
-            // perform RPC call to deamon to get
-            // its transaction pull
             boost::mutex m_daemon_rpc_mutex;
 
             m_daemon_rpc_mutex.lock();
 
             bool r = epee::net_utils::invoke_http_json_remote_command2(
-                    deamon_url + "/getblocks.bin",
+                    deamon_url + "/get_transaction_pool",
                     req, res, m_http_client, 200000);
 
             m_daemon_rpc_mutex.unlock();
@@ -93,22 +83,14 @@ namespace xmreg
             {
                 cerr << "Error connecting to Monero deamon at "
                      << deamon_url << endl;
-                return blocks;
+                return false;
             }
 
-            const std::list<block_complete_entry>& blocks_entries = res.blocks;
+            mempool_txs = res.transactions;
 
-            for (const auto& be: blocks_entries)
-            {
-               // blocks.push_back(block_)
-            }
-
-            return blocks;
-
-
-
-
+            return true;
         }
+
 
 
     };

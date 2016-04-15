@@ -99,6 +99,7 @@ namespace xmreg {
             uint64_t end_height   = height - no_of_last_blocks * (page_no);
 
             // check few conditions to make sure we are whithin the avaliable range
+            //@TODO its too messed up. needs to find cleaner way.
             start_height = start_height > 0      ? start_height : 0;
             end_height   = end_height   < height ? end_height   : height;
             start_height = start_height > end_height ? 0 : start_height;
@@ -127,6 +128,7 @@ namespace xmreg {
 
                 string timestamp_str = xmreg::timestamp_to_str(blk.timestamp);
 
+                // default format for age
                 string age_str = fmt::format("{:02d}:{:02d}:{:02d}",
                                              delta_time[2], delta_time[3],
                                              delta_time[4]);
@@ -134,10 +136,10 @@ namespace xmreg {
                 // if have days or years, change age format
                 if (delta_time[0] > 0)
                 {
-
                    age_str = fmt::format("{:02d}:{:02d}:{:02d}:{:02d}:{:02d}",
                                      delta_time[0], delta_time[1], delta_time[2],
                                      delta_time[3], delta_time[4]);
+
                   context["age_format"] = string("[y:d:h:m:s]");
                 }
                 else if (delta_time[1] > 0)
@@ -145,6 +147,7 @@ namespace xmreg {
                   age_str = fmt::format("{:02d}:{:02d}:{:02d}:{:02d}",
                                                delta_time[1], delta_time[2],
                                                delta_time[3], delta_time[4]);
+
                   context["age_format"] = string("[d:h:m:s]");
                 }
 
@@ -176,6 +179,7 @@ namespace xmreg {
                             *max_element(mixin_numbers.begin(), mixin_numbers.end()));
                 }
 
+                // mixing format for the templates
                 auto mixin_format = [=]() -> mstch::node
                 {
                     if (mixin_min < 0)
@@ -185,6 +189,7 @@ namespace xmreg {
                     return fmt::format("{:d}-{:d}", mixin_min - 1, mixin_max - 1);
                 };
 
+                // get block size in bytes
                 uint64_t blk_size = get_object_blobsize(blk);
 
                 // set output page template map
@@ -233,35 +238,17 @@ namespace xmreg {
         string
         mempool()
         {
-            string deamon_url {"http:://127.0.0.1:18081"};
 
-            // perform RPC call to deamon to get
-            // its transaction pull
-            boost::mutex m_daemon_rpc_mutex;
+            std::vector<tx_info> mempool_txs;
 
-            request req;
-            response res;
-
-            http_simple_client m_http_client;
-
-            m_daemon_rpc_mutex.lock();
-
-            bool r = epee::net_utils::invoke_http_json_remote_command2(
-                    deamon_url + "/get_transaction_pool",
-                    req, res, m_http_client, 200000);
-
-            m_daemon_rpc_mutex.unlock();
-
-            if (!r)
+            if (!rpc.get_mempool(mempool_txs))
             {
-                cerr << "Error connecting to Monero deamon at "
-                     << deamon_url << endl;
-                return "Error connecting to Monero deamon to get mempool";
+              return "Getting mempool failed";
             }
 
             // initalise page tempate map with basic info about mempool
             mstch::map context {
-                    {"mempool_size",  fmt::format("{:d}", res.transactions.size())},
+                    {"mempool_size",  fmt::format("{:d}", mempool_txs.size())},
                     {"mempooltxs" ,   mstch::array()}
             };
 
@@ -269,10 +256,10 @@ namespace xmreg {
             mstch::array& txs = boost::get<mstch::array>(context["mempooltxs"]);
 
             // for each transaction in the memory pool
-            for (size_t i = 0; i < res.transactions.size(); ++i)
+            for (size_t i = 0; i < mempool_txs.size(); ++i)
             {
                 // get transaction info of the tx in the mempool
-                tx_info _tx_info = res.transactions.at(i);
+                tx_info _tx_info = mempool_txs.at(i);
 
                 // calculate difference between tx in mempool and server timestamps
                 array<size_t, 5> delta_time = timestamp_difference(
