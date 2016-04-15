@@ -23,7 +23,7 @@ namespace xmreg
     class rpccalls
     {
         string deamon_url {"http:://127.0.0.1:18081"};
-        uint64_t timeout_time {20000};
+        uint64_t timeout_time {200000};
 
         epee::net_utils::http::url_content url;
 

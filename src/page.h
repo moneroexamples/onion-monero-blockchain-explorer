@@ -62,14 +62,14 @@ namespace xmreg {
         index(uint64_t page_no = 0, bool refresh_page = false)
         {
 
-            bool is_connected = rpc.check_connection();
-
-            cout << "check connection: " << is_connected << endl;
-
-            if (!is_connected)
-            {
-                return "Connection to the Monero demon does not exist or was lost!";
-            }
+//            bool is_connected = rpc.check_connection();
+//
+//            cout << "check connection: " << is_connected << endl;
+//
+//            if (!is_connected)
+//            {
+//                return "Connection to the Monero demon does not exist or was lost!";
+//            }
 
             //get current server timestamp
             server_timestamp = std::time(nullptr);
