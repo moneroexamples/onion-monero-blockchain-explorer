@@ -18,15 +18,19 @@
 
     {{{mempool_info}}}
 
-
-    <h2>100 recent blocks<!--(height: {{height}})--></h2>
+    {{#is_page_zero}}
+      <h2>100 recent blocks<!--(height: {{height}})--></h2>
+    {{/is_page_zero}}
+    {{^is_page_zero}}
+      <h2>older blocks<!--(height: {{height}})--></h2>
+    {{/is_page_zero}}
 
     <div class="center">
 
             <table class="center">
                 <tr>
                     <td>height</td>
-                    <td>age {{age_format}}}</td>
+                    <td>age {{age_format}}</td>
                     <td>block hash</td>
                     <td>reward/fees</td>
                     <td>txs</td>
