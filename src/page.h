@@ -143,7 +143,7 @@ namespace xmreg {
                     {
                         return string("N/A");
                     }
-                    return fmt::format("{:d}-{:d}", mixin_min, mixin_max);
+                    return fmt::format("{:d}-{:d}", mixin_min - 1, mixin_max - 1);
                 };
 
                 uint64_t blk_size = get_object_blobsize(blk);
@@ -272,7 +272,7 @@ namespace xmreg {
                         {"fee"           , fmt::format("{:0.4f}", XMR_AMOUNT(_tx_info.fee))},
                         {"xmr_inputs"    , fmt::format("{:0.2f}", XMR_AMOUNT(sum_inputs))},
                         {"xmr_outputs"   , fmt::format("{:0.2f}", XMR_AMOUNT(sum_outputs))},
-                        {"mixin"         , fmt::format("{:d}", mixin_numbers.at(0))},
+                        {"mixin"         , fmt::format("{:d}", mixin_numbers.at(0) - 1)},
                         {"txsize"        , fmt::format("{:0.2f}", static_cast<double>(_tx_info.blob_size)/1024.0)}
                 });
             }
