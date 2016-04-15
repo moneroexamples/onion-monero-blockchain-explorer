@@ -61,15 +61,14 @@ namespace xmreg {
         string
         index(uint64_t page_no = 0, bool refresh_page = false)
         {
+            // connect to the deamon if not yet connected
+            bool is_connected = rpc.connect_to_monero_deamon();
 
-//            bool is_connected = rpc.check_connection();
-//
-//            cout << "check connection: " << is_connected << endl;
-//
-//            if (!is_connected)
-//            {
-//                return "Connection to the Monero demon does not exist or was lost!";
-//            }
+            if (!is_connected)
+            {
+                cerr << "Connection to the Monero demon does not exist or was lost!" << endl;
+                return "Connection to the Monero demon does not exist or was lost!";
+            }
 
             //get current server timestamp
             server_timestamp = std::time(nullptr);
@@ -111,9 +110,6 @@ namespace xmreg {
             start_height = start_height > end_height ? 0 : start_height;
             end_height   = end_height - start_height > no_of_last_blocks
                            ? no_of_last_blocks : end_height;
-
-            cout << start_height << ", " << end_height << endl;
-
 
             // iterate over last no_of_last_blocks of blocks
             for (uint64_t i = start_height; i <= end_height; ++i)

@@ -2,10 +2,13 @@
 // Created by mwo on 13/04/16.
 //
 
+
 #ifndef CROWXMR_RPCCALLS_H
 #define CROWXMR_RPCCALLS_H
 
 #include "monero_headers.h"
+
+#include <mutex>
 
 namespace xmreg
 {
@@ -15,26 +18,23 @@ namespace xmreg
     using namespace std;
 
 
-    using request = cryptonote::COMMAND_RPC_GET_TRANSACTION_POOL::request;
-    using response = cryptonote::COMMAND_RPC_GET_TRANSACTION_POOL::response;
-    using http_simple_client = epee::net_utils::http::http_simple_client;
-
-
     class rpccalls
     {
-        string deamon_url {"http:://127.0.0.1:18081"};
-        uint64_t timeout_time {200000};
+        string deamon_url ;
+        uint64_t timeout_time;
 
         epee::net_utils::http::url_content url;
 
-        http_simple_client m_http_client;
-        boost::mutex m_daemon_rpc_mutex;
+        epee::net_utils::http::http_simple_client m_http_client;
+        std::mutex m_daemon_rpc_mutex;
 
         string port;
 
     public:
 
-        rpccalls()
+        rpccalls(string _deamon_url = "http:://127.0.0.1:18081",
+                 uint64_t _timeout = 200000)
+        : deamon_url {_deamon_url}, timeout_time {_timeout}
         {
             epee::net_utils::parse_url(deamon_url, url);
 
@@ -42,9 +42,14 @@ namespace xmreg
         }
 
         bool
-        check_connection()
+        connect_to_monero_deamon()
         {
-            m_daemon_rpc_mutex.lock();
+            std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
+
+            if(m_http_client.is_connected())
+            {
+                return true;
+            }
 
             return m_http_client.connect(url.host,
                                          port,
@@ -57,13 +62,11 @@ namespace xmreg
             COMMAND_RPC_GET_HEIGHT::request   req;
             COMMAND_RPC_GET_HEIGHT::response  res;
 
-            m_daemon_rpc_mutex.lock();
+            std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
 
             bool r = epee::net_utils::invoke_http_json_remote_command2(
                     deamon_url + "/getheight",
                     req, res, m_http_client, timeout_time);
-
-            m_daemon_rpc_mutex.unlock();
 
             if (!r)
             {
@@ -85,13 +88,11 @@ namespace xmreg
             COMMAND_RPC_GET_TRANSACTION_POOL::request  req;
             COMMAND_RPC_GET_TRANSACTION_POOL::response res;
 
-            m_daemon_rpc_mutex.lock();
+            std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
 
             bool r = epee::net_utils::invoke_http_json_remote_command2(
                     deamon_url + "/get_transaction_pool",
                     req, res, m_http_client, timeout_time);
-
-            m_daemon_rpc_mutex.unlock();
 
             if (!r)
             {
