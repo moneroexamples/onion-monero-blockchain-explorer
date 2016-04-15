@@ -72,6 +72,16 @@ int main(int ac, const char* av[]) {
         return xmrblocks.index(page_no);
     });
 
+    CROW_ROUTE(app, "/block/<uint>")
+    ([&](size_t block_height) {
+        return xmrblocks.show_block(block_height);
+    });
+
+    CROW_ROUTE(app, "/block/<string>")
+            ([&](string block_hash) {
+                return xmrblocks.show_block(block_hash);
+            });
+
     CROW_ROUTE(app, "/autorefresh")
     ([&]() {
         uint64_t page_no {0};

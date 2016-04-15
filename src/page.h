@@ -29,6 +29,7 @@
 #define TMPL_MEMPOOL TMPL_DIR "/mempool.html"
 #define TMPL_HEADER  TMPL_DIR "/header.html"
 #define TMPL_FOOTER  TMPL_DIR "/footer.html"
+#define TMPL_BLOCK   TMPL_DIR "/block.html"
 
 
 
@@ -92,7 +93,7 @@ namespace xmreg {
                     {"total_page_no"   , fmt::format("{:d}", height / (no_of_last_blocks))},
                     {"is_page_zero"    , !bool(page_no)},
                     {"next_page"       , fmt::format("{:d}", page_no + 1)},
-                    {"prev_page"       , fmt::format("{:d}", (page_no > 0 ? page_no - 1 : 0))},
+                    {"prev_page"       , fmt::format("{:d}", (page_no > 0 ? page_no - 1 : 0))}
             };
 
 
@@ -216,7 +217,7 @@ namespace xmreg {
                         {"blksize"     , fmt::format("{:0.2f}",
                                                      static_cast<double>(blk_size) / 1024.0)}
                 });
-            }
+            } //  for (uint64_t i = start_height; i <= end_height; ++i)
 
             // reverse blocks and remove last (i.e., oldest)
             // block. This is done so that time delats
@@ -313,6 +314,68 @@ namespace xmreg {
 
             // render the page
             return mstch::render(mempool_html, context);
+        }
+
+
+        string
+        show_block(uint64_t _blk_height)
+        {
+            // get block at the given height i
+            block blk;
+
+            if (!mcore->get_block_by_height(_blk_height, blk))
+            {
+                cerr << "Cant get block: " << _blk_height << endl;
+                return fmt::format("Block of height {:d} not found!", _blk_height);
+            }
+
+            // initalise page tempate map with basic info about blockchain
+            mstch::map context {
+                    {"blk_height"      , fmt::format("{:d}", _blk_height)}
+            };
+
+            // get block's hash
+            crypto::hash blk_hash = core_storage->get_block_id_by_height(_blk_height);
+
+            // read block.html
+            string block_html = xmreg::read(TMPL_BLOCK);
+
+            // add header and footer
+            string full_page = get_full_page(block_html);
+
+            // render the page
+            return mstch::render(full_page, context);
+        }
+
+        string
+        show_block(string _blk_hash)
+        {
+            crypto::hash blk_hash;
+
+            if (!xmreg::parse_str_secret_key(_blk_hash, blk_hash))
+            {
+                cerr << "Cant parse blk hash: " << blk_hash << endl;
+                return fmt::format("Cant parse block hash {:s}!", blk_hash);
+            }
+
+            uint64_t blk_height;
+
+            try
+            {
+                blk_height = core_storage->get_db().get_block_height(blk_hash);
+            }
+            catch (const BLOCK_DNE& e)
+            {
+                cerr << "Block does not exist: " << blk_hash << endl;
+                return fmt::format("Block of hash {:s} does not exist!", blk_hash);
+            }
+            catch (const std::exception& e)
+            {
+                cerr << "Cant get block: " << blk_hash << endl;
+                return fmt::format("Block of hash {:s} not found!", blk_hash);
+            }
+
+            return show_block(blk_height);
         }
 
 
