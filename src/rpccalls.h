@@ -22,7 +22,6 @@ namespace xmreg
 
     class rpccalls
     {
-
         string deamon_url {"http:://127.0.0.1:18081"};
         uint64_t timeout_time {200000};
 
