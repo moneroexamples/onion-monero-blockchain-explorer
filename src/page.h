@@ -81,6 +81,7 @@ namespace xmreg {
                     {"height"          , fmt::format("{:d}", height)},
                     {"server_timestamp", xmreg::timestamp_to_str(server_timestamp)},
                     {"blocks"          , mstch::array()},
+                    {"age_format"      , "[h:m:d]"},
                     {"page_no"         , fmt::format("{:d}", page_no)},
                     {"total_page_no"   , fmt::format("{:d}", height / (no_of_last_blocks))},
                     {"is_page_zero"    , bool(page_no)},
@@ -133,12 +134,14 @@ namespace xmreg {
                    age_str = fmt::format("{:02d}:{:02d}:{:02d}:{:02d}:{:02d}",
                                      delta_time[0], delta_time[1], delta_time[2],
                                      delta_time[3], delta_time[4]);
+                  context["age_format"] = "[y:d:h:m:s]";
                 }
                 else if (delta_time[1] > 0)
                 {
                   age_str = fmt::format("{:02d}:{:02d}:{:02d}:{:02d}",
                                                delta_time[1], delta_time[2],
                                                delta_time[3], delta_time[4]);
+                  context["age_format"] = "[d:h:m:s]";                                                                                    
                 }
 
                 // get xmr in the block reward
