@@ -84,7 +84,7 @@ namespace xmreg {
                     {"age_format"      , string("[h:m:d]")},
                     {"page_no"         , fmt::format("{:d}", page_no)},
                     {"total_page_no"   , fmt::format("{:d}", height / (no_of_last_blocks))},
-                    {"is_page_zero"    , bool(page_no)},
+                    {"is_page_zero"    , !bool(page_no)},
                     {"next_page"       , fmt::format("{:d}", page_no + 1)},
                     {"prev_page"       , fmt::format("{:d}", (page_no > 0 ? page_no - 1 : 0))},
 
@@ -94,9 +94,11 @@ namespace xmreg {
             // get reference to blocks template map to be field below
             mstch::array& blocks = boost::get<mstch::array>(context["blocks"]);
 
+            // calculate starting and ending block numbers to show
             uint64_t start_height = height - no_of_last_blocks * (page_no + 1);
             uint64_t end_height   = height - no_of_last_blocks * (page_no);
 
+            // check few conditions to make sure we are whithin the avaliable range
             start_height = start_height > 0      ? start_height : 0;
             end_height   = end_height   < height ? end_height   : height;
             start_height = start_height > end_height ? 0 : start_height;
