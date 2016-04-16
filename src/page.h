@@ -77,9 +77,6 @@ namespace xmreg {
             // number of last blocks to show
             uint64_t no_of_last_blocks {100 + 1};
 
-            // get the current blockchain height. Just to check  if it reads ok.
-           // uint64_t height = core_storage->get_current_blockchain_height() - 1;
-
             uint64_t height = rpc.get_current_height() - 1;
 
             // initalise page tempate map with basic info about blockchain
@@ -127,36 +124,15 @@ namespace xmreg {
                 // get block's hash
                 crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
 
+                // remove "<" and ">" from the hash string
                 string blk_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", blk_hash));
 
-                // calculate difference between server and block timestamps
-                array<size_t, 5> delta_time = timestamp_difference(
-                                              server_timestamp, blk.timestamp);
-
+                // get block timestamp in user friendly format
                 string timestamp_str = xmreg::timestamp_to_str(blk.timestamp);
 
-                // default format for age
-                string age_str = fmt::format("{:02d}:{:02d}:{:02d}",
-                                             delta_time[2], delta_time[3],
-                                             delta_time[4]);
+                pair<string, string> age = get_age(server_timestamp, blk.timestamp);
 
-                // if have days or years, change age format
-                if (delta_time[0] > 0)
-                {
-                   age_str = fmt::format("{:02d}:{:02d}:{:02d}:{:02d}:{:02d}",
-                                     delta_time[0], delta_time[1], delta_time[2],
-                                     delta_time[3], delta_time[4]);
-
-                  context["age_format"] = string("[y:d:h:m:s]");
-                }
-                else if (delta_time[1] > 0)
-                {
-                  age_str = fmt::format("{:02d}:{:02d}:{:02d}:{:02d}",
-                                               delta_time[1], delta_time[2],
-                                               delta_time[3], delta_time[4]);
-
-                  context["age_format"] = string("[d:h:m:s]");
-                }
+                context["age_format"] = age.second;
 
                 // get xmr in the block reward
                 array<uint64_t, 2> coinbase_tx = sum_money_in_tx(blk.miner_tx);
@@ -203,7 +179,7 @@ namespace xmreg {
                 blocks.push_back(mstch::map {
                         {"height"      , to_string(i)},
                         {"timestamp"   , timestamp_str},
-                        {"age"         , age_str},
+                        {"age"         , age.first},
                         {"hash"        , blk_hash_str},
                         {"block_reward", fmt::format("{:0.4f}/{:0.4f}",
                                                      XMR_AMOUNT(coinbase_tx[1] - sum_fees),
@@ -329,13 +305,67 @@ namespace xmreg {
                 return fmt::format("Block of height {:d} not found!", _blk_height);
             }
 
-            // initalise page tempate map with basic info about blockchain
-            mstch::map context {
-                    {"blk_height"      , fmt::format("{:d}", _blk_height)}
-            };
-
             // get block's hash
             crypto::hash blk_hash = core_storage->get_block_id_by_height(_blk_height);
+
+            crypto::hash prev_hash = blk.prev_id;
+            crypto::hash next_hash = core_storage->get_block_id_by_height(_blk_height + 1);
+
+            bool have_next_hash = (next_hash == null_hash ? false : true);
+            bool have_prev_hash = (prev_hash == null_hash ? false : true);
+
+            // remove "<" and ">" from the hash string
+            string prev_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", prev_hash));
+            string next_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", next_hash));
+
+            // remove "<" and ">" from the hash string
+            string blk_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", blk_hash));
+
+            // get block timestamp in user friendly format
+            string blk_timestamp = xmreg::timestamp_to_str(blk.timestamp);
+
+            // get age of the block relative to the server time
+            pair<string, string> age = get_age(server_timestamp, blk.timestamp);
+
+            // get time from the last block
+            string delta_time {"N/A"};
+
+            if (have_prev_hash)
+            {
+                block prev_blk = core_storage->get_db().get_block(prev_hash);
+
+                pair<string, string> delta_diff = get_age(blk.timestamp, prev_blk.timestamp);
+
+                delta_time = delta_diff.first;
+            }
+
+            // get block size in bytes
+            uint64_t blk_size = get_object_blobsize(blk);
+
+            // miner reward tx
+            transaction coinbase_tx = blk.miner_tx;
+
+            // transcation in the block
+            vector<crypto::hash> tx_hashes = blk.tx_hashes;
+
+            // initalise page tempate map with basic info about blockchain
+            mstch::map context {
+                    {"blk_hash"       , blk_hash_str},
+                    {"blk_height"     , fmt::format("{:d}", _blk_height)},
+                    {"blk_timestamp"  , blk_timestamp},
+                    {"prev_hash"      , prev_hash_str},
+                    {"next_hash"      , next_hash_str},
+                    {"have_next_hash" , have_next_hash},
+                    {"have_prev_hash" , have_prev_hash},
+                    {"blk_age"        , age.first},
+                    {"delta_time"     , delta_time},
+                    {"blk_nonce"      , std::to_string(blk.nonce)},
+                    {"age_format"     , age.second},
+                    {"major_ver"      , std::to_string(blk.major_version)},
+                    {"minor_ver"      , std::to_string(blk.minor_version)},
+                    {"blk_size"       , fmt::format("{:0.4f}",
+                                                    static_cast<double>(blk_size) / 1024.0)}
+            };
 
             // read block.html
             string block_html = xmreg::read(TMPL_BLOCK);
@@ -380,6 +410,48 @@ namespace xmreg {
 
 
     private:
+
+        pair<string, string>
+        get_age(uint64_t timestamp1, uint64_t timestamp2)
+        {
+
+
+            pair<string, string> age_pair;
+
+            // calculate difference between server and block timestamps
+            array<size_t, 5> delta_time = timestamp_difference(
+                    timestamp1, timestamp2);
+
+            // default format for age
+            string age_str = fmt::format("{:02d}:{:02d}:{:02d}",
+                                         delta_time[2], delta_time[3],
+                                         delta_time[4]);
+
+            string age_format {"[h:m:s]"};
+
+            // if have days or years, change age format
+            if (delta_time[0] > 0)
+            {
+                age_str = fmt::format("{:02d}:{:02d}:{:02d}:{:02d}:{:02d}",
+                                      delta_time[0], delta_time[1], delta_time[2],
+                                      delta_time[3], delta_time[4]);
+
+                age_format = string("[y:d:h:m:s]");
+            }
+            else if (delta_time[1] > 0)
+            {
+                age_str = fmt::format("{:02d}:{:02d}:{:02d}:{:02d}",
+                                      delta_time[1], delta_time[2],
+                                      delta_time[3], delta_time[4]);
+
+                age_format = string("[d:h:m:s]");
+            }
+
+            age_pair.first  = age_str;
+            age_pair.second = age_format;
+
+            return age_pair;
+        }
 
         uint64_t
         sum_xmr_outputs(const string& json_str)

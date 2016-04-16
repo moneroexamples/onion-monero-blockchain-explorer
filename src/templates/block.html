@@ -1,4 +1,36 @@
 
 <div>
-    Height: {{blk_height}}
+
+    <H3>Block hash (height): {{blk_hash}} ({{blk_height}})</H3>
+
+
+    {{#have_prev_hash}}
+    <H4>Previous block: <a href="/block/{{prev_hash}}">{{prev_hash}}</a></H4>
+    {{/have_prev_hash}}
+
+    {{#have_next_hash}}
+    <H4>Next block: <a href="/block/{{next_hash}}">{{next_hash}}</a></H4>
+    {{/have_next_hash}}
+
+
+
+    <table class="center" style="width:60%">
+        <tr>
+            <td>Timestamp [UCT]:</td><td>{{blk_timestamp}}</td>
+            <td>Age {{age_format}}:</td><td>{{blk_age}}</td>
+            <td>Time from previous block [h:m:s]:</td><td>{{delta_time}}</td>
+        </tr>
+        <tr>
+            <td>Major version:</td><td>{{major_ver}}</td>
+            <td>Minor version:</td><td>{{minor_ver}}</td>
+            <td>Block size [kB]:</td><td>{{blk_size}}</td>
+        </tr>
+        <tr>
+            <td>nonce:</td><td>{{blk_nonce}}</td>
+            <td>Minor version:</td><td>{{minor_ver}}</td>
+            <td>Block size [kB]:</td><td>{{blk_size}}</td>
+        </tr>
+
+
+    </table>
 </div>
