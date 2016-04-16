@@ -52,9 +52,10 @@ namespace xmreg {
 
     public:
 
-        page(MicroCore* _mcore, Blockchain* _core_storage)
+        page(MicroCore* _mcore, Blockchain* _core_storage, string deamon_url)
                 : mcore {_mcore},
                   core_storage {_core_storage},
+                  rpc {deamon_url},
                   server_timestamp {std::time(nullptr)}
         {
         }

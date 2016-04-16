@@ -30,22 +30,32 @@ int main(int ac, const char* av[]) {
         return 0;
     }
 
-    auto port_opt      = opts.get_option<string>("port");
-    auto bc_path_opt   = opts.get_option<string>("bc-path");
+
+    auto port_opt         = opts.get_option<string>("port");
+    auto bc_path_opt      = opts.get_option<string>("bc-path");
+    auto deamon_url_opt   = opts.get_option<string>("deamon-url");
 
     //cast port number in string to uint16
     uint16_t app_port = boost::lexical_cast<uint16_t>(*port_opt);
 
+    // get blockchain path
+    path blockchain_path;
 
-    path blockchain_path {"/home/mwo/.bitmonero/lmdb"};
+    if (!xmreg::get_blockchain_path(bc_path_opt, blockchain_path))
+    {
+        cerr << "Error getting blockchain path." << endl;
+        return 1;
+    }
 
      // enable basic monero log output
     xmreg::enable_monero_log();
 
     // create instance of our MicroCore
+    // and make pointer to the Blockchain
     xmreg::MicroCore mcore;
     cryptonote::Blockchain* core_storage;
 
+    // initialize mcore and core_storage
     if (!xmreg::init_blockchain(blockchain_path.string(),
                                mcore, core_storage))
     {
@@ -54,18 +64,16 @@ int main(int ac, const char* av[]) {
     }
 
     // create instance of page class which
-    // coins logic for the website
-    xmreg::page xmrblocks(&mcore, core_storage);
+    // contains logic for the website
+    xmreg::page xmrblocks(&mcore, core_storage, *deamon_url_opt);
 
     // crow instance
     crow::SimpleApp app;
-
 
     CROW_ROUTE(app, "/")
     ([&]() {
         return xmrblocks.index();
     });
-
 
     CROW_ROUTE(app, "/page/<uint>")
     ([&](size_t page_no) {
@@ -87,11 +95,6 @@ int main(int ac, const char* av[]) {
         uint64_t page_no {0};
         bool refresh_page {true};
         return xmrblocks.index(page_no, refresh_page);
-    });
-
-    CROW_ROUTE(app, "/css/style.css")
-    ([&]() {
-        return xmreg::read("./templates/css/style.css");
     });
 
     // run the crow http server
