@@ -348,6 +348,8 @@ namespace xmreg {
             // transcation in the block
             vector<crypto::hash> tx_hashes = blk.tx_hashes;
 
+            bool have_txs = !blk.tx_hashes.empty();
+
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"blk_hash"       , blk_hash_str},
