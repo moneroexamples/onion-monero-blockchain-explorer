@@ -58,7 +58,7 @@
         <table class="center" style="width:80%">
             <tr>
                 <td>hash</td>
-                <td>inputs/outputs</td>
+                <td>outputs</td>
                 <td>fee</td>
                 <td>mixin no</td>
                 <td>size [kB]</td>
@@ -67,7 +67,7 @@
             {{#blk_txs}}
                 <tr>
                     <td>{{hash}}</td>
-                    <td>{{sum_inputs}}/{{sum_outputs}}</td>
+                    <td>{{sum_outputs}}</td>
                     <td>{{tx_fee}}</td>
                     <td>{{mixin}}</td>
                     <td>{{tx_size}}</td>

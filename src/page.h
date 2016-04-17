@@ -543,6 +543,43 @@ namespace xmreg {
             return txd;
         }
 
+        string
+        mixins_time_scale(const vector<uint64_t>& timestamps)
+        {
+            string empty_time = string("___________________________________")
+                                + string("___________________________________")
+                                + string("___________________________________")
+                                + string("___________________________________");
+
+            size_t time_axis_length = empty_time.size();
+
+            cout << "time_axis_length: " << time_axis_length << endl;
+
+            uint64_t time0 = 10;
+            uint64_t timeN = 30;
+
+            uint64_t interval_length = timeN-time0;
+
+            double scale = double(interval_length) / double(time_axis_length);
+
+            for (const auto& timestamp: timestamps)
+            {
+
+                if (timestamp < time0 || timestamp > timeN)
+                {
+                    cout << "Out of range" << endl;
+                    continue;
+                }
+
+                uint64_t timestamp_place = double(timestamp-time0)/double(interval_length)*(time_axis_length-1);
+                //cout << timestamp_place << endl;
+                empty_time[timestamp_place] = '*';
+            }
+
+            return string("Genesis ") + empty_time + string(" Now");
+        }
+
+
         pair<string, string>
         get_age(uint64_t timestamp1, uint64_t timestamp2)
         {
