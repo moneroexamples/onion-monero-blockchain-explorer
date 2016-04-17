@@ -220,6 +220,7 @@ namespace xmreg {
                         {"block_reward", fmt::format("{:0.4f}/{:0.4f}",
                                                      XMR_AMOUNT(coinbase_tx[1] - sum_fees),
                                                      XMR_AMOUNT(sum_fees))},
+                        {"fees"        , fmt::format("{:0.4f}", XMR_AMOUNT(sum_fees))},
                         {"notx"        , fmt::format("{:d}", blk.tx_hashes.size())},
                         {"xmr_inputs"  , fmt::format("{:0.2f}",
                                                      XMR_AMOUNT(sum_xmr_in_out[0]))},
