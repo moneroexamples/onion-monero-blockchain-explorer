@@ -28,9 +28,32 @@
         <tr>
             <td>nonce:</td><td>{{blk_nonce}}</td>
             <td>Minor version:</td><td>{{minor_ver}}</td>
-            <td>Block size [kB]:</td><td>{{blk_size}}</td>
+            <td>No of txs:</td><td>{{no_txs}}</td>
         </tr>
+    </table>
 
+
+    <h3>Transactions ({{no_txs}})</h3>
+    <table class="center" style="width:80%">
+        <tr>
+            <td>hash</td>
+            <td>inputs/outputs</td>
+            <td>fee</td>
+            <td>mixin no</td>
+            <td>size [kB]</td>
+            <td>unlock time</td>
+        </tr>
+        {{#blk_txs}}
+            <tr>
+                <td>{{hash}}</td>
+                <td>{{sum_inputs}}/{{sum_outputs}}</td>
+                <td>{{tx_fee}}</td>
+                <td>{{mixin}}</td>
+                <td>{{tx_size}}</td>
+                <td>{{unlock_time}}</td>
+            </tr>
+        {{/blk_txs}}
 
     </table>
+
 </div>

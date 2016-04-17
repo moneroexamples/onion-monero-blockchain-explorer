@@ -12,8 +12,6 @@
 #include "../ext/format.h"
 
 
-
-
 #include "monero_headers.h"
 
 #include "MicroCore.h"
@@ -42,6 +40,48 @@ namespace xmreg {
     using request = cryptonote::COMMAND_RPC_GET_TRANSACTION_POOL::request;
     using response = cryptonote::COMMAND_RPC_GET_TRANSACTION_POOL::response;
     using http_simple_client = epee::net_utils::http::http_simple_client;
+
+
+    /**
+     * @brief The tx_details struct
+     *
+     * Basic information about tx
+     *
+     */
+    struct tx_details
+    {
+        crypto::hash hash;
+        crypto::public_key pk;
+        uint64_t xmr_inputs;
+        uint64_t xmr_outputs;
+        uint64_t fee;
+        uint64_t mixin_no;
+        uint64_t size;
+        size_t version;
+        uint64_t unlock_time;
+
+
+        mstch::map
+        get_mstch_map()
+        {
+            // remove "<" and ">" from the hash string
+            string tx_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", hash));
+
+            string tx_pk_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", pk));
+
+            return mstch::map {
+                    {"hash"          , tx_hash_str},
+                    {"pub_key"       , tx_pk_str},
+                    {"tx_fee"        , fmt::format("{:0.4f}", XMR_AMOUNT(fee))},
+                    {"sum_inputs"    , fmt::format("{:0.4f}", XMR_AMOUNT(xmr_inputs))},
+                    {"sum_outputs"   , fmt::format("{:0.4f}", XMR_AMOUNT(xmr_outputs))},
+                    {"mixin"         , std::to_string(mixin_no - 1)},
+                    {"version"       , std::to_string(version)},
+                    {"unlock_time"   , std::to_string(unlock_time)},
+                    {"tx_size"       , fmt::format("{:0.4f}", static_cast<double>(size)/1024.0)}
+            };
+        }
+    };
 
     class page {
 
@@ -83,15 +123,15 @@ namespace xmreg {
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"refresh"         , refresh_page},
-                    {"height"          , fmt::format("{:d}", height)},
+                    {"height"          , std::to_string(height)},
                     {"server_timestamp", xmreg::timestamp_to_str(server_timestamp)},
                     {"blocks"          , mstch::array()},
                     {"age_format"      , string("[h:m:d]")},
-                    {"page_no"         , fmt::format("{:d}", page_no)},
-                    {"total_page_no"   , fmt::format("{:d}", height / (no_of_last_blocks))},
+                    {"page_no"         , std::to_string(page_no)},
+                    {"total_page_no"   , std::to_string(height / (no_of_last_blocks))},
                     {"is_page_zero"    , !bool(page_no)},
-                    {"next_page"       , fmt::format("{:d}", page_no + 1)},
-                    {"prev_page"       , fmt::format("{:d}", (page_no > 0 ? page_no - 1 : 0))}
+                    {"next_page"       , std::to_string(page_no + 1)},
+                    {"prev_page"       , std::to_string((page_no > 0 ? page_no - 1 : 0))}
             };
 
 
@@ -231,7 +271,7 @@ namespace xmreg {
 
             // initalise page tempate map with basic info about mempool
             mstch::map context {
-                    {"mempool_size",  fmt::format("{:d}", mempool_txs.size())},
+                    {"mempool_size",  std::to_string(mempool_txs.size())},
                     {"mempooltxs" ,   mstch::array()}
             };
 
@@ -360,6 +400,8 @@ namespace xmreg {
                     {"next_hash"      , next_hash_str},
                     {"have_next_hash" , have_next_hash},
                     {"have_prev_hash" , have_prev_hash},
+                    {"have_txs"       , have_txs},
+                    {"no_txs"         , std::to_string(blk.tx_hashes.size())},
                     {"blk_age"        , age.first},
                     {"delta_time"     , delta_time},
                     {"blk_nonce"      , std::to_string(blk.nonce)},
@@ -367,8 +409,38 @@ namespace xmreg {
                     {"major_ver"      , std::to_string(blk.major_version)},
                     {"minor_ver"      , std::to_string(blk.minor_version)},
                     {"blk_size"       , fmt::format("{:0.4f}",
-                                                    static_cast<double>(blk_size) / 1024.0)}
+                                                    static_cast<double>(blk_size) / 1024.0)},
+                    {"blk_txs" ,   mstch::array()}
             };
+
+
+            // get reference to blocks template map to be field below
+            mstch::array& txs = boost::get<mstch::array>(context["blk_txs"]);
+
+            // for each transaction in the memory pool
+            for (size_t i = 0; i < blk.tx_hashes.size(); ++i)
+            {
+                // get transaction info of the tx in the mempool
+                const crypto::hash& tx_hash = blk.tx_hashes.at(i);
+
+                // remove "<" and ">" from the hash string
+                string tx_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", tx_hash));
+
+
+                // get transaction
+                transaction tx;
+
+                if (!mcore->get_tx(tx_hash, tx))
+                {
+                    cerr << "Cant get tx: " << tx_hash << endl;
+                    continue;
+                }
+
+                tx_details txd = get_tx_details(tx);
+
+                // add tx details mstch map to context
+                txs.push_back(txd.get_mstch_map());
+            }
 
             // read block.html
             string block_html = xmreg::read(TMPL_BLOCK);
@@ -413,6 +485,40 @@ namespace xmreg {
 
 
     private:
+
+
+        tx_details
+        get_tx_details(const transaction& tx)
+        {
+            tx_details txd;
+
+            // get tx hash
+            txd.hash = get_transaction_hash(tx);
+
+            // get tx public key
+            txd.pk = get_tx_pub_key_from_extra(tx);
+
+            // sum xmr in inputs and ouputs in the given tx
+            txd.xmr_inputs  = sum_money_in_inputs(tx);
+            txd.xmr_outputs = sum_money_in_outputs(tx);
+
+            // get mixin number
+            txd.mixin_no    = get_mixin_no(tx);
+
+            // get tx fee
+            txd.fee = get_tx_fee(tx);
+
+            // get tx size in bytes
+            txd.size = get_object_blobsize(tx);
+
+            // get tx version
+            txd.version = tx.version;
+
+            // get unlock time
+            txd.unlock_time = tx.unlock_time;
+
+            return txd;
+        }
 
         pair<string, string>
         get_age(uint64_t timestamp1, uint64_t timestamp2)
