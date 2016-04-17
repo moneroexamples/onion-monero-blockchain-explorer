@@ -220,7 +220,7 @@ namespace xmreg {
                         {"block_reward", fmt::format("{:0.4f}/{:0.4f}",
                                                      XMR_AMOUNT(coinbase_tx[1] - sum_fees),
                                                      XMR_AMOUNT(sum_fees))},
-                        {"fees"        , fmt::format("{:0.4f}", XMR_AMOUNT(sum_fees))},
+                        {"fees"        , fmt::format("{:0.3f}", XMR_AMOUNT(sum_fees))},
                         {"notx"        , fmt::format("{:d}", blk.tx_hashes.size())},
                         {"xmr_inputs"  , fmt::format("{:0.2f}",
                                                      XMR_AMOUNT(sum_xmr_in_out[0]))},
@@ -314,7 +314,7 @@ namespace xmreg {
                         {"timestamp"     , xmreg::timestamp_to_str(_tx_info.receive_time)},
                         {"age"           , age_str},
                         {"hash"          , fmt::format("{:s}", _tx_info.id_hash)},
-                        {"fee"           , fmt::format("{:0.4f}", XMR_AMOUNT(_tx_info.fee))},
+                        {"fee"           , fmt::format("{:0.3f}", XMR_AMOUNT(_tx_info.fee))},
                         {"xmr_inputs"    , fmt::format("{:0.2f}", XMR_AMOUNT(sum_inputs))},
                         {"xmr_outputs"   , fmt::format("{:0.2f}", XMR_AMOUNT(sum_outputs))},
                         {"mixin"         , fmt::format("{:d}", mixin_numbers.at(0) - 1)},
@@ -412,7 +412,7 @@ namespace xmreg {
                     {"major_ver"      , std::to_string(blk.major_version)},
                     {"minor_ver"      , std::to_string(blk.minor_version)},
                     {"blk_size"       , fmt::format("{:0.4f}",
-                                                    static_cast<double>(blk_size) / 1024.0)},                    
+                                                    static_cast<double>(blk_size) / 1024.0)},
                     {"coinbase_txs"   , mstch::array{{txd_coinbase.get_mstch_map()}}},
                     {"blk_txs"        , mstch::array()}
             };
