@@ -37,11 +37,6 @@ namespace xmreg {
     using namespace crypto;
     using namespace std;
 
-    using request = cryptonote::COMMAND_RPC_GET_TRANSACTION_POOL::request;
-    using response = cryptonote::COMMAND_RPC_GET_TRANSACTION_POOL::response;
-    using http_simple_client = epee::net_utils::http::http_simple_client;
-
-
     /**
      * @brief The tx_details struct
      *
@@ -72,9 +67,9 @@ namespace xmreg {
             return mstch::map {
                     {"hash"          , tx_hash_str},
                     {"pub_key"       , tx_pk_str},
-                    {"tx_fee"        , fmt::format("{:0.4f}", XMR_AMOUNT(fee))},
-                    {"sum_inputs"    , fmt::format("{:0.4f}", XMR_AMOUNT(xmr_inputs))},
-                    {"sum_outputs"   , fmt::format("{:0.4f}", XMR_AMOUNT(xmr_outputs))},
+                    {"tx_fee"        , fmt::format("{:0.6f}", XMR_AMOUNT(fee))},
+                    {"sum_inputs"    , fmt::format("{:0.6f}", XMR_AMOUNT(xmr_inputs))},
+                    {"sum_outputs"   , fmt::format("{:0.6f}", XMR_AMOUNT(xmr_outputs))},
                     {"mixin"         , std::to_string(mixin_no - 1)},
                     {"version"       , std::to_string(version)},
                     {"unlock_time"   , std::to_string(unlock_time)},
@@ -389,12 +384,19 @@ namespace xmreg {
             // transcation in the block
             vector<crypto::hash> tx_hashes = blk.tx_hashes;
 
+
             bool have_txs = !blk.tx_hashes.empty();
+
+            // sum of all transactions in the block
+            uint64_t sum_fees = 0;
+
+            // get tx details for the coinbase tx, i.e., miners reward
+            tx_details txd_coinbase = get_tx_details(blk.miner_tx, true);
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"blk_hash"       , blk_hash_str},
-                    {"blk_height"     , fmt::format("{:d}", _blk_height)},
+                    {"blk_height"     , _blk_height},
                     {"blk_timestamp"  , blk_timestamp},
                     {"prev_hash"      , prev_hash_str},
                     {"next_hash"      , next_hash_str},
@@ -404,16 +406,21 @@ namespace xmreg {
                     {"no_txs"         , std::to_string(blk.tx_hashes.size())},
                     {"blk_age"        , age.first},
                     {"delta_time"     , delta_time},
-                    {"blk_nonce"      , std::to_string(blk.nonce)},
+                    {"blk_nonce"      , blk.nonce},
                     {"age_format"     , age.second},
                     {"major_ver"      , std::to_string(blk.major_version)},
                     {"minor_ver"      , std::to_string(blk.minor_version)},
                     {"blk_size"       , fmt::format("{:0.4f}",
-                                                    static_cast<double>(blk_size) / 1024.0)},
-                    {"blk_txs" ,   mstch::array()}
+                                                    static_cast<double>(blk_size) / 1024.0)},                    
+                    {"coinbase_txs"   , mstch::array{{txd_coinbase.get_mstch_map()}}},
+                    {"blk_txs"        , mstch::array()}
             };
 
+            // .push_back(txd_coinbase.get_mstch_map()
 
+           // boost::get<mstch::array>(context["blk_txs"]).push_back(txd_coinbase.get_mstch_map());
+
+            // now process nomral transactions
             // get reference to blocks template map to be field below
             mstch::array& txs = boost::get<mstch::array>(context["blk_txs"]);
 
@@ -438,9 +445,21 @@ namespace xmreg {
 
                 tx_details txd = get_tx_details(tx);
 
+                // add fee to the rest
+                sum_fees += txd.fee;
+
                 // add tx details mstch map to context
                 txs.push_back(txd.get_mstch_map());
             }
+
+
+            // add total fees in the block to the context
+            context["sum_fees"]   = fmt::format("{:0.6f}",
+                                         XMR_AMOUNT(sum_fees));
+
+            // get xmr in the block reward
+            context["blk_reward"] = fmt::format("{:0.6f}",
+                                         XMR_AMOUNT(txd_coinbase.xmr_outputs - sum_fees));
 
             // read block.html
             string block_html = xmreg::read(TMPL_BLOCK);
@@ -451,6 +470,7 @@ namespace xmreg {
             // render the page
             return mstch::render(full_page, context);
         }
+
 
         string
         show_block(string _blk_hash)
@@ -488,7 +508,7 @@ namespace xmreg {
 
 
         tx_details
-        get_tx_details(const transaction& tx)
+        get_tx_details(const transaction& tx, bool coinbase = false)
         {
             tx_details txd;
 
@@ -505,8 +525,11 @@ namespace xmreg {
             // get mixin number
             txd.mixin_no    = get_mixin_no(tx);
 
-            // get tx fee
-            txd.fee = get_tx_fee(tx);
+            if (!coinbase)
+            {
+                // get tx fee
+                txd.fee = get_tx_fee(tx);
+            }
 
             // get tx size in bytes
             txd.size = get_object_blobsize(tx);

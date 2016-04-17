@@ -21,39 +21,60 @@
             <td>Δ [h:m:s]:</td><td>{{delta_time}}</td>
         </tr>
         <tr>
-            <td>Major version:</td><td>{{major_ver}}</td>
-            <td>Minor version:</td><td>{{minor_ver}}</td>
+            <td>Major.minor version:</td><td>{{major_ver}}.{{minor_ver}}</td>
+            <td>Block reward:</td><td>{{blk_reward}}</td>
             <td>Block size [kB]:</td><td>{{blk_size}}</td>
         </tr>
         <tr>
             <td>nonce:</td><td>{{blk_nonce}}</td>
-            <td>Minor version:</td><td>{{minor_ver}}</td>
+            <td>Total fees:</td><td>{{sum_fees}}</td>
             <td>No of txs:</td><td>{{no_txs}}</td>
         </tr>
     </table>
 
-
-    <h3>Transactions ({{no_txs}})</h3>
+    <h3>Miner reward transaction</h3>
     <table class="center" style="width:80%">
         <tr>
             <td>hash</td>
-            <td>inputs/outputs</td>
-            <td>fee</td>
-            <td>mixin no</td>
+            <td>outputs</td>
             <td>size [kB]</td>
             <td>version</td>
         </tr>
-        {{#blk_txs}}
+        {{#coinbase_txs}}
             <tr>
                 <td>{{hash}}</td>
-                <td>{{sum_inputs}}/{{sum_outputs}}</td>
-                <td>{{tx_fee}}</td>
-                <td>{{mixin}}</td>
+                <td>{{sum_outputs}}</td>
                 <td>{{tx_size}}</td>
                 <td>{{version}}</td>
             </tr>
-        {{/blk_txs}}
+        {{/coinbase_txs}}
 
     </table>
+
+
+
+    <h3>Transactions ({{no_txs}})</h3>
+    {{#have_txs}}
+        <table class="center" style="width:80%">
+            <tr>
+                <td>hash</td>
+                <td>inputs/outputs</td>
+                <td>fee</td>
+                <td>mixin no</td>
+                <td>size [kB]</td>
+                <td>version</td>
+            </tr>
+            {{#blk_txs}}
+                <tr>
+                    <td>{{hash}}</td>
+                    <td>{{sum_inputs}}/{{sum_outputs}}</td>
+                    <td>{{tx_fee}}</td>
+                    <td>{{mixin}}</td>
+                    <td>{{tx_size}}</td>
+                    <td>{{version}}</td>
+                </tr>
+            {{/blk_txs}}
+        </table>
+    {{/have_txs}}
 
 </div>

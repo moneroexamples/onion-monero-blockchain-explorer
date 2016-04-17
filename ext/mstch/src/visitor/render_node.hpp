@@ -32,6 +32,18 @@ class render_node: public boost::static_visitor<std::string> {
     return ss.str();
   }
 
+  std::string operator()(const uint64_t& value) const {
+    std::stringstream ss;
+    ss << value;
+    return ss.str();
+  }
+
+  std::string operator()(const uint32_t& value) const {
+     std::stringstream ss;
+     ss << value;
+     return ss.str();
+  }
+
   std::string operator()(const bool& value) const {
     return value ? "true" : "false";
   }
