@@ -19,7 +19,7 @@
 #include "rpccalls.h"
 
 #include <algorithm>
-
+#include <limits>
 #include<ctime>
 
 #define TMPL_DIR              "./templates"
@@ -145,7 +145,8 @@ namespace xmreg {
             end_height   = end_height - start_height > no_of_last_blocks
                            ? no_of_last_blocks : end_height;
 
-            time_t prev_blk_timestamp {0};
+            // previous blk timestamp, initalised to lowest possible value
+            double prev_blk_timestamp {std::numeric_limits<double>::lowest()};
 
             // iterate over last no_of_last_blocks of blocks
             for (uint64_t i = start_height; i <= end_height; ++i)
@@ -175,7 +176,7 @@ namespace xmreg {
                 // get time difference [m] between previous and current blocks
                 string time_delta_str {};
 
-                if (prev_blk_timestamp > 0)
+                if (prev_blk_timestamp > std::numeric_limits<double>::lowest())
                 {
                   time_delta_str = fmt::format("{:0.2f}",
                       (double(blk.timestamp) - double(prev_blk_timestamp))/60.0);
@@ -244,7 +245,7 @@ namespace xmreg {
                 });
 
                 // save current's block timestamp as reference for the next one
-                prev_blk_timestamp  = blk.timestamp;
+                prev_blk_timestamp  = static_cast<double>(blk.timestamp);
 
             } //  for (uint64_t i = start_height; i <= end_height; ++i)
 
@@ -252,7 +253,13 @@ namespace xmreg {
             // block. This is done so that time delats
             // are easier to calcualte in the above for loop
             std::reverse(blocks.begin(), blocks.end());
-            blocks.pop_back();
+
+            // if we look at the genesis time, we should not remove
+            // the last block, i.e. genesis one.
+            if (!(start_height < 2))
+            {
+              blocks.pop_back();
+            }
 
             // get memory pool rendered template
             string mempool_html = mempool();
