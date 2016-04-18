@@ -20,7 +20,7 @@
 
 #include <algorithm>
 #include <limits>
-#include<ctime>
+#include <ctime>
 
 #define TMPL_DIR              "./templates"
 #define TMPL_INDEX   TMPL_DIR "/index.html"
@@ -28,7 +28,7 @@
 #define TMPL_HEADER  TMPL_DIR "/header.html"
 #define TMPL_FOOTER  TMPL_DIR "/footer.html"
 #define TMPL_BLOCK   TMPL_DIR "/block.html"
-
+#define TMPL_TX      TMPL_DIR "/tx.html"
 
 
 namespace xmreg {
@@ -525,6 +525,28 @@ namespace xmreg {
             }
 
             return show_block(blk_height);
+        }
+
+        string
+        show_tx(string _tx_hash)
+        {
+
+            uint64_t _blk_height {0};
+
+            // initalise page tempate map with basic info about blockchain
+            mstch::map context {
+                    {"tx_hash"        , _tx_hash},
+                    {"blk_height"     , _blk_height}
+            };
+
+            // read tx.html
+            string tx_html = xmreg::read(TMPL_TX);
+
+            // add header and footer
+            string full_page = get_full_page(tx_html);
+
+            // render the page
+            return mstch::render(full_page, context);
         }
 
 

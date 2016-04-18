@@ -85,9 +85,14 @@ int main(int ac, const char* av[]) {
     });
 
     CROW_ROUTE(app, "/block/<string>")
-            ([&](string block_hash) {
-                return xmrblocks.show_block(block_hash);
-            });
+    ([&](string block_hash) {
+        return xmrblocks.show_block(block_hash);
+    });
+
+    CROW_ROUTE(app, "/tx/<string>")
+    ([&](string tx_hash) {
+        return xmrblocks.show_tx(tx_hash);
+    });
 
     CROW_ROUTE(app, "/autorefresh")
     ([&]() {
