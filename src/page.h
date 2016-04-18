@@ -145,6 +145,8 @@ namespace xmreg {
             end_height   = end_height - start_height > no_of_last_blocks
                            ? no_of_last_blocks : end_height;
 
+            time_t prev_blk_timestamp {0};
+
             // iterate over last no_of_last_blocks of blocks
             for (uint64_t i = start_height; i <= end_height; ++i)
             {
@@ -169,6 +171,15 @@ namespace xmreg {
                 pair<string, string> age = get_age(server_timestamp, blk.timestamp);
 
                 context["age_format"] = age.second;
+
+                // get time difference [m] between previous and current blocks
+                string time_delta_str {};
+
+                if (prev_blk_timestamp > 0)
+                {
+                  time_delta_str = fmt::format("{:0.2f}",
+                      (double(blk.timestamp) - double(prev_blk_timestamp))/60.0);
+                }
 
                 // get xmr in the block reward
                 array<uint64_t, 2> coinbase_tx = sum_money_in_tx(blk.miner_tx);
@@ -215,6 +226,7 @@ namespace xmreg {
                 blocks.push_back(mstch::map {
                         {"height"      , to_string(i)},
                         {"timestamp"   , timestamp_str},
+                        {"time_delta"  , time_delta_str},
                         {"age"         , age.first},
                         {"hash"        , blk_hash_str},
                         {"block_reward", fmt::format("{:0.4f}/{:0.4f}",
@@ -230,13 +242,17 @@ namespace xmreg {
                         {"blksize"     , fmt::format("{:0.2f}",
                                                      static_cast<double>(blk_size) / 1024.0)}
                 });
+
+                // save current's block timestamp as reference for the next one
+                prev_blk_timestamp  = blk.timestamp;
+
             } //  for (uint64_t i = start_height; i <= end_height; ++i)
 
             // reverse blocks and remove last (i.e., oldest)
             // block. This is done so that time delats
             // are easier to calcualte in the above for loop
             std::reverse(blocks.begin(), blocks.end());
-            //blocks.pop_back();
+            blocks.pop_back();
 
             // get memory pool rendered template
             string mempool_html = mempool();
