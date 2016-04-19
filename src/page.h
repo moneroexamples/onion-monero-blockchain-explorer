@@ -55,6 +55,12 @@ namespace xmreg {
         size_t version;
         uint64_t unlock_time;
 
+        // key images of inputs
+        vector<txin_to_key> input_key_imgs;
+
+        // public keys and xmr amount of outputs
+        vector<pair<txout_to_key, uint64_t>> output_pub_keys;
+
 
         mstch::map
         get_mstch_map()
@@ -70,6 +76,8 @@ namespace xmreg {
                     {"tx_fee"        , fmt::format("{:0.6f}", XMR_AMOUNT(fee))},
                     {"sum_inputs"    , fmt::format("{:0.6f}", XMR_AMOUNT(xmr_inputs))},
                     {"sum_outputs"   , fmt::format("{:0.6f}", XMR_AMOUNT(xmr_outputs))},
+                    {"no_inputs"     , input_key_imgs.size()},
+                    {"no_outputs"    , output_pub_keys.size()},
                     {"mixin"         , std::to_string(mixin_no - 1)},
                     {"version"       , std::to_string(version)},
                     {"unlock_time"   , std::to_string(unlock_time)},
@@ -579,6 +587,10 @@ namespace xmreg {
 
             // get tx size in bytes
             txd.size = get_object_blobsize(tx);
+
+            txd.input_key_imgs  = get_key_images(tx);
+            txd.output_pub_keys = get_ouputs(tx);
+
 
             // get tx version
             txd.version = tx.version;
