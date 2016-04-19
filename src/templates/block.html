@@ -42,7 +42,7 @@
         </tr>
         {{#coinbase_txs}}
             <tr>
-                <td>{{hash}}</td>
+                <td><a href="/tx/{{hash}}">{{hash}}</a>
                 <td>{{sum_outputs}}</td>
                 <td>{{tx_size}}</td>
                 <td>{{version}}</td>
@@ -67,7 +67,7 @@
             </tr>
             {{#blk_txs}}
                 <tr>
-                    <td>{{hash}}</td>
+                    <td><a href="/tx/{{hash}}">{{hash}}</a></td>
                     <td>{{sum_outputs}}</td>
                     <td>{{tx_fee}}</td>
                     <td>{{mixin}}</td>

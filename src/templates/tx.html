@@ -1,15 +1,15 @@
 
 <div>
 
-    <H4>Tx hash (block height): {{blk_hash}} ({{blk_height}})</H4>
+    <H4>Tx hash (block height): {{tx_hash}} ({{blk_height}})</H4>
 
 
     {{#have_prev_hash}}
-    <H5>Previous block: <a href="/block/{{prev_hash}}">{{prev_hash}}</a></H5>
+    <H5>Previous tx: <a href="/tx/{{prev_hash}}">{{prev_hash}}</a></H5>
     {{/have_prev_hash}}
 
     {{#have_next_hash}}
-    <H5>Next block: <a href="/block/{{next_hash}}">{{next_hash}}</a></H5>
+    <H5>Next tx: <a href="/tx/{{next_hash}}">{{next_hash}}</a></H5>
     {{/have_next_hash}}
 
 
@@ -32,7 +32,7 @@
         </tr>
     </table>
 
-    <h3>Miner reward transaction</h3>
+    <h3>Inputs {{inputs_no}}</h3>
     <table class="center">
         <tr>
             <td>hash</td>
@@ -53,7 +53,7 @@
 
 
 
-    <h3>Transactions ({{no_txs}})</h3>
+    <h3>Outputs ({{outputs_no}})</h3>
     {{#have_txs}}
         <table class="center" style="width:80%">
             <tr>
