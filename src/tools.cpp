@@ -527,7 +527,7 @@ namespace xmreg
                       std::istreambuf_iterator<char>());
     }
 
-    string
+    pair<string, double>
     timestamps_time_scale(const vector<uint64_t>& timestamps,
                           uint64_t timeN, uint64_t resolution, uint64_t time0)
     {
@@ -553,7 +553,7 @@ namespace xmreg
             empty_time[timestamp_place + 1] = '*';
         }
 
-        return empty_time;
+        return make_pair(empty_time, scale);
     }
 
 

@@ -199,7 +199,7 @@ namespace xmreg
         std::cout << "]" << std::endl;
     }
 
-    string
+    pair<string, double>
     timestamps_time_scale(const vector<uint64_t>& timestamps,
                       uint64_t timeN, uint64_t resolution = 80,
                       uint64_t time0 = 1397818193 /* timestamp of the second block */);

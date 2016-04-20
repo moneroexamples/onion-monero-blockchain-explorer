@@ -582,6 +582,7 @@ namespace xmreg {
             mstch::array inputs = mstch::array{};
 
             mstch::array mixins_timescales;
+            double timescale_scale {0.0}; // size of one '_' in days
 
             // make timescale maps for mixins in input
             for (const txin_to_key& in_key: txd.input_key_imgs)
@@ -651,19 +652,25 @@ namespace xmreg {
                 }
 
                 // get mixins in time scale for visual representation
-                string mixin_times_scale = xmreg::timestamps_time_scale(mixin_timestamps,
-                                                                        server_timestamp, 80);
+                pair<string, double> mixin_times_scale = xmreg::timestamps_time_scale(
+                                                            mixin_timestamps,
+                                                            server_timestamp, 100);
+
                 // add beginning and end to the mixin_times_scale
                 string timescale_str = string("Genesis<")
-                                       + mixin_times_scale
+                                       + mixin_times_scale.first
                                        + string(">") + server_time_str;
+
+                timescale_scale = mixin_times_scale.second ;
 
                 // save the string timescales for later to show
                 mixins_timescales.push_back(mstch::map {{"timescale", timescale_str}});
             }
 
-            context["inputs"]     = inputs;
-            context["timescales"] = mixins_timescales;
+            context["inputs"]           = inputs;
+            context["timescales"]       = mixins_timescales;
+            context["timescales_scale"] = fmt::format("{:0.2f}",
+                                                timescale_scale / 3600.0 / 24.0); // in days
 
             mstch::array outputs;
 
