@@ -615,7 +615,13 @@ namespace xmreg {
                 // for each found output public key find its block to get timestamp
                 for (const uint64_t &i: absolute_offsets)
                 {
+                    // get basic information about mixn's output
                     cryptonote::output_data_t output_data = outputs.at(count);
+
+                    // get pair pair<crypto::hash, uint64_t> where first is tx hash
+                    // and second is local index of the output i in that tx
+                    tx_out_index tx_out_idx =
+                            core_storage->get_db().get_output_tx_and_index(in_key.amount, i);
 
                     // get block of given height, as we want to get its timestamp
                     cryptonote::block blk;
@@ -629,7 +635,11 @@ namespace xmreg {
                     pair<string, string> mixin_age = get_age(server_timestamp, blk.timestamp);
 
                     mixins.push_back(mstch::map {
-                            {"mix_timestamp"  , blk.timestamp},
+                            {"mix_blk"        , fmt::format("{:d}", output_data.height)},
+                            {"mix_pub_key"    , fmt::format("{:s}", output_data.pubkey)},
+                            {"mix_tx_hash"    , fmt::format("{:s}", tx_out_idx.first)},
+                            {"mix_out_indx"   , fmt::format("{:d}", tx_out_idx.second)},
+                            {"mix_timestamp"  , xmreg::timestamp_to_str(blk.timestamp)},
                             {"mix_age"        , mixin_age.first},
                             {"mix_age_format" , mixin_age.second}
                     });
@@ -654,6 +664,19 @@ namespace xmreg {
 
             context["inputs"]     = inputs;
             context["timescales"] = mixins_timescales;
+
+            mstch::array outputs;
+
+            for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
+            {
+                outputs.push_back(mstch::map {
+                      {"out_pub_key"   , fmt::format("{:s}", outp.first.key)},
+                      {"amount"        , fmt::format("{:0.4f}", XMR_AMOUNT(outp.second))}
+                });
+            }
+
+            context["outputs"] = outputs;
+
 
             // read tx.html
             string tx_html = xmreg::read(TMPL_TX);
