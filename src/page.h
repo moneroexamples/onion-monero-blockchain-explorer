@@ -604,7 +604,7 @@ namespace xmreg {
 
 
                 inputs.push_back(mstch::map {
-                    {"in_key_img", fmt::format("{:s}", in_key.k_image)},
+                    {"in_key_img", REMOVE_HASH_BRAKETS(fmt::format("{:s}", in_key.k_image))},
                     {"amount"    , fmt::format("{:0.3f}", XMR_AMOUNT(in_key.amount))},
                     {"mixins"    , mstch::array{}}
                 });
@@ -637,8 +637,8 @@ namespace xmreg {
 
                     mixins.push_back(mstch::map {
                             {"mix_blk"        , fmt::format("{:d}", output_data.height)},
-                            {"mix_pub_key"    , fmt::format("{:s}", output_data.pubkey)},
-                            {"mix_tx_hash"    , fmt::format("{:s}", tx_out_idx.first)},
+                            {"mix_pub_key"    , REMOVE_HASH_BRAKETS(fmt::format("{:s}", output_data.pubkey))},
+                            {"mix_tx_hash"    , REMOVE_HASH_BRAKETS(fmt::format("{:s}", tx_out_idx.first))},
                             {"mix_out_indx"   , fmt::format("{:d}", tx_out_idx.second)},
                             {"mix_timestamp"  , xmreg::timestamp_to_str(blk.timestamp)},
                             {"mix_age"        , mixin_age.first},
@@ -677,7 +677,7 @@ namespace xmreg {
             for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
             {
                 outputs.push_back(mstch::map {
-                      {"out_pub_key"   , fmt::format("{:s}", outp.first.key)},
+                      {"out_pub_key"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", outp.first.key))},
                       {"amount"        , fmt::format("{:0.4f}", XMR_AMOUNT(outp.second))}
                 });
             }
