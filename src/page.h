@@ -578,7 +578,9 @@ namespace xmreg {
 
             string server_time_str = xmreg::timestamp_to_str(server_timestamp, "%F");
 
-            mstch::array inputs;
+
+            mstch::array inputs = mstch::array{};
+
             mstch::array mixins_timescales;
 
             // make timescale maps for mixins in input
@@ -599,10 +601,16 @@ namespace xmreg {
 
                 size_t count = 0;
 
-                inputs.push_back{mstch::map {
+
+                inputs.push_back(mstch::map {
                     {"in_key_img", fmt::format("{:s}", in_key.k_image)},
-                    {"in_amount",   amount}
-                };
+                    {"amount"    , fmt::format("{:0.3f}", XMR_AMOUNT(in_key.amount))},
+                    {"mixins"    , mstch::array{}}
+                });
+
+                // get reference to mixins array created above
+                mstch::array& mixins = boost::get<mstch::array>(
+                            boost::get<mstch::map>(inputs.back())["mixins"]);
 
                 // for each found output public key find its block to get timestamp
                 for (const uint64_t &i: absolute_offsets)
@@ -617,6 +625,14 @@ namespace xmreg {
                         cerr << "- cant get block of height: " << output_data.height << endl;
                         return fmt::format("- cant get block of height: {}\n", output_data.height);
                     }
+
+                    pair<string, string> mixin_age = get_age(server_timestamp, blk.timestamp);
+
+                    mixins.push_back(mstch::map {
+                            {"mix_timestamp"  , blk.timestamp},
+                            {"mix_age"        , mixin_age.first},
+                            {"mix_age_format" , mixin_age.second}
+                    });
 
                     // get mixin timestamp from its orginal block
                     mixin_timestamps.push_back(blk.timestamp);

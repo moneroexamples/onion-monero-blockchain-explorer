@@ -35,19 +35,15 @@
     <h3>Inputs {{inputs_no}}</h3>
     <table class="center">
         <tr>
-            <td>hash</td>
-            <td>outputs</td>
-            <td>size [kB]</td>
-            <td>version</td>
+            <td>key image</td>
+            <td>amount</td>
         </tr>
-        {{#coinbase_txs}}
+        {{#inputs}}
             <tr>
-                <td>{{hash}}</td>
-                <td>{{sum_outputs}}</td>
-                <td>{{tx_size}}</td>
-                <td>{{version}}</td>
+                <td>{{in_key_img}}</td>
+                <td>{{amount}}</td>
             </tr>
-        {{/coinbase_txs}}
+        {{/inputs}}
 
     </table>
 
