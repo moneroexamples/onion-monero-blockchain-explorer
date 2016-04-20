@@ -456,6 +456,9 @@ namespace xmreg {
             // get reference to blocks template map to be field below
             mstch::array& txs = boost::get<mstch::array>(context["blk_txs"]);
 
+            // timescale representation for each tx in the block
+            vector<string> mixin_timescales_str;
+
             // for each transaction in the memory pool
             for (size_t i = 0; i < blk.tx_hashes.size(); ++i)
             {
@@ -479,6 +482,12 @@ namespace xmreg {
 
                 // add fee to the rest
                 sum_fees += txd.fee;
+
+
+                // get mixins in time scale for visual representation
+                //string mixin_times_scale = xmreg::timestamps_time_scale(mixin_timestamps,
+                //                                                        server_timestamp);
+
 
                 // add tx details mstch map to context
                 txs.push_back(txd.get_mstch_map());
@@ -536,16 +545,99 @@ namespace xmreg {
         }
 
         string
-        show_tx(string _tx_hash)
+        show_tx(string tx_hash_str)
         {
+
+            // parse tx hash string to hash object
+            crypto::hash tx_hash;
+
+            if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+            {
+                cerr << "Cant parse tx hash: " << tx_hash_str << endl;
+                return string("Cant parse tx hash: " + tx_hash_str);
+            }
+
+            // get transaction
+            transaction tx;
+
+            if (!mcore->get_tx(tx_hash, tx))
+            {
+                cerr << "Cant get tx: " << tx_hash << endl;
+                return string("Cant get tx: " + tx_hash_str);
+            }
+
+            tx_details txd = get_tx_details(tx);
 
             uint64_t _blk_height {0};
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
-                    {"tx_hash"        , _tx_hash},
+                    {"tx_hash"        , tx_hash_str},
                     {"blk_height"     , _blk_height}
             };
+
+            string server_time_str = xmreg::timestamp_to_str(server_timestamp, "%F");
+
+            mstch::array inputs;
+            mstch::array mixins_timescales;
+
+            // make timescale maps for mixins in input
+            for (const txin_to_key& in_key: txd.input_key_imgs)
+            {
+                // get absolute offsets of mixins
+                std::vector<uint64_t> absolute_offsets
+                        = cryptonote::relative_output_offsets_to_absolute(
+                                in_key.key_offsets);
+
+                // get public keys of outputs used in the mixins that match to the offests
+                std::vector<cryptonote::output_data_t> outputs;
+                core_storage->get_db().get_output_key(in_key.amount,
+                                                      absolute_offsets,
+                                                      outputs);
+
+                vector<uint64_t> mixin_timestamps;
+
+                size_t count = 0;
+
+                inputs.push_back{mstch::map {
+                    {"in_key_img", fmt::format("{:s}", in_key.k_image)},
+                    {"in_amount",   amount}
+                };
+
+                // for each found output public key find its block to get timestamp
+                for (const uint64_t &i: absolute_offsets)
+                {
+                    cryptonote::output_data_t output_data = outputs.at(count);
+
+                    // get block of given height, as we want to get its timestamp
+                    cryptonote::block blk;
+
+                    if (!mcore->get_block_by_height(output_data.height, blk))
+                    {
+                        cerr << "- cant get block of height: " << output_data.height << endl;
+                        return fmt::format("- cant get block of height: {}\n", output_data.height);
+                    }
+
+                    // get mixin timestamp from its orginal block
+                    mixin_timestamps.push_back(blk.timestamp);
+
+                    ++count;
+                }
+
+                // get mixins in time scale for visual representation
+                string mixin_times_scale = xmreg::timestamps_time_scale(mixin_timestamps,
+                                                                        server_timestamp, 80);
+                // add beginning and end to the mixin_times_scale
+                string timescale_str = string("Genesis<")
+                                       + mixin_times_scale
+                                       + string(">") + server_time_str;
+
+                // save the string timescales for later to show
+                mixins_timescales.push_back(mstch::map {{"timescale", timescale_str}});
+            }
+
+            context["inputs"]     = inputs;
+            context["timescales"] = mixins_timescales;
 
             // read tx.html
             string tx_html = xmreg::read(TMPL_TX);
@@ -600,43 +692,6 @@ namespace xmreg {
 
             return txd;
         }
-
-        string
-        mixins_time_scale(const vector<uint64_t>& timestamps)
-        {
-            string empty_time = string("___________________________________")
-                                + string("___________________________________")
-                                + string("___________________________________")
-                                + string("___________________________________");
-
-            size_t time_axis_length = empty_time.size();
-
-            cout << "time_axis_length: " << time_axis_length << endl;
-
-            uint64_t time0 = 10;
-            uint64_t timeN = 30;
-
-            uint64_t interval_length = timeN-time0;
-
-            double scale = double(interval_length) / double(time_axis_length);
-
-            for (const auto& timestamp: timestamps)
-            {
-
-                if (timestamp < time0 || timestamp > timeN)
-                {
-                    cout << "Out of range" << endl;
-                    continue;
-                }
-
-                uint64_t timestamp_place = double(timestamp-time0)/double(interval_length)*(time_axis_length-1);
-                //cout << timestamp_place << endl;
-                empty_time[timestamp_place] = '*';
-            }
-
-            return string("Genesis ") + empty_time + string(" Now");
-        }
-
 
         pair<string, string>
         get_age(uint64_t timestamp1, uint64_t timestamp2)
