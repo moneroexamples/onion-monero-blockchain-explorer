@@ -656,8 +656,8 @@ namespace xmreg {
                                                             mixin_timestamps,
                                                             server_timestamp, 165);
 
-                // add beginning and end to the mixin_times_scale
-                string timescale_str = mixin_times_scale.first;
+                // save resolution of mixin timescales
+                timescale_scale = mixin_times_scale.second;
 
                 // save the string timescales for later to show
                 mixins_timescales.push_back(mstch::map {
