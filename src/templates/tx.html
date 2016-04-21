@@ -33,6 +33,34 @@
     </table>
 
 
+  <h3>Outputs</h3>
+  <div class="center">
+      <table class="center" >
+          <tr>
+              <td>out_pub_key</td>
+              <td>amount</td>
+          </tr>
+          {{#outputs}}
+          <tr>
+              <td>{{out_pub_key}}</td>
+              <td>{{amount}}</td>
+          </tr>
+          {{/outputs}}
+      </table>
+  </div>
+
+
+  <h3>Inputs' mixins time scale (from genesis till {{server_time}};
+    resolution: {{timescales_scale}} days)</h3>
+  <div class="center">
+    <ul class="center">
+      {{#timescales}}
+        <li  style="list-style-type: none; text-align: center; font-size: 8px">{{timescale}}</li>
+      {{/timescales}}
+    </ul>
+  </div>
+
+
   <h3>Inputs {{inputs_no}}</h3>
   <div class="center">
        <table class="center">
@@ -72,32 +100,5 @@
   </div>
 
 
-
-  <h3>Mixins time scale (resolution: {{timescales_scale}} days)</h3>
-  <h4>From Gensis till {{server_time}}</h4>
-  <div class="center">
-    <ul class="center">
-      {{#timescales}}
-        <li  style="list-style-type: none; text-align: center;">{{timescale}}</li>
-      {{/timescales}}
-    </ul>
-  </div>
-
-
-  <h3>Outputs</h3>
-  <div class="center">
-      <table class="center" >
-          <tr>
-              <td>out_pub_key</td>
-              <td>amount</td>
-          </tr>
-          {{#outputs}}
-          <tr>
-              <td>{{out_pub_key}}</td>
-              <td>{{amount}}</td>
-          </tr>
-          {{/outputs}}
-      </table>
-  </div>
 
 </div>

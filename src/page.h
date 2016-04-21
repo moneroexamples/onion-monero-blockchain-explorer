@@ -654,7 +654,7 @@ namespace xmreg {
                 // get mixins in time scale for visual representation
                 pair<string, double> mixin_times_scale = xmreg::timestamps_time_scale(
                                                             mixin_timestamps,
-                                                            server_timestamp, 130);
+                                                            server_timestamp, 160);
 
                 // add beginning and end to the mixin_times_scale
                 string timescale_str = string("|")
