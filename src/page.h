@@ -654,12 +654,12 @@ namespace xmreg {
                 // get mixins in time scale for visual representation
                 pair<string, double> mixin_times_scale = xmreg::timestamps_time_scale(
                                                             mixin_timestamps,
-                                                            server_timestamp, 100);
+                                                            server_timestamp, 140);
 
                 // add beginning and end to the mixin_times_scale
-                string timescale_str = string("Genesis<")
+                string timescale_str = string("|")
                                        + mixin_times_scale.first
-                                       + string(">") + server_time_str;
+                                       + string(">");
 
                 timescale_scale = mixin_times_scale.second ;
 
@@ -667,6 +667,7 @@ namespace xmreg {
                 mixins_timescales.push_back(mstch::map {{"timescale", timescale_str}});
             }
 
+            context["server_time"]      = server_time_str;
             context["inputs"]           = inputs;
             context["timescales"]       = mixins_timescales;
             context["timescales_scale"] = fmt::format("{:0.2f}",
