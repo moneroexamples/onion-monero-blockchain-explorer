@@ -773,7 +773,7 @@ namespace xmreg {
             // if have days or years, change age format
             if (delta_time[0] > 0 || full_format == true)
             {
-                age_str = fmt::format("{:02d}:{:02d}:{:02d}:{:02d}:{:02d}",
+                age_str = fmt::format("{:02d}:{:03d}:{:02d}:{:02d}:{:02d}",
                                       delta_time[0], delta_time[1], delta_time[2],
                                       delta_time[3], delta_time[4]);
 
