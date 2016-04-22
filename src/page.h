@@ -570,24 +570,46 @@ namespace xmreg {
 
             tx_details txd = get_tx_details(tx);
 
-            uint64_t _blk_height {0};
+            uint64_t tx_blk_height {0};
+
+            bool tx_blk_found {false};
+
+            try
+            {
+                tx_blk_height = core_storage->get_db().get_tx_block_height(tx_hash);
+                tx_blk_found = true;
+            }
+            catch (BLOCK_DNE & e)
+            {
+                cerr << "Cant get block height: " << tx_hash << endl;
+            }
+
+
+            // get block cointaining this tx
+            block blk;
+
+            if (!mcore->get_block_by_height(tx_blk_height, blk))
+            {
+                cerr << "Cant get block: " << tx_blk_height << endl;
+            }
+
+            cout << "tx_blk_height: " << tx_blk_height << endl;
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"tx_hash"        , tx_hash_str},
-                    {"blk_height"     , _blk_height},
+                    {"blk_height"     , tx_blk_height},
                     {"inputs_no"      , txd.input_key_imgs.size()},
                     {"outputs_no"     , txd.output_pub_keys.size()}
             };
 
-            string server_time_str = xmreg::timestamp_to_str(server_timestamp, "%F");
-
+            string server_time_str = xmreg::timestamp_to_str(server_timestamp,
+                                                                    "%F");
 
             mstch::array inputs = mstch::array{};
 
             mstch::array mixins_timescales;
             double timescale_scale {0.0}; // size of one '_' in days
-
 
             uint64_t input_idx {0};
 
@@ -606,8 +628,6 @@ namespace xmreg {
                                                       outputs);
 
                 vector<uint64_t> mixin_timestamps;
-
-
 
                 inputs.push_back(mstch::map {
                     {"in_key_img", REMOVE_HASH_BRAKETS(fmt::format("{:s}", in_key.k_image))},
@@ -639,28 +659,45 @@ namespace xmreg {
                     if (!mcore->get_block_by_height(output_data.height, blk))
                     {
                         cerr << "- cant get block of height: " << output_data.height << endl;
-                        return fmt::format("- cant get block of height: {}\n", output_data.height);
+                        return fmt::format("- cant get block of height: {}", output_data.height);
                     }
 
+                    // get age of mixin relative to server time
                     pair<string, string> mixin_age = get_age(server_timestamp,
                                                              blk.timestamp,
                                                              FULL_AGE_FORMAT);
+                     // get mixin transaction
+                     transaction mixin_tx;
 
-                    mixins.push_back(mstch::map {
+                     if (!mcore->get_tx(tx_out_idx.first, mixin_tx))
+                     {
+                         cerr << "Cant get tx: " << tx_out_idx.first << endl;
+                         return fmt::format("Cant get tx: {:s}", tx_out_idx.first);
+                     }
+
+                     // mixin tx details
+                     tx_details mixin_txd = get_tx_details(mixin_tx, true);
+
+                     mixins.push_back(mstch::map {
                             {"mix_blk"        , fmt::format("{:08d}", output_data.height)},
-                            {"mix_pub_key"    , REMOVE_HASH_BRAKETS(fmt::format("{:s}", output_data.pubkey))},
-                            {"mix_tx_hash"    , REMOVE_HASH_BRAKETS(fmt::format("{:s}", tx_out_idx.first))},
+                            {"mix_pub_key"    , REMOVE_HASH_BRAKETS(fmt::format("{:s}",
+                                                    output_data.pubkey))},
+                            {"mix_tx_hash"    , REMOVE_HASH_BRAKETS(fmt::format("{:s}",
+                                                    tx_out_idx.first))},
                             {"mix_out_indx"   , fmt::format("{:d}", tx_out_idx.second)},
                             {"mix_timestamp"  , xmreg::timestamp_to_str(blk.timestamp)},
                             {"mix_age"        , mixin_age.first},
+                            {"mix_mixin_no"   , mixin_txd.mixin_no},
+                            {"mix_inputs_no"  , mixin_txd.input_key_imgs.size()},
+                            {"mix_outputs_no" , mixin_txd.output_pub_keys.size()},
                             {"mix_age_format" , mixin_age.second},
                             {"mix_idx"        , fmt::format("{:02d}", count)},
-                    });
+                     });
 
-                    // get mixin timestamp from its orginal block
-                    mixin_timestamps.push_back(blk.timestamp);
+                     // get mixin timestamp from its orginal block
+                     mixin_timestamps.push_back(blk.timestamp);
 
-                    ++count;
+                     ++count;
                 }
 
                 // get mixins in time scale for visual representation
