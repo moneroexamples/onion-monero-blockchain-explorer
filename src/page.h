@@ -88,6 +88,8 @@ namespace xmreg {
 
     class page {
 
+        static const bool FULL_AGE_FORMAT {true};
+
         MicroCore* mcore;
         Blockchain* core_storage;
         rpccalls rpc;
@@ -609,7 +611,7 @@ namespace xmreg {
 
                 inputs.push_back(mstch::map {
                     {"in_key_img", REMOVE_HASH_BRAKETS(fmt::format("{:s}", in_key.k_image))},
-                    {"amount"    , fmt::format("{:0.8f}", XMR_AMOUNT(in_key.amount))},
+                    {"amount"    , fmt::format("{:0.12f}", XMR_AMOUNT(in_key.amount))},
                     {"input_idx" , fmt::format("{:02d}", input_idx++)},
                     {"mixins"    , mstch::array{}},
                 });
@@ -640,17 +642,19 @@ namespace xmreg {
                         return fmt::format("- cant get block of height: {}\n", output_data.height);
                     }
 
-                    pair<string, string> mixin_age = get_age(server_timestamp, blk.timestamp);
+                    pair<string, string> mixin_age = get_age(server_timestamp,
+                                                             blk.timestamp,
+                                                             FULL_AGE_FORMAT);
 
                     mixins.push_back(mstch::map {
-                            {"mix_blk"        , fmt::format("{:d}", output_data.height)},
+                            {"mix_blk"        , fmt::format("{:08d}", output_data.height)},
                             {"mix_pub_key"    , REMOVE_HASH_BRAKETS(fmt::format("{:s}", output_data.pubkey))},
                             {"mix_tx_hash"    , REMOVE_HASH_BRAKETS(fmt::format("{:s}", tx_out_idx.first))},
                             {"mix_out_indx"   , fmt::format("{:d}", tx_out_idx.second)},
                             {"mix_timestamp"  , xmreg::timestamp_to_str(blk.timestamp)},
                             {"mix_age"        , mixin_age.first},
                             {"mix_age_format" , mixin_age.second},
-                            {"mix_idx" , fmt::format("{:02d}", count)},
+                            {"mix_idx"        , fmt::format("{:02d}", count)},
                     });
 
                     // get mixin timestamp from its orginal block
@@ -687,7 +691,7 @@ namespace xmreg {
             {
                 outputs.push_back(mstch::map {
                       {"out_pub_key"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", outp.first.key))},
-                      {"amount"        , fmt::format("{:0.8f}", XMR_AMOUNT(outp.second))},
+                      {"amount"        , fmt::format("{:0.12f}", XMR_AMOUNT(outp.second))},
                       {"output_idx"    , fmt::format("{:02d}", output_idx++)}
                 });
             }
@@ -750,9 +754,8 @@ namespace xmreg {
         }
 
         pair<string, string>
-        get_age(uint64_t timestamp1, uint64_t timestamp2)
+        get_age(uint64_t timestamp1, uint64_t timestamp2, bool full_format = 0)
         {
-
 
             pair<string, string> age_pair;
 
@@ -768,7 +771,7 @@ namespace xmreg {
             string age_format {"[h:m:s]"};
 
             // if have days or years, change age format
-            if (delta_time[0] > 0)
+            if (delta_time[0] > 0 || full_format == true)
             {
                 age_str = fmt::format("{:02d}:{:02d}:{:02d}:{:02d}:{:02d}",
                                       delta_time[0], delta_time[1], delta_time[2],
