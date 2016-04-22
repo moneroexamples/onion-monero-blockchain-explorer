@@ -33,7 +33,7 @@
     </table>
 
 
-  <h3>Outputs</h3>
+  <h3>Outputs ({{outputs_no}})</h3>
   <div class="center">
       <table class="center" >
           <tr>
@@ -42,7 +42,7 @@
           </tr>
           {{#outputs}}
           <tr>
-              <td>{{out_pub_key}}</td>
+              <td>{{output_idx}}: {{out_pub_key}}</td>
               <td>{{amount}}</td>
           </tr>
           {{/outputs}}
@@ -61,31 +61,29 @@
   </div>
 
 
-  <h3>Inputs {{inputs_no}}</h3>
+  <h3>Inputs ({{inputs_no}})</h3>
   <div class="center">
        <table class="center">
-          <tr>
-              <td>key image</td>
-              <td>amount</td>
-          </tr>
-
       {{#inputs}}
         <tr>
-          <td>{{in_key_img}}</td>
-          <td>{{amount}}</td>
+          <td style="text-align: left;">key image  {{input_idx}}: {{in_key_img}}</td>
+          <td>amount: {{amount}}</td>
        </tr>
           <tr>
             <td colspan="2">
-                <table style="width:100%">
+                <table style="width:100%; margin-bottom:20px">
                 <tr>
-                <td>pub_key</td>
-                <td>blk</td>
-                <td>timestamp</td>
-                <td>age</td>
+                  <td>Mixin public key</td>
+                  <td>blk</td>
+                  <td>timestamp</td>
+                  <td>age</td>
                 </tr>
              {{#mixins}}
                 <tr>
-                  <td><a href="/tx/{{mix_tx_hash}}">{{mix_pub_key}}</a></td> <td>{{mix_blk}}</td> <td>{{mix_timestamp}}</td><td>{{mix_age}}</td>
+                  <td> - {{mix_idx}}: <a href="/tx/{{mix_tx_hash}}">{{mix_pub_key}}</a></td> 
+                  <td>{{mix_blk}}</td> 
+                  <td>{{mix_timestamp}}</td>
+                  <td>{{mix_age}}</td>
                 </tr>
               <!--  <tr>
                   <td>{{mix_tx_hash}}</td> <td>{{mix_out_indx}}</td><td></td><td></td>

@@ -573,7 +573,9 @@ namespace xmreg {
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"tx_hash"        , tx_hash_str},
-                    {"blk_height"     , _blk_height}
+                    {"blk_height"     , _blk_height},
+                    {"inputs_no"      , txd.input_key_imgs.size()},
+                    {"outputs_no"     , txd.output_pub_keys.size()}
             };
 
             string server_time_str = xmreg::timestamp_to_str(server_timestamp, "%F");
@@ -583,6 +585,9 @@ namespace xmreg {
 
             mstch::array mixins_timescales;
             double timescale_scale {0.0}; // size of one '_' in days
+
+
+            uint64_t input_idx {0};
 
             // make timescale maps for mixins in input
             for (const txin_to_key& in_key: txd.input_key_imgs)
@@ -600,18 +605,20 @@ namespace xmreg {
 
                 vector<uint64_t> mixin_timestamps;
 
-                size_t count = 0;
 
 
                 inputs.push_back(mstch::map {
                     {"in_key_img", REMOVE_HASH_BRAKETS(fmt::format("{:s}", in_key.k_image))},
-                    {"amount"    , fmt::format("{:0.3f}", XMR_AMOUNT(in_key.amount))},
-                    {"mixins"    , mstch::array{}}
+                    {"amount"    , fmt::format("{:0.8f}", XMR_AMOUNT(in_key.amount))},
+                    {"input_idx" , fmt::format("{:02d}", input_idx++)},
+                    {"mixins"    , mstch::array{}},
                 });
 
                 // get reference to mixins array created above
                 mstch::array& mixins = boost::get<mstch::array>(
                             boost::get<mstch::map>(inputs.back())["mixins"]);
+
+                size_t count = 0;
 
                 // for each found output public key find its block to get timestamp
                 for (const uint64_t &i: absolute_offsets)
@@ -642,7 +649,8 @@ namespace xmreg {
                             {"mix_out_indx"   , fmt::format("{:d}", tx_out_idx.second)},
                             {"mix_timestamp"  , xmreg::timestamp_to_str(blk.timestamp)},
                             {"mix_age"        , mixin_age.first},
-                            {"mix_age_format" , mixin_age.second}
+                            {"mix_age_format" , mixin_age.second},
+                            {"mix_idx" , fmt::format("{:02d}", count)},
                     });
 
                     // get mixin timestamp from its orginal block
@@ -670,13 +678,17 @@ namespace xmreg {
             context["timescales_scale"] = fmt::format("{:0.2f}",
                                                 timescale_scale / 3600.0 / 24.0); // in days
 
+
+            uint64_t output_idx {0};
+
             mstch::array outputs;
 
             for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
             {
                 outputs.push_back(mstch::map {
                       {"out_pub_key"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", outp.first.key))},
-                      {"amount"        , fmt::format("{:0.4f}", XMR_AMOUNT(outp.second))}
+                      {"amount"        , fmt::format("{:0.8f}", XMR_AMOUNT(outp.second))},
+                      {"output_idx"    , fmt::format("{:02d}", output_idx++)}
                 });
             }
 
