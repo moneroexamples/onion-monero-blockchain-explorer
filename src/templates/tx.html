@@ -1,7 +1,8 @@
 
 <div>
 
-    <H4>Tx hash (block height): {{tx_hash}} ({{blk_height}})</H4>
+    <H4>Tx hash: {{tx_hash}}</H4>
+    <H3>Tx public key: {{tx_pub_key}}</H3>
 
 
     {{#have_prev_hash}}
@@ -14,22 +15,14 @@
 
 
 
-    <table class="center">
+    <table class="center" style="width: 80%">
         <tr>
-            <td>Timestamp [UCT]:</td><td>{{blk_timestamp}}</td>
-            <td>Age {{age_format}}:</td><td>{{blk_age}}</td>
-            <td>Δ [h:m:s]:</td><td>{{delta_time}}</td>
-        </tr>
-        <tr>
-            <td>Major.minor version:</td><td>{{major_ver}}.{{minor_ver}}</td>
-            <td>Block reward:</td><td>{{blk_reward}}</td>
-            <td>Block size [kB]:</td><td>{{blk_size}}</td>
-        </tr>
-        <tr>
-            <td>nonce:</td><td>{{blk_nonce}}</td>
-            <td>Total fees:</td><td>{{sum_fees}}</td>
-            <td>No of txs:</td><td>{{no_txs}}</td>
-        </tr>
+            <td>Block: {{blk_height}}</td>
+            <td>Timestamp [UCT]: {{blk_timestamp}}</td>
+            <td>Age [y:d:h:m:s]: {{delta_time}}</td>
+            <td>Fee: {{tx_fee}}</td>
+            <td>Tx size: {{tx_size}} kB</td>
+        </tr>        
     </table>
 
 
@@ -37,7 +30,7 @@
   <div class="center">
       <table class="center" >
           <tr>
-              <td>out_pub_key</td>
+              <td>Outputs public keys</td>
               <td>amount</td>
           </tr>
           {{#outputs}}
@@ -89,14 +82,29 @@
                   <td>{{mix_timestamp}}</td>
                   <td>{{mix_age}}</td>
                 </tr>
-              <!--  <tr>
-                  <td>{{mix_tx_hash}}</td> <td>{{mix_out_indx}}</td><td></td><td></td>
-                </tr>-->
-
              {{/mixins}}
              </table>
            </td>
          </tr>
+
+
+          <tr>
+            <td colspan="2">
+                <table style="width:100%; margin-bottom:20px">
+                <tr>
+                  <td>Ring signature</td>
+                </tr>
+                {{#ring_sigs}}
+                <tr>
+                    <td>{{ring_sig}}</td>
+                </tr>
+                {{/ring_sigs}}
+             </table>
+           </td>
+         </tr>
+
+
+
       {{/inputs}}
       </table>
   </div>

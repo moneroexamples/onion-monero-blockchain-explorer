@@ -55,6 +55,8 @@ namespace xmreg {
         size_t version;
         uint64_t unlock_time;
 
+        std::vector<std::vector<crypto::signature> > signatures;
+
         // key images of inputs
         vector<txin_to_key> input_key_imgs;
 
@@ -70,20 +72,53 @@ namespace xmreg {
 
             string tx_pk_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", pk));
 
-            return mstch::map {
-                    {"hash"          , tx_hash_str},
-                    {"pub_key"       , tx_pk_str},
-                    {"tx_fee"        , fmt::format("{:0.6f}", XMR_AMOUNT(fee))},
-                    {"sum_inputs"    , fmt::format("{:0.6f}", XMR_AMOUNT(xmr_inputs))},
-                    {"sum_outputs"   , fmt::format("{:0.6f}", XMR_AMOUNT(xmr_outputs))},
-                    {"no_inputs"     , input_key_imgs.size()},
-                    {"no_outputs"    , output_pub_keys.size()},
-                    {"mixin"         , std::to_string(mixin_no - 1)},
-                    {"version"       , std::to_string(version)},
-                    {"unlock_time"   , std::to_string(unlock_time)},
-                    {"tx_size"       , fmt::format("{:0.4f}", static_cast<double>(size)/1024.0)}
+            mstch::map txd_map {
+                {"hash"          , tx_hash_str},
+                {"pub_key"       , tx_pk_str},
+                {"tx_fee"        , fmt::format("{:0.6f}", XMR_AMOUNT(fee))},
+                {"sum_inputs"    , fmt::format("{:0.6f}", XMR_AMOUNT(xmr_inputs))},
+                {"sum_outputs"   , fmt::format("{:0.6f}", XMR_AMOUNT(xmr_outputs))},
+                {"no_inputs"     , input_key_imgs.size()},
+                {"no_outputs"    , output_pub_keys.size()},
+                {"mixin"         , std::to_string(mixin_no - 1)},
+                {"version"       , std::to_string(version)},
+                {"unlock_time"   , std::to_string(unlock_time)},
+                {"tx_size"       , fmt::format("{:0.4f}", static_cast<double>(size)/1024.0)}
             };
+
+
+            return txd_map;
         }
+
+         mstch::array
+         get_ring_sig_for_input(uint64_t in_i)
+         {
+             mstch::array ring_sigs {};
+
+             if (in_i >= signatures.size())
+             {
+                 return ring_sigs;
+             }
+
+             for (const crypto::signature &sig: signatures.at(in_i))
+             {
+                 cout << print_sig(sig) << endl;
+                 ring_sigs.push_back(mstch::map{{"ring_sig", print_signature(sig)}});
+             }
+
+             return ring_sigs;
+         }
+
+         string
+         print_signature(const signature& sig)
+         {
+             stringstream ss;
+
+             ss << epee::string_tools::pod_to_hex(sig.c)
+                << epee::string_tools::pod_to_hex(sig.r);
+
+             return ss.str();
+         }
     };
 
     class page {
@@ -593,12 +628,22 @@ namespace xmreg {
                 cerr << "Cant get block: " << tx_blk_height << endl;
             }
 
-            cout << "tx_blk_height: " << tx_blk_height << endl;
+
+            // calculate difference between tx and server timestamps
+             pair<string, string> age = get_age(server_timestamp,
+                                                blk.timestamp, FULL_AGE_FORMAT);
+
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"tx_hash"        , tx_hash_str},
-                    {"blk_height"     , tx_blk_height},
+                    {"tx_pub_key"     , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
+                    {"blk_height"     , tx_blk_height},            
+                    {"tx_size"        , fmt::format("{:0.2f}",
+                                            static_cast<double>(txd.size) / 1024.0)},
+                    {"tx_fee"         , fmt::format("{:0.12f}", XMR_AMOUNT(txd.fee))},
+                    {"blk_timestamp"  , xmreg::timestamp_to_str(blk.timestamp)},
+                    {"delta_time"     , age.first},
                     {"inputs_no"      , txd.input_key_imgs.size()},
                     {"outputs_no"     , txd.output_pub_keys.size()}
             };
@@ -632,9 +677,12 @@ namespace xmreg {
                 inputs.push_back(mstch::map {
                     {"in_key_img", REMOVE_HASH_BRAKETS(fmt::format("{:s}", in_key.k_image))},
                     {"amount"    , fmt::format("{:0.12f}", XMR_AMOUNT(in_key.amount))},
-                    {"input_idx" , fmt::format("{:02d}", input_idx++)},
+                    {"input_idx" , fmt::format("{:02d}", input_idx)},
                     {"mixins"    , mstch::array{}},
+                    {"ring_sigs" , txd.get_ring_sig_for_input(input_idx)}
                 });
+
+
 
                 // get reference to mixins array created above
                 mstch::array& mixins = boost::get<mstch::array>(
@@ -698,7 +746,8 @@ namespace xmreg {
                      mixin_timestamps.push_back(blk.timestamp);
 
                      ++count;
-                }
+
+                } // for (const uint64_t &i: absolute_offsets)
 
                 // get mixins in time scale for visual representation
                 pair<string, double> mixin_times_scale = xmreg::timestamps_time_scale(
@@ -711,7 +760,9 @@ namespace xmreg {
                 // save the string timescales for later to show
                 mixins_timescales.push_back(mstch::map {
                     {"timescale", mixin_times_scale.first}});
-            }
+
+                input_idx++;
+            } // for (const txin_to_key& in_key: txd.input_key_imgs)
 
             context["server_time"]      = server_time_str;
             context["inputs"]           = inputs;
@@ -780,6 +831,8 @@ namespace xmreg {
             txd.input_key_imgs  = get_key_images(tx);
             txd.output_pub_keys = get_ouputs(tx);
 
+            // get tx signatures for each input
+            txd.signatures = tx.signatures;
 
             // get tx version
             txd.version = tx.version;
