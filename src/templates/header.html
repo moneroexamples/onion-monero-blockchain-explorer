@@ -62,6 +62,17 @@
         text-align: center;
        }
 
+        .style-1 input[type="text"] {
+          padding: 2px;
+          border: solid 1px #dcdcdc;
+          transition: box-shadow 0.3s, border 0.3s;
+        }
+        .style-1 input[type="text"]:focus,
+        .style-1 input[type="text"].focus {
+          border: solid 1px #707070;
+          box-shadow: 0 0 5px 1px #969696;
+        }
+
     </style>
 
 </head>
@@ -74,7 +85,7 @@
     </div>
 
     <div class="center">
-    <form action="/search" method="get" style="width:100%; margin-top:10px">
+    <form action="/search" method="get" style="width:100%; margin-top:10px" class="style-1">
       <input type="text" name="value" size="100">
       <input type="submit" value="Search">
     </form>
