@@ -868,16 +868,29 @@ namespace xmreg {
 
 
             // first check if searching for block of given height
-            if (search_text.size() < 12)
+            if (search_text.size() < 12)                                
             {
-                result_html = show_block(boost::lexical_cast<uint64_t>(search_text));
+                uint64_t blk_height;
 
-                // nasty check if output is "Cant get" as a sign of
-                // a not found tx. Later need to think of something better.
-                if (result_html.find("Cant get") == string::npos)
+                try
                 {
-                     return result_html;
+                    blk_height = boost::lexical_cast<uint64_t>(search_text);
+
+                    result_html = show_block(blk_height);
+
+                    // nasty check if output is "Cant get" as a sign of
+                    // a not found tx. Later need to think of something better.
+                    if (result_html.find("Cant get") == string::npos)
+                    {
+                         return result_html;
+                    }
+
                 }
+                catch(boost::bad_lexical_cast &e)
+                {
+                    cerr << search_text << " is not a number" << endl;
+                }
+
             }
 
             // second let try searching for tx
