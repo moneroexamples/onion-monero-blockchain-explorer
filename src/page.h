@@ -859,8 +859,10 @@ namespace xmreg {
         }
 
         string
-        search(const string& search_text)
+        search(string search_text)
         {
+            // remove white characters
+            boost::trim(search_text);
 
             string result_html {"No such thing found: " + search_text};
 
@@ -869,13 +871,13 @@ namespace xmreg {
             if (search_text.size() < 12)
             {
                 result_html = show_block(boost::lexical_cast<uint64_t>(search_text));
-            }
 
-            // nasty check if output is "Cant get" as a sign of
-            // a not found tx. Later need to think of something better.
-            if (result_html.find("Cant get") == string::npos)
-            {
-                 return result_html;
+                // nasty check if output is "Cant get" as a sign of
+                // a not found tx. Later need to think of something better.
+                if (result_html.find("Cant get") == string::npos)
+                {
+                     return result_html;
+                }
             }
 
             // second let try searching for tx
