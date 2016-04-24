@@ -56,6 +56,12 @@
             text-decoration: none;
             color: white;
         }
+
+       form {
+        display: inline-block;
+        text-align: center;
+       }
+
     </style>
 
 </head>
@@ -65,4 +71,11 @@
     <div class="center">
         <h1 class="center"><a href="/">Onion Monero Blockchain Explorer</a></h1>
         <h4 style="font-size: 15px; margin: 0px">(no javascript - no web analytics trackers - no images - open sourced)</h4>
+    </div>
+
+    <div class="center">
+    <form action="/search" method="get" style="width:100%; margin-top:10px">
+      <input type="text" name="value" size="100">
+      <input type="submit" value="Search">
+    </form>
     </div>

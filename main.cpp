@@ -94,6 +94,12 @@ int main(int ac, const char* av[]) {
         return xmrblocks.show_tx(tx_hash);
     });
 
+
+    CROW_ROUTE(app, "/search").methods("GET"_method)
+    ([&](const crow::request& req) {        
+        return xmrblocks.search(string(req.url_params.get("value")));
+    });
+
     CROW_ROUTE(app, "/autorefresh")
     ([&]() {
         uint64_t page_no {0};

@@ -431,7 +431,7 @@ namespace xmreg {
             if (!mcore->get_block_by_height(_blk_height, blk))
             {
                 cerr << "Cant get block: " << _blk_height << endl;
-                return fmt::format("Block of height {:d} not found!", _blk_height);
+                return fmt::format("Cant get block {:d}!", _blk_height);
             }
 
             // get block's hash
@@ -615,7 +615,7 @@ namespace xmreg {
             if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
             {
                 cerr << "Cant parse tx hash: " << tx_hash_str << endl;
-                return string("Cant parse tx hash: " + tx_hash_str);
+                return string("Cant get tx hash due to parse error: " + tx_hash_str);
             }
 
             // tx age
@@ -628,7 +628,7 @@ namespace xmreg {
 
             if (!mcore->get_tx(tx_hash, tx))
             {
-                cerr << "Cant find tx ib blockchain: " << tx_hash
+                cerr << "Cant get tx in blockchain: " << tx_hash
                      << ". Check mempool now" << endl;
 
                 vector<pair<tx_info, transaction>> found_txs
@@ -653,7 +653,7 @@ namespace xmreg {
                 else
                 {
                     // tx is nowhere to be found :-(
-                    return string("Cant find tx: " + tx_hash_str);
+                    return string("Cant get tx: " + tx_hash_str);
                 }
             }
 
@@ -858,6 +858,30 @@ namespace xmreg {
             return mstch::render(full_page, context);
         }
 
+        string
+        search(const string& search_text)
+        {
+            // first let try searching for tx
+            // parse tx hash string to hash object
+            string result_html = show_tx(search_text);
+
+            // nasty check if output is "Cant get" as a sign of
+            // a not found tx. Later need to think of something better.
+            if (result_html.find("Cant get") == std::string::npos) {
+                 return result_html;
+            }
+
+            // if tx search not successful, check if we are looking for block
+            result_html = show_block(search_text);
+
+            if (result_html.find("Cant get") == std::string::npos) {
+                 return result_html;
+            }
+
+
+            return "No such thing found: " + search_text;
+        }
+
 
     private:
 
@@ -947,7 +971,7 @@ namespace xmreg {
                     if (!parse_and_validate_tx_from_blob(
                             tx_blob, tx))
                     {
-                        cerr << "Cant parse tx from blob" << endl;
+                        cerr << "Cant get tx from blob" << endl;
                         continue;
                     }
 
