@@ -887,8 +887,8 @@ namespace xmreg {
 
                 }
                 catch(boost::bad_lexical_cast &e)
-                {
-                    cerr << search_text << " is not a number" << endl;
+                {                    
+                    return result_html;
                 }
 
             }
