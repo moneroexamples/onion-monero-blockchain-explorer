@@ -861,25 +861,44 @@ namespace xmreg {
         string
         search(const string& search_text)
         {
-            // first let try searching for tx
-            // parse tx hash string to hash object
-            string result_html = show_tx(search_text);
+
+            string result_html {"No such thing found: " + search_text};
+
+
+            // first check if searching for block of given height
+            if (search_text.size() < 12)
+            {
+                result_html = show_block(boost::lexical_cast<uint64_t>(search_text));
+            }
 
             // nasty check if output is "Cant get" as a sign of
             // a not found tx. Later need to think of something better.
-            if (result_html.find("Cant get") == std::string::npos) {
+            if (result_html.find("Cant get") == string::npos)
+            {
                  return result_html;
             }
 
-            // if tx search not successful, check if we are looking for block
+            // second let try searching for tx
+            result_html = show_tx(search_text);
+
+            // nasty check if output is "Cant get" as a sign of
+            // a not found tx. Later need to think of something better.
+            if (result_html.find("Cant get") == string::npos)
+            {
+                 return result_html;
+            }
+
+            // if tx search not successful, check if we are looking
+            // for a block with given hash
             result_html = show_block(search_text);
 
-            if (result_html.find("Cant get") == std::string::npos) {
+            if (result_html.find("Cant get") == string::npos)
+            {
                  return result_html;
             }
 
 
-            return "No such thing found: " + search_text;
+            return result_html;
         }
 
 
