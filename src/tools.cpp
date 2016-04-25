@@ -446,6 +446,41 @@ namespace xmreg
         return key_images;
     }
 
+    bool
+    get_payment_id(const transaction& tx,
+                   crypto::hash& payment_id,
+                   crypto::hash8& payment_id8)
+    {
+
+        payment_id = null_hash;
+        payment_id8 = null_hash8;
+
+        std::vector<tx_extra_field> tx_extra_fields;
+
+        if(!parse_tx_extra(tx.extra, tx_extra_fields))
+        {
+            return false;
+        }
+
+        tx_extra_nonce extra_nonce;
+
+        if (find_tx_extra_field_by_type(tx_extra_fields, extra_nonce))
+        {
+            // first check for encripted id and then for normal one
+            if(get_encrypted_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id8))
+            {
+                return true;
+            }
+            else if (get_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
     /**
      * Rough estimate of block height from the time provided
      *

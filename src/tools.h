@@ -159,6 +159,12 @@ namespace xmreg
     get_key_images(const transaction& tx);
 
 
+    bool
+    get_payment_id(const transaction& tx,
+                   crypto::hash& payment_id,
+                   crypto::hash8& payment_id8);
+
+
     inline void
     enable_monero_log() {
         uint32_t log_level = 0;
