@@ -71,6 +71,9 @@ namespace xmreg {
         size_t version;
         uint64_t unlock_time;
 
+        crypto::hash  payment_id  = null_hash; // normal
+        crypto::hash8 payment_id8 = null_hash8; // encrypted
+
         std::vector<std::vector<crypto::signature> > signatures;
 
         // key images of inputs
@@ -88,18 +91,27 @@ namespace xmreg {
 
             string tx_pk_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", pk));
 
+            cout << "payment_id: " << payment_id << endl;
+
+            string pid_str   = REMOVE_HASH_BRAKETS(fmt::format("{:s}", payment_id));
+            string pid8_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", payment_id8));
+
             mstch::map txd_map {
-                {"hash"          , tx_hash_str},
-                {"pub_key"       , tx_pk_str},
-                {"tx_fee"        , fmt::format("{:0.6f}", XMR_AMOUNT(fee))},
-                {"sum_inputs"    , fmt::format("{:0.6f}", XMR_AMOUNT(xmr_inputs))},
-                {"sum_outputs"   , fmt::format("{:0.6f}", XMR_AMOUNT(xmr_outputs))},
-                {"no_inputs"     , input_key_imgs.size()},
-                {"no_outputs"    , output_pub_keys.size()},
-                {"mixin"         , std::to_string(mixin_no - 1)},
-                {"version"       , std::to_string(version)},
-                {"unlock_time"   , std::to_string(unlock_time)},
-                {"tx_size"       , fmt::format("{:0.4f}", static_cast<double>(size)/1024.0)}
+                {"hash"            , tx_hash_str},
+                {"pub_key"         , tx_pk_str},
+                {"tx_fee"          , fmt::format("{:0.6f}", XMR_AMOUNT(fee))},
+                {"sum_inputs"      , fmt::format("{:0.6f}", XMR_AMOUNT(xmr_inputs))},
+                {"sum_outputs"     , fmt::format("{:0.6f}", XMR_AMOUNT(xmr_outputs))},
+                {"no_inputs"       , input_key_imgs.size()},
+                {"no_outputs"      , output_pub_keys.size()},
+                {"mixin"           , std::to_string(mixin_no - 1)},
+                {"version"         , std::to_string(version)},
+                {"has_payment_id"  , payment_id  != null_hash},
+                {"has_payment_id8" , payment_id8 != null_hash8},
+                {"payment_id"      , pid_str},
+                {"payment_id8"     , pid8_str},
+                {"unlock_time"     , std::to_string(unlock_time)},
+                {"tx_size"         , fmt::format("{:0.4f}", static_cast<double>(size)/1024.0)}
             };
 
 
@@ -117,7 +129,7 @@ namespace xmreg {
              }
 
              for (const crypto::signature &sig: signatures.at(in_i))
-             {                 
+             {
                  ring_sigs.push_back(mstch::map{
                      {"ring_sig", print_signature(sig)}
                  });
@@ -693,21 +705,28 @@ namespace xmreg {
                 blk_timestamp = xmreg::timestamp_to_str(blk.timestamp);
 
                 tx_blk_height_str = std::to_string(tx_blk_height);
-            }                    
+            }
 
+            // payments id. both normal and encrypted (payment_id8)    
+            string pid_str   = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id));
+            string pid8_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id8));
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
-                    {"tx_hash"        , tx_hash_str},
-                    {"tx_pub_key"     , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
-                    {"blk_height"     , tx_blk_height_str},
-                    {"tx_size"        , fmt::format("{:0.4f}",
+                    {"tx_hash"         , tx_hash_str},
+                    {"tx_pub_key"      , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
+                    {"blk_height"      , tx_blk_height_str},
+                    {"tx_size"         , fmt::format("{:0.4f}",
                                             static_cast<double>(txd.size) / 1024.0)},
-                    {"tx_fee"         , fmt::format("{:0.12f}", XMR_AMOUNT(txd.fee))},
-                    {"blk_timestamp"  , blk_timestamp},
-                    {"delta_time"     , age.first},
-                    {"inputs_no"      , txd.input_key_imgs.size()},
-                    {"outputs_no"     , txd.output_pub_keys.size()}
+                    {"tx_fee"          , fmt::format("{:0.12f}", XMR_AMOUNT(txd.fee))},
+                    {"blk_timestamp"   , blk_timestamp},
+                    {"delta_time"      , age.first},
+                    {"inputs_no"       , txd.input_key_imgs.size()},
+                    {"outputs_no"      , txd.output_pub_keys.size()},
+                    {"has_payment_id"  , txd.payment_id  != null_hash},
+                    {"has_payment_id8" , txd.payment_id8 != null_hash8},
+                    {"payment_id"      , pid_str},
+                    {"payment_id8"     , pid8_str},
             };
 
             string server_time_str = xmreg::timestamp_to_str(server_timestamp, "%F");
@@ -868,7 +887,7 @@ namespace xmreg {
 
 
             // first check if searching for block of given height
-            if (search_text.size() < 12)                                
+            if (search_text.size() < 12)
             {
                 uint64_t blk_height;
 
@@ -887,7 +906,7 @@ namespace xmreg {
 
                 }
                 catch(boost::bad_lexical_cast &e)
-                {                    
+                {
                     return result_html;
                 }
 
@@ -943,6 +962,8 @@ namespace xmreg {
                 // get tx fee
                 txd.fee = get_tx_fee(tx);
             }
+
+            get_payment_id(tx, txd.payment_id, txd.payment_id8);
 
             // get tx size in bytes
             txd.size = get_object_blobsize(tx);

@@ -1,8 +1,17 @@
 
 <div>
 
-    <H4>Tx hash: {{tx_hash}}</H4>
-    <H5>Tx public key: {{tx_pub_key}}</H5>
+    <H4 style="margin:5px">Tx hash: {{tx_hash}}</H4>
+    <H5 style="margin:5px">Tx public key: {{tx_pub_key}}</H5>
+
+
+    {{#has_payment_id}}
+        <H5 style="margin:5px">Payment id: {{payment_id}}</H5>
+    {{/has_payment_id}}
+
+    {{#has_payment_id8}}
+        <H5 style="margin:5px">Payment id (encrypted): {{payment_id8}}</H5>
+    {{/has_payment_id8}}
 
 
     {{#have_prev_hash}}
@@ -15,14 +24,14 @@
 
 
 
-    <table class="center" style="width: 80%">
+    <table class="center" style="width: 80%; margin-top:10px">
         <tr>
             <td>Block: {{blk_height}}</td>
             <td>Timestamp [UCT]: {{blk_timestamp}}</td>
             <td>Age [y:d:h:m:s]: {{delta_time}}</td>
             <td>Fee: {{tx_fee}}</td>
             <td>Tx size: {{tx_size}} kB</td>
-        </tr>        
+        </tr>
     </table>
 
 
@@ -75,10 +84,10 @@
                 </tr>
              {{#mixins}}
                 <tr>
-                  <td> - {{mix_idx}}: <a href="/tx/{{mix_tx_hash}}">{{mix_pub_key}}</a></td> 
-                  <td>{{mix_blk}}</td> 
-                  <td>{{mix_mixin_no}}</td> 
-                  <td>{{mix_inputs_no}}/{{mix_outputs_no}}</td> 
+                  <td> - {{mix_idx}}: <a href="/tx/{{mix_tx_hash}}">{{mix_pub_key}}</a></td>
+                  <td>{{mix_blk}}</td>
+                  <td>{{mix_mixin_no}}</td>
+                  <td>{{mix_inputs_no}}/{{mix_outputs_no}}</td>
                   <td>{{mix_timestamp}}</td>
                   <td>{{mix_age}}</td>
                 </tr>
