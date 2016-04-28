@@ -24,14 +24,14 @@
 #include <limits>
 #include <ctime>
 
-#define TMPL_DIR              "./templates"
-#define TMPL_INDEX   TMPL_DIR "/index.html"
-#define TMPL_MEMPOOL TMPL_DIR "/mempool.html"
-#define TMPL_HEADER  TMPL_DIR "/header.html"
-#define TMPL_FOOTER  TMPL_DIR "/footer.html"
-#define TMPL_BLOCK   TMPL_DIR "/block.html"
-#define TMPL_TX      TMPL_DIR "/tx.html"
-
+#define TMPL_DIR             "./templates"
+#define TMPL_INDEX           TMPL_DIR "/index.html"
+#define TMPL_MEMPOOL         TMPL_DIR "/mempool.html"
+#define TMPL_HEADER          TMPL_DIR "/header.html"
+#define TMPL_FOOTER          TMPL_DIR "/footer.html"
+#define TMPL_BLOCK           TMPL_DIR "/block.html"
+#define TMPL_TX              TMPL_DIR "/tx.html"
+#define TMPL_SEARCH_RESULTS  TMPL_DIR "/search_results.html"
 
 namespace xmreg {
 
@@ -936,26 +936,56 @@ namespace xmreg {
 
             result_html = default_txt;
 
+            // now search my own custom lmdb database
+            // with key_images, public_keys etc.
+
+            vector<pair<string, vector<string>>> all_possible_tx_hashes;
+
             xmreg::MyLMDB mylmdb {"/home/mwo/.bitmonero/lmdb2"};
 
             vector<string> tx_hashes = mylmdb.search(search_text, "key_images");
-
-            if (tx_hashes.size() == 1)
-            {
-                result_html = show_tx(tx_hashes.at(0));
-                return result_html;
-            }
+            all_possible_tx_hashes.push_back(make_pair("key_images", tx_hashes));
 
             tx_hashes = mylmdb.search(search_text, "public_keys");
+            all_possible_tx_hashes.push_back(make_pair("public_keys", tx_hashes));
 
-            if (tx_hashes.size() == 1)
-            {
-                result_html = show_tx(tx_hashes.at(0));
-                return result_html;
-            }
+            // if (tx_hashes.size() == 1)
+            // {
+            //     result_html = show_tx(tx_hashes.at(0));
+            //     return result_html;
+            // }
+            //
+            // tx_hashes = mylmdb.search(search_text, "public_keys");
+            //
+            // if (tx_hashes.size() == 1)
+            // {
+            //     result_html = show_tx(tx_hashes.at(0));
+            //     return result_html;
+            // }
 
             return result_html;
         }
+
+        string
+        show_search_results(
+            const vector<pair<string, vector<string>>>& all_possible_tx_hashes)
+        {
+
+            // initalise page tempate map with basic info about blockchain
+            mstch::map context {
+                    {"something"         , "something"},
+            };
+
+            // read search_results.html
+            string search_results_html = xmreg::read(TMPL_SEARCH_RESULTS);
+
+            // add header and footer
+            string full_page = get_full_page(search_results_html);
+
+            // render the page
+            return mstch::render(full_page, context);
+        }
+
 
 
     private:
