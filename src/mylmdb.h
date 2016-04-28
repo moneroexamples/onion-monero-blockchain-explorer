@@ -226,14 +226,14 @@ namespace xmreg
                 // set cursor the the first item
                 if (cr.get(key_to_find, tx_hash_val, MDB_SET))
                 {
-                    cout << key_val_to_str(key_to_find, tx_hash_val) << endl;
+                    //cout << key_val_to_str(key_to_find, tx_hash_val) << endl;
 
                     out.push_back(string(tx_hash_val.data(), tx_hash_val.size()));
 
                     // process other values for the same key
                     while (cr.get(key_to_find, tx_hash_val, MDB_NEXT_DUP)) {
 
-                        cout << key_val_to_str(key_to_find, tx_hash_val) << endl;
+                        //cout << key_val_to_str(key_to_find, tx_hash_val) << endl;
 
                         out.push_back(string(tx_hash_val.data(), tx_hash_val.size()));
 

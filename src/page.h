@@ -18,6 +18,7 @@
 #include "MicroCore.h"
 #include "tools.h"
 #include "rpccalls.h"
+#include "mylmdb.h"
 
 #include <algorithm>
 #include <limits>
@@ -594,7 +595,7 @@ namespace xmreg {
             if (!xmreg::parse_str_secret_key(_blk_hash, blk_hash))
             {
                 cerr << "Cant parse blk hash: " << blk_hash << endl;
-                return fmt::format("Cant parse block hash {:s}!", blk_hash);
+                return fmt::format("Cant get block {:s}!", blk_hash);
             }
 
             uint64_t blk_height;
@@ -606,12 +607,12 @@ namespace xmreg {
             catch (const BLOCK_DNE& e)
             {
                 cerr << "Block does not exist: " << blk_hash << endl;
-                return fmt::format("Block of hash {:s} does not exist!", blk_hash);
+                return fmt::format("Cant get block {:s}!", blk_hash);
             }
             catch (const std::exception& e)
             {
                 cerr << "Cant get block: " << blk_hash << endl;
-                return fmt::format("Block of hash {:s} not found!", blk_hash);
+                return fmt::format("Cant get block {:s}!", blk_hash);
             }
 
             return show_block(blk_height);
@@ -931,13 +932,29 @@ namespace xmreg {
                  return result_html;
             }
 
+            xmreg::MyLMDB mylmdb {"/home/mwo/.bitmonero/lmdb2"};
+
+            vector<string> tx_hashes = mylmdb.search(search_text, "key_images");
+
+            if (tx_hashes.size() == 1)
+            {
+                result_html = show_tx(tx_hashes.at(0));
+                return result_html;
+            }
+
+            tx_hashes = mylmdb.search(search_text, "public_keys");
+
+            if (tx_hashes.size() == 1)
+            {
+                result_html = show_tx(tx_hashes.at(0));
+                return result_html;
+            }
 
             return result_html;
         }
 
 
     private:
-
 
         tx_details
         get_tx_details(const transaction& tx, bool coinbase = false)
