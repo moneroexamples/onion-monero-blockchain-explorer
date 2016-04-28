@@ -93,23 +93,6 @@ set(SOURCE_FILES
 add_executable(${PROJECT_NAME}
         ${SOURCE_FILES})
 
-#add_custom_command(TARGET template_folder POST_BUILD
-#        COMMAND ${CMAKE_COMMAND} -E  copy_directory
-#        "${CMAKE_CURRENT_SOURCE_DIR}/src/templates" "${CMAKE_CURRENT_BINARY_DIR}")
-#
-#add_custom_target(template_folder
-#                       ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/templates")
-#
-#ADD_DEPENDENCIES(${PROJECT_NAME}
-#        template_folder)
-
-#file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/src/templates"
-#        DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-#
-#include(copy_files)
-#copy_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates/ *.html ${CMAKE_CURRENT_BINARY_DIR})
-#
-
 macro(configure_files srcDir destDir)
     message(STATUS "Configuring directory ${destDir}")
     make_directory(${destDir})
@@ -130,28 +113,6 @@ endmacro(configure_files)
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates ${CMAKE_CURRENT_BINARY_DIR}/templates)
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates/css ${CMAKE_CURRENT_BINARY_DIR}/templates/css)
 
-#macro(copy_files GLOBPAT DESTINATION)
-#
-#    message(STATUS "Configuring directory ${DESTINATION}")
-#
-#    file(GLOB COPY_FILES
-#            RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-#            ${GLOBPAT})
-#    add_custom_target(copy ALL
-#            COMMENT "Copying files: ${GLOBPAT}")
-#
-#    foreach(FILENAME ${COPY_FILES})
-#        set(SRC "${CMAKE_CURRENT_SOURCE_DIR}/${FILENAME}")
-#        set(DST "${DESTINATION}/${FILENAME}")
-#
-#        add_custom_command(
-#                TARGET copy
-#                COMMAND ${CMAKE_COMMAND} -E copy ${SRC} ${DST}
-#        )
-#    endforeach(FILENAME)
-#endmacro(copy_files)
-#
-#copy_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates ${CMAKE_CURRENT_BINARY_DIR})
 
 target_link_libraries(${PROJECT_NAME}
         myxrm
