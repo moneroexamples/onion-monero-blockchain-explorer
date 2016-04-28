@@ -595,7 +595,7 @@ namespace xmreg {
             if (!xmreg::parse_str_secret_key(_blk_hash, blk_hash))
             {
                 cerr << "Cant parse blk hash: " << blk_hash << endl;
-                return fmt::format("Cant get block {:s}!", blk_hash);
+                return fmt::format("Cant get block {:s} due to block hash parse error!", blk_hash);
             }
 
             uint64_t blk_height;
@@ -607,12 +607,12 @@ namespace xmreg {
             catch (const BLOCK_DNE& e)
             {
                 cerr << "Block does not exist: " << blk_hash << endl;
-                return fmt::format("Cant get block {:s}!", blk_hash);
+                return fmt::format("Cant get block {:s} because it does not exist!", blk_hash);
             }
             catch (const std::exception& e)
             {
                 cerr << "Cant get block: " << blk_hash << endl;
-                return fmt::format("Cant get block {:s}!", blk_hash);
+                return fmt::format("Cant get block {:s} for some uknown reason", blk_hash);
             }
 
             return show_block(blk_height);
@@ -708,7 +708,7 @@ namespace xmreg {
                 tx_blk_height_str = std::to_string(tx_blk_height);
             }
 
-            // payments id. both normal and encrypted (payment_id8)    
+            // payments id. both normal and encrypted (payment_id8)
             string pid_str   = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id));
             string pid8_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id8));
 
@@ -884,7 +884,9 @@ namespace xmreg {
             // remove white characters
             boost::trim(search_text);
 
-            string result_html {"No such thing found: " + search_text};
+            string default_txt {"No such thing found: " + search_text};
+
+            string result_html {default_txt};
 
 
             // first check if searching for block of given height
@@ -931,6 +933,8 @@ namespace xmreg {
             {
                  return result_html;
             }
+
+            result_html = default_txt;
 
             xmreg::MyLMDB mylmdb {"/home/mwo/.bitmonero/lmdb2"};
 
