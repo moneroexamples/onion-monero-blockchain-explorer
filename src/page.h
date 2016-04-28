@@ -1003,13 +1003,13 @@ namespace xmreg {
             }
 
             // read search_results.html
-            string search_results_html = xmreg::read(TMPL_SEARCH_RESULTS);
+            //string search_results_html = xmreg::read(TMPL_SEARCH_RESULTS);
 
             // add header and footer
-            string full_page = get_full_page(search_results_html);
+            string full_page = get_full_page(out_tmp);
 
             // render the page
-            return out_tmp;
+            return  mstch::render(full_page, context);
         }
 
 
