@@ -946,8 +946,16 @@ namespace xmreg {
             vector<string> tx_hashes = mylmdb.search(search_text, "key_images");
             all_possible_tx_hashes.push_back(make_pair("key_images", tx_hashes));
 
-            tx_hashes = mylmdb.search(search_text, "public_keys");
-            all_possible_tx_hashes.push_back(make_pair("public_keys", tx_hashes));
+            tx_hashes = mylmdb.search(search_text, "tx_public_keys");
+            all_possible_tx_hashes.push_back(make_pair("tx_public_keys", tx_hashes));
+
+            tx_hashes = mylmdb.search(search_text, "payments_id");
+            all_possible_tx_hashes.push_back(make_pair("payments_id", tx_hashes));
+
+            tx_hashes = mylmdb.search(search_text, "output_public_keys");
+            all_possible_tx_hashes.push_back(make_pair("output_public_keys", tx_hashes));
+
+            result_html = show_search_results(all_possible_tx_hashes);
 
             // if (tx_hashes.size() == 1)
             // {
@@ -976,6 +984,24 @@ namespace xmreg {
                     {"something"         , "something"},
             };
 
+            string out_tmp;
+
+            for (const pair<string, vector<string>>& found_txs: all_possible_tx_hashes)
+            {
+                if (!found_txs.second.empty())
+                {
+                    out_tmp += found_txs.first + string("<br/>");
+
+                    for (const string& tx_hash: found_txs.second)
+                    {
+                        out_tmp += string(" - ")
+                                + fmt::format("{:s}", tx_hash)
+                                +  string("<br/>");
+                    }
+
+                }
+            }
+
             // read search_results.html
             string search_results_html = xmreg::read(TMPL_SEARCH_RESULTS);
 
@@ -983,7 +1009,7 @@ namespace xmreg {
             string full_page = get_full_page(search_results_html);
 
             // render the page
-            return mstch::render(full_page, context);
+            return out_tmp;
         }
 
 

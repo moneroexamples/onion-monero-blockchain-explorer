@@ -21,7 +21,7 @@ namespace xmreg
     {
 
 
-        static const uint64_t DEFAULT_MAPSIZE = 10UL * 1024UL * 1024UL * 1024UL; /* 10 GiB */
+        static const uint64_t DEFAULT_MAPSIZE = 20UL * 1024UL * 1024UL * 1024UL; /* 10 GiB */
         static const uint64_t DEFAULT_NO_DBs  = 5;
 
 
@@ -114,7 +114,7 @@ namespace xmreg
         }
 
         bool
-        write_public_keys(const transaction& tx)
+        write_output_public_keys(const transaction& tx)
         {
             crypto::hash tx_hash = get_transaction_hash(tx);
 
@@ -131,7 +131,7 @@ namespace xmreg
             try
             {
                 wtxn = lmdb::txn::begin(m_env);
-                wdbi = lmdb::dbi::open(wtxn, "public_keys", flags);
+                wdbi = lmdb::dbi::open(wtxn, "output_public_keys", flags);
             }
             catch (lmdb::error& e )
             {
@@ -154,6 +154,42 @@ namespace xmreg
                 wtxn.commit();
             }
             catch (lmdb::error& e )
+            {
+                cerr << e.what() << endl;
+                return false;
+            }
+
+            return true;
+        }
+
+        bool
+        write_tx_public_key(const transaction& tx)
+        {
+            crypto::hash tx_hash = get_transaction_hash(tx);
+
+            string tx_hash_str = pod_to_hex(tx_hash);
+
+            unsigned int flags = MDB_CREATE | MDB_DUPSORT | MDB_DUPFIXED;
+
+            public_key pk = get_tx_pub_key_from_extra(tx);
+
+            string pk_str = pod_to_hex(pk);
+
+            try
+            {
+                lmdb::txn wtxn = lmdb::txn::begin(m_env);
+                lmdb::dbi wdbi = lmdb::dbi::open(wtxn, "tx_public_keys", flags);
+
+                //cout << "Saving public_key: " << pk_str << endl;
+
+                lmdb::val public_key_val {pk_str};
+                lmdb::val tx_hash_val    {tx_hash_str};
+
+                wdbi.put(wtxn, public_key_val, tx_hash_val);
+
+                wtxn.commit();
+            }
+            catch (lmdb::error& e)
             {
                 cerr << e.what() << endl;
                 return false;
@@ -190,8 +226,8 @@ namespace xmreg
 
                 //cout << "Saving payiment_id: " << payment_id_str << endl;
 
-                lmdb::val payment_id_val{payment_id_str};
-                lmdb::val tx_hash_val{tx_hash_str};
+                lmdb::val payment_id_val {payment_id_str};
+                lmdb::val tx_hash_val    {tx_hash_str};
 
                 wdbi.put(wtxn, payment_id_val, tx_hash_val);
 
@@ -227,16 +263,13 @@ namespace xmreg
                 if (cr.get(key_to_find, tx_hash_val, MDB_SET))
                 {
                     //cout << key_val_to_str(key_to_find, tx_hash_val) << endl;
-
                     out.push_back(string(tx_hash_val.data(), tx_hash_val.size()));
 
                     // process other values for the same key
-                    while (cr.get(key_to_find, tx_hash_val, MDB_NEXT_DUP)) {
-
+                    while (cr.get(key_to_find, tx_hash_val, MDB_NEXT_DUP))
+                    {
                         //cout << key_val_to_str(key_to_find, tx_hash_val) << endl;
-
                         out.push_back(string(tx_hash_val.data(), tx_hash_val.size()));
-
                     }
                 }
 
