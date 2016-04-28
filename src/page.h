@@ -955,7 +955,7 @@ namespace xmreg {
             tx_hashes = mylmdb.search(search_text, "output_public_keys");
             all_possible_tx_hashes.push_back(make_pair("output_public_keys", tx_hashes));
 
-            result_html = show_search_results(all_possible_tx_hashes);
+            result_html = show_search_results(search_text, all_possible_tx_hashes);
 
             // if (tx_hashes.size() == 1)
             // {
@@ -975,16 +975,17 @@ namespace xmreg {
         }
 
         string
-        show_search_results(
+        show_search_results(const string& search_text,
             const vector<pair<string, vector<string>>>& all_possible_tx_hashes)
+
         {
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
-                    {"something"         , "something"},
+                    {"search_text: " , search_text},
             };
 
-            string out_tmp;
+            string out_tmp {"Searching for: " + search_text + string("<br/>")};
 
             for (const pair<string, vector<string>>& found_txs: all_possible_tx_hashes)
             {
