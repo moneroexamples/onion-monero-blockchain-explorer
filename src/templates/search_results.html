@@ -1,2 +1,48 @@
   <H4 style="margin:5px">Search results</H4>
-  
+  <h5> Looking for {{search_text}} </h5>
+
+
+  <div>
+
+
+    {{#has_key_images}}
+
+        <h3>This key image found in the following transactions</h3>
+        <ul>
+        {{#key_images}}
+            <li>{{tx_hash}}</li>
+        {{/key_images}}
+        </ul>
+
+    {{/has_key_images}}
+
+
+
+  </div>
+
+  <div>
+
+    {{#tx_public_keys}}
+        {{tx_hash}} </br>
+    {{/tx_public_keys}}
+
+  </div>
+
+  <div>
+
+    {{#payments_id}}
+        {{tx_hash}} </br>
+    {{/payments_id}}
+
+  </div>
+
+  <div>
+
+    {{#output_public_keys}}
+        {{tx_hash}} </br>
+    {{/output_public_keys}}
+
+  </div>
+
+
+

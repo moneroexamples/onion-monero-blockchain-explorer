@@ -957,20 +957,6 @@ namespace xmreg {
 
             result_html = show_search_results(search_text, all_possible_tx_hashes);
 
-            // if (tx_hashes.size() == 1)
-            // {
-            //     result_html = show_tx(tx_hashes.at(0));
-            //     return result_html;
-            // }
-            //
-            // tx_hashes = mylmdb.search(search_text, "public_keys");
-            //
-            // if (tx_hashes.size() == 1)
-            // {
-            //     result_html = show_tx(tx_hashes.at(0));
-            //     return result_html;
-            // }
-
             return result_html;
         }
 
@@ -982,19 +968,37 @@ namespace xmreg {
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
-                    {"search_text: " , search_text},
+                    {"search_text", search_text},
             };
 
             string out_tmp {"Searching for: " + search_text + string("<br/>")};
 
             for (const pair<string, vector<string>>& found_txs: all_possible_tx_hashes)
             {
+
+                // define flag, e.g., has_key_images denoting that
+                // tx hashes for key_image searched were found
+                context.insert({"has_" + found_txs.first, !found_txs.second.empty()});
+
+
+                // insert new array based on what we found to context if not exist
+                pair< mstch::map::iterator, bool> res
+                        = context.insert({found_txs.first, mstch::array{}});
+
+
                 if (!found_txs.second.empty())
                 {
                     out_tmp += found_txs.first + string("<br/>");
 
+                    cout << "found_txs.first: " << found_txs.first << endl;
+
                     for (const string& tx_hash: found_txs.second)
                     {
+
+                        boost::get<mstch::array>((res.first)->second).push_back(
+                                        mstch::map {{"tx_hash", tx_hash}}
+                        );
+
                         out_tmp += string(" - ")
                                 + fmt::format("{:s}", tx_hash)
                                 +  string("<br/>");
@@ -1004,10 +1008,10 @@ namespace xmreg {
             }
 
             // read search_results.html
-            //string search_results_html = xmreg::read(TMPL_SEARCH_RESULTS);
+            string search_results_html = xmreg::read(TMPL_SEARCH_RESULTS);
 
             // add header and footer
-            string full_page = get_full_page(out_tmp);
+            string full_page = get_full_page(search_results_html);
 
             // render the page
             return  mstch::render(full_page, context);
