@@ -70,8 +70,9 @@ namespace xmreg {
         uint64_t fee;
         uint64_t mixin_no;
         uint64_t size;
-        size_t version;
+        size_t   version;
         uint64_t unlock_time;
+        vector<uint8_t> extra;
 
         crypto::hash  payment_id  = null_hash; // normal
         crypto::hash8 payment_id8 = null_hash8; // encrypted
@@ -93,10 +94,13 @@ namespace xmreg {
 
             string tx_pk_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", pk));
 
-            cout << "payment_id: " << payment_id << endl;
+            //cout << "payment_id: " << payment_id << endl;
 
             string pid_str   = REMOVE_HASH_BRAKETS(fmt::format("{:s}", payment_id));
             string pid8_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", payment_id8));
+
+
+            //cout << "extra: " << extra_str << endl;
 
             mstch::map txd_map {
                 {"hash"            , tx_hash_str},
@@ -111,6 +115,7 @@ namespace xmreg {
                 {"has_payment_id"  , payment_id  != null_hash},
                 {"has_payment_id8" , payment_id8 != null_hash8},
                 {"payment_id"      , pid_str},
+                {"extra"           , get_extra_str()},
                 {"payment_id8"     , pid8_str},
                 {"unlock_time"     , std::to_string(unlock_time)},
                 {"tx_size"         , fmt::format("{:0.4f}", static_cast<double>(size)/1024.0)}
@@ -120,9 +125,20 @@ namespace xmreg {
             return txd_map;
         }
 
-         mstch::array
-         get_ring_sig_for_input(uint64_t in_i)
-         {
+        string
+        get_extra_str()
+        {
+
+            string extra_str = epee::string_tools::buff_to_hex_nodelimer(
+                        string{reinterpret_cast<const char*>(extra.data()), extra.size()});
+
+            return extra_str;
+        }
+
+
+        mstch::array
+        get_ring_sig_for_input(uint64_t in_i)
+        {
              mstch::array ring_sigs {};
 
              if (in_i >= signatures.size())
@@ -138,18 +154,18 @@ namespace xmreg {
              }
 
              return ring_sigs;
-         }
+        }
 
-         string
-         print_signature(const signature& sig)
-         {
+        string
+        print_signature(const signature& sig)
+        {
              stringstream ss;
 
              ss << epee::string_tools::pod_to_hex(sig.c)
                 << epee::string_tools::pod_to_hex(sig.r);
 
              return ss.str();
-         }
+        }
     };
 
     class page {
@@ -729,6 +745,7 @@ namespace xmreg {
                     {"has_payment_id8"      , txd.payment_id8 != null_hash8},
                     {"payment_id"           , pid_str},
                     {"payment_id8"          , pid8_str},
+                    {"extra"                , txd.get_extra_str()},
                     {"with_ring_signatures" , static_cast<bool>(with_ring_signatures)}
             };
 
@@ -1071,6 +1088,8 @@ namespace xmreg {
 
             txd.input_key_imgs  = get_key_images(tx);
             txd.output_pub_keys = get_ouputs(tx);
+
+            txd.extra = tx.extra;
 
             // get tx signatures for each input
             txd.signatures = tx.signatures;
