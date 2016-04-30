@@ -135,6 +135,29 @@ namespace xmreg
         return true;
     }
 
+    bool
+    MicroCore::get_tx(const string& tx_hash_str, transaction& tx)
+    {
+
+        // parse tx hash string to hash object
+        crypto::hash tx_hash;
+
+        if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+        {
+            cerr << "Cant parse tx hash: " << tx_hash_str << endl;
+            return false;
+        }
+
+
+        if (!get_tx(tx_hash, tx))
+        {
+            return false;
+        }
+
+
+        return true;
+    }
+
 
 
 

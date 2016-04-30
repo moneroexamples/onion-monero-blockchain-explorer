@@ -1,46 +1,75 @@
-  <H4 style="margin:5px">Search results</H4>
-  <h5> Looking for {{search_text}} </h5>
 
+  <h3> Search results for: {{search_text}} </h3>
+
+  {{#no_results}}
+    <h4>Nothing has been found that matches the search term :-(</h4>
+  {{/no_results}}
 
   <div>
-
 
     {{#has_key_images}}
 
-        <h3>This key image found in the following transactions</h3>
-        <ul>
-        {{#key_images}}
-            <li>{{tx_hash}}</li>
-        {{/key_images}}
-        </ul>
+        <h3>The search term matches key image found in the following transactions</h3>
+
+        <table class="center" style="width:80%">
+            {{>tx_table_head}}
+            {{#key_images}}
+                {{>tx_table_row}}
+            {{/key_images}}
+        </table>
 
     {{/has_key_images}}
 
+  </div>
 
+  <div>
+
+      {{#has_tx_public_keys}}
+
+        <h3>The search term matches tx public key found in the following transactions</h3>
+
+        <table class="center" style="width:80%">
+            {{>tx_table_head}}
+            {{#tx_public_keys}}
+                {{>tx_table_row}}
+            {{/tx_public_keys}}
+        </table>
+
+    {{/has_tx_public_keys}}
 
   </div>
 
   <div>
 
-    {{#tx_public_keys}}
-        {{tx_hash}} </br>
-    {{/tx_public_keys}}
+    {{#has_payments_id}}
+
+    <h3>The search term matches payment id found in the following transactions</h3>
+
+    <table class="center" style="width:80%">
+        {{>tx_table_head}}
+        {{#payments_id}}
+            {{>tx_table_row}}
+        {{/payments_id}}
+    </table>
+
+    {{/has_payments_id}}
 
   </div>
 
   <div>
 
-    {{#payments_id}}
-        {{tx_hash}} </br>
-    {{/payments_id}}
+    {{#has_output_public_keys}}
 
-  </div>
+    <h3>The search term matches output public key found in the following transactions</h3>
 
-  <div>
+    <table class="center" style="width:80%">
+        {{>tx_table_head}}
+        {{#output_public_keys}}
+            {{>tx_table_row}}
+        {{/output_public_keys}}
+    </table>
 
-    {{#output_public_keys}}
-        {{tx_hash}} </br>
-    {{/output_public_keys}}
+    {{/has_output_public_keys}}
 
   </div>
 

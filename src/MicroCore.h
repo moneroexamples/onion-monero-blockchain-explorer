@@ -47,6 +47,9 @@ namespace xmreg
         get_tx(const crypto::hash& tx_hash, transaction& tx);
 
         bool
+        get_tx(const string& tx_hash, transaction& tx);
+
+        bool
         find_output_in_tx(const transaction& tx,
                           const public_key& output_pubkey,
                           tx_out& out,

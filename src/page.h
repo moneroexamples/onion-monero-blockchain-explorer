@@ -25,6 +25,7 @@
 #include <ctime>
 
 #define TMPL_DIR             "./templates"
+#define TMPL_PARIALS_DIR     TMPL_DIR "/partials"
 #define TMPL_INDEX           TMPL_DIR "/index.html"
 #define TMPL_MEMPOOL         TMPL_DIR "/mempool.html"
 #define TMPL_HEADER          TMPL_DIR "/header.html"
@@ -969,9 +970,9 @@ namespace xmreg {
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"search_text", search_text},
+                    {"no_results" , true},
             };
 
-            string out_tmp {"Searching for: " + search_text + string("<br/>")};
 
             for (const pair<string, vector<string>>& found_txs: all_possible_tx_hashes)
             {
@@ -985,24 +986,28 @@ namespace xmreg {
                 pair< mstch::map::iterator, bool> res
                         = context.insert({found_txs.first, mstch::array{}});
 
-
                 if (!found_txs.second.empty())
-                {
-                    out_tmp += found_txs.first + string("<br/>");
+                {                    
 
-                    cout << "found_txs.first: " << found_txs.first << endl;
-
+                    // for each found tx_hash, get the corresponding tx
+                    // and its details, and put into mstch for rendering
                     for (const string& tx_hash: found_txs.second)
                     {
 
-                        boost::get<mstch::array>((res.first)->second).push_back(
-                                        mstch::map {{"tx_hash", tx_hash}}
-                        );
+                        transaction tx;
 
-                        out_tmp += string(" - ")
-                                + fmt::format("{:s}", tx_hash)
-                                +  string("<br/>");
+                        if (!mcore->get_tx(tx_hash, tx))
+                        {
+                            return string("Cant get tx of hash: " + tx_hash);
+                        }
+
+                        tx_details txd = get_tx_details(tx);
+
+                        boost::get<mstch::array>((res.first)->second).push_back(txd.get_mstch_map());
                     }
+
+                    // if found something, set this flag to indicate this fact
+                    context["no_results"] = false;
 
                 }
             }
@@ -1010,11 +1015,17 @@ namespace xmreg {
             // read search_results.html
             string search_results_html = xmreg::read(TMPL_SEARCH_RESULTS);
 
-            // add header and footer
+            // add header and footer            
             string full_page = get_full_page(search_results_html);
 
+            // read partial for showing details of tx(s) found
+            map<string, string> partials {
+                {"tx_table_head", xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html")},
+                {"tx_table_row" , xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html")}
+            };
+
             // render the page
-            return  mstch::render(full_page, context);
+            return  mstch::render(full_page, context, partials);
         }
 
 
