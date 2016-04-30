@@ -939,22 +939,30 @@ namespace xmreg {
             result_html = default_txt;
 
             // now search my own custom lmdb database
-            // with key_images, public_keys etc.
+            // with key_images, public_keys, payments_id etc.
 
             vector<pair<string, vector<string>>> all_possible_tx_hashes;
 
             xmreg::MyLMDB mylmdb {"/home/mwo/.bitmonero/lmdb2"};
 
-            vector<string> tx_hashes = mylmdb.search(search_text, "key_images");
+            vector<string> tx_hashes;
+            mylmdb.search(search_text, tx_hashes, "key_images");
             all_possible_tx_hashes.push_back(make_pair("key_images", tx_hashes));
 
-            tx_hashes = mylmdb.search(search_text, "tx_public_keys");
+            tx_hashes.clear();
+            mylmdb.search(search_text, tx_hashes, "tx_public_keys");
             all_possible_tx_hashes.push_back(make_pair("tx_public_keys", tx_hashes));
 
-            tx_hashes = mylmdb.search(search_text, "payments_id");
+            tx_hashes.clear();
+            mylmdb.search(search_text, tx_hashes, "payments_id");
             all_possible_tx_hashes.push_back(make_pair("payments_id", tx_hashes));
 
-            tx_hashes = mylmdb.search(search_text, "output_public_keys");
+            tx_hashes.clear();
+            mylmdb.search(search_text, tx_hashes, "encrypted_payments_id");
+            all_possible_tx_hashes.push_back(make_pair("encrypted_payments_id", tx_hashes));
+
+            tx_hashes.clear();
+            mylmdb.search(search_text, tx_hashes, "output_public_keys");
             all_possible_tx_hashes.push_back(make_pair("output_public_keys", tx_hashes));
 
             result_html = show_search_results(search_text, all_possible_tx_hashes);
@@ -973,7 +981,6 @@ namespace xmreg {
                     {"search_text", search_text},
                     {"no_results" , true},
             };
-
 
             for (const pair<string, vector<string>>& found_txs: all_possible_tx_hashes)
             {

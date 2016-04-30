@@ -58,6 +58,21 @@
 
   </div>
 
+    {{#has_encrypted_payments_id}}
+
+    <h3>The search term matches encrypted payment id found in the following transaction(s)</h3>
+
+    <table class="center" style="width:80%">
+        {{>tx_table_head}}
+        {{#encrypted_payments_id}}
+            {{>tx_table_row}}
+        {{/encrypted_payments_id}}
+    </table>
+
+    {{/has_encrypted_payments_id}}
+
+  </div>
+
   <div>
 
     {{#has_output_public_keys}}

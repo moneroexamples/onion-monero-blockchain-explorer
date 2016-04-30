@@ -22,7 +22,7 @@ namespace xmreg
 
 
         static const uint64_t DEFAULT_MAPSIZE = 20UL * 1024UL * 1024UL * 1024UL; /* 10 GiB */
-        static const uint64_t DEFAULT_NO_DBs  = 5;
+        static const uint64_t DEFAULT_NO_DBs  = 10;
 
 
         string m_db_path;
@@ -123,15 +123,17 @@ namespace xmreg
             vector<pair<cryptonote::txout_to_key, uint64_t>> outputs
                     = xmreg::get_ouputs(tx);
 
-            lmdb::txn wtxn {nullptr};
-            lmdb::dbi wdbi {0};
+            lmdb::txn wtxn  {nullptr};
+            lmdb::dbi wdbi1 {0};
+            lmdb::dbi wdbi2 {0};
 
             unsigned int flags = MDB_CREATE | MDB_DUPSORT | MDB_DUPFIXED;
 
             try
             {
-                wtxn = lmdb::txn::begin(m_env);
-                wdbi = lmdb::dbi::open(wtxn, "output_public_keys", flags);
+                wtxn  = lmdb::txn::begin(m_env);
+                wdbi1 = lmdb::dbi::open(wtxn, "output_public_keys", flags);
+                wdbi2 = lmdb::dbi::open(wtxn, "output_amounts", flags);
             }
             catch (lmdb::error& e )
             {
@@ -139,14 +141,18 @@ namespace xmreg
                 return false;
             }
 
-            for (const pair<cryptonote::txout_to_key, uint64_t>& output: outputs)
+            for (pair<cryptonote::txout_to_key, uint64_t>& output: outputs)
             {
                 string public_key_str = pod_to_hex(output.first.key);
 
                 lmdb::val public_key_val {public_key_str};
                 lmdb::val tx_hash_val    {tx_hash_str};
 
-                wdbi.put(wtxn, public_key_val, tx_hash_val);
+                lmdb::val amount_val     {static_cast<void*>(&output.second),
+                                          sizeof(output.second)};
+
+                wdbi1.put(wtxn, public_key_val, tx_hash_val);
+                wdbi2.put(wtxn, public_key_val, amount_val);
             }
 
             try
@@ -242,11 +248,57 @@ namespace xmreg
             return true;
         }
 
-        vector<string>
-        search(const string& key, const string& db_name = "key_images")
+        bool
+        write_encrypted_payment_id(const transaction& tx)
         {
-            vector<string> out;
+            crypto::hash tx_hash = get_transaction_hash(tx);
 
+            string tx_hash_str = pod_to_hex(tx_hash);
+
+            crypto::hash  payment_id;
+            crypto::hash8 payment_id8;
+
+            get_payment_id(tx, payment_id, payment_id8);
+
+            if (payment_id8 == null_hash8)
+            {
+                return true;
+            }
+
+            unsigned int flags = MDB_CREATE | MDB_DUPSORT | MDB_DUPFIXED;
+
+            string payment_id_str = pod_to_hex(payment_id8);
+
+            try
+            {
+                lmdb::txn wtxn = lmdb::txn::begin(m_env);
+                lmdb::dbi wdbi = lmdb::dbi::open(wtxn, "encrypted_payments_id", flags);
+
+                //cout << "Saving encrypted payiment_id: " << payment_id_str << endl;
+                //string wait_for_enter;
+                //cin >> wait_for_enter;
+
+                lmdb::val payment_id_val {payment_id_str};
+                lmdb::val tx_hash_val    {tx_hash_str};
+
+                wdbi.put(wtxn, payment_id_val, tx_hash_val);
+
+                wtxn.commit();
+            }
+            catch (lmdb::error& e)
+            {
+                cerr << e.what() << endl;
+                return false;
+            }
+
+            return true;
+        }
+
+        bool
+        search(const string& key,
+               vector<string>& found_tx_hashes,
+               const string& db_name = "key_images")
+        {
             unsigned int flags = MDB_DUPSORT | MDB_DUPFIXED;
 
             try
@@ -263,14 +315,18 @@ namespace xmreg
                 if (cr.get(key_to_find, tx_hash_val, MDB_SET))
                 {
                     //cout << key_val_to_str(key_to_find, tx_hash_val) << endl;
-                    out.push_back(string(tx_hash_val.data(), tx_hash_val.size()));
+                    found_tx_hashes.push_back(string(tx_hash_val.data(), tx_hash_val.size()));
 
                     // process other values for the same key
                     while (cr.get(key_to_find, tx_hash_val, MDB_NEXT_DUP))
                     {
                         //cout << key_val_to_str(key_to_find, tx_hash_val) << endl;
-                        out.push_back(string(tx_hash_val.data(), tx_hash_val.size()));
+                        found_tx_hashes.push_back(string(tx_hash_val.data(), tx_hash_val.size()));
                     }
+                }
+                else
+                {
+                    return false;
                 }
 
                 cr.close();
@@ -280,10 +336,46 @@ namespace xmreg
             catch (lmdb::error& e)
             {
                 cerr << e.what() << endl;
-                return out;
+                return false;
             }
 
-            return out;
+            return true;
+        }
+
+        bool
+        get_output_amount(const string& key,
+                          uint64_t& amount,
+                          const string& db_name = "output_amounts")
+        {
+
+            unsigned int flags = 0;
+
+            try
+            {
+
+                lmdb::txn rtxn  = lmdb::txn::begin(m_env, nullptr, MDB_RDONLY);
+                lmdb::dbi rdbi  = lmdb::dbi::open(rtxn, db_name.c_str(), flags);
+
+                lmdb::val key_to_find{key};
+                lmdb::val amount_val;
+
+                if(!rdbi.get(rtxn, key_to_find, amount_val))
+                {
+                    return false;
+                }
+
+                amount = *(amount_val.data<uint64_t>());
+
+                rtxn.abort();
+
+            }
+            catch (lmdb::error& e)
+            {
+                cerr << e.what() << endl;
+                return false;
+            }
+
+            return true;
         }
 
         void
