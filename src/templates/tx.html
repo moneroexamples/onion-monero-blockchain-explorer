@@ -97,6 +97,8 @@
          </tr>
 
 
+        {{#with_ring_signatures}}
+
           <tr>
             <td colspan="2">
                 <table style="width:100%; margin-bottom:20px">
@@ -112,10 +114,19 @@
            </td>
          </tr>
 
+        {{/with_ring_signatures}}
 
 
       {{/inputs}}
       </table>
+
+    {{^with_ring_signatures}}
+      <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}/1">Show this tx with ring signature for each input</a></h5>
+    {{/with_ring_signatures}}
+    {{#with_ring_signatures}}
+      <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}">Show this tx without ring signature for each input</a></h5>
+    {{/with_ring_signatures}}
+
   </div>
 
 

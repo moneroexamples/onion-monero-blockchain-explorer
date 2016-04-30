@@ -620,7 +620,7 @@ namespace xmreg {
         }
 
         string
-        show_tx(string tx_hash_str)
+        show_tx(string tx_hash_str, uint with_ring_signatures = 0)
         {
 
             // parse tx hash string to hash object
@@ -715,20 +715,21 @@ namespace xmreg {
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
-                    {"tx_hash"         , tx_hash_str},
-                    {"tx_pub_key"      , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
-                    {"blk_height"      , tx_blk_height_str},
-                    {"tx_size"         , fmt::format("{:0.4f}",
-                                            static_cast<double>(txd.size) / 1024.0)},
-                    {"tx_fee"          , fmt::format("{:0.12f}", XMR_AMOUNT(txd.fee))},
-                    {"blk_timestamp"   , blk_timestamp},
-                    {"delta_time"      , age.first},
-                    {"inputs_no"       , txd.input_key_imgs.size()},
-                    {"outputs_no"      , txd.output_pub_keys.size()},
-                    {"has_payment_id"  , txd.payment_id  != null_hash},
-                    {"has_payment_id8" , txd.payment_id8 != null_hash8},
-                    {"payment_id"      , pid_str},
-                    {"payment_id8"     , pid8_str},
+                    {"tx_hash"              , tx_hash_str},
+                    {"tx_pub_key"           , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
+                    {"blk_height"           , tx_blk_height_str},
+                    {"tx_size"              , fmt::format("{:0.4f}",
+                                                   static_cast<double>(txd.size) / 1024.0)},
+                    {"tx_fee"               , fmt::format("{:0.12f}", XMR_AMOUNT(txd.fee))},
+                    {"blk_timestamp"        , blk_timestamp},
+                    {"delta_time"           , age.first},
+                    {"inputs_no"            , txd.input_key_imgs.size()},
+                    {"outputs_no"           , txd.output_pub_keys.size()},
+                    {"has_payment_id"       , txd.payment_id  != null_hash},
+                    {"has_payment_id8"      , txd.payment_id8 != null_hash8},
+                    {"payment_id"           , pid_str},
+                    {"payment_id8"          , pid8_str},
+                    {"with_ring_signatures" , static_cast<bool>(with_ring_signatures)}
             };
 
             string server_time_str = xmreg::timestamp_to_str(server_timestamp, "%F");
