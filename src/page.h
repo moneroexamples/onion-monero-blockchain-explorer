@@ -611,8 +611,8 @@ namespace xmreg {
                 }
 
                 // sum xmr in inputs and ouputs in the given tx
-                uint64_t sum_inputs  = sum_xmr_inputs(_tx_info.tx_json);
-                uint64_t sum_outputs = sum_xmr_outputs(_tx_info.tx_json);
+                pair<uint64_t, uint64_t> sum_inputs  = sum_xmr_inputs(_tx_info.tx_json);
+                pair<uint64_t, uint64_t> sum_outputs = sum_xmr_outputs(_tx_info.tx_json);
 
                 // get mixin number in each transaction
                 vector<uint64_t> mixin_numbers = get_mixin_no_in_txs(_tx_info.tx_json);
@@ -623,8 +623,10 @@ namespace xmreg {
                         {"age"           , age_str},
                         {"hash"          , fmt::format("{:s}", _tx_info.id_hash)},
                         {"fee"           , fmt::format("{:0.3f}", XMR_AMOUNT(_tx_info.fee))},
-                        {"xmr_inputs"    , fmt::format("{:0.2f}", XMR_AMOUNT(sum_inputs))},
-                        {"xmr_outputs"   , fmt::format("{:0.2f}", XMR_AMOUNT(sum_outputs))},
+                        {"xmr_inputs"    , fmt::format("{:0.2f}", XMR_AMOUNT(sum_inputs.first))},
+                        {"xmr_outputs"   , fmt::format("{:0.2f}", XMR_AMOUNT(sum_outputs.first))},
+                        {"no_inputs"     , sum_inputs.second},
+                        {"no_outputs"    , sum_outputs.second},
                         {"mixin"         , fmt::format("{:d}", mixin_numbers.at(0) - 1)},
                         {"txsize"        , fmt::format("{:0.2f}", static_cast<double>(_tx_info.blob_size)/1024.0)}
                 });
@@ -1390,17 +1392,17 @@ namespace xmreg {
             return age_pair;
         }
 
-        uint64_t
+        pair<uint64_t, uint64_t>
         sum_xmr_outputs(const string& json_str)
         {
-            uint64_t sum_xmr {0};
+            pair<uint64_t, uint64_t> sum_xmr {0, 0};
 
             rapidjson::Document json;
 
             if (json.Parse(json_str.c_str()).HasParseError())
             {
                 cerr << "Failed to parse JSON" << endl;
-                return 0;
+                return sum_xmr;
             }
 
             // get information about outputs
@@ -1415,24 +1417,26 @@ namespace xmreg {
                     //    vout[i]["target"]["key"].GetString(),
                     //    XMR_AMOUNT(vout[i]["amount"].GetUint64()));
 
-                    sum_xmr += vout[i]["amount"].GetUint64();
+                    sum_xmr.first += vout[i]["amount"].GetUint64();
                 }
+
+                  sum_xmr.second = vout.Size();
             }
 
             return sum_xmr;
         }
 
-        uint64_t
+        pair<uint64_t, uint64_t>
         sum_xmr_inputs(const string& json_str)
         {
-            uint64_t sum_xmr {0};
+            pair<uint64_t, uint64_t> sum_xmr {0, 0};
 
             rapidjson::Document json;
 
             if (json.Parse(json_str.c_str()).HasParseError())
             {
                 cerr << "Failed to parse JSON" << endl;
-                return 0;
+                return sum_xmr;
             }
 
             // get information about inputs
@@ -1452,9 +1456,11 @@ namespace xmreg {
                         //       key_img["k_image"].GetString(),
                         //       XMR_AMOUNT(key_img["amount"].GetUint64()));
 
-                        sum_xmr += key_img["amount"].GetUint64();
+                        sum_xmr.first += key_img["amount"].GetUint64();
                     }
                 }
+
+                sum_xmr.second = vin.Size();
             }
 
             return sum_xmr;

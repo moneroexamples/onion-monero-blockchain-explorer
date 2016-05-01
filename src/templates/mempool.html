@@ -4,11 +4,12 @@
 <div class="center">
     
       <table class="center">
-            <tr>               
+            <tr>                           
                 <td>age [h:m:s]</td>
                 <td>transaction hash</td>
                 <td>fee</td>
                 <td>outputs</td>
+                <td>in/out</td>
                 <td>mixin</td>
                 <td>size [kB]</td>
             </tr>
@@ -18,6 +19,7 @@
                 <td><a href="/tx/{{hash}}">{{hash}}</a></td>
                 <td>{{fee}}</td>
                 <td>{{xmr_outputs}}</td>
+                <td>{{no_inputs}}/{{no_outputs}}</td>
                 <td>{{mixin}}</td>
                 <td>{{txsize}}</td>
             </tr>
