@@ -1045,7 +1045,7 @@ namespace xmreg {
                 // get mixins in time scale for visual representation
                 pair<string, double> mixin_times_scale = xmreg::timestamps_time_scale(
                                                             mixin_timestamps,
-                                                            server_timestamp, 175);
+                                                            server_timestamp, 170);
 
                 // save resolution of mixin timescales
                 timescale_scale = mixin_times_scale.second;
