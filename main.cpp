@@ -71,12 +71,12 @@ int main(int ac, const char* av[]) {
 
     CROW_ROUTE(app, "/")
     ([&]() {
-        return xmrblocks.index();
+        return xmrblocks.index2();
     });
 
     CROW_ROUTE(app, "/page/<uint>")
     ([&](size_t page_no) {
-        return xmrblocks.index(page_no);
+        return xmrblocks.index2(page_no);
     });
 
     CROW_ROUTE(app, "/block/<uint>")

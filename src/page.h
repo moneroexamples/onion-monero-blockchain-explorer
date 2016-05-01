@@ -442,6 +442,12 @@ namespace xmreg {
                     continue;
                 }
 
+                // get block's hash
+                crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
+
+                // remove "<" and ">" from the hash string
+                string blk_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", blk_hash));
+
                 // get block age
 
                 pair<string, string> age = get_age(server_timestamp, blk.timestamp);
@@ -476,6 +482,8 @@ namespace xmreg {
                     mstch::map txd_map = txd.get_mstch_map();
 
                     //add age to the txd mstch map
+                    txd_map.insert({"height"    , i});
+                    txd_map.insert({"blk_hash"  , blk_hash_str});
                     txd_map.insert({"time_delta", time_delta_str});
                     txd_map.insert({"age"       , age.first});
 
@@ -503,10 +511,10 @@ namespace xmreg {
             context["mempool_info"] = mempool_html;
 
             // read index.html
-            string index_html = xmreg::read(TMPL_INDEX2);
+            string index2_html = xmreg::read(TMPL_INDEX2);
 
             // add header and footer
-            string full_page = get_full_page(index_html);
+            string full_page = get_full_page(index2_html);
 
             // render the page
             return mstch::render(full_page, context);
