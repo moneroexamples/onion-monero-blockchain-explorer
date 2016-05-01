@@ -28,6 +28,8 @@ namespace xmreg
      */
     class MicroCore {
 
+        string blockchain_path;
+
         tx_memory_pool m_mempool;
         Blockchain m_blockchain_storage;
 
@@ -35,7 +37,7 @@ namespace xmreg
         MicroCore();
 
         bool
-        init(const string& blockchain_path);
+        init(const string& _blockchain_path);
 
         Blockchain&
         get_core();
@@ -63,6 +65,9 @@ namespace xmreg
 
         uint64_t
         get_blk_timestamp(uint64_t blk_height);
+
+        string
+        get_blkchain_path();
 
 
         virtual ~MicroCore();

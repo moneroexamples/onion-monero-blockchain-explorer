@@ -32,9 +32,11 @@ namespace xmreg
      * Initialize m_blockchain_storage with the BlockchainLMDB object.
      */
     bool
-    MicroCore::init(const string& blockchain_path)
+    MicroCore::init(const string& _blockchain_path)
     {
         int db_flags = 0;
+
+        blockchain_path = _blockchain_path;
 
         //db_flags |= MDB_RDONLY;
         //db_flags |= MDB_NOLOCK;
@@ -45,7 +47,7 @@ namespace xmreg
         db_flags = DEFAULT_FLAGS;
 
         BlockchainDB* db = nullptr;
-        db = new BlockchainLMDB();
+        db = new BlockchainLMDB();                        
 
         try
         {
@@ -322,5 +324,10 @@ namespace xmreg
         return true;
     }
 
+    string
+    MicroCore::get_blkchain_path()
+    {
+        return blockchain_path;
+    }
 
 }

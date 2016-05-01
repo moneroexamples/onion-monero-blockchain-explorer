@@ -27,6 +27,7 @@
 #define TMPL_DIR             "./templates"
 #define TMPL_PARIALS_DIR     TMPL_DIR "/partials"
 #define TMPL_INDEX           TMPL_DIR "/index.html"
+#define TMPL_INDEX2          TMPL_DIR "/index2.html"
 #define TMPL_MEMPOOL         TMPL_DIR "/mempool.html"
 #define TMPL_HEADER          TMPL_DIR "/header.html"
 #define TMPL_FOOTER          TMPL_DIR "/footer.html"
@@ -194,6 +195,13 @@ namespace xmreg {
 
         }
 
+
+        /**
+         * @brief Show recent blocks and mempool
+         * @param page_no block page to show
+         * @param refresh_page enable autorefresh
+         * @return rendered index page
+         */
         string
         index(uint64_t page_no = 0, bool refresh_page = false)
         {
@@ -377,6 +385,135 @@ namespace xmreg {
         }
 
 
+
+        /**
+         * @brief show recent transactions and mempool
+         * @param page_no block page to show
+         * @param refresh_page enable autorefresh
+         * @return rendered index page
+         */
+        string
+        index2(uint64_t page_no = 0, bool refresh_page = false)
+        {
+
+            //get current server timestamp
+            server_timestamp = std::time(nullptr);
+
+            // number of last blocks to show
+            uint64_t no_of_last_blocks {20 + 1};
+
+            // get the current blockchain height. Just to check
+            uint64_t height =
+                    xmreg::MyLMDB::get_blockchain_height(mcore->get_blkchain_path());
+
+            // initalise page tempate map with basic info about blockchain
+            mstch::map context {
+                    {"refresh"         , refresh_page},
+                    {"height"          , std::to_string(height)},
+                    {"server_timestamp", xmreg::timestamp_to_str(server_timestamp)},
+                    {"age_format"      , string("[h:m:d]")},
+                    {"page_no"         , std::to_string(page_no)},
+                    {"total_page_no"   , std::to_string(height / (no_of_last_blocks))},
+                    {"is_page_zero"    , !bool(page_no)},
+                    {"next_page"       , std::to_string(page_no + 1)},
+                    {"prev_page"       , std::to_string((page_no > 0 ? page_no - 1 : 0))},
+                    {"txs"             , mstch::array()}, // will keep tx to show
+            };
+
+            // get reference to txs mstch map to be field below
+            mstch::array& txs = boost::get<mstch::array>(context["txs"]);
+
+            // calculate starting and ending block numbers to show
+            uint64_t start_height = height - no_of_last_blocks * (page_no + 1);
+            uint64_t end_height   = height - no_of_last_blocks * (page_no);
+
+            // previous blk timestamp, initalised to lowest possible value
+            double prev_blk_timestamp {std::numeric_limits<double>::lowest()};
+
+            // iterate over last no_of_last_blocks of blocks
+            for (uint64_t i = start_height; i <= end_height; ++i)
+            {
+                // get block at the given height i
+                block blk;
+
+                if (!mcore->get_block_by_height(i, blk))
+                {
+                    cerr << "Cant get block: " << i << endl;
+                    continue;
+                }
+
+                // get block age
+
+                pair<string, string> age = get_age(server_timestamp, blk.timestamp);
+
+                context["age_format"] = age.second;
+
+                // get time difference [m] between previous and current blocks
+                string time_delta_str {};
+
+                if (prev_blk_timestamp > std::numeric_limits<double>::lowest())
+                {
+                  time_delta_str = fmt::format("{:0.2f}",
+                      (double(blk.timestamp) - double(prev_blk_timestamp))/60.0);
+                }
+
+                // get all transactions in the block found
+                // initialize the first list with transaction for solving
+                // the block i.e. coinbase.
+                list<cryptonote::transaction> blk_txs {blk.miner_tx};
+                list<crypto::hash> missed_txs;
+
+                if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs))
+                {
+                    cerr << "Cant get transactions in block: " << i << endl;
+                    continue;
+                }
+
+                for (const cryptonote::transaction& tx : blk_txs)
+                {
+                    tx_details txd = get_tx_details(tx);
+
+                    mstch::map txd_map = txd.get_mstch_map();
+
+                    //add age to the txd mstch map
+                    txd_map.insert({"time_delta", time_delta_str});
+                    txd_map.insert({"age"       , age.first});
+
+                    txs.push_back(txd_map);
+                }
+
+            } // for (uint64_t i = start_height; i <= end_height; ++i)
+
+            // reverse txs and remove last (i.e., oldest)
+            // tx. This is done so that time delats
+            // are easier to calcualte in the above for loop
+            std::reverse(txs.begin(), txs.end());
+
+            // if we look at the genesis time, we should not remove
+            // the last block, i.e. genesis one.
+            if (!(start_height < 2))
+            {
+              txs.pop_back();
+            }
+
+            // get memory pool rendered template
+            string mempool_html = mempool();
+
+            // append mempool_html to the index context map
+            context["mempool_info"] = mempool_html;
+
+            // read index.html
+            string index_html = xmreg::read(TMPL_INDEX2);
+
+            // add header and footer
+            string full_page = get_full_page(index_html);
+
+            // render the page
+            return mstch::render(full_page, context);
+
+        }
+
+
         string
         mempool()
         {
@@ -550,7 +687,7 @@ namespace xmreg {
             // timescale representation for each tx in the block
             vector<string> mixin_timescales_str;
 
-            // for each transaction in the memory pool
+            // for each transaction in the block
             for (size_t i = 0; i < blk.tx_hashes.size(); ++i)
             {
                 // get transaction info of the tx in the mempool
