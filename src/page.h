@@ -1189,6 +1189,7 @@ namespace xmreg {
             mstch::map context {
                     {"search_text", search_text},
                     {"no_results" , true},
+                    {"to_many_results", false}
             };
 
             for (const pair<string, vector<string>>& found_txs: all_possible_tx_hashes)
@@ -1204,7 +1205,9 @@ namespace xmreg {
                         = context.insert({found_txs.first, mstch::array{}});
 
                 if (!found_txs.second.empty())
-                {                    
+                {
+
+                    uint64_t tx_i {0};
 
                     // for each found tx_hash, get the corresponding tx
                     // and its details, and put into mstch for rendering
@@ -1221,11 +1224,19 @@ namespace xmreg {
                         tx_details txd = get_tx_details(tx);
 
                         boost::get<mstch::array>((res.first)->second).push_back(txd.get_mstch_map());
+
+                        // dont show more than 500 results
+                        if (tx_i > 500)
+                        {
+                            context["to_many_results"] = true;
+                            break;
+                        }
+
+                        ++tx_i;
                     }
 
                     // if found something, set this flag to indicate this fact
                     context["no_results"] = false;
-
                 }
             }
 
