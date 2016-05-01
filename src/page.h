@@ -73,7 +73,7 @@ namespace xmreg {
         uint64_t size;
         size_t   version;
         uint64_t unlock_time;
-        vector<uint8_t> extra;
+        vector<uint8_t> extra;        
 
         crypto::hash  payment_id  = null_hash; // normal
         crypto::hash8 payment_id8 = null_hash8; // encrypted
@@ -1223,7 +1223,16 @@ namespace xmreg {
 
                         tx_details txd = get_tx_details(tx);
 
-                        boost::get<mstch::array>((res.first)->second).push_back(txd.get_mstch_map());
+                        mstch::map txd_map = txd.get_mstch_map();
+
+                        // get timestamp of the tx's block
+                        uint64_t blk_height = core_storage->get_db().get_tx_block_height(txd.hash);
+                        uint64_t blk_timestamp = core_storage->get_db().get_block_timestamp(blk_height);
+
+                        // add the timestamp to tx mstch map
+                        txd_map.insert({"timestamp", xmreg::timestamp_to_str(blk_timestamp)});
+
+                        boost::get<mstch::array>((res.first)->second).push_back(txd_map);
 
                         // dont show more than 500 results
                         if (tx_i > 500)
