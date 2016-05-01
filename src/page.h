@@ -502,8 +502,11 @@ namespace xmreg {
 
                 uint64_t tx_i {0};
 
-                for (const cryptonote::transaction& tx : blk_txs)
-                {
+                for(list<cryptonote::transaction>::reverse_iterator rit = blk_txs.rbegin();
+                    rit != blk_txs.rend(); ++rit)
+                {                    
+                    const cryptonote::transaction& tx = *rit;
+
                     tx_details txd = get_tx_details(tx);
 
                     mstch::map txd_map = txd.get_mstch_map();
@@ -515,8 +518,9 @@ namespace xmreg {
                     txd_map.insert({"age"       , age.first});
 
                     // do not show block info for other than
-                    // first tx in the block
-                    if (tx_i > 0)
+                    // last (i.e., first after reverse below)
+                    // tx in the block
+                    if (tx_i < blk_txs.size() - 1)
                     {
                         txd_map["height"]     = string("");
                         txd_map["age"]        = string("");
