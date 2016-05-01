@@ -27,7 +27,7 @@
             <table class="center">
                 <tr>
                     <td>height</td>
-                    <td>age {{age_format}} (Δm)</td>
+                    <td>age {{age_format}}<!--(Δm)--></td>
                     <td>tx hash</td>
                     <td>fees</td>
                     <td>outputs</td>
@@ -38,7 +38,7 @@
                 {{#txs}}
                 <tr>
                     <td><a href="/block/{{height}}">{{height}}</a></td>
-                    <td>{{age}} {{time_delta}}</td>
+                    <td>{{age}}<!--{{time_delta}}--></td>
                     <td><a href="/tx/{{hash}}">{{hash}}</a></td>
                     <td>{{tx_fee_short}}</td>
                     <td>{{sum_outputs_short}}</td>
