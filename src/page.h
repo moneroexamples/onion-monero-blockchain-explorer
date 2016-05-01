@@ -100,26 +100,43 @@ namespace xmreg {
             string pid_str   = REMOVE_HASH_BRAKETS(fmt::format("{:s}", payment_id));
             string pid8_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", payment_id8));
 
+            string mixin_str {"N/A"};
+            string fee_str {"N/A"};
+            string fee_short_str {"N/A"};
+
+            if (!input_key_imgs.empty())
+            {
+                mixin_str     = std::to_string(mixin_no - 1);
+                fee_str       = fmt::format("{:0.6f}", XMR_AMOUNT(fee));
+                fee_short_str = fmt::format("{:0.3f}", XMR_AMOUNT(fee));
+            }
+
 
             //cout << "extra: " << extra_str << endl;
 
             mstch::map txd_map {
-                {"hash"            , tx_hash_str},
-                {"pub_key"         , tx_pk_str},
-                {"tx_fee"          , fmt::format("{:0.6f}", XMR_AMOUNT(fee))},
-                {"sum_inputs"      , fmt::format("{:0.6f}", XMR_AMOUNT(xmr_inputs))},
-                {"sum_outputs"     , fmt::format("{:0.6f}", XMR_AMOUNT(xmr_outputs))},
-                {"no_inputs"       , input_key_imgs.size()},
-                {"no_outputs"      , output_pub_keys.size()},
-                {"mixin"           , std::to_string(mixin_no - 1)},
-                {"version"         , std::to_string(version)},
-                {"has_payment_id"  , payment_id  != null_hash},
-                {"has_payment_id8" , payment_id8 != null_hash8},
-                {"payment_id"      , pid_str},
-                {"extra"           , get_extra_str()},
-                {"payment_id8"     , pid8_str},
-                {"unlock_time"     , std::to_string(unlock_time)},
-                {"tx_size"         , fmt::format("{:0.4f}", static_cast<double>(size)/1024.0)}
+                {"hash"              , tx_hash_str},
+                {"pub_key"           , tx_pk_str},
+                {"tx_fee"            , fee_str},
+                {"tx_fee_short"      , fee_short_str},
+                {"sum_inputs"        , fmt::format("{:0.6f}", XMR_AMOUNT(xmr_inputs))},
+                {"sum_outputs"       , fmt::format("{:0.6f}", XMR_AMOUNT(xmr_outputs))},
+                {"sum_inputs_short"  , fmt::format("{:0.3f}", XMR_AMOUNT(xmr_inputs))},
+                {"sum_outputs_short" , fmt::format("{:0.3f}", XMR_AMOUNT(xmr_outputs))},
+                {"no_inputs"         , input_key_imgs.size()},
+                {"no_outputs"        , output_pub_keys.size()},
+                {"mixin"             , mixin_str},
+                {"version"           , std::to_string(version)},
+                {"has_payment_id"    , payment_id  != null_hash},
+                {"has_payment_id8"   , payment_id8 != null_hash8},
+                {"payment_id"        , pid_str},
+                {"extra"             , get_extra_str()},
+                {"payment_id8"       , pid8_str},
+                {"unlock_time"       , std::to_string(unlock_time)},
+                {"tx_size"           , fmt::format("{:0.4f}",
+                                                   static_cast<double>(size)/1024.0)},
+                {"tx_size_short"     , fmt::format("{:0.2f}",
+                                                   static_cast<double>(size)/1024.0)}
             };
 
 
@@ -400,11 +417,11 @@ namespace xmreg {
             server_timestamp = std::time(nullptr);
 
             // number of last blocks to show
-            uint64_t no_of_last_blocks {20 + 1};
+            uint64_t no_of_last_blocks {50 + 1};
 
             // get the current blockchain height. Just to check
             uint64_t height =
-                    xmreg::MyLMDB::get_blockchain_height(mcore->get_blkchain_path());
+                    xmreg::MyLMDB::get_blockchain_height(mcore->get_blkchain_path()) - 1;
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
@@ -426,6 +443,14 @@ namespace xmreg {
             // calculate starting and ending block numbers to show
             uint64_t start_height = height - no_of_last_blocks * (page_no + 1);
             uint64_t end_height   = height - no_of_last_blocks * (page_no);
+
+            // check few conditions to make sure we are whithin the avaliable range
+            //@TODO its too messed up. needs to find cleaner way.
+            start_height = start_height > 0      ? start_height : 0;
+            end_height   = end_height   < height ? end_height   : height;
+            start_height = start_height > end_height ? 0 : start_height;
+            end_height   = end_height - start_height > no_of_last_blocks
+                           ? no_of_last_blocks : end_height;
 
             // previous blk timestamp, initalised to lowest possible value
             double prev_blk_timestamp {std::numeric_limits<double>::lowest()};
@@ -459,7 +484,7 @@ namespace xmreg {
 
                 if (prev_blk_timestamp > std::numeric_limits<double>::lowest())
                 {
-                  time_delta_str = fmt::format("{:0.2f}",
+                  time_delta_str = fmt::format("({:06.2f})",
                       (double(blk.timestamp) - double(prev_blk_timestamp))/60.0);
                 }
 
@@ -475,6 +500,8 @@ namespace xmreg {
                     continue;
                 }
 
+                uint64_t tx_i {0};
+
                 for (const cryptonote::transaction& tx : blk_txs)
                 {
                     tx_details txd = get_tx_details(tx);
@@ -487,8 +514,22 @@ namespace xmreg {
                     txd_map.insert({"time_delta", time_delta_str});
                     txd_map.insert({"age"       , age.first});
 
+                    // do not show block info for other than
+                    // first tx in the block
+                    if (tx_i > 0)
+                    {
+                        txd_map["height"]     = string("");
+                        txd_map["age"]        = string("");
+                        txd_map["time_delta"] = string("");
+                    }
+
                     txs.push_back(txd_map);
+
+                    ++tx_i;
                 }
+
+                // save current's block timestamp as reference for the next one
+                prev_blk_timestamp  = static_cast<double>(blk.timestamp);
 
             } // for (uint64_t i = start_height; i <= end_height; ++i)
 
@@ -501,7 +542,7 @@ namespace xmreg {
             // the last block, i.e. genesis one.
             if (!(start_height < 2))
             {
-              txs.pop_back();
+              //txs.pop_back();
             }
 
             // get memory pool rendered template

@@ -109,7 +109,7 @@ int main(int ac, const char* av[]) {
     ([&]() {
         uint64_t page_no {0};
         bool refresh_page {true};
-        return xmrblocks.index(page_no, refresh_page);
+        return xmrblocks.index2(page_no, refresh_page);
     });
 
     // run the crow http server
