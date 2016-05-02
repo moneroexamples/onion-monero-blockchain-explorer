@@ -73,7 +73,7 @@ namespace xmreg {
         uint64_t size;
         size_t   version;
         uint64_t unlock_time;
-        vector<uint8_t> extra;        
+        vector<uint8_t> extra;
 
         crypto::hash  payment_id  = null_hash; // normal
         crypto::hash8 payment_id8 = null_hash8; // encrypted
@@ -504,7 +504,7 @@ namespace xmreg {
 
                 for(list<cryptonote::transaction>::reverse_iterator rit = blk_txs.rbegin();
                     rit != blk_txs.rend(); ++rit)
-                {                    
+                {
                     const cryptonote::transaction& tx = *rit;
 
                     tx_details txd = get_tx_details(tx);
@@ -1147,12 +1147,18 @@ namespace xmreg {
 
             result_html = default_txt;
 
+            // get mempool transaction so that what we search,
+            // might be there. Note: show_tx above already searches it
+            // but only looks for tx hash. Now want to check
+            // for key_images, public_keys, payments_id, etc.
+            vector<transaction> mempool_txs = get_mempool_txs();
+
             // now search my own custom lmdb database
             // with key_images, public_keys, payments_id etc.
 
             vector<pair<string, vector<string>>> all_possible_tx_hashes;
 
-            xmreg::MyLMDB mylmdb {"/home/mwo/.bitmonero/lmdb2"};
+            xmreg::MyLMDB mylmdb {mcore->get_blkchain_path()};
 
             vector<string> tx_hashes;
             mylmdb.search(search_text, tx_hashes, "key_images");
@@ -1179,26 +1185,42 @@ namespace xmreg {
             return result_html;
         }
 
+        vector<transaction>
+        get_mempool_txs()
+        {
+            // get mempool data using rpc call
+            vector<pair<tx_info, transaction>> mempool_data = search_mempool();
+
+            // output only transactions
+            vector<transaction> mempool_txs;
+
+            mempool_txs.reserve(mempool_data.size());
+
+            for (const auto& a_pair: mempool_data)
+            {
+                mempool_txs.push_back(a_pair.second);
+            }
+
+            return mempool_txs;
+        }
+
         string
         show_search_results(const string& search_text,
             const vector<pair<string, vector<string>>>& all_possible_tx_hashes)
-
         {
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
-                    {"search_text", search_text},
-                    {"no_results" , true},
+                    {"search_text"    , search_text},
+                    {"no_results"     , true},
                     {"to_many_results", false}
             };
 
             for (const pair<string, vector<string>>& found_txs: all_possible_tx_hashes)
             {
-
                 // define flag, e.g., has_key_images denoting that
                 // tx hashes for key_image searched were found
                 context.insert({"has_" + found_txs.first, !found_txs.second.empty()});
-
 
                 // insert new array based on what we found to context if not exist
                 pair< mstch::map::iterator, bool> res
@@ -1226,8 +1248,10 @@ namespace xmreg {
                         mstch::map txd_map = txd.get_mstch_map();
 
                         // get timestamp of the tx's block
-                        uint64_t blk_height = core_storage->get_db().get_tx_block_height(txd.hash);
-                        uint64_t blk_timestamp = core_storage->get_db().get_block_timestamp(blk_height);
+                        uint64_t blk_height    = core_storage
+                                                    ->get_db().get_tx_block_height(txd.hash);
+                        uint64_t blk_timestamp = core_storage
+                                                    ->get_db().get_block_timestamp(blk_height);
 
                         // add the timestamp to tx mstch map
                         txd_map.insert({"timestamp", xmreg::timestamp_to_str(blk_timestamp)});
@@ -1252,7 +1276,7 @@ namespace xmreg {
             // read search_results.html
             string search_results_html = xmreg::read(TMPL_SEARCH_RESULTS);
 
-            // add header and footer            
+            // add header and footer
             string full_page = get_full_page(search_results_html);
 
             // read partial for showing details of tx(s) found
@@ -1268,6 +1292,19 @@ namespace xmreg {
 
 
     private:
+
+        map<string, vector<string>>
+        get_tx_keys(vector<tx_info> tx_infos)
+        {
+            map<string, vector<string>> tx_keys;
+
+            for (const tx_info& tx_info: tx_infos)
+            {
+
+            }
+
+            return tx_keys;
+        }
 
         tx_details
         get_tx_details(const transaction& tx, bool coinbase = false)
@@ -1316,7 +1353,7 @@ namespace xmreg {
         }
 
         vector<pair<tx_info, transaction>>
-        search_mempool(crypto::hash tx_hash)
+        search_mempool(crypto::hash tx_hash = null_hash)
         {
 
             vector<pair<tx_info, transaction>> found_txs;
@@ -1363,12 +1400,22 @@ namespace xmreg {
                     }
 
 
-                    // check if tx hash matches, and if yes, save it for return
-                    if (tx_hash == get_transaction_hash(tx))
+                    // if we dont provide tx_hash, just get all txs in
+                    // the mempool
+                    if (tx_hash != null_hash)
                     {
-                        found_txs.push_back(make_pair(_tx_info, tx));
-                        break;
+                        // check if tx hash matches, and if yes, save it for return
+                        if (tx_hash == get_transaction_hash(tx))
+                        {
+                            found_txs.push_back(make_pair(_tx_info, tx));
+                            break;
+                        }
                     }
+                    else
+                    {
+                       found_txs.push_back(make_pair(_tx_info, tx));
+                    }
+
                 }
             }
 
