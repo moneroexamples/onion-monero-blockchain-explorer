@@ -101,7 +101,7 @@ int main(int ac, const char* av[]) {
 
 
     CROW_ROUTE(app, "/search").methods("GET"_method)
-    ([&](const crow::request& req) {        
+    ([&](const crow::request& req) {
         return xmrblocks.search(string(req.url_params.get("value")));
     });
 

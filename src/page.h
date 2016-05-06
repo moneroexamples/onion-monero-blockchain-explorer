@@ -1322,9 +1322,9 @@ namespace xmreg {
             txd.xmr_outputs = sum_money_in_outputs(tx);
 
             // get mixin number
-            txd.mixin_no    = get_mixin_no(tx);
+            txd.mixin_no    = get_mixin_no(tx);            
 
-            if (!coinbase)
+            if (!coinbase &&  tx.vin.size() > 1)
             {
                 // get tx fee
                 txd.fee = get_tx_fee(tx);
