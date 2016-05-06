@@ -274,10 +274,6 @@ namespace xmreg
                 lmdb::txn wtxn = lmdb::txn::begin(m_env);
                 lmdb::dbi wdbi = lmdb::dbi::open(wtxn, "encrypted_payments_id", flags);
 
-                //cout << "Saving encrypted payiment_id: " << payment_id_str << endl;
-                //string wait_for_enter;
-                //cin >> wait_for_enter;
-
                 lmdb::val payment_id_val {payment_id_str};
                 lmdb::val tx_hash_val    {tx_hash_str};
 
@@ -303,7 +299,7 @@ namespace xmreg
 
             try
             {
-
+            
                 lmdb::txn rtxn  = lmdb::txn::begin(m_env, nullptr, MDB_RDONLY);
                 lmdb::dbi rdbi  = lmdb::dbi::open(rtxn, db_name.c_str(), flags);
                 lmdb::cursor cr = lmdb::cursor::open(rtxn, rdbi);

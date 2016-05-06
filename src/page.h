@@ -851,7 +851,7 @@ namespace xmreg {
             if (!mcore->get_tx(tx_hash, tx))
             {
                 cerr << "Cant get tx in blockchain: " << tx_hash
-                     << ". Check mempool now" << endl;
+                     << ". \n Check mempool now" << endl;
 
                 vector<pair<tx_info, transaction>> found_txs
                         = search_mempool(tx_hash);
@@ -1153,36 +1153,154 @@ namespace xmreg {
             // for key_images, public_keys, payments_id, etc.
             vector<transaction> mempool_txs = get_mempool_txs();
 
+            // key is string indicating where search_text was found.
+            map<string, vector<string>> tx_search_results
+                                = search_txs(mempool_txs, search_text);
+
             // now search my own custom lmdb database
             // with key_images, public_keys, payments_id etc.
 
             vector<pair<string, vector<string>>> all_possible_tx_hashes;
 
-            xmreg::MyLMDB mylmdb {mcore->get_blkchain_path()};
+            //@TODO make lmdb2 path to some option
+            xmreg::MyLMDB mylmdb {"/home/mwo/.bitmonero/lmdb2"};
 
-            vector<string> tx_hashes;
-            mylmdb.search(search_text, tx_hashes, "key_images");
-            all_possible_tx_hashes.push_back(make_pair("key_images", tx_hashes));
+            // search the custum lmdb for key_images and append the result
+            // to those from the mempool search if found
 
-            tx_hashes.clear();
-            mylmdb.search(search_text, tx_hashes, "tx_public_keys");
-            all_possible_tx_hashes.push_back(make_pair("tx_public_keys", tx_hashes));
+            mylmdb.search(search_text,
+                         tx_search_results["key_images"],
+                         "key_images");
 
-            tx_hashes.clear();
-            mylmdb.search(search_text, tx_hashes, "payments_id");
-            all_possible_tx_hashes.push_back(make_pair("payments_id", tx_hashes));
+            cout << "size: " << tx_search_results["key_images"].size() << endl;
 
-            tx_hashes.clear();
-            mylmdb.search(search_text, tx_hashes, "encrypted_payments_id");
-            all_possible_tx_hashes.push_back(make_pair("encrypted_payments_id", tx_hashes));
+            all_possible_tx_hashes.push_back(
+                    make_pair("key_images",
+                               tx_search_results["key_images"]));
 
-            tx_hashes.clear();
-            mylmdb.search(search_text, tx_hashes, "output_public_keys");
-            all_possible_tx_hashes.push_back(make_pair("output_public_keys", tx_hashes));
+
+           // search the custum lmdb for tx_public_keys and append the result
+           // to those from the mempool search if found
+
+            mylmdb.search(search_text,
+                         tx_search_results["tx_public_keys"],
+                         "tx_public_keys");
+
+            all_possible_tx_hashes.push_back(
+                    make_pair("tx_public_keys",
+                               tx_search_results["tx_public_keys"]));
+
+           // search the custum lmdb for payments_id and append the result
+           // to those from the mempool search if found
+
+            mylmdb.search(search_text,
+                          tx_search_results["payments_id"],
+                          "payments_id");
+
+            all_possible_tx_hashes.push_back(
+                    make_pair("payments_id",
+                              tx_search_results["payments_id"]));
+
+            // search the custum lmdb for encrypted_payments_id and append the result
+            // to those from the mempool search if found
+
+            mylmdb.search(search_text,
+                          tx_search_results["encrypted_payments_id"],
+                          "encrypted_payments_id");
+
+            all_possible_tx_hashes.push_back(
+                    make_pair("encrypted_payments_id",
+                              tx_search_results["encrypted_payments_id"]));
+
+            // search the custum lmdb for output_public_keys and append the result
+            // to those from the mempool search if found
+
+            mylmdb.search(search_text,
+                          tx_search_results["output_public_keys"],
+                          "output_public_keys");
+
+            all_possible_tx_hashes.push_back(
+                    make_pair("output_public_keys",
+                              tx_search_results["output_public_keys"]));
 
             result_html = show_search_results(search_text, all_possible_tx_hashes);
 
             return result_html;
+        }
+
+
+        map<string, vector<string>>
+        search_txs(vector<transaction> txs, const string& search_text)
+        {
+            map<string, vector<string>> tx_hashes;
+
+            // initlizte the map with empty results
+            tx_hashes["key_images"]            = {};
+            tx_hashes["tx_public_keys"]        = {};
+            tx_hashes["payments_id"]           = {};
+            tx_hashes["encrypted_payments_id"] = {};
+            tx_hashes["output_public_keys"]    = {};
+
+            for (const transaction& tx: txs)
+            {
+
+                tx_details txd = get_tx_details(tx);
+
+                string tx_hash_str = pod_to_hex(txd.hash);
+
+                // check if any key_image matches the search_text
+
+                vector<txin_to_key>::iterator it1 =
+                    find_if(begin(txd.input_key_imgs), end(txd.input_key_imgs),
+                        [&](const txin_to_key& key_img)
+                        {
+                            return pod_to_hex(key_img.k_image) == search_text;
+                        });
+
+                if (it1 != txd.input_key_imgs.end())
+                {
+                    tx_hashes["key_images"].push_back(tx_hash_str);
+                }
+
+                // check if  tx_public_key matches the search_text
+
+                if (pod_to_hex(txd.pk) == search_text)
+                {
+                    tx_hashes["tx_public_keys"].push_back(tx_hash_str);
+                }
+
+                // check if  payments_id matches the search_text
+
+                if (pod_to_hex(txd.payment_id) == search_text)
+                {
+                    tx_hashes["payment_id"].push_back(tx_hash_str);
+                }
+
+                // check if  encrypted_payments_id matches the search_text
+
+                if (pod_to_hex(txd.payment_id8) == search_text)
+                {
+                    tx_hashes["encrypted_payments_id"].push_back(tx_hash_str);
+                }
+
+                // check if output_public_keys matche the search_text
+
+                vector<pair<txout_to_key, uint64_t>>::iterator it2 =
+                    find_if(begin(txd.output_pub_keys), end(txd.output_pub_keys),
+                        [&](const pair<txout_to_key, uint64_t>& tx_out_pk)
+                        {
+                            return pod_to_hex(tx_out_pk.first.key) == search_text;
+                        });
+
+                if (it2 != txd.output_pub_keys.end())
+                {
+                    tx_hashes["output_public_keys"].push_back(tx_hash_str);
+                }
+
+            }
+
+            return  tx_hashes;
+
         }
 
         vector<transaction>
@@ -1240,7 +1358,7 @@ namespace xmreg {
 
                         if (!mcore->get_tx(tx_hash, tx))
                         {
-                            return string("Cant get tx of hash: " + tx_hash);
+                            return string("Cant get tx of hash (show_search_results): " + tx_hash);
                         }
 
                         tx_details txd = get_tx_details(tx);
@@ -1322,7 +1440,7 @@ namespace xmreg {
             txd.xmr_outputs = sum_money_in_outputs(tx);
 
             // get mixin number
-            txd.mixin_no    = get_mixin_no(tx);            
+            txd.mixin_no    = get_mixin_no(tx);
 
             if (!coinbase &&  tx.vin.size() > 1)
             {
