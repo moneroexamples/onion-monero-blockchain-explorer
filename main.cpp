@@ -30,9 +30,10 @@ int main(int ac, const char* av[]) {
         return 0;
     }
 
-    auto port_opt         = opts.get_option<string>("port");
-    auto bc_path_opt      = opts.get_option<string>("bc-path");
-    auto deamon_url_opt   = opts.get_option<string>("deamon-url");
+    auto port_opt           = opts.get_option<string>("port");
+    auto bc_path_opt        = opts.get_option<string>("bc-path");
+    auto custom_db_path_opt = opts.get_option<string>("custom-db-path");
+    auto deamon_url_opt     = opts.get_option<string>("deamon-url");
 
     //cast port number in string to uint16
     uint16_t app_port = boost::lexical_cast<uint16_t>(*port_opt);

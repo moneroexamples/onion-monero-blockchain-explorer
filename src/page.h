@@ -215,6 +215,9 @@ namespace xmreg {
 
         /**
          * @brief Show recent blocks and mempool
+         *
+         * Not used currently. index2 method is used instead
+         *
          * @param page_no block page to show
          * @param refresh_page enable autorefresh
          * @return rendered index page
@@ -567,6 +570,9 @@ namespace xmreg {
         }
 
 
+        /**
+         * Render mempool data
+         */
         string
         mempool()
         {
@@ -1241,10 +1247,6 @@ namespace xmreg {
             tx_hashes["encrypted_payments_id"] = {};
             tx_hashes["output_public_keys"]    = {};
 
-            cout << "txs.size(): " << txs.size() << endl;
-
-            cout << "search_text: " << search_text << endl;
-
             for (const transaction& tx: txs)
             {
 
@@ -1268,14 +1270,10 @@ namespace xmreg {
 
                 // check if  tx_public_key matches the search_text
 
-                cout << "txd.pk: " << pod_to_hex(txd.pk) << endl;
-
                 if (pod_to_hex(txd.pk) == search_text)
                 {
                     tx_hashes["tx_public_keys"].push_back(tx_hash_str);
                 }
-
-                cout << "txd.payment_id: " << txd.payment_id << endl;
 
                 // check if  payments_id matches the search_text
 

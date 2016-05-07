@@ -18,7 +18,7 @@ namespace xmreg
         p.add("txhash", -1);
 
         options_description desc(
-                "showmixins, shows mixin outputs used for each input in a given transaction");
+                "xmrblocks, start Onion Monero Blockchain Explorer");
 
         desc.add_options()
                 ("help,h", value<bool>()->default_value(false)->implicit_value(true),
@@ -27,6 +27,8 @@ namespace xmreg
                  "default port")
                 ("bc-path,b", value<string>(),
                  "path to lmdb blockchain")
+                ("custom-db-path,c", value<string>(),
+                 "path to the custom lmdb database used for searching things")
                 ("deamon-url,d", value<string>()->default_value("http:://127.0.0.1:18081"),
                  "monero address string");
 
