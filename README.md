@@ -2,7 +2,7 @@
 
 Two Monero blockchain explorer exist in the clearnet. Although useful,
 their limitations are that they use JavaScript, have images
-([might be used for coockless tracking](http://lucb1e.com/rp/cookielesscookies/)), use
+([might be used for coockless tracking](http://lucb1e.com/rp/cookielesscookies/)),
 track users activates through google analytics, are not open sourced, and are not
  available as hidden services. These things are of importance
  for privacy-oriented users.
