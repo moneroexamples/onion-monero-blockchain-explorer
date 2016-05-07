@@ -25,6 +25,9 @@ track users activates through google analytics, are not open sourced, and are no
  - made fully in C++ allowing for seamless integration with Monero
  - does not use RPC calls, except to get mempool data, which improves its performance
  and enables to fetch more information from the blockchain
+ - index page lists recent transactions in the blockchain and in the memory pool,
+  rather than only recent blocks, allowing for fast overview of recent activity in Monero
+
 
 
 
