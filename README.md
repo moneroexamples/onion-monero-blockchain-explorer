@@ -18,13 +18,14 @@ track users activates through google analytics, are not open sourced, and are no
   - [rapidjson](https://github.com/miloyip/rapidjson) - C++ JSON parser/generator
 
 
-
 ## Onion Monero Blockchain Explorer features
 
  - no javascript, no web analytics trackers, no images, i.e., no user tracking
  - open source which allows everyone to check its source code, fork it, contribute
  - made fully in C++ allowing for seamless integration with Monero
  - does not use RPC calls, except to get mempool data, which improves its performance
+ and enables to fetch more information from the blockchain
+
 
 
 
