@@ -27,7 +27,7 @@ int main(int ac, const char* av[]) {
     // if help was chosen, display help text and finish
     if (*help_opt)
     {
-        return 0;
+        return EXIT_SUCCESS;
     }
 
     auto port_opt           = opts.get_option<string>("port");
@@ -44,7 +44,7 @@ int main(int ac, const char* av[]) {
     if (!xmreg::get_blockchain_path(bc_path_opt, blockchain_path))
     {
         cerr << "Error getting blockchain path." << endl;
-        return 1;
+        return EXIT_FAILURE;
     }
 
      // enable basic monero log output
@@ -60,7 +60,7 @@ int main(int ac, const char* av[]) {
                                mcore, core_storage))
     {
         cerr << "Error accessing blockchain." << endl;
-        return 1;
+        return EXIT_FAILURE;
     }
 
     // create instance of page class which
@@ -116,5 +116,5 @@ int main(int ac, const char* av[]) {
     // run the crow http server
     app.port(app_port).multithreaded().run();
 
-    return 0;
+    return EXIT_SUCCESS;
 }
