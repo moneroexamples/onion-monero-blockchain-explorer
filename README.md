@@ -3,7 +3,7 @@
 Two Monero blockchain explorer exist in the clearnet. Although useful,
 their limitations are that they use JavaScript, have images
 ([might be used for coockless tracking](http://lucb1e.com/rp/cookielesscookies/)), use
-use google analytics, are not open sourced, and are not
+track users activates through google analytics, are not open sourced, and are not
  available as hidden services. These things are of importance
  for privacy-oriented users.
 
@@ -19,7 +19,7 @@ use google analytics, are not open sourced, and are not
 
 
 
-# Onion Monero Blockchain Explorer features
+## Onion Monero Blockchain Explorer features
 
  - no javascript, no web analytics trackers, no images, i.e., no user tracking
  - open source which allows everyone to check its source code, fork it, contribute
