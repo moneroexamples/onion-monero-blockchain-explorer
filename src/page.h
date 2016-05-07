@@ -1241,6 +1241,10 @@ namespace xmreg {
             tx_hashes["encrypted_payments_id"] = {};
             tx_hashes["output_public_keys"]    = {};
 
+            cout << "txs.size(): " << txs.size() << endl;
+
+            cout << "search_text: " << search_text << endl;
+
             for (const transaction& tx: txs)
             {
 
@@ -1264,10 +1268,14 @@ namespace xmreg {
 
                 // check if  tx_public_key matches the search_text
 
+                cout << "txd.pk: " << pod_to_hex(txd.pk) << endl;
+
                 if (pod_to_hex(txd.pk) == search_text)
                 {
                     tx_hashes["tx_public_keys"].push_back(tx_hash_str);
                 }
+
+                cout << "txd.payment_id: " << txd.payment_id << endl;
 
                 // check if  payments_id matches the search_text
 
@@ -1354,22 +1362,55 @@ namespace xmreg {
                     for (const string& tx_hash: found_txs.second)
                     {
 
+                        crypto::hash tx_hash_pod;
+
+                        epee::string_tools::hex_to_pod(tx_hash, tx_hash_pod);
+
                         transaction tx;
 
-                        if (!mcore->get_tx(tx_hash, tx))
+                        uint64_t blk_height {0};
+
+                        int64_t blk_timestamp;
+
+                        // first check in the blockchain
+                        if (mcore->get_tx(tx_hash, tx))
                         {
-                            return string("Cant get tx of hash (show_search_results): " + tx_hash);
+
+                            // get timestamp of the tx's block
+                            blk_height    = core_storage
+                                    ->get_db().get_tx_block_height(tx_hash_pod);
+
+                            blk_timestamp = core_storage
+                                    ->get_db().get_block_timestamp(blk_height);
+
+                        }
+                        else
+                        {
+                            // check in mempool if tx_hash not found in the
+                            // blockchain
+                            vector<pair<tx_info, transaction>> found_txs
+                                    = search_mempool(tx_hash_pod);
+
+                            if (!found_txs.empty())
+                            {
+                                // there should be only one tx found
+                                tx = found_txs.at(0).second;
+                            }
+                            else
+                            {
+                                return string("Cant get tx of hash (show_search_results): " + tx_hash);
+                            }
+
+                            // tx in mempool have no blk_timestamp
+                            // but can use their recive time
+                             blk_timestamp = found_txs.at(0).first.receive_time;
+
                         }
 
                         tx_details txd = get_tx_details(tx);
 
                         mstch::map txd_map = txd.get_mstch_map();
 
-                        // get timestamp of the tx's block
-                        uint64_t blk_height    = core_storage
-                                                    ->get_db().get_tx_block_height(txd.hash);
-                        uint64_t blk_timestamp = core_storage
-                                                    ->get_db().get_block_timestamp(blk_height);
 
                         // add the timestamp to tx mstch map
                         txd_map.insert({"timestamp", xmreg::timestamp_to_str(blk_timestamp)});
