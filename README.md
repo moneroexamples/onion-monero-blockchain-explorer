@@ -149,10 +149,8 @@ int main(int ac, const char* av[]) {
 
 ## Example screenshot
 
-![Onion Monero Blockchain Explorer](https://raw.githubusercontent.com/moneroexamples/onion-monero-blockchain-explorer/master/screenshot/screenshot.jpg | width=400)
+![Onion Monero Blockchain Explorer](https://raw.githubusercontent.com/moneroexamples/onion-monero-blockchain-explorer/master/screenshot/screenshot.jpg)
 
-
-<img src="https://raw.githubusercontent.com/moneroexamples/onion-monero-blockchain-explorer/master/screenshot/screenshot.jpg%20%7C%20width=400" alt="Onion Monero Blockchain Explorer" style="max-width:50%;">
 
 ## Compile this example
 The dependencies are same as those for Monero, so I assume Monero compiles
