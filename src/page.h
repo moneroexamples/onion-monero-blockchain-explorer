@@ -938,6 +938,7 @@ namespace xmreg {
                     {"blk_timestamp"        , blk_timestamp},
                     {"delta_time"           , age.first},
                     {"inputs_no"            , txd.input_key_imgs.size()},
+                    {"has_inputs"           , !txd.input_key_imgs.empty()},
                     {"outputs_no"           , txd.output_pub_keys.size()},
                     {"has_payment_id"       , txd.payment_id  != null_hash},
                     {"has_payment_id8"      , txd.payment_id8 != null_hash8},
