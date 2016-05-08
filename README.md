@@ -26,7 +26,7 @@ track users activates through google analytics, are not open sourced, and are no
  - the only explorer showing encrypted payments ID
  - the only explorer with the ability to search by encrypted payments ID, tx public
  keys, outputs public keys, input key images
- - the only explorer showing ring signatures for inputs
+ - the only explorer showing ring signatures
 
 
 ## Prerequisite
