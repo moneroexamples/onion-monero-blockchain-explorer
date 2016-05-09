@@ -1101,6 +1101,26 @@ namespace xmreg {
         show_my_outputs(string tx_hash_str, string xmr_address_str, string viewkey_str)
         {
 
+            // remove white characters
+            boost::trim(tx_hash_str);
+            boost::trim(xmr_address_str);
+            boost::trim(viewkey_str);
+
+            if (tx_hash_str.empty())
+            {
+                return string("tx hash not provided!");
+            }
+
+            if (xmr_address_str.empty())
+            {
+                return string("Monero address not provided!");
+            }
+
+            if (viewkey_str.empty())
+            {
+                return string("Viewkey not provided!");
+            }
+
             // parse tx hash string to hash object
             crypto::hash tx_hash;
 
