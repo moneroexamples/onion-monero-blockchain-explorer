@@ -6,7 +6,7 @@ Curently avaliable Monero blockchain explorer websites exist in the clearnet. Al
  - have images which might be used for [coockless tracking](http://lucb1e.com/rp/cookielesscookies/)),
  - track users activates through google analytics,
  - are closed sourced,
- - are not available as hidden services, 
+ - are not available as hidden services,
  - have very only basic search capabilities,
  - can't identify users ouputs based on provided Monero address and viewkey.
 
@@ -22,19 +22,20 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
 
 ## Onion Monero Blockchain Explorer features
 
- - no javascript, no web analytics trackers, no images
- - open source
- - made fully in C++
- - the only explorer showing encrypted payments ID
- - the only explorer with the ability to search by encrypted payments ID, tx public
- keys, outputs public keys, input key images
- - the only explorer showing ring signatures
- - the only explorer that can show which outputs belong to the given Monero address and viewkey
+ - no javascript, no web analytics trackers, no images,
+ - open source,
+ - made fully in C++,
+ - the only explorer showing encrypted payments ID,
+ - the only explorer with the ability to search by encrypted payments ID, tx public,
+ keys, outputs public keys, input key images,
+ - the only explorer showing ring signatures,
+ - the only explorer that can show which outputs belong to the given Monero address and viewkey,
+ - the only explorer showing detailed information about mixins, such as, mixins'
+ age, timescale, mixin of mixins.
 
 ## Prerequisite
 
-Everything here was done and tested using Monero 0.9.4 on
-Xubuntu 16.04 x86_64.
+Everything here was done and tested using Monero 0.9.4 on Ubuntu 16.04 x86_64.
 
 Instruction for Monero 0.9 compilation and Monero headers and libraries setup are
 as shown here:
