@@ -33,6 +33,7 @@
 #define TMPL_FOOTER          TMPL_DIR "/footer.html"
 #define TMPL_BLOCK           TMPL_DIR "/block.html"
 #define TMPL_TX              TMPL_DIR "/tx.html"
+#define TMPL_MY_OUTPUTS      TMPL_DIR "/my_outputs.html"
 #define TMPL_SEARCH_RESULTS  TMPL_DIR "/search_results.html"
 
 namespace xmreg {
@@ -1088,6 +1089,194 @@ namespace xmreg {
 
             // read tx.html
             string tx_html = xmreg::read(TMPL_TX);
+
+            // add header and footer
+            string full_page = get_full_page(tx_html);
+
+            // render the page
+            return mstch::render(full_page, context);
+        }
+
+        string
+        show_my_outputs(string tx_hash_str, string xmr_address_str, string viewkey_str)
+        {
+
+            // parse tx hash string to hash object
+            crypto::hash tx_hash;
+
+            if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+            {
+                cerr << "Cant parse tx hash: " << tx_hash_str << endl;
+                return string("Cant get tx hash due to parse error: " + tx_hash_str);
+            }
+
+            // parse string representing given monero address
+            cryptonote::account_public_address address;
+
+            if (!xmreg::parse_str_address(xmr_address_str,  address, 0))
+            {
+                cerr << "Cant parse string address: " << xmr_address_str << endl;
+                return string("Cant parse xmr address: " + xmr_address_str);
+            }
+
+            // parse string representing given private viewkey
+            crypto::secret_key prv_view_key;
+
+            if (!xmreg::parse_str_secret_key(viewkey_str, prv_view_key))
+            {
+                cerr << "Cant parse view key: " << viewkey_str << endl;
+                return string("Cant parse view key: " + viewkey_str);
+            }
+
+
+            // tx age
+            pair<string, string> age;
+
+            string blk_timestamp {"N/A"};
+
+            // get transaction
+            transaction tx;
+
+            if (!mcore->get_tx(tx_hash, tx))
+            {
+                cerr << "Cant get tx in blockchain: " << tx_hash
+                     << ". \n Check mempool now" << endl;
+
+                vector<pair<tx_info, transaction>> found_txs
+                        = search_mempool(tx_hash);
+
+                if (!found_txs.empty())
+                {
+                    // there should be only one tx found
+                    tx = found_txs.at(0).second;
+
+                    // since its tx in mempool, it has no blk yet
+                    // so use its recive_time as timestamp to show
+
+                    uint64_t tx_recieve_timestamp
+                            = found_txs.at(0).first.receive_time;
+
+                    blk_timestamp = xmreg::timestamp_to_str(tx_recieve_timestamp);
+
+                    age = get_age(server_timestamp, tx_recieve_timestamp,
+                                  FULL_AGE_FORMAT);
+                }
+                else
+                {
+                    // tx is nowhere to be found :-(
+                    return string("Cant get tx: " + tx_hash_str);
+                }
+            }
+
+            tx_details txd = get_tx_details(tx);
+
+            uint64_t tx_blk_height {0};
+
+            bool tx_blk_found {false};
+
+            try
+            {
+                tx_blk_height = core_storage->get_db().get_tx_block_height(tx_hash);
+                tx_blk_found = true;
+            }
+            catch (exception& e)
+            {
+                cerr << "Cant get block height: " << tx_hash
+                     << e.what() << endl;
+            }
+
+
+            // get block cointaining this tx
+            block blk;
+
+            if (tx_blk_found && !mcore->get_block_by_height(tx_blk_height, blk))
+            {
+                cerr << "Cant get block: " << tx_blk_height << endl;
+            }
+
+            string tx_blk_height_str {"N/A"};
+
+            if (tx_blk_found)
+            {
+                // calculate difference between tx and server timestamps
+                age = get_age(server_timestamp, blk.timestamp, FULL_AGE_FORMAT);
+
+                blk_timestamp = xmreg::timestamp_to_str(blk.timestamp);
+
+                tx_blk_height_str = std::to_string(tx_blk_height);
+            }
+
+            // payments id. both normal and encrypted (payment_id8)
+            string pid_str   = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id));
+            string pid8_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id8));
+
+            // initalise page tempate map with basic info about blockchain
+            mstch::map context {
+                    {"tx_hash"              , tx_hash_str},
+                    {"tx_pub_key"           , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
+                    {"blk_height"           , tx_blk_height_str},
+                    {"tx_size"              , fmt::format("{:0.4f}",
+                                                          static_cast<double>(txd.size) / 1024.0)},
+                    {"tx_fee"               , fmt::format("{:0.12f}", XMR_AMOUNT(txd.fee))},
+                    {"blk_timestamp"        , blk_timestamp},
+                    {"delta_time"           , age.first},
+                    {"outputs_no"           , txd.output_pub_keys.size()},
+                    {"has_payment_id"       , txd.payment_id  != null_hash},
+                    {"has_payment_id8"      , txd.payment_id8 != null_hash8},
+                    {"payment_id"           , pid_str},
+                    {"payment_id8"          , pid8_str}
+            };
+
+            string server_time_str = xmreg::timestamp_to_str(server_timestamp, "%F");
+
+            uint64_t output_idx {0};
+
+            // public transaction key is combined with our viewkey
+            // to create, so called, derived key.
+            key_derivation derivation;
+
+            if (!generate_key_derivation(txd.pk, prv_view_key, derivation))
+            {
+                cerr << "Cant get dervied key for: "  << "\n"
+                     << "pub_tx_key: " << txd.pk << " and "
+                     << "prv_view_key" << prv_view_key << endl;
+
+                return string("Cant get key_derivation");
+            }
+
+
+            mstch::array outputs;
+
+
+            for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
+            {
+
+                // get the tx output public key
+                // that normally would be generated for us,
+                // if someone had sent us some xmr.
+                public_key pubkey;
+
+                derive_public_key(derivation,
+                                  output_idx,
+                                  address.m_spend_public_key,
+                                  pubkey);
+
+                // check if generated public key matches the current output's key
+                bool mine_output = (outp.first.key == pubkey);
+
+                outputs.push_back(mstch::map {
+                    {"out_pub_key"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", outp.first.key))},
+                    {"amount"        , fmt::format("{:0.12f}", XMR_AMOUNT(outp.second))},
+                    {"mine_output"   , mine_output},
+                    {"output_idx"    , fmt::format("{:02d}", output_idx++)}
+                });
+
+            }
+
+            context["outputs"] = outputs;
+
+            // read tx.html
+            string tx_html = xmreg::read(TMPL_MY_OUTPUTS);
 
             // add header and footer
             string full_page = get_full_page(tx_html);
