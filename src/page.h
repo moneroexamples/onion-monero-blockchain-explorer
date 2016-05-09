@@ -1213,6 +1213,8 @@ namespace xmreg {
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"tx_hash"              , tx_hash_str},
+                    {"xmr_address"          , xmr_address_str},
+                    {"viewkey"              , viewkey_str},
                     {"tx_pub_key"           , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
                     {"blk_height"           , tx_blk_height_str},
                     {"tx_size"              , fmt::format("{:0.4f}",
@@ -1247,6 +1249,8 @@ namespace xmreg {
 
             mstch::array outputs;
 
+            uint64_t sum_xmr {0};
+
 
             for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
             {
@@ -1264,6 +1268,11 @@ namespace xmreg {
                 // check if generated public key matches the current output's key
                 bool mine_output = (outp.first.key == pubkey);
 
+                if (mine_output)
+                {
+                    sum_xmr += outp.second;
+                }
+
                 outputs.push_back(mstch::map {
                     {"out_pub_key"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", outp.first.key))},
                     {"amount"        , fmt::format("{:0.12f}", XMR_AMOUNT(outp.second))},
@@ -1273,13 +1282,16 @@ namespace xmreg {
 
             }
 
-            context["outputs"] = outputs;
+            cout << "outputs.size(): " << outputs.size() << endl;
 
-            // read tx.html
-            string tx_html = xmreg::read(TMPL_MY_OUTPUTS);
+            context["outputs"] = outputs;
+            context["sum_xmr"] = XMR_AMOUNT(sum_xmr);
+
+            // read my_outputs.html
+            string my_outputs_html = xmreg::read(TMPL_MY_OUTPUTS);
 
             // add header and footer
-            string full_page = get_full_page(tx_html);
+            string full_page = get_full_page(my_outputs_html);
 
             // render the page
             return mstch::render(full_page, context);
