@@ -46,11 +46,13 @@
       <table class="center" >
           <tr>
               <td>Outputs public keys</td>
+              <td>Global index</td>
               <td>amount</td>
           </tr>
           {{#outputs}}
           <tr>
               <td>{{output_idx}}: {{out_pub_key}}</td>
+              <td>{{global_idx}}</td>
               <td>{{amount}}</td>
           </tr>
           {{/outputs}}

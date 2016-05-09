@@ -87,7 +87,6 @@ namespace xmreg {
         // public keys and xmr amount of outputs
         vector<pair<txout_to_key, uint64_t>> output_pub_keys;
 
-
         mstch::map
         get_mstch_map()
         {
@@ -143,6 +142,7 @@ namespace xmreg {
 
             return txd_map;
         }
+
 
         string
         get_extra_str()
@@ -1071,6 +1071,10 @@ namespace xmreg {
             context["timescales_scale"] = fmt::format("{:0.2f}",
                                                 timescale_scale / 3600.0 / 24.0); // in days
 
+            vector<uint64_t> out_global_indices;
+
+            // get outputs global indices
+            core_storage->get_tx_outputs_gindexs(txd.hash, out_global_indices);
 
             uint64_t output_idx {0};
 
@@ -1081,6 +1085,7 @@ namespace xmreg {
                 outputs.push_back(mstch::map {
                       {"out_pub_key"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", outp.first.key))},
                       {"amount"        , fmt::format("{:0.12f}", XMR_AMOUNT(outp.second))},
+                      {"global_idx"    , fmt::format("{:02d}", out_global_indices.at(output_idx))},
                       {"output_idx"    , fmt::format("{:02d}", output_idx++)}
                 });
             }
@@ -1326,6 +1331,13 @@ namespace xmreg {
             string default_txt {"No such thing found: " + search_text};
 
             string result_html {default_txt};
+
+
+            //cout << "XMR_AMOUNT(7000000000): " << XMR_AMOUNT(7000000000) << endl;
+
+            //output_data_t output = core_storage->get_db().get_output_key(7000000000, 200689);
+
+            //search_text = pod_to_hex(output.pubkey);
 
 
             // first check if searching for block of given height
