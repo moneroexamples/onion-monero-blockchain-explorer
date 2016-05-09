@@ -26,13 +26,14 @@
 
     <table class="center" style="width: 80%; margin-top:10px">
         <tr>
-            <td>Block: {{blk_height}}</td>
+            <td>Block: <a href="/block/{{blk_height}}">{{blk_height}}</a></td>
             <td>Timestamp [UCT]: {{blk_timestamp}}</td>
             <td>Age [y:d:h:m:s]: {{delta_time}}</td>
             <td>Fee: {{tx_fee}}</td>
             <td>Tx size: {{tx_size}} kB</td>
         </tr>
-    <!--    <tr>
+    <!--
+        <tr>
             <td colspan="5">Extra: {{extra}}</td>
         </tr>
      -->

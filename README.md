@@ -1,14 +1,14 @@
 # Onion Monero Blockchain Explorer
 
-Curently avaliable Monero blockchain explorer websites exist in the clearnet. Although useful, they have several limitations which or of special importance to priavcy-oriented users:
+Curently available Monero blockchain explorer websites have several limitations which are of special importance to privacy-oriented users:
 
  - they use JavaScript,
- - have images which might be used for [coockless tracking](http://lucb1e.com/rp/cookielesscookies/)),
+ - have images which might be used for [cookieless tracking](http://lucb1e.com/rp/cookielesscookies/)),
  - track users activates through google analytics,
  - are closed sourced,
  - are not available as hidden services,
- - have very only basic search capabilities,
- - can't identify users ouputs based on provided Monero address and viewkey.
+ - provide only basic search capabilities,
+ - can't identify users outputs based on provided Monero address and viewkey.
 
 
 In this example, these limitations are addressed by development of
@@ -22,8 +22,11 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
 
 ## Onion Monero Blockchain Explorer features
 
+The key features of the Onion Monero Blockchain Explorer are
+
+ - available as a hidden service,
  - no javascript, no web analytics trackers, no images,
- - open source,
+ - open sourced,
  - made fully in C++,
  - the only explorer showing encrypted payments ID,
  - the only explorer with the ability to search by encrypted payments ID, tx public,
