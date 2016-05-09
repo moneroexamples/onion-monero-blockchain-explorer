@@ -6,8 +6,9 @@ Curently avaliable Monero blockchain explorer websites exist in the clearnet. Al
  - have images which might be used for [coockless tracking](http://lucb1e.com/rp/cookielesscookies/)),
  - track users activates through google analytics,
  - are closed sourced,
- - are not available as hidden services, and
- - have very only basic search capapilites.
+ - are not available as hidden services, 
+ - have very only basic search capabilities,
+ - cant identify users ouputs based on provided Monero address and viewkey.
 
 
 In this example, these limitations are addressed by development of
@@ -28,6 +29,7 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
  - the only explorer with the ability to search by encrypted payments ID, tx public
  keys, outputs public keys, input key images
  - the only explorer showing ring signatures
+ - the only explorer that can show which outputs belong to the given Monero address and viewkey
 
 ## Prerequisite
 
