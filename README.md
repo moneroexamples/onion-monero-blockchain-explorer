@@ -127,8 +127,13 @@ int main(int ac, const char* av[]) {
         return xmrblocks.show_tx(tx_hash, with_ring_signatures);
     });
 
-    CROW_ROUTE(app, "/myoutputs/<string>/<string>/<string>")
-    ([&](string tx_hash, string xmr_address, string viewkey) {
+    CROW_ROUTE(app, "/myoutputs").methods("GET"_method)
+    ([&](const crow::request& req) {
+
+        string tx_hash     = string(req.url_params.get("tx_hash"));
+        string xmr_address = string(req.url_params.get("xmr_address"));
+        string viewkey     = string(req.url_params.get("viewkey"));
+
         return xmrblocks.show_my_outputs(tx_hash, xmr_address, viewkey);
     });
 
