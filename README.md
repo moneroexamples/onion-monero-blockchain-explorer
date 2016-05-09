@@ -1,21 +1,22 @@
 # Onion Monero Blockchain Explorer
 
-Curent Monero blockchain explorer websites exist in the clearnet. Although useful,
-their limitations are that they use JavaScript, have images
-([might be used for coockless tracking](http://lucb1e.com/rp/cookielesscookies/)),
-track users activates through google analytics, are not open sourced, and are not
- available as hidden services. These things are of importance
- for privacy-oriented users.
+Curently avaliable Monero blockchain explorer websites exist in the clearnet. Although useful, they have several limitations which or of special importance to priavcy-oriented users:
 
- In this example, these limitations are addressed by development of
- an Onion Monero Blockchain Explorer. It is build in C++,
- and it not only shows how to use Monero C++ libraries, but also demonstrates how to
- use:
+ - they use JavaScript,
+ - have images which might be used for [coockless tracking](http://lucb1e.com/rp/cookielesscookies/)),
+ - track users activates through google analytics,
+ - are closed sourced,
+ - are not available as hidden services, and
+ - have very only basic search capapilites.
 
-  - [crow](https://github.com/ipkn/crow) - C++ micro web framework
-  - [lmdb++](https://github.com/bendiken/lmdbxx) - C++ wrapper for the LMDB
-  - [mstch](https://github.com/no1msd/mstch) - C++ {{mustache}} templates
-  - [rapidjson](https://github.com/miloyip/rapidjson) - C++ JSON parser/generator
+
+In this example, these limitations are addressed by development of
+an Onion Monero Blockchain Explorer. The example not only shows how to use Monero C++ libraries, but also demonstrates how to use:
+
+ - [crow](https://github.com/ipkn/crow) - C++ micro web framework
+ - [lmdb++](https://github.com/bendiken/lmdbxx) - C++ wrapper for the LMDB
+ - [mstch](https://github.com/no1msd/mstch) - C++ {{mustache}} templates
+ - [rapidjson](https://github.com/miloyip/rapidjson) - C++ JSON parser/generator
 
 
 ## Onion Monero Blockchain Explorer features
@@ -27,7 +28,6 @@ track users activates through google analytics, are not open sourced, and are no
  - the only explorer with the ability to search by encrypted payments ID, tx public
  keys, outputs public keys, input key images
  - the only explorer showing ring signatures
-
 
 ## Prerequisite
 
@@ -185,7 +185,3 @@ Some Monero are also welcome:
 ```
 48daf1rG3hE1Txapcsxh6WXNe9MLNKtu7W7tKTivtSoVLHErYzvdcpea2nSTgGkz66RFP4GKVAsTV14v6G3oddBTHfxP6tU
 ```
-
-
-
-
