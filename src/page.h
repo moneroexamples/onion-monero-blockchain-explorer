@@ -1072,8 +1072,18 @@ namespace xmreg {
                                                 timescale_scale / 3600.0 / 24.0); // in days
 
          // get outputs global indices
-            vector<uint64_t> out_global_indices =
-                    core_storage->get_db().get_tx_amount_output_indices(txd.hash);
+            vector<uint64_t> out_global_indices;
+
+            try
+            {
+                out_global_indices = core_storage->get_db()
+                                .get_tx_amount_output_indices(txd.hash);
+            }
+            catch(const exception& e)
+            {
+                cerr << e.what() << endl;
+            }
+
 
             uint64_t output_idx {0};
 
@@ -1086,10 +1096,20 @@ namespace xmreg {
                 uint64_t num_outputs_amount = core_storage->get_db()
                                                 .get_num_outputs(outp.second);
 
+                string out_global_index_str {"N/A"};
+
+                // outputs in tx in them mempool dont have yet global indices
+                // thus for them, we print N/A
+                if (!out_global_indices.empty())
+                {
+                    out_global_index_str = fmt::format("{:d}",
+                                            out_global_indices.at(output_idx));
+                }
+
                 outputs.push_back(mstch::map {
                       {"out_pub_key"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", outp.first.key))},
                       {"amount"        , fmt::format("{:0.12f}", XMR_AMOUNT(outp.second))},
-                      {"global_idx"    , fmt::format("{:d}", out_global_indices.at(output_idx))},
+                      {"global_idx"    , out_global_index_str},
                       {"num_outputs"   , fmt::format("{:d}", num_outputs_amount)},
                       {"output_idx"    , fmt::format("{:02d}", output_idx++)}
                 });
