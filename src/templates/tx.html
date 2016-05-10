@@ -43,17 +43,19 @@
 
   <h3>Outputs ({{outputs_no}})</h3>
   <div class="center">
-      <table class="center" >
+      <table class="center">
           <tr>
-              <td>Outputs public keys</td>
-              <td>Global index</td>
+              <td>outputs public keys</td>
+              <td>global index</td>
               <td>amount</td>
+              <td>total # of outputs <br/>for this amount</td>
           </tr>
           {{#outputs}}
           <tr>
               <td>{{output_idx}}: {{out_pub_key}}</td>
               <td>{{global_idx}}</td>
               <td>{{amount}}</td>
+              <td>{{num_outputs}}</td>
           </tr>
           {{/outputs}}
       </table>

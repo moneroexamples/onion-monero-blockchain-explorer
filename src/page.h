@@ -1071,10 +1071,9 @@ namespace xmreg {
             context["timescales_scale"] = fmt::format("{:0.2f}",
                                                 timescale_scale / 3600.0 / 24.0); // in days
 
-            vector<uint64_t> out_global_indices;
-
-            // get outputs global indices
-            core_storage->get_tx_outputs_gindexs(txd.hash, out_global_indices);
+         // get outputs global indices
+            vector<uint64_t> out_global_indices =
+                    core_storage->get_db().get_tx_amount_output_indices(txd.hash);
 
             uint64_t output_idx {0};
 
@@ -1082,10 +1081,16 @@ namespace xmreg {
 
             for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
             {
+
+                // total number of ouputs in the blockchain for this amount
+                uint64_t num_outputs_amount = core_storage->get_db()
+                                                .get_num_outputs(outp.second);
+
                 outputs.push_back(mstch::map {
                       {"out_pub_key"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", outp.first.key))},
                       {"amount"        , fmt::format("{:0.12f}", XMR_AMOUNT(outp.second))},
-                      {"global_idx"    , fmt::format("{:02d}", out_global_indices.at(output_idx))},
+                      {"global_idx"    , fmt::format("{:d}", out_global_indices.at(output_idx))},
+                      {"num_outputs"   , fmt::format("{:d}", num_outputs_amount)},
                       {"output_idx"    , fmt::format("{:02d}", output_idx++)}
                 });
             }
