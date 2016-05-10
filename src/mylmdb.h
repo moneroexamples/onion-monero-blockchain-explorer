@@ -299,7 +299,7 @@ namespace xmreg
 
             try
             {
-            
+
                 lmdb::txn rtxn  = lmdb::txn::begin(m_env, nullptr, MDB_RDONLY);
                 lmdb::dbi rdbi  = lmdb::dbi::open(rtxn, db_name.c_str(), flags);
                 lmdb::cursor cr = lmdb::cursor::open(rtxn, rdbi);
@@ -372,6 +372,54 @@ namespace xmreg
             }
 
             return true;
+        }
+
+
+        void
+        for_all_output_amounts(std::function<bool(
+                                public_key& output_pub_key,
+                                uint64_t& amount)> f)
+        {
+            unsigned int flags = MDB_DUPSORT | MDB_DUPFIXED;
+
+            try
+            {
+
+                lmdb::txn rtxn  = lmdb::txn::begin(m_env, nullptr, MDB_RDONLY);
+                lmdb::dbi rdbi  = lmdb::dbi::open(rtxn, "output_amounts", flags);
+                lmdb::cursor cr = lmdb::cursor::open(rtxn, rdbi);
+
+                lmdb::val key_to_find;
+                lmdb::val amount_val;
+
+
+                // process all values for the same key
+                while (cr.get(key_to_find, amount_val, MDB_NEXT))
+                {
+                    public_key pub_key;
+
+                    epee::string_tools::hex_to_pod(
+                                string(key_to_find.data(), key_to_find.size()),
+                                pub_key);
+
+                    uint64_t xmr_amount = *(amount_val.data<uint64_t>());
+
+                    //cout << key_val_to_str(key_to_find, tx_hash_val) << endl;
+
+                    if (f(pub_key, xmr_amount) == false)
+                    {
+                        break;
+                    }
+                }
+
+                cr.close();
+                rtxn.abort();
+
+            }
+            catch (lmdb::error& e)
+            {
+                cerr << e.what() << endl;
+            }
         }
 
         void

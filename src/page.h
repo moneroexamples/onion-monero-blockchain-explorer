@@ -1373,9 +1373,74 @@ namespace xmreg {
             return mstch::render(full_page, context);
         }
 
+        void find_all_outputs()
+        {
+
+            string xmr_address_str {"43A7NUmo5HbhJoSKbw9bRWW4u2b8dNfhKheTR5zxoRwQ7bULK5TgUQeAvPS5EVNLAJYZRQYqXCmhdf26zG2Has35SpiF1FP"};
+            string viewkey_str    {"9c2edec7636da3fbb343931d6c3d6e11bcd8042ff7e11de98a8d364f31976c04"};
+
+            // parse string representing given monero address
+            cryptonote::account_public_address address;
+
+            if (!xmreg::parse_str_address(xmr_address_str,  address, 0))
+            {
+                cerr << "Cant parse string address: " << xmr_address_str << endl;
+                //return string("Cant parse xmr address: " + xmr_address_str);
+            }
+
+            // parse string representing given private viewkey
+            crypto::secret_key prv_view_key;
+
+            if (!xmreg::parse_str_secret_key(viewkey_str, prv_view_key))
+            {
+                cerr << "Cant parse view key: " << viewkey_str << endl;
+                //return string("Cant parse view key: " + viewkey_str);
+            }
+
+            // public transaction key is combined with our viewkey
+            // to create, so called, derived key.
+            // key_derivation derivation;
+            //
+            // if (!generate_key_derivation(txd.pk, prv_view_key, derivation))
+            // {
+            //     cerr << "Cant get dervied key for: "  << "\n"
+            //          << "pub_tx_key: " << txd.pk << " and "
+            //          << "prv_view_key" << prv_view_key << endl;
+            //
+            //     //return string("Cant get key_derivation");
+            // }
+
+            public_key to_find;
+            epee::string_tools::hex_to_pod(
+                    "46ff0a46390feab13e1991186d622b768069c8489ed27e62fca4d478aaee3ffc",
+                    to_find);
+
+
+            auto output_search = [&](public_key& output_pub_key,
+                                     uint64_t& amount) -> bool
+            {
+                    if (to_find == output_pub_key)
+                    {
+                        cout << amount << endl;
+                    }
+
+                    return true;
+            };
+
+
+
+            //@TODO make lmdb2 path to some option
+            xmreg::MyLMDB mylmdb {"/home/mwo/.bitmonero/lmdb2"};
+
+            cout << "Seaerch stated" << endl;
+            mylmdb.for_all_output_amounts(output_search);
+            cout << "Seaerch finished" << endl;
+        }
+
         string
         search(string search_text)
         {
+
             // remove white characters
             boost::trim(search_text);
 
