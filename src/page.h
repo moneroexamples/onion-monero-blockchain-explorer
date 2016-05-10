@@ -1512,13 +1512,6 @@ namespace xmreg {
 
             // seach for output using output global index
 
-            // an empty result, as this is not returned by mylmdb search method
-            all_possible_tx_hashes.push_back(
-                    make_pair("output_public_keys_based_on_global_idx",
-                                    vector<string>{}));
-
-
-
             cout << "search_text.substr(4): " << search_text.substr(4) << endl;
 
             if (search_for_global_output_idx)
@@ -1535,13 +1528,11 @@ namespace xmreg {
                      output_data_t output_data = core_storage->get_db()
                                                 .get_output_key(global_idx);
 
-                     tx_out_index tx_out = core_storage->get_db()
-                                        .get_output_tx_and_index_from_global(global_idx);
+                     //tx_out_index tx_out = core_storage->get_db()
+                    //                    .get_output_tx_and_index_from_global(global_idx);
 
-                     cout << "tx_out.first: " << tx_out.first << endl;
-                     cout << "tx_out.second: " << tx_out.second << endl;
-
-                     cout << "output_pub_key: " << output_data.pubkey << endl;
+                     //cout << "tx_out.first: " << tx_out.first << endl;
+                     //cout << "tx_out.second: " << tx_out.second << endl;
 
                      string output_pub_key = pod_to_hex(output_data.pubkey);
 
@@ -1684,6 +1675,8 @@ namespace xmreg {
                 // define flag, e.g., has_key_images denoting that
                 // tx hashes for key_image searched were found
                 context.insert({"has_" + found_txs.first, !found_txs.second.empty()});
+
+                cout << "found_txs.first: " << found_txs.first << endl;
 
                 // insert new array based on what we found to context if not exist
                 pair< mstch::map::iterator, bool> res
