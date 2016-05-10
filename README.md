@@ -31,6 +31,7 @@ The key features of the Onion Monero Blockchain Explorer are
  - the only explorer showing encrypted payments ID,
  - the only explorer with the ability to search by encrypted payments ID, tx public
  keys, outputs public keys, input key images, output global indices,
+ output amount index and its amount,
  - the only explorer showing ring signatures,
  - the only explorer that can show which outputs belong to the given Monero address and viewkey,
  - the only explorer showing detailed information about mixins, such as, mixins'

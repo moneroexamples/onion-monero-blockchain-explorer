@@ -1387,8 +1387,14 @@ namespace xmreg {
             // such search start with "goi_", e.g., "goi_543"
             bool search_for_global_output_idx = (search_text.substr(0, 4) == "goi_");
 
+            // check if we look for output with amout index and amount
+            // such search start with "aoi_", e.g., "aoi_444-23.00"
+            bool search_for_amount_output_idx = (search_text.substr(0, 4) == "aoi_");
+
             // first check if searching for block of given height
-            if (search_text.size() < 12 && search_for_global_output_idx == false)
+            if (search_text.size() < 12 &&
+                                (search_for_global_output_idx == false
+                                 ||search_for_amount_output_idx == false))
             {
                 uint64_t blk_height;
 
@@ -1510,9 +1516,8 @@ namespace xmreg {
                     make_pair("output_public_keys",
                               tx_search_results["output_public_keys"]));
 
-            // seach for output using output global index
 
-            cout << "search_text.substr(4): " << search_text.substr(4) << endl;
+            // seach for output using output global index
 
             if (search_for_global_output_idx)
             {
@@ -1522,7 +1527,7 @@ namespace xmreg {
                                                     search_text.substr(4));
 
 
-                     cout << "global_idx: " << global_idx << endl;
+                     //cout << "global_idx: " << global_idx << endl;
 
                      // get info about output of a given global index
                      output_data_t output_data = core_storage->get_db()
@@ -1536,7 +1541,7 @@ namespace xmreg {
 
                      string output_pub_key = pod_to_hex(output_data.pubkey);
 
-                     cout << "output_pub_key: " << output_pub_key << endl;
+                     //cout << "output_pub_key: " << output_pub_key << endl;
 
                      vector<string> found_outputs;
 
@@ -1544,7 +1549,7 @@ namespace xmreg {
                                    found_outputs,
                                    "output_public_keys");
 
-                     cout << "found_outputs.size(): " << found_outputs.size() << endl;
+                     //cout << "found_outputs.size(): " << found_outputs.size() << endl;
 
                      all_possible_tx_hashes.push_back(
                              make_pair("output_public_keys_based_on_global_idx",
@@ -1553,7 +1558,75 @@ namespace xmreg {
                 }
                 catch(boost::bad_lexical_cast &e)
                 {
-                    cerr << "Cant cast global_idx string: " << search_text.substr(3) << endl;
+                    cerr << "Cant cast global_idx string: "
+                         << search_text.substr(4) << endl;
+                }
+            }
+
+            // seach for output using output amount index and amount
+
+            if (search_for_amount_output_idx)
+            {
+                try
+                {
+
+                    string str_to_split = search_text.substr(4);
+
+                    vector<string> string_parts;
+
+                    boost::split(string_parts, str_to_split,
+                                 boost::is_any_of("-"));
+
+                     if (string_parts.size() != 2)
+                     {
+                         throw;
+                     }
+
+                     uint64_t amount_idx = boost::lexical_cast<uint64_t>(
+                                                            string_parts[0]);
+
+                     uint64_t amount = static_cast<uint64_t>
+                                        (boost::lexical_cast<double>(
+                                                string_parts[1]) * 1e12);
+
+
+                     //cout << "amount_idx: " << amount_idx << endl;
+                     //cout << "amount: "     << amount << endl;
+
+                     // get info about output of a given global index
+                     output_data_t output_data = core_storage->get_db()
+                                                    .get_output_key(
+                                                        amount, amount_idx);
+
+                     string output_pub_key = pod_to_hex(output_data.pubkey);
+
+                     //cout << "output_pub_key: " << output_pub_key << endl;
+
+                     vector<string> found_outputs;
+
+                     mylmdb.search(output_pub_key,
+                                   found_outputs,
+                                   "output_public_keys");
+
+                     //cout << "found_outputs.size(): " << found_outputs.size() << endl;
+
+                     all_possible_tx_hashes.push_back(
+                             make_pair("output_public_keys_based_on_amount_idx",
+                                       found_outputs));
+
+                }
+                catch(boost::bad_lexical_cast& e)
+                {
+                    cerr << "Cant parse amout index and amout string: "
+                         << search_text.substr(4) << endl;
+                }
+                catch(OUTPUT_DNE& e)
+                {
+                    cerr << "Output not found in the blockchain: "
+                         << search_text.substr(4) << endl;
+
+                    return(string("Output not found in the blockchain: ")
+                           + search_text.substr(4));
                 }
             }
 

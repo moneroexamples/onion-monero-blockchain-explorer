@@ -110,3 +110,21 @@
     {{/has_output_public_keys_based_on_global_idx}}
 
   </div>
+
+  <div>
+
+    {{#has_output_public_keys_based_on_amount_idx}}
+
+    <h3>The search term matches amount index and an amount of an output
+        in the following transaction(s)</h3>
+
+    <table class="center" style="width:90%">
+        {{>tx_table_head}}
+        {{#output_public_keys_based_on_amount_idx}}
+            {{>tx_table_row}}
+        {{/output_public_keys_based_on_amount_idx}}
+    </table>
+
+    {{/has_output_public_keys_based_on_amount_idx}}
+
+  </div>
