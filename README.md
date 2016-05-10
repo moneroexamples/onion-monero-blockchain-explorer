@@ -29,7 +29,7 @@ The key features of the Onion Monero Blockchain Explorer are
  - open sourced,
  - made fully in C++,
  - the only explorer showing encrypted payments ID,
- - the only explorer with the ability to search by encrypted payments ID, tx public,
+ - the only explorer with the ability to search by encrypted payments ID, tx public
  keys, outputs public keys, input key images, output global indices,
  - the only explorer showing ring signatures,
  - the only explorer that can show which outputs belong to the given Monero address and viewkey,
