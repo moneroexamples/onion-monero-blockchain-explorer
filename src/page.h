@@ -1071,18 +1071,33 @@ namespace xmreg {
             context["timescales_scale"] = fmt::format("{:0.2f}",
                                                 timescale_scale / 3600.0 / 24.0); // in days
 
-         // get outputs global indices
-            vector<uint64_t> out_global_indices;
+            // get indices of outputs in amounts tables
+            vector<uint64_t> out_amount_indices;
 
             try
             {
-                out_global_indices = core_storage->get_db()
+                out_amount_indices = core_storage->get_db()
                                 .get_tx_amount_output_indices(txd.hash);
             }
             catch(const exception& e)
             {
                 cerr << e.what() << endl;
             }
+
+            // get global indices of outputs
+            vector<uint64_t> out_global_indices;
+
+            try
+            {
+                out_global_indices = core_storage->get_db()
+                                .get_tx_output_indices(txd.hash);
+            }
+            catch(const exception& e)
+            {
+                cerr << e.what() << endl;
+            }
+
+
 
 
             uint64_t output_idx {0};
@@ -1106,10 +1121,21 @@ namespace xmreg {
                                             out_global_indices.at(output_idx));
                 }
 
+                string out_amount_index_str {"N/A"};
+
+                // outputs in tx in them mempool dont have yet global indices
+                // thus for them, we print N/A
+                if (!out_amount_indices.empty())
+                {
+                    out_amount_index_str = fmt::format("{:d}",
+                                            out_amount_indices.at(output_idx));
+                }
+
                 outputs.push_back(mstch::map {
                       {"out_pub_key"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", outp.first.key))},
                       {"amount"        , fmt::format("{:0.12f}", XMR_AMOUNT(outp.second))},
                       {"global_idx"    , out_global_index_str},
+                      {"amount_idx"    , out_amount_index_str},
                       {"num_outputs"   , fmt::format("{:d}", num_outputs_amount)},
                       {"output_idx"    , fmt::format("{:02d}", output_idx++)}
                 });
@@ -1357,16 +1383,12 @@ namespace xmreg {
 
             string result_html {default_txt};
 
-
-            //cout << "XMR_AMOUNT(7000000000): " << XMR_AMOUNT(7000000000) << endl;
-
-            //output_data_t output = core_storage->get_db().get_output_key(7000000000, 200689);
-
-            //search_text = pod_to_hex(output.pubkey);
-
+            // check first if we look for output with given global index
+            // such search start with "goi_", e.g., "goi_543"
+            bool search_for_global_output_idx = (search_text.substr(0, 4) == "goi_");
 
             // first check if searching for block of given height
-            if (search_text.size() < 12)
+            if (search_text.size() < 12 && search_for_global_output_idx == false)
             {
                 uint64_t blk_height;
 
@@ -1488,6 +1510,64 @@ namespace xmreg {
                     make_pair("output_public_keys",
                               tx_search_results["output_public_keys"]));
 
+            // seach for output using output global index
+
+            // an empty result, as this is not returned by mylmdb search method
+            all_possible_tx_hashes.push_back(
+                    make_pair("output_public_keys_based_on_global_idx",
+                                    vector<string>{}));
+
+
+
+            cout << "search_text.substr(4): " << search_text.substr(4) << endl;
+
+            if (search_for_global_output_idx)
+            {
+                try
+                {
+                     uint64_t global_idx = boost::lexical_cast<uint64_t>(
+                                                    search_text.substr(4));
+
+
+                     cout << "global_idx: " << global_idx << endl;
+
+                     // get info about output of a given global index
+                     output_data_t output_data = core_storage->get_db()
+                                                .get_output_key(global_idx);
+
+                     tx_out_index tx_out = core_storage->get_db()
+                                        .get_output_tx_and_index_from_global(global_idx);
+
+                     cout << "tx_out.first: " << tx_out.first << endl;
+                     cout << "tx_out.second: " << tx_out.second << endl;
+
+                     cout << "output_pub_key: " << output_data.pubkey << endl;
+
+                     string output_pub_key = pod_to_hex(output_data.pubkey);
+
+                     cout << "output_pub_key: " << output_pub_key << endl;
+
+                     vector<string> found_outputs;
+
+                     mylmdb.search(output_pub_key,
+                                   found_outputs,
+                                   "output_public_keys");
+
+                     cout << "found_outputs.size(): " << found_outputs.size() << endl;
+
+                     all_possible_tx_hashes.push_back(
+                             make_pair("output_public_keys_based_on_global_idx",
+                                       found_outputs));
+
+                }
+                catch(boost::bad_lexical_cast &e)
+                {
+                    cerr << "Cant cast global_idx string: " << search_text.substr(3) << endl;
+                }
+            }
+
+
+
             result_html = show_search_results(search_text, all_possible_tx_hashes);
 
             return result_html;
@@ -1500,11 +1580,11 @@ namespace xmreg {
             map<string, vector<string>> tx_hashes;
 
             // initlizte the map with empty results
-            tx_hashes["key_images"]            = {};
-            tx_hashes["tx_public_keys"]        = {};
-            tx_hashes["payments_id"]           = {};
-            tx_hashes["encrypted_payments_id"] = {};
-            tx_hashes["output_public_keys"]    = {};
+            tx_hashes["key_images"]                             = {};
+            tx_hashes["tx_public_keys"]                         = {};
+            tx_hashes["payments_id"]                            = {};
+            tx_hashes["encrypted_payments_id"]                  = {};
+            tx_hashes["output_public_keys"]                     = {};
 
             for (const transaction& tx: txs)
             {

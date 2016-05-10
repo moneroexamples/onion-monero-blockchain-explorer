@@ -3,7 +3,7 @@
 Curently available Monero blockchain explorer websites have several limitations which are of special importance to privacy-oriented users:
 
  - they use JavaScript,
- - have images which might be used for [cookieless tracking](http://lucb1e.com/rp/cookielesscookies/)),
+ - have images which might be used for [cookieless tracking](http://lucb1e.com/rp/cookielesscookies/),
  - track users activates through google analytics,
  - are closed sourced,
  - are not available as hidden services,
