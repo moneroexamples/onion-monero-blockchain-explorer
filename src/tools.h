@@ -155,6 +155,9 @@ namespace xmreg
     vector<pair<txout_to_key, uint64_t>>
     get_ouputs(const transaction& tx);
 
+    vector<tuple<txout_to_key, uint64_t, uint64_t>>
+    get_ouputs_tuple(const transaction& tx);
+
     vector<txin_to_key>
     get_key_images(const transaction& tx);
 

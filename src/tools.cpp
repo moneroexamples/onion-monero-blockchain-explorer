@@ -372,7 +372,29 @@ namespace xmreg
 
         return outputs;
 
+    };
 
+    vector<tuple<txout_to_key, uint64_t, uint64_t>>
+    get_ouputs_tuple(const transaction& tx)
+    {
+        vector<tuple<txout_to_key, uint64_t, uint64_t>> outputs;
+
+        for (uint64_t n = 0; n < tx.vout.size(); ++n)
+        {
+
+            if (tx.vout[n].target.type() != typeid(txout_to_key))
+            {
+                continue;
+            }
+
+            // get tx input key
+            const txout_to_key& txout_key
+                    = boost::get<cryptonote::txout_to_key>(tx.vout[n].target);
+
+            outputs.push_back(make_tuple(txout_key, tx.vout[n].amount, n));
+        }
+
+        return outputs;
     };
 
     uint64_t

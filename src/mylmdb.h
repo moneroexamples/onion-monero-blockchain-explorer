@@ -17,6 +17,22 @@ namespace xmreg
     using namespace std;
 
 
+
+    /**
+     * Stores info about outputs useful
+     * for checking which ouputs belong to a
+     * given address and viewkey
+     */
+    struct output_info
+    {
+        crypto::hash       tx_hash;
+        crypto::public_key tx_pub_key;
+        uint64_t           amount;
+        uint64_t           index_in_tx;
+    };
+
+
+
     class MyLMDB
     {
 
@@ -118,14 +134,17 @@ namespace xmreg
         {
             crypto::hash tx_hash = get_transaction_hash(tx);
 
+            crypto::public_key tx_pub_key = get_tx_pub_key_from_extra(tx);
+
             string tx_hash_str = pod_to_hex(tx_hash);
 
-            vector<pair<cryptonote::txout_to_key, uint64_t>> outputs
-                    = xmreg::get_ouputs(tx);
+            vector<tuple<txout_to_key, uint64_t, uint64_t>> outputs =
+                                    xmreg::get_ouputs_tuple(tx);
 
             lmdb::txn wtxn  {nullptr};
             lmdb::dbi wdbi1 {0};
             lmdb::dbi wdbi2 {0};
+            lmdb::dbi wdbi3 {0};
 
             unsigned int flags = MDB_CREATE | MDB_DUPSORT | MDB_DUPFIXED;
 
@@ -134,6 +153,7 @@ namespace xmreg
                 wtxn  = lmdb::txn::begin(m_env);
                 wdbi1 = lmdb::dbi::open(wtxn, "output_public_keys", flags);
                 wdbi2 = lmdb::dbi::open(wtxn, "output_amounts", flags);
+                wdbi3 = lmdb::dbi::open(wtxn, "output_info", flags);
             }
             catch (lmdb::error& e )
             {
@@ -141,18 +161,28 @@ namespace xmreg
                 return false;
             }
 
-            for (pair<cryptonote::txout_to_key, uint64_t>& output: outputs)
+            for (auto& output: outputs)
             {
-                string public_key_str = pod_to_hex(output.first.key);
+                string public_key_str = pod_to_hex(std::get<0>(output).key);
 
                 lmdb::val public_key_val {public_key_str};
                 lmdb::val tx_hash_val    {tx_hash_str};
 
-                lmdb::val amount_val     {static_cast<void*>(&output.second),
-                                          sizeof(output.second)};
+                uint64_t amount = std::get<1>(output);
+
+                lmdb::val amount_val     {static_cast<void*>(&amount), sizeof(amount)};
+
+                uint64_t index_in_tx = std::get<2>(output);
+
+
+                output_info out_info {tx_hash, tx_pub_key, amount, index_in_tx};
+
+
+                lmdb::val out_info_val     {static_cast<void*>(&out_info), sizeof(out_info)};
 
                 wdbi1.put(wtxn, public_key_val, tx_hash_val);
                 wdbi2.put(wtxn, public_key_val, amount_val);
+                wdbi3.put(wtxn, public_key_val, out_info_val);
             }
 
             try
@@ -274,6 +304,10 @@ namespace xmreg
                 lmdb::txn wtxn = lmdb::txn::begin(m_env);
                 lmdb::dbi wdbi = lmdb::dbi::open(wtxn, "encrypted_payments_id", flags);
 
+                //cout << "Saving encrypted payiment_id: " << payment_id_str << endl;
+                //string wait_for_enter;
+                //cin >> wait_for_enter;
+
                 lmdb::val payment_id_val {payment_id_str};
                 lmdb::val tx_hash_val    {tx_hash_str};
 
@@ -375,51 +409,40 @@ namespace xmreg
         }
 
 
-        void
-        for_all_output_amounts(std::function<bool(
-                                public_key& output_pub_key,
-                                uint64_t& amount)> f)
+        bool
+        get_output_info(const string& key,
+                        output_info& out_info,
+                        const string& db_name = "output_info")
         {
-            unsigned int flags = MDB_DUPSORT | MDB_DUPFIXED;
+
+            unsigned int flags = 0;
 
             try
             {
 
                 lmdb::txn rtxn  = lmdb::txn::begin(m_env, nullptr, MDB_RDONLY);
-                lmdb::dbi rdbi  = lmdb::dbi::open(rtxn, "output_amounts", flags);
-                lmdb::cursor cr = lmdb::cursor::open(rtxn, rdbi);
+                lmdb::dbi rdbi  = lmdb::dbi::open(rtxn, db_name.c_str(), flags);
 
-                lmdb::val key_to_find;
-                lmdb::val amount_val;
+                lmdb::val key_to_find{key};
+                lmdb::val info_val;
 
-
-                // process all values for the same key
-                while (cr.get(key_to_find, amount_val, MDB_NEXT))
+                if(!rdbi.get(rtxn, key_to_find, info_val))
                 {
-                    public_key pub_key;
-
-                    epee::string_tools::hex_to_pod(
-                                string(key_to_find.data(), key_to_find.size()),
-                                pub_key);
-
-                    uint64_t xmr_amount = *(amount_val.data<uint64_t>());
-
-                    //cout << key_val_to_str(key_to_find, tx_hash_val) << endl;
-
-                    if (f(pub_key, xmr_amount) == false)
-                    {
-                        break;
-                    }
+                    return false;
                 }
 
-                cr.close();
+                out_info = *(info_val.data<output_info>());
+
                 rtxn.abort();
 
             }
             catch (lmdb::error& e)
             {
                 cerr << e.what() << endl;
+                return false;
             }
+
+            return true;
         }
 
         void
