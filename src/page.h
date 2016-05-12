@@ -928,6 +928,7 @@ namespace xmreg {
             string pid_str   = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id));
             string pid8_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id8));
 
+
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"tx_hash"              , tx_hash_str},
@@ -1951,7 +1952,7 @@ namespace xmreg {
             // get mixin number
             txd.mixin_no    = get_mixin_no(tx);
 
-            if (!coinbase &&  tx.vin.size() > 1)
+            if (!coinbase &&  tx.vin.size() > 0)
             {
                 // get tx fee
                 txd.fee = get_tx_fee(tx);
