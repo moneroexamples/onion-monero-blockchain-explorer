@@ -1952,10 +1952,18 @@ namespace xmreg {
             // get mixin number
             txd.mixin_no    = get_mixin_no(tx);
 
+            txd.fee = 0;
+            
             if (!coinbase &&  tx.vin.size() > 0)
             {
-                // get tx fee
-                txd.fee = get_tx_fee(tx);
+                // check if not miner tx
+                // i.e., for blocks without any user transactions
+                if (tx.vin.at(0).type() != typeid(txin_gen))
+                {
+                    // get tx fee
+                    txd.fee = get_tx_fee(tx);
+                }
+
             }
 
             get_payment_id(tx, txd.payment_id, txd.payment_id8);
