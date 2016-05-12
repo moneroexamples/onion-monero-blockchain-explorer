@@ -37,7 +37,7 @@ namespace xmreg
     {
 
 
-        static const uint64_t DEFAULT_MAPSIZE = 20UL * 1024UL * 1024UL * 1024UL; /* 10 GiB */
+        static const uint64_t DEFAULT_MAPSIZE = 30UL * 1024UL * 1024UL * 1024UL; /* 30 GiB */
         static const uint64_t DEFAULT_NO_DBs  = 10;
 
 
@@ -490,7 +490,7 @@ namespace xmreg
             {
                 cerr << e.what() << endl;
             }
-        }        
+        }
 
         void
         print_all(const string& db_name)
