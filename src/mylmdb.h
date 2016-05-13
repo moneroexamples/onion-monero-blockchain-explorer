@@ -13,6 +13,7 @@ namespace xmreg
 {
 
     using epee::string_tools::pod_to_hex;
+    using epee::string_tools::hex_to_pod;
 
     using namespace std;
 
@@ -445,10 +446,11 @@ namespace xmreg
             return true;
         }
 
+
         void
-        for_all_output_amounts(std::function<bool(
-                                public_key& output_pub_key,
-                                uint64_t& amount)> f)
+        for_all_outputs(
+                std::function<bool(public_key& out_pubkey,
+                                   output_info& out_info)> f)
         {
             unsigned int flags = MDB_DUPSORT | MDB_DUPFIXED;
 
@@ -456,7 +458,7 @@ namespace xmreg
             {
 
                 lmdb::txn rtxn  = lmdb::txn::begin(m_env, nullptr, MDB_RDONLY);
-                lmdb::dbi rdbi  = lmdb::dbi::open(rtxn, "output_amounts", flags);
+                lmdb::dbi rdbi  = lmdb::dbi::open(rtxn, "output_info", flags);
                 lmdb::cursor cr = lmdb::cursor::open(rtxn, rdbi);
 
                 lmdb::val key_to_find;
@@ -468,15 +470,12 @@ namespace xmreg
                 {
                     public_key pub_key;
 
-                    epee::string_tools::hex_to_pod(
-                                string(key_to_find.data(), key_to_find.size()),
-                                pub_key);
+                    hex_to_pod(string(key_to_find.data(), key_to_find.size()),
+                              pub_key);
 
-                    uint64_t xmr_amount = *(amount_val.data<uint64_t>());
+                    output_info out_info =  *(amount_val.data<output_info>());
 
-                    //cout << key_val_to_str(key_to_find, tx_hash_val) << endl;
-
-                    if (f(pub_key, xmr_amount) == false)
+                    if (f(pub_key, out_info) == false)
                     {
                         break;
                     }
@@ -491,6 +490,7 @@ namespace xmreg
                 cerr << e.what() << endl;
             }
         }
+
 
         void
         print_all(const string& db_name)
