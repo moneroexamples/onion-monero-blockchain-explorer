@@ -938,6 +938,7 @@ namespace xmreg {
                                                    static_cast<double>(txd.size) / 1024.0)},
                     {"tx_fee"               , fmt::format("{:0.12f}", XMR_AMOUNT(txd.fee))},
                     {"blk_timestamp"        , blk_timestamp},
+                    {"blk_timestamp_uint"   , blk.timestamp},
                     {"delta_time"           , age.first},
                     {"inputs_no"            , txd.input_key_imgs.size()},
                     {"has_inputs"           , !txd.input_key_imgs.empty()},
@@ -1953,7 +1954,7 @@ namespace xmreg {
             txd.mixin_no    = get_mixin_no(tx);
 
             txd.fee = 0;
-            
+
             if (!coinbase &&  tx.vin.size() > 0)
             {
                 // check if not miner tx
