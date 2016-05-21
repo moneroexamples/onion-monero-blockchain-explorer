@@ -20,6 +20,16 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
  - [rapidjson](https://github.com/miloyip/rapidjson) - C++ JSON parser/generator
 
 
+## Onion address
+
+Tor users:
+
+ - [http://xmrblocksvckbwvx.onion](http://xmrblocksvckbwvx.onion)
+
+Non tor users, can try tor proxy, e.g., 
+
+ - [http://xmrblocksvckbwvx.onion.to](http://xmrblocksvckbwvx.onion.to)
+
 ## Onion Monero Blockchain Explorer features
 
 The key features of the Onion Monero Blockchain Explorer are
