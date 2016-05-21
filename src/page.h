@@ -1078,8 +1078,19 @@ namespace xmreg {
 
             try
             {
-                out_amount_indices = core_storage->get_db()
-                                .get_tx_amount_output_indices(txd.hash);
+
+                uint64_t tx_index;
+
+                if (core_storage->get_db().tx_exists(txd.hash, tx_index))
+                {
+                    out_amount_indices = core_storage->get_db()
+                            .get_tx_amount_output_indices(tx_index);
+                }
+                else
+                {
+                    cerr << "get_tx_outputs_gindexs failed to find transaction with id = " << txd.hash;
+                }
+
             }
             catch(const exception& e)
             {
@@ -1091,16 +1102,14 @@ namespace xmreg {
 
             try
             {
-                out_global_indices = core_storage->get_db()
-                                .get_tx_output_indices(txd.hash);
+                core_storage->get_tx_outputs_gindexs(txd.hash,
+                                                     out_global_indices);
+
             }
             catch(const exception& e)
             {
                 cerr << e.what() << endl;
             }
-
-
-
 
             uint64_t output_idx {0};
 
