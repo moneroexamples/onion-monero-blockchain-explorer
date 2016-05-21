@@ -26,13 +26,23 @@ namespace xmreg
      */
     struct output_info
     {
+        crypto::public_key out_pub_key;
         crypto::hash       tx_hash;
         crypto::public_key tx_pub_key;
         uint64_t           amount;
         uint64_t           index_in_tx;
     };
 
+    std::ostream& operator<<(std::ostream& os, const output_info&  out_info)
+    {
+         os  << ", out_pub_key: " << out_info.out_pub_key
+             << ", tx_hash: " << out_info.tx_hash
+             << ", tx_pub_key: " << out_info.tx_pub_key
+             << ", amount: " << XMR_AMOUNT(out_info.amount)
+             << ", index_in_tx: " << out_info.index_in_tx;
 
+        return os;
+    }
 
     class MyLMDB
     {
@@ -131,7 +141,7 @@ namespace xmreg
         }
 
         bool
-        write_output_public_keys(const transaction& tx)
+        write_output_public_keys(const transaction& tx, const block& blk)
         {
             crypto::hash tx_hash = get_transaction_hash(tx);
 
@@ -154,7 +164,8 @@ namespace xmreg
                 wtxn  = lmdb::txn::begin(m_env);
                 wdbi1 = lmdb::dbi::open(wtxn, "output_public_keys", flags);
                 wdbi2 = lmdb::dbi::open(wtxn, "output_amounts", flags);
-                wdbi3 = lmdb::dbi::open(wtxn, "output_info", flags);
+                wdbi3 = lmdb::dbi::open(wtxn, "output_info",
+                                        flags | MDB_INTEGERKEY | MDB_INTEGERDUP);
             }
             catch (lmdb::error& e )
             {
@@ -164,7 +175,10 @@ namespace xmreg
 
             for (auto& output: outputs)
             {
-                string public_key_str = pod_to_hex(std::get<0>(output).key);
+
+                public_key out_pub_key = std::get<0>(output).key;
+
+                string public_key_str = pod_to_hex(out_pub_key);
 
                 lmdb::val public_key_val {public_key_str};
                 lmdb::val tx_hash_val    {tx_hash_str};
@@ -175,15 +189,18 @@ namespace xmreg
 
                 uint64_t index_in_tx = std::get<2>(output);
 
+                output_info out_info {out_pub_key, tx_hash, tx_pub_key, amount, index_in_tx};
 
-                output_info out_info {tx_hash, tx_pub_key, amount, index_in_tx};
+                uint64_t out_timestamp = blk.timestamp;
 
-
-                lmdb::val out_info_val     {static_cast<void*>(&out_info), sizeof(out_info)};
+                lmdb::val out_timestamp_val     {static_cast<void*>(&out_timestamp),
+                                                 sizeof(out_timestamp)};
+                lmdb::val out_info_val          {static_cast<void*>(&out_info),
+                                                 sizeof(out_info)};
 
                 wdbi1.put(wtxn, public_key_val, tx_hash_val);
                 wdbi2.put(wtxn, public_key_val, amount_val);
-                wdbi3.put(wtxn, public_key_val, out_info_val);
+                wdbi3.put(wtxn, out_timestamp_val, out_info_val);
             }
 
             try
@@ -411,8 +428,8 @@ namespace xmreg
 
 
         bool
-        get_output_info(const string& key,
-                        output_info& out_info,
+        get_output_info(uint64_t key_timestamp,
+                        vector<output_info>& out_infos,
                         const string& db_name = "output_info")
         {
 
@@ -424,15 +441,31 @@ namespace xmreg
                 lmdb::txn rtxn  = lmdb::txn::begin(m_env, nullptr, MDB_RDONLY);
                 lmdb::dbi rdbi  = lmdb::dbi::open(rtxn, db_name.c_str(), flags);
 
-                lmdb::val key_to_find{key};
+                lmdb::val key_to_find{static_cast<void*>(&key_timestamp),
+                                      sizeof(key_timestamp)};
                 lmdb::val info_val;
 
-                if(!rdbi.get(rtxn, key_to_find, info_val))
+
+
+                lmdb::cursor cr = lmdb::cursor::open(rtxn, rdbi);
+
+
+                // set cursor the the first item
+                if (cr.get(key_to_find, info_val, MDB_SET))
+                {
+                    out_infos.push_back(*(info_val.data<output_info>()));
+
+                    // process other values for the same key
+                    while (cr.get(key_to_find, info_val, MDB_NEXT_DUP))
+                    {
+                        //cout << key_val_to_str(key_to_find, tx_hash_val) << endl;
+                        out_infos.push_back(*(info_val.data<output_info>()));
+                    }
+                }
+                else
                 {
                     return false;
                 }
-
-                out_info = *(info_val.data<output_info>());
 
                 rtxn.abort();
 
@@ -471,7 +504,7 @@ namespace xmreg
                     public_key pub_key;
 
                     hex_to_pod(string(key_to_find.data(), key_to_find.size()),
-                              pub_key);
+                               pub_key);
 
                     output_info out_info =  *(amount_val.data<output_info>());
 
