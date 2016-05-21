@@ -176,7 +176,7 @@ steps can be executed:
 
 ```bash
 # download the source code
-https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
+git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
 
 # enter the downloaded sourced code folder
 cd onion-monero-blockchain-explorer
