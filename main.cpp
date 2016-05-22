@@ -63,9 +63,39 @@ int main(int ac, const char* av[]) {
         return EXIT_FAILURE;
     }
 
+    // check if we have path to lmdb2 (i.e., custom db)
+    // and if it exists
+
+    string custom_db_path_str;
+
+    if (custom_db_path_opt)
+    {
+        if (boost::filesystem::exists(boost::filesystem::path(*custom_db_path_opt)))
+        {
+            custom_db_path_str = *custom_db_path_opt;
+        }
+        else
+        {
+            cerr << "Custom db path: " << *custom_db_path_opt
+                 << "does not exist" << endl;
+
+            return EXIT_FAILURE;
+        }
+    }
+    else
+    {
+        // if not given assume it is located in ~./bitmonero/lmdb2 folder
+        custom_db_path_str = blockchain_path.parent_path().string()
+                             + string("/lmdb2");
+    }
+
+    custom_db_path_str = xmreg::remove_trailing_path_separator(custom_db_path_str);
+
+
     // create instance of page class which
     // contains logic for the website
-    xmreg::page xmrblocks(&mcore, core_storage, *deamon_url_opt);
+    xmreg::page xmrblocks(&mcore, core_storage,
+                          *deamon_url_opt, custom_db_path_str);
 
     // crow instance
     crow::SimpleApp app;

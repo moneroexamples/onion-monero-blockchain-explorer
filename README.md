@@ -46,7 +46,7 @@ The key features of the Onion Monero Blockchain Explorer are
  - the only explorer that can show which outputs belong to the given Monero address and viewkey,
  - the only explorer showing detailed information about mixins, such as, mixins'
  age, timescale, mixin of mixins,
- - the only explorer correctly showing global output indices as well as thier amount indices.
+ - the only explorer showing amount output indices.
 
 ## Prerequisite
 
