@@ -1846,19 +1846,6 @@ namespace xmreg {
 
     private:
 
-        map<string, vector<string>>
-        get_tx_keys(vector<tx_info> tx_infos)
-        {
-            map<string, vector<string>> tx_keys;
-
-            for (const tx_info& tx_info: tx_infos)
-            {
-
-            }
-
-            return tx_keys;
-        }
-
         tx_details
         get_tx_details(const transaction& tx, bool coinbase = false)
         {
