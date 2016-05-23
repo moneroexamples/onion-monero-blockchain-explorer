@@ -26,9 +26,15 @@ Tor users:
 
  - [http://xmrblocksvckbwvx.onion](http://xmrblocksvckbwvx.onion)
 
-Non tor users, can try tor proxy, e.g., 
+Non tor users, can try tor proxy, e.g.,
 
  - [http://xmrblocksvckbwvx.onion.to](http://xmrblocksvckbwvx.onion.to)
+
+## Still under development
+
+The Onion Monero Blockchain Explorer is still under development and testing.
+So not everything can work as expected and the explorer can be offline from time
+to time, when changes are being made to it.
 
 ## Onion Monero Blockchain Explorer features
 
