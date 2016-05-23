@@ -1503,10 +1503,6 @@ namespace xmreg {
                           tx_search_results["output_public_keys"],
                           "output_public_keys");
 
-
-            cout <<  "tx_search_results[\"output_public_keys\"]"
-                << tx_search_results["output_public_keys"].size() << endl; 
-
             all_possible_tx_hashes.push_back(
                     make_pair("output_public_keys",
                               tx_search_results["output_public_keys"]));
@@ -1969,6 +1965,12 @@ namespace xmreg {
                     }
 
                 }
+            }
+            else
+            {
+                // @TODO make tx_info from json
+                // if dont have tx_blob member, construct tx_info
+                // from json obtained from the rpc call
             }
 
             return found_txs;
