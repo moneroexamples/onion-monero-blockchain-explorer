@@ -186,6 +186,7 @@ int main(int ac, const char* av[]) {
 
 
 ## Compile this example
+
 The dependencies are same as those for Monero, so I assume Monero compiles
 correctly. If so then to download and compile this example, the following
 steps can be executed:
@@ -204,8 +205,12 @@ cmake .
 make
 ```
 
+Some explorer functionality depends on [lmdbcpp-monero](https://github.com/moneroexamples/lmdbcpp-monero.git) which must
+be up to date with monero blockchain and running alongside monero daeamon, to
+keep it up to date as new blocks are created in the blockchain.
 
 ## Other examples
+
 Other examples can be found on  [github](https://github.com/moneroexamples?tab=repositories).
 Please know that some of the examples/repositories are not
 finished and may not work as intended.
