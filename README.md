@@ -199,7 +199,7 @@ The Onion Explorer uses Monero C++ libraries and headers. Also some functionalit
 - https://github.com/moneroexamples/compile-monero-09-on-arch-linux (Arch Linux)
 
 
-### Custom lmdb database
+### Custom lmdb database (optional)
 
 Most unique search abilities of the Onion Explorer are achieved through using
 a [custom lmdb database](https://github.com/moneroexamples/lmdbcpp-monero.git) constructed based on the Monero blockchain.
@@ -207,13 +207,17 @@ The reason for the custom database is that Monero's own lmdb database has limite
 search abilities. For example, its not possible to search for a tx having a
  given key image, except performing an exhaustive search on the blockchain.
 
+Instruction how to compile the lmdbcpp-monero are provided here:
+
  - https://github.com/moneroexamples/lmdbcpp-monero.git
 
+The custom database can be quit large, 12GB now. So its obtional off course.
+But without it, some searching abilities wont be possible, e.g., searching
+for key images, output and tx public keys, encrypted payments id.
 
-### Compile the explorer
-The dependencies are same as those for Monero, so I assume Monero compiles
-correctly. If so then to download and compile this example, the following
-steps can be executed:
+### Compile and run the explorer
+Once the Monero is compiled and setup, the explorer can be downloaded and compiled
+as follows:
 
 ```bash
 # download the source code
@@ -229,11 +233,35 @@ cmake .
 make
 ```
 
+When compilation finishes executable `xmrblocks` should be created.
+
+To run it:
+```
+./xmrblocks
+```
+
+Example output:
+
+```bash
+[mwo@arch onion-monero-blockchain-explorer]$ ./xmrblocks
+2016-May-28 10:04:49.160280 Blockchain initialized. last block: 1056761, d0.h0.m12.s47 time ago, current difficulty: 1517857750
+(2016-05-28 02:04:49) [INFO    ] Crow/0.1 server is running, local port 8081
+```
+
+Go to your browser: http://127.0.0.1:8081
+
 ### Run the explorer
 
 Some explorer functionality depends on [lmdbcpp-monero](https://github.com/moneroexamples/lmdbcpp-monero.git) which must
-be up to date with monero blockchain and running alongside monero daeamon, to
+be up to date with monero blockchain and running alongside monero daemon, to
 keep it up to date as new blocks are created in the blockchain.
+
+In one terminal window start the lmdbcpp:
+
+```
+/patch/to/
+```
+
 
 ## Other examples
 
