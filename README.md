@@ -46,13 +46,13 @@ The key features of the Onion Monero Blockchain Explorer are
  - made fully in C++,
  - the only explorer showing encrypted payments ID,
  - the only explorer with the ability to search by encrypted payments ID, tx public
- keys, outputs public keys, input key images, output global indices,
+ keys, outputs public keys, input key images,
  output amount index and its amount,
  - the only explorer showing ring signatures,
  - the only explorer that can show which outputs belong to the given Monero address and viewkey,
  - the only explorer showing detailed information about mixins, such as, mixins'
  age, timescale, mixin of mixins,
- - the only explorer showing amount output indices.
+ - the only explorer showing number of amount output indices.
 
 ## Prerequisite
 
@@ -185,8 +185,31 @@ int main(int ac, const char* av[]) {
 ![Onion Monero Blockchain Explorer](https://raw.githubusercontent.com/moneroexamples/onion-monero-blockchain-explorer/master/screenshot/screenshot.jpg)
 
 
-## Compile this example
+## Compile and run the explorer
 
+#### Monero headers and libraries setup
+
+The Onion Explorer uses Monero C++ libraries and headers. Also some functionality
+ in the Explorer for mempool is achieved through [patching](https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04/blob/master/res/tx_blob_to_tx_info.patch)
+ the Monero deamon.
+ Instructions how to download Monero source files, apply a patch, compile  Monero,
+ setup header and library files are presented here:
+
+- https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04
+
+
+### Custom lmdb database
+
+Most unique search abilities of the Onion Explorer are achieved through using
+a [custom lmdb database](https://github.com/moneroexamples/lmdbcpp-monero.git) constructed based on the Monero blockchain.
+The reason for the custom database is that Monero's own lmdb database has limited
+search abilities. For example, its not possible to search for a tx having a
+ given key image, except performing an exhaustive search on the blockchain.
+
+ - https://github.com/moneroexamples/lmdbcpp-monero.git
+
+
+### Compile the explorer
 The dependencies are same as those for Monero, so I assume Monero compiles
 correctly. If so then to download and compile this example, the following
 steps can be executed:
@@ -204,6 +227,8 @@ cmake .
 # compile
 make
 ```
+
+### Run the explorer
 
 Some explorer functionality depends on [lmdbcpp-monero](https://github.com/moneroexamples/lmdbcpp-monero.git) which must
 be up to date with monero blockchain and running alongside monero daeamon, to
