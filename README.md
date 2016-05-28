@@ -195,7 +195,8 @@ The Onion Explorer uses Monero C++ libraries and headers. Also some functionalit
  Instructions how to download Monero source files, apply a patch, compile  Monero,
  setup header and library files are presented here:
 
-- https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04
+- https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04 (Ubuntu 16.04)
+- https://github.com/moneroexamples/compile-monero-09-on-arch-linux (Arch Linux)
 
 
 ### Custom lmdb database
