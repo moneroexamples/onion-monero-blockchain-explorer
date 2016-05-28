@@ -1447,178 +1447,199 @@ namespace xmreg {
             vector<pair<string, vector<string>>> all_possible_tx_hashes;
 
 
-            xmreg::MyLMDB mylmdb {lmdb2_path};
-
-            // search the custum lmdb for key_images and append the result
-            // to those from the mempool search if found
-
-            mylmdb.search(search_text,
-                         tx_search_results["key_images"],
-                         "key_images");
-
-            cout << "size: " << tx_search_results["key_images"].size() << endl;
-
-            all_possible_tx_hashes.push_back(
-                    make_pair("key_images",
-                               tx_search_results["key_images"]));
 
 
-           // search the custum lmdb for tx_public_keys and append the result
-           // to those from the mempool search if found
-
-            mylmdb.search(search_text,
-                         tx_search_results["tx_public_keys"],
-                         "tx_public_keys");
-
-            all_possible_tx_hashes.push_back(
-                    make_pair("tx_public_keys",
-                               tx_search_results["tx_public_keys"]));
-
-           // search the custum lmdb for payments_id and append the result
-           // to those from the mempool search if found
-
-            mylmdb.search(search_text,
-                          tx_search_results["payments_id"],
-                          "payments_id");
-
-            all_possible_tx_hashes.push_back(
-                    make_pair("payments_id",
-                              tx_search_results["payments_id"]));
-
-            // search the custum lmdb for encrypted_payments_id and append the result
-            // to those from the mempool search if found
-
-            mylmdb.search(search_text,
-                          tx_search_results["encrypted_payments_id"],
-                          "encrypted_payments_id");
-
-            all_possible_tx_hashes.push_back(
-                    make_pair("encrypted_payments_id",
-                              tx_search_results["encrypted_payments_id"]));
-
-            // search the custum lmdb for output_public_keys and append the result
-            // to those from the mempool search if found
-
-            mylmdb.search(search_text,
-                          tx_search_results["output_public_keys"],
-                          "output_public_keys");
-
-            all_possible_tx_hashes.push_back(
-                    make_pair("output_public_keys",
-                              tx_search_results["output_public_keys"]));
-
-
-            // seach for output using output global index
-
-            if (search_for_global_output_idx)
+            try
             {
-                try
+                unique_ptr<xmreg::MyLMDB> mylmdb;
+
+                if (!bf::is_directory(lmdb2_path))
                 {
-                     uint64_t global_idx = boost::lexical_cast<uint64_t>(
-                                                    search_text.substr(4));
-
-
-                     //cout << "global_idx: " << global_idx << endl;
-
-                     // get info about output of a given global index
-                     output_data_t output_data = core_storage->get_db()
-                                                .get_output_key(global_idx);
-
-                     //tx_out_index tx_out = core_storage->get_db()
-                    //                    .get_output_tx_and_index_from_global(global_idx);
-
-                     //cout << "tx_out.first: " << tx_out.first << endl;
-                     //cout << "tx_out.second: " << tx_out.second << endl;
-
-                     string output_pub_key = pod_to_hex(output_data.pubkey);
-
-                     //cout << "output_pub_key: " << output_pub_key << endl;
-
-                     vector<string> found_outputs;
-
-                     mylmdb.search(output_pub_key,
-                                   found_outputs,
-                                   "output_public_keys");
-
-                     //cout << "found_outputs.size(): " << found_outputs.size() << endl;
-
-                     all_possible_tx_hashes.push_back(
-                             make_pair("output_public_keys_based_on_global_idx",
-                                       found_outputs));
-
+                    throw std::runtime_error(lmdb2_path + " does not exist");
                 }
-                catch(boost::bad_lexical_cast &e)
+
+                mylmdb = make_unique<xmreg::MyLMDB>(lmdb2_path);
+
+
+                mylmdb->search(search_text,
+                               tx_search_results["key_images"],
+                               "key_images");
+
+                cout << "size: " << tx_search_results["key_images"].size() << endl;
+
+                all_possible_tx_hashes.push_back(
+                        make_pair("key_images",
+                                  tx_search_results["key_images"]));
+
+
+                // search the custum lmdb for tx_public_keys and append the result
+                // to those from the mempool search if found
+
+                mylmdb->search(search_text,
+                               tx_search_results["tx_public_keys"],
+                               "tx_public_keys");
+
+                all_possible_tx_hashes.push_back(
+                        make_pair("tx_public_keys",
+                                  tx_search_results["tx_public_keys"]));
+
+                // search the custum lmdb for payments_id and append the result
+                // to those from the mempool search if found
+
+                mylmdb->search(search_text,
+                               tx_search_results["payments_id"],
+                               "payments_id");
+
+                all_possible_tx_hashes.push_back(
+                        make_pair("payments_id",
+                                  tx_search_results["payments_id"]));
+
+                // search the custum lmdb for encrypted_payments_id and append the result
+                // to those from the mempool search if found
+
+                mylmdb->search(search_text,
+                               tx_search_results["encrypted_payments_id"],
+                               "encrypted_payments_id");
+
+                all_possible_tx_hashes.push_back(
+                        make_pair("encrypted_payments_id",
+                                  tx_search_results["encrypted_payments_id"]));
+
+                // search the custum lmdb for output_public_keys and append the result
+                // to those from the mempool search if found
+
+                mylmdb->search(search_text,
+                               tx_search_results["output_public_keys"],
+                               "output_public_keys");
+
+                all_possible_tx_hashes.push_back(
+                        make_pair("output_public_keys",
+                                  tx_search_results["output_public_keys"]));
+
+
+                // seach for output using output global index
+
+                if (search_for_global_output_idx)
                 {
-                    cerr << "Cant cast global_idx string: "
-                         << search_text.substr(4) << endl;
-                }
+                    try
+                    {
+                        uint64_t global_idx = boost::lexical_cast<uint64_t>(
+                                search_text.substr(4));
+
+
+                        //cout << "global_idx: " << global_idx << endl;
+
+                        // get info about output of a given global index
+                        output_data_t output_data = core_storage->get_db()
+                                .get_output_key(global_idx);
+
+                        //tx_out_index tx_out = core_storage->get_db()
+                        //                    .get_output_tx_and_index_from_global(global_idx);
+
+                        //cout << "tx_out.first: " << tx_out.first << endl;
+                        //cout << "tx_out.second: " << tx_out.second << endl;
+
+                        string output_pub_key = pod_to_hex(output_data.pubkey);
+
+                        //cout << "output_pub_key: " << output_pub_key << endl;
+
+                        vector<string> found_outputs;
+
+                        mylmdb->search(output_pub_key,
+                                       found_outputs,
+                                       "output_public_keys");
+
+                        //cout << "found_outputs.size(): " << found_outputs.size() << endl;
+
+                        all_possible_tx_hashes.push_back(
+                                make_pair("output_public_keys_based_on_global_idx",
+                                          found_outputs));
+
+                    }
+                    catch(boost::bad_lexical_cast &e)
+                    {
+                        cerr << "Cant cast global_idx string: "
+                        << search_text.substr(4) << endl;
+                    }
+                } //  if (search_for_global_output_idx)
+
+                // seach for output using output amount index and amount
+
+                if (search_for_amount_output_idx)
+                {
+                    try
+                    {
+
+                        string str_to_split = search_text.substr(4);
+
+                        vector<string> string_parts;
+
+                        boost::split(string_parts, str_to_split,
+                                     boost::is_any_of("-"));
+
+                        if (string_parts.size() != 2)
+                        {
+                            throw;
+                        }
+
+                        uint64_t amount_idx = boost::lexical_cast<uint64_t>(
+                                string_parts[0]);
+
+                        uint64_t amount = static_cast<uint64_t>
+                        (boost::lexical_cast<double>(
+                                        string_parts[1]) * 1e12);
+
+
+                        //cout << "amount_idx: " << amount_idx << endl;
+                        //cout << "amount: "     << amount << endl;
+
+                        // get info about output of a given global index
+                        output_data_t output_data = core_storage->get_db()
+                                .get_output_key(
+                                        amount, amount_idx);
+
+                        string output_pub_key = pod_to_hex(output_data.pubkey);
+
+                        //cout << "output_pub_key: " << output_pub_key << endl;
+
+                        vector<string> found_outputs;
+
+                        mylmdb->search(output_pub_key,
+                                       found_outputs,
+                                       "output_public_keys");
+
+                        //cout << "found_outputs.size(): " << found_outputs.size() << endl;
+
+                        all_possible_tx_hashes.push_back(
+                                make_pair("output_public_keys_based_on_amount_idx",
+                                          found_outputs));
+
+                    }
+                    catch(boost::bad_lexical_cast& e)
+                    {
+                        cerr << "Cant parse amout index and amout string: "
+                             << search_text.substr(4) << endl;
+                    }
+                    catch(OUTPUT_DNE& e)
+                    {
+                        cerr << "Output not found in the blockchain: "
+                             << search_text.substr(4) << endl;
+
+                        return(string("Output not found in the blockchain: ")
+                               + search_text.substr(4));
+                    }
+                } // if (search_for_amount_output_idx)
             }
-
-            // seach for output using output amount index and amount
-
-            if (search_for_amount_output_idx)
+            catch (const lmdb::runtime_error& e)
             {
-                try
-                {
-
-                    string str_to_split = search_text.substr(4);
-
-                    vector<string> string_parts;
-
-                    boost::split(string_parts, str_to_split,
-                                 boost::is_any_of("-"));
-
-                     if (string_parts.size() != 2)
-                     {
-                         throw;
-                     }
-
-                     uint64_t amount_idx = boost::lexical_cast<uint64_t>(
-                                                            string_parts[0]);
-
-                     uint64_t amount = static_cast<uint64_t>
-                                        (boost::lexical_cast<double>(
-                                                string_parts[1]) * 1e12);
-
-
-                     //cout << "amount_idx: " << amount_idx << endl;
-                     //cout << "amount: "     << amount << endl;
-
-                     // get info about output of a given global index
-                     output_data_t output_data = core_storage->get_db()
-                                                    .get_output_key(
-                                                        amount, amount_idx);
-
-                     string output_pub_key = pod_to_hex(output_data.pubkey);
-
-                     //cout << "output_pub_key: " << output_pub_key << endl;
-
-                     vector<string> found_outputs;
-
-                     mylmdb.search(output_pub_key,
-                                   found_outputs,
-                                   "output_public_keys");
-
-                     //cout << "found_outputs.size(): " << found_outputs.size() << endl;
-
-                     all_possible_tx_hashes.push_back(
-                             make_pair("output_public_keys_based_on_amount_idx",
-                                       found_outputs));
-
-                }
-                catch(boost::bad_lexical_cast& e)
-                {
-                    cerr << "Cant parse amout index and amout string: "
-                         << search_text.substr(4) << endl;
-                }
-                catch(OUTPUT_DNE& e)
-                {
-                    cerr << "Output not found in the blockchain: "
-                         << search_text.substr(4) << endl;
-
-                    return(string("Output not found in the blockchain: ")
-                           + search_text.substr(4));
-                }
+                cerr << "Error opening/accessing custom lmdb database: "
+                     << e.what() << endl;
+            }
+            catch (...)
+            {
+                std::exception_ptr p = std::current_exception();
+                cerr << "Error opening/accessing custom lmdb database: "
+                     << p.__cxa_exception_type()->name() << endl;
             }
 
 
