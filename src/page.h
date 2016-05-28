@@ -1458,6 +1458,9 @@ namespace xmreg {
                     throw std::runtime_error(lmdb2_path + " does not exist");
                 }
 
+                cout << "Custom lmdb database seem to exist at: " << lmdb2_path << endl;
+                cout << "So lets try to search there for what we are after." << endl;
+
                 mylmdb = make_unique<xmreg::MyLMDB>(lmdb2_path);
 
 

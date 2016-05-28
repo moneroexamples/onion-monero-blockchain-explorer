@@ -205,15 +205,18 @@ Most unique search abilities of the Onion Explorer are achieved through using
 a [custom lmdb database](https://github.com/moneroexamples/lmdbcpp-monero.git) constructed based on the Monero blockchain.
 The reason for the custom database is that Monero's own lmdb database has limited
 search abilities. For example, its not possible to search for a tx having a
- given key image, except performing an exhaustive search on the blockchain.
+ given key image, except by performing an exhaustive search on the blockchain which is very time consuming.
 
-Instruction how to compile the lmdbcpp-monero are provided here:
+Instruction how to compile the `lmdbcpp-monero` are provided here:
 
  - https://github.com/moneroexamples/lmdbcpp-monero.git
 
-The custom database can be quit large, 12GB now. So its optional off course.
-But without it, some searching abilities wont be possible, e.g., searching
-for key images, output and tx public keys, encrypted payments id.
+The custom database is rather big, 12GB now, and it must be running alongside Monero deamon
+ so that it keeps updating itself with new information from new blocks as they are added
+  to the blockchain.
+
+For these reasons, its use is optional. However, without it, some searches wont be possible,
+e.g., searching for key images, output and tx public keys, encrypted payments id.
 
 ##### Compile and run the explorer
 Once the Monero is compiled and setup, the explorer can be downloaded and compiled
