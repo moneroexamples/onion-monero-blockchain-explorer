@@ -211,7 +211,7 @@ Instruction how to compile the lmdbcpp-monero are provided here:
 
  - https://github.com/moneroexamples/lmdbcpp-monero.git
 
-The custom database can be quit large, 12GB now. So its obtional off course.
+The custom database can be quit large, 12GB now. So its optional off course.
 But without it, some searching abilities wont be possible, e.g., searching
 for key images, output and tx public keys, encrypted payments id.
 
