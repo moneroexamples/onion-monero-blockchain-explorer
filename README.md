@@ -187,7 +187,7 @@ int main(int ac, const char* av[]) {
 
 ## Compile and run the explorer
 
-#### Monero headers and libraries setup
+##### Monero headers and libraries setup
 
 The Onion Explorer uses Monero C++ libraries and headers. Also some functionality
  in the Explorer for mempool is achieved through [patching](https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04/blob/master/res/tx_blob_to_tx_info.patch)
@@ -199,7 +199,7 @@ The Onion Explorer uses Monero C++ libraries and headers. Also some functionalit
 - https://github.com/moneroexamples/compile-monero-09-on-arch-linux (Arch Linux)
 
 
-### Custom lmdb database (optional)
+#### Custom lmdb database (optional)
 
 Most unique search abilities of the Onion Explorer are achieved through using
 a [custom lmdb database](https://github.com/moneroexamples/lmdbcpp-monero.git) constructed based on the Monero blockchain.
@@ -215,7 +215,7 @@ The custom database can be quit large, 12GB now. So its obtional off course.
 But without it, some searching abilities wont be possible, e.g., searching
 for key images, output and tx public keys, encrypted payments id.
 
-### Compile and run the explorer
+#### Compile and run the explorer
 Once the Monero is compiled and setup, the explorer can be downloaded and compiled
 as follows:
 
@@ -249,18 +249,6 @@ Example output:
 ```
 
 Go to your browser: http://127.0.0.1:8081
-
-### Run the explorer
-
-Some explorer functionality depends on [lmdbcpp-monero](https://github.com/moneroexamples/lmdbcpp-monero.git) which must
-be up to date with monero blockchain and running alongside monero daemon, to
-keep it up to date as new blocks are created in the blockchain.
-
-In one terminal window start the lmdbcpp:
-
-```
-/patch/to/
-```
 
 
 ## Other examples
