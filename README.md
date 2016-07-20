@@ -20,7 +20,7 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
  - [rapidjson](https://github.com/miloyip/rapidjson) - C++ JSON parser/generator
 
 
-## Onion address
+## Address
 
 Tor users:
 
@@ -28,7 +28,7 @@ Tor users:
 
 Non tor users, can use its clearnet version (thanks to [Gingeropolous](https://github.com/Gingeropolous)):
 
- - [http://explore.MoneroWorld.com](explore.moneroworld.com)
+ - [http://explore.MoneroWorld.com](http://explore.moneroworld.com)
 
 
 ## Onion Monero Blockchain Explorer features
