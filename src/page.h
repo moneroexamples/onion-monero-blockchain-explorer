@@ -33,6 +33,7 @@
 #define TMPL_FOOTER          TMPL_DIR "/footer.html"
 #define TMPL_BLOCK           TMPL_DIR "/block.html"
 #define TMPL_TX              TMPL_DIR "/tx.html"
+#define TMPL_ADDRESS         TMPL_DIR "/address.html"
 #define TMPL_MY_OUTPUTS      TMPL_DIR "/my_outputs.html"
 #define TMPL_SEARCH_RESULTS  TMPL_DIR "/search_results.html"
 
@@ -1407,7 +1408,34 @@ namespace xmreg {
                 {
                     return result_html;
                 }
+            }
 
+
+            // check if monero address is given based on its length
+            // if yes, then we can only show its public components
+            if (search_text.length() == 95)
+            {
+                cout << "address is given " << endl;
+
+                // parse string representing given monero address
+                cryptonote::account_public_address address;
+
+                bool testnet {false};
+
+                if (search_text[0] == '9' || search_text[0] == 'A')
+                    testnet = true;
+
+                if (!xmreg::parse_str_address(search_text, address, testnet))
+                {
+                    cerr << "Cant parse string address: " << search_text << endl;
+                    return string("Cant parse address (probably incorrect format): ")
+                           + search_text;
+                }
+
+                cout << "public spend key: " << address.m_spend_public_key << endl;
+                cout << "public view key: " << address.m_view_public_key << endl;
+
+                return show_address_details(address, testnet);
             }
 
             // second let try searching for tx
@@ -1646,10 +1674,34 @@ namespace xmreg {
             }
 
 
-
             result_html = show_search_results(search_text, all_possible_tx_hashes);
 
             return result_html;
+        }
+
+        string
+        show_address_details(const account_public_address& address, bool testnet = false)
+        {
+
+            string address_str      = xmreg::print_address(address, testnet);
+            string pub_viewkey_str  = fmt::format("{:s}", address.m_view_public_key);
+            string pub_spendkey_str = fmt::format("{:s}", address.m_spend_public_key);
+
+            mstch::map context {
+                    {"xmr_address"     , REMOVE_HASH_BRAKETS(address_str)},
+                    {"public_viewkey"  , REMOVE_HASH_BRAKETS(pub_viewkey_str)},
+                    {"public_spendkey" , REMOVE_HASH_BRAKETS(pub_spendkey_str)},
+                    {"testnet"         , testnet},
+            };
+
+            // read address.html
+            string address_html = xmreg::read(TMPL_ADDRESS);
+
+            // add header and footer
+            string full_page = get_full_page(address_html);
+
+            // render the page
+            return mstch::render(full_page, context);
         }
 
 

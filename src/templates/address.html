@@ -1,0 +1,28 @@
+
+<div>
+    <br/>
+    <H4 style="margin:5px">Address:<br/>{{xmr_address}}</H4>
+    <br/>
+
+    {{#testnet}}
+    <H4 style="margin:5px">Testnet address: Yes</H4>
+    {{/testnet}}
+    {{^testnet}}
+    <H4 style="margin:5px">Testnet address: No</H4>
+    {{/testnet}}
+
+    <br/>
+    <H4 style="margin:5px">Associated public keys</H4>
+
+    <H4 style="margin:5px">Public view key: {{public_viewkey}}</H4>
+    <H4 style="margin:5px">Public spend key: {{public_spendkey}}</H4>
+
+    <br/>
+    <H4 style="margin:5px">
+        Transactions:<br/> Sorry, its not possible to find txs associated with
+        normal addresses in Monero
+    </H4>
+
+</div>
+<br/>
+<br/>
