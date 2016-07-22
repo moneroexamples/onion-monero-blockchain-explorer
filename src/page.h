@@ -1415,8 +1415,6 @@ namespace xmreg {
             // if yes, then we can only show its public components
             if (search_text.length() == 95)
             {
-                cout << "address is given " << endl;
-
                 // parse string representing given monero address
                 cryptonote::account_public_address address;
 
@@ -1432,11 +1430,36 @@ namespace xmreg {
                            + search_text;
                 }
 
-                cout << "public spend key: " << address.m_spend_public_key << endl;
-                cout << "public view key: " << address.m_view_public_key << endl;
-
                 return show_address_details(address, testnet);
             }
+
+            // check if integrated monero address is given based on its length
+            // if yes, then show its public components search tx based on encrypted id
+            if (search_text.length() == 106)
+            {
+
+                cryptonote::account_public_address address;
+
+                bool has_payment_id;
+
+                crypto::hash8 encrypted_payment_id;
+
+                bool testnet;
+
+                if (!get_account_integrated_address_from_str(address,
+                                                        has_payment_id,
+                                                        encrypted_payment_id,
+                                                        testnet,
+                                                        search_text))
+                {
+                    cerr << "Cant parse string integerated address: " << search_text << endl;
+                    return string("Cant parse address (probably incorrect format): ")
+                           + search_text;
+                }
+
+                return show_integrated_address_details(address, encrypted_payment_id, testnet);
+            }
+
 
             // second let try searching for tx
             result_html = show_tx(search_text);
@@ -1688,10 +1711,11 @@ namespace xmreg {
             string pub_spendkey_str = fmt::format("{:s}", address.m_spend_public_key);
 
             mstch::map context {
-                    {"xmr_address"     , REMOVE_HASH_BRAKETS(address_str)},
-                    {"public_viewkey"  , REMOVE_HASH_BRAKETS(pub_viewkey_str)},
-                    {"public_spendkey" , REMOVE_HASH_BRAKETS(pub_spendkey_str)},
-                    {"testnet"         , testnet},
+                    {"xmr_address"        , REMOVE_HASH_BRAKETS(address_str)},
+                    {"public_viewkey"     , REMOVE_HASH_BRAKETS(pub_viewkey_str)},
+                    {"public_spendkey"    , REMOVE_HASH_BRAKETS(pub_spendkey_str)},
+                    {"is_integrated_addr" , false},
+                    {"testnet"            , testnet},
             };
 
             // read address.html
@@ -1704,6 +1728,36 @@ namespace xmreg {
             return mstch::render(full_page, context);
         }
 
+        // ;
+        string
+        show_integrated_address_details(const account_public_address& address,
+                                        const crypto::hash8& encrypted_payment_id,
+                                        bool testnet = false)
+        {
+
+            string address_str        = xmreg::print_address(address, testnet);
+            string pub_viewkey_str    = fmt::format("{:s}", address.m_view_public_key);
+            string pub_spendkey_str   = fmt::format("{:s}", address.m_spend_public_key);
+            string enc_payment_id_str = fmt::format("{:s}", encrypted_payment_id);
+
+            mstch::map context {
+                    {"xmr_address"          , REMOVE_HASH_BRAKETS(address_str)},
+                    {"public_viewkey"       , REMOVE_HASH_BRAKETS(pub_viewkey_str)},
+                    {"public_spendkey"      , REMOVE_HASH_BRAKETS(pub_spendkey_str)},
+                    {"encrypted_payment_id" , REMOVE_HASH_BRAKETS(enc_payment_id_str)},
+                    {"is_integrated_addr"   , true},
+                    {"testnet"              , testnet},
+            };
+
+            // read address.html
+            string address_html = xmreg::read(TMPL_ADDRESS);
+
+            // add header and footer
+            string full_page = get_full_page(address_html);
+
+            // render the page
+            return mstch::render(full_page, context);
+        }
 
         map<string, vector<string>>
         search_txs(vector<transaction> txs, const string& search_text)
