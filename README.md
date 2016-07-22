@@ -36,7 +36,7 @@ Non tor users, can use its clearnet version (thanks to [Gingeropolous](https://g
 The key features of the Onion Monero Blockchain Explorer are
 
  - available as a hidden service,
- - no javascript, no web analytics trackers, no images,
+ - no javascript, no cookies, no web analytics trackers, no images,
  - open sourced,
  - made fully in C++,
  - the only explorer showing encrypted payments ID,
@@ -44,6 +44,7 @@ The key features of the Onion Monero Blockchain Explorer are
  keys, outputs public keys, input key images,
  output amount index and its amount,
  - the only explorer showing ring signatures,
+ - the only explorer that allows to search using payment ids from integrated address
  - the only explorer showing transaction extra field,
  - the only explorer that can show which outputs belong to the given Monero address and viewkey,
  - the only explorer showing detailed information about mixins, such as, mixins'
