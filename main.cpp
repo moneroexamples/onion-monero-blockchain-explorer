@@ -121,6 +121,7 @@ int main(int ac, const char* av[]) {
         // on the explorer. I block it with this
         if (!xmreg::does_header_has(req, "Accept", "q=.2, */*; q=.2").empty())
         {
+            cout << "Scanner with q=.2, */*; q=.2 blocked!" << endl;
             return crow::response(400);
         }
 
@@ -134,7 +135,8 @@ int main(int ac, const char* av[]) {
         // on the explorer. I block it with this
         if (!xmreg::does_header_has(req, "Accept", "q=.2, */*; q=.2").empty())
         {
-            return crow::response(400);;
+            cout << "Scanner with q=.2, */*; q=.2 blocked!" << endl;
+            return crow::response(400);
         }
 
         return crow::response(xmrblocks.show_block(block_hash));
@@ -147,6 +149,7 @@ int main(int ac, const char* av[]) {
         // on the explorer. I block it with this
         if (!xmreg::does_header_has(req, "Accept", "q=.2, */*; q=.2").empty())
         {
+            cout << "Scanner with q=.2, */*; q=.2 blocked!" << endl;
             return crow::response(400);
         }
 
