@@ -60,6 +60,14 @@ namespace xmreg {
 
 
 
+    /**
+     * Check if a given header filed contains value string
+     *
+     * @param req
+     * @param field
+     * @param value
+     * @return string
+     */
     string
     does_header_has(const crow::request& req,
                     const string& field = "Accept",
@@ -71,8 +79,6 @@ namespace xmreg {
         {
             if (accept.find(value) != std::string::npos)
             {
-                cout << value << " found" << endl;
-
                 return accept;
             }
         }

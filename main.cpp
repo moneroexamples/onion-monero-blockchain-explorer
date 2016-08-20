@@ -115,8 +115,16 @@ int main(int ac, const char* av[]) {
     });
 
     CROW_ROUTE(app, "/block/<uint>")
-    ([&](size_t block_height) {
-        return xmrblocks.show_block(block_height);
+    ([&](const crow::request& req, size_t block_height) {
+
+        // there is some robot scanning everything
+        // on the explorer. I block it with this
+        if (!xmreg::does_header_has(req, "Accept", "q=.2, */*; q=.2").empty())
+        {
+            return crow::response(400);
+        }
+
+        return crow::response(xmrblocks.show_block(block_height));
     });
 
     CROW_ROUTE(app, "/block/<string>")
@@ -128,8 +136,6 @@ int main(int ac, const char* av[]) {
         {
             return crow::response(400);;
         }
-
-
 
         return crow::response(xmrblocks.show_block(block_hash));
     });
