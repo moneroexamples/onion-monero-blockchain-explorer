@@ -19,6 +19,7 @@
 #include "tools.h"
 #include "rpccalls.h"
 #include "mylmdb.h"
+#include "../ext/crow/http_request.h"
 
 #include <algorithm>
 #include <limits>
@@ -56,6 +57,29 @@ namespace xmreg {
     // as string if exists. the getter return empty string if
     // tx_blob does not exist
     DEFINE_MEMBER_GETTER(tx_blob, string)
+
+
+
+    string
+    does_header_has(const crow::request& req,
+                    const string& field = "Accept",
+                    const string& value = "q=.2, */*; q=.2")
+    {
+        string accept = req.get_header_value(field);
+
+        if (!accept.empty())
+        {
+            if (accept.find(value) != std::string::npos)
+            {
+                cout << value << " found" << endl;
+
+                return accept;
+            }
+        }
+
+        return string {};
+    }
+
 
 
     /**

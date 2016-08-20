@@ -120,22 +120,31 @@ int main(int ac, const char* av[]) {
     });
 
     CROW_ROUTE(app, "/block/<string>")
-    ([&](string block_hash) {
-        return xmrblocks.show_block(block_hash);
-    });
+    ([&](const crow::request& req, string block_hash) {
 
-//    CROW_ROUTE(app, "/tx/<string>")
-//    ([&](string tx_hash) {
-//        return xmrblocks.show_tx(tx_hash);
-//    });
+        // there is some robot scanning everything
+        // on the explorer. I block it with this
+        if (!xmreg::does_header_has(req, "Accept", "q=.2, */*; q=.2").empty())
+        {
+            return crow::response(400);;
+        }
+
+
+
+        return crow::response(xmrblocks.show_block(block_hash));
+    });
 
     CROW_ROUTE(app, "/tx/<string>")
     ([&](const crow::request& req, string tx_hash) {
 
-        for (const auto& m : req.headers)
-            cout << m.first << ": " << m.second << endl;
+        // there is some robot scanning everything
+        // on the explorer. I block it with this
+        if (!xmreg::does_header_has(req, "Accept", "q=.2, */*; q=.2").empty())
+        {
+            return crow::response(400);
+        }
 
-        return "";
+        return crow::response(xmrblocks.show_tx(tx_hash));
     });
 
     CROW_ROUTE(app, "/tx/<string>/<uint>")
