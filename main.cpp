@@ -106,6 +106,14 @@ int main(int ac, const char* av[]) {
         //for (const auto& m : req.headers)
         //    cout << m.first << ": " << m.second << endl;
 
+        // there is some robot scanning everything
+        // on the explorer. I block it with this
+        if (!xmreg::does_header_has(req, "Accept", "q=.2, */*; q=.2").empty())
+        {
+            cout << "Scanner with q=.2, */*; q=.2 blocked!" << endl;
+            return crow::response(400);
+        }
+
         return xmrblocks.index2();
     });
 
