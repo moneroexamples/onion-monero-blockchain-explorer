@@ -130,7 +130,7 @@ int main(int ac, const char* av[]) {
 //    });
 
     CROW_ROUTE(app, "/tx/<string>")
-    ([&](const crow::request& req) {
+    ([&](const crow::request& req, string tx_hash) {
 
         for (const auto& m : req.headers)
             cout << m.first << ": " << m.second << endl;
