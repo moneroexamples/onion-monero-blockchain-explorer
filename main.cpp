@@ -145,6 +145,13 @@ int main(int ac, const char* av[]) {
         return xmrblocks.search(string(req.url_params.get("value")));
     });
 
+    CROW_ROUTE(app, "/tx/robots.txt")
+    ([&]() {
+        string text = "User-agent: *\n"
+                      "Disallow: ";
+        return text;
+    });
+
     CROW_ROUTE(app, "/autorefresh")
     ([&]() {
         uint64_t page_no {0};
