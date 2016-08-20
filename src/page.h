@@ -996,6 +996,8 @@ namespace xmreg {
 
             uint64_t input_idx {0};
 
+            uint64_t inputs_xmr_sum {0};
+
             // make timescale maps for mixins in input
             for (const txin_to_key& in_key: txd.input_key_imgs)
             {
@@ -1019,6 +1021,8 @@ namespace xmreg {
                     {"mixins"    , mstch::array{}},
                     {"ring_sigs" , txd.get_ring_sig_for_input(input_idx)}
                 });
+
+                inputs_xmr_sum += in_key.amount;
 
 
                 // get reference to mixins array created above
@@ -1102,6 +1106,7 @@ namespace xmreg {
                 input_idx++;
             } // for (const txin_to_key& in_key: txd.input_key_imgs)
 
+            context["inputs_xmr_sum"] = fmt::format("{:0.12f}", XMR_AMOUNT(inputs_xmr_sum));
             context["server_time"]      = server_time_str;
             context["inputs"]           = inputs;
             context["timescales"]       = mixins_timescales;
@@ -1136,6 +1141,8 @@ namespace xmreg {
 
             mstch::array outputs;
 
+            uint64_t outputs_xmr_sum {0};
+
             for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
             {
 
@@ -1153,6 +1160,8 @@ namespace xmreg {
                                             out_amount_indices.at(output_idx));
                 }
 
+                outputs_xmr_sum += outp.second;
+
                 outputs.push_back(mstch::map {
                       {"out_pub_key"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", outp.first.key))},
                       {"amount"        , fmt::format("{:0.12f}", XMR_AMOUNT(outp.second))},
@@ -1161,6 +1170,8 @@ namespace xmreg {
                       {"output_idx"    , fmt::format("{:02d}", output_idx++)}
                 });
             }
+
+            context["outputs_xmr_sum"] = fmt::format("{:0.12f}", XMR_AMOUNT(outputs_xmr_sum));
 
             context["outputs"] = outputs;
 
