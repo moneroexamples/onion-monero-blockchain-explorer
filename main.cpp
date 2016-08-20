@@ -114,7 +114,7 @@ int main(int ac, const char* av[]) {
             return crow::response(400);
         }
 
-        return xmrblocks.index2();
+        return crow::response(xmrblocks.index2());
     });
 
     CROW_ROUTE(app, "/page/<uint>")
