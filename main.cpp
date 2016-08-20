@@ -101,7 +101,11 @@ int main(int ac, const char* av[]) {
     crow::SimpleApp app;
 
     CROW_ROUTE(app, "/")
-    ([&]() {
+    ([&](const crow::request& req) {
+
+        for (const auto& m : req.headers)
+            cout << m.first << ": " << m.second << endl;
+
         return xmrblocks.index2();
     });
 
@@ -120,9 +124,18 @@ int main(int ac, const char* av[]) {
         return xmrblocks.show_block(block_hash);
     });
 
+//    CROW_ROUTE(app, "/tx/<string>")
+//    ([&](string tx_hash) {
+//        return xmrblocks.show_tx(tx_hash);
+//    });
+
     CROW_ROUTE(app, "/tx/<string>")
-    ([&](string tx_hash) {
-        return xmrblocks.show_tx(tx_hash);
+    ([&](const crow::request& req) {
+
+        for (const auto& m : req.headers)
+            cout << m.first << ": " << m.second << endl;
+
+        return "";
     });
 
     CROW_ROUTE(app, "/tx/<string>/<uint>")
