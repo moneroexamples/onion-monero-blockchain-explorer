@@ -103,8 +103,8 @@ int main(int ac, const char* av[]) {
     CROW_ROUTE(app, "/")
     ([&](const crow::request& req) {
 
-        //for (const auto& m : req.headers)
-        //    cout << m.first << ": " << m.second << endl;
+        for (const auto& m : req.headers)
+            cout << m.first << ": " << m.second << endl;
 
         // there is some robot scanning everything
         // on the explorer. I block it with this
