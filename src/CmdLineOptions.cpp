@@ -23,6 +23,8 @@ namespace xmreg
         desc.add_options()
                 ("help,h", value<bool>()->default_value(false)->implicit_value(true),
                  "produce help message")
+                ("testnet,t", value<bool>()->default_value(false)->implicit_value(true),
+                 "use testnet blockchain")
                 ("port,p", value<string>()->default_value("8081"),
                  "default port")
                 ("bc-path,b", value<string>(),

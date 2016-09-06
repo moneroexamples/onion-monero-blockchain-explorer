@@ -118,7 +118,7 @@ namespace xmreg
 
 
     string
-    get_default_lmdb_folder();
+    get_default_lmdb_folder(bool testnet = false);
 
     bool
     generate_key_image(const crypto::key_derivation& derivation,
@@ -129,7 +129,8 @@ namespace xmreg
 
     bool
     get_blockchain_path(const boost::optional<string>& bc_path,
-                        bf::path& blockchain_path);
+                        bf::path& blockchain_path,
+                        bool testnet = false);
 
     uint64_t
     sum_money_in_outputs(const transaction& tx);

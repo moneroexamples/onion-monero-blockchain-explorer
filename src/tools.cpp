@@ -223,11 +223,15 @@ namespace xmreg
 
 
     string
-    get_default_lmdb_folder()
+    get_default_lmdb_folder(bool testnet)
     {
         // default path to monero folder
         // on linux this is /home/<username>/.bitmonero
         string default_monero_dir = tools::get_default_data_dir();
+
+        if (testnet)
+            default_monero_dir += "/testnet";
+
 
         // the default folder of the lmdb blockchain database
         // is therefore as follows
@@ -241,16 +245,16 @@ namespace xmreg
      * If not given, provide default path
      */
     bool
-    get_blockchain_path(const boost::optional<string>& bc_path, bf::path& blockchain_path )
+    get_blockchain_path(const boost::optional<string>& bc_path,
+                        bf::path& blockchain_path,
+                        bool testnet)
     {
         // the default folder of the lmdb blockchain database
-        string default_lmdb_dir   = xmreg::get_default_lmdb_folder();
+        string default_lmdb_dir   = xmreg::get_default_lmdb_folder(testnet);
 
         blockchain_path = bc_path
                           ? bf::path(*bc_path)
                           : bf::path(default_lmdb_dir);
-
-
 
         if (!bf::is_directory(blockchain_path))
         {

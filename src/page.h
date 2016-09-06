@@ -234,16 +234,19 @@ namespace xmreg {
 
         string lmdb2_path;
 
+        bool testnet;
+
 
     public:
 
         page(MicroCore* _mcore, Blockchain* _core_storage,
-             string _deamon_url, string _lmdb2_path)
+             string _deamon_url, string _lmdb2_path, bool _testnet)
                 : mcore {_mcore},
                   core_storage {_core_storage},
                   rpc {_deamon_url},
                   server_timestamp {std::time(nullptr)},
-                  lmdb2_path {_lmdb2_path}
+                  lmdb2_path {_lmdb2_path},
+                  testnet {_testnet}
         {
 
         }
@@ -972,6 +975,7 @@ namespace xmreg {
                     {"tx_size"              , fmt::format("{:0.4f}",
                                                    static_cast<double>(txd.size) / 1024.0)},
                     {"tx_fee"               , fmt::format("{:0.12f}", XMR_AMOUNT(txd.fee))},
+                    {"tx_version"           , fmt::format("{:d}", txd.version)},
                     {"blk_timestamp"        , blk_timestamp},
                     {"blk_timestamp_uint"   , blk.timestamp},
                     {"delta_time"           , age.first},
