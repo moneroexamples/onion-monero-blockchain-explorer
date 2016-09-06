@@ -98,28 +98,28 @@ namespace crow
 
         template <typename MW, typename Context, typename ParentContext>
         typename std::enable_if<!is_before_handle_arity_3_impl<MW>::value>::type
-        before_handler_call(MW& mw, request& req, response& res, Context& ctx, ParentContext& parent_ctx)
+        before_handler_call(MW& mw, request& req, response& res, Context& ctx, ParentContext& /*parent_ctx*/)
         {
             mw.before_handle(req, res, ctx.template get<MW>(), ctx);
         }
 
         template <typename MW, typename Context, typename ParentContext>
         typename std::enable_if<is_before_handle_arity_3_impl<MW>::value>::type
-        before_handler_call(MW& mw, request& req, response& res, Context& ctx, ParentContext& parent_ctx)
+        before_handler_call(MW& mw, request& req, response& res, Context& ctx, ParentContext& /*parent_ctx*/)
         {
             mw.before_handle(req, res, ctx.template get<MW>());
         }
 
         template <typename MW, typename Context, typename ParentContext>
         typename std::enable_if<!is_after_handle_arity_3_impl<MW>::value>::type
-        after_handler_call(MW& mw, request& req, response& res, Context& ctx, ParentContext& parent_ctx)
+        after_handler_call(MW& mw, request& req, response& res, Context& ctx, ParentContext& /*parent_ctx*/)
         {
             mw.after_handle(req, res, ctx.template get<MW>(), ctx);
         }
 
         template <typename MW, typename Context, typename ParentContext>
         typename std::enable_if<is_after_handle_arity_3_impl<MW>::value>::type
-        after_handler_call(MW& mw, request& req, response& res, Context& ctx, ParentContext& parent_ctx)
+        after_handler_call(MW& mw, request& req, response& res, Context& ctx, ParentContext& /*parent_ctx*/)
         {
             mw.after_handle(req, res, ctx.template get<MW>());
         }
@@ -146,14 +146,14 @@ namespace crow
         }
 
         template <int N, typename Context, typename Container>
-        bool middleware_call_helper(Container& middlewares, request& req, response& res, Context& ctx)
+        bool middleware_call_helper(Container& /*middlewares*/, request& /*req*/, response& /*res*/, Context& /*ctx*/)
         {
             return false;
         }
 
         template <int N, typename Context, typename Container>
         typename std::enable_if<(N<0)>::type 
-        after_handlers_call_helper(Container& middlewares, Context& context, request& req, response& res)
+        after_handlers_call_helper(Container& /*middlewares*/, Context& /*context*/, request& /*req*/, response& /*res*/)
         {
         }
 
@@ -256,6 +256,7 @@ namespace crow
 
             req_ = std::move(parser_.to_request());
             request& req = req_;
+
             if (parser_.check_version(1, 0))
             {
                 // HTTP/1.0
@@ -282,6 +283,20 @@ namespace crow
                     is_invalid_request = true;
                     res = response(400);
                 }
+				if (parser_.is_upgrade())
+				{
+					if (req.get_header_value("upgrade") == "h2c")
+					{
+						// TODO HTTP/2
+                        // currently, ignore upgrade header
+					}
+                    else
+                    {
+                        close_connection_ = true;
+                        handler_->handle_upgrade(req, res, std::move(adaptor_));
+                        return;
+                    }
+				}
             }
 
             CROW_LOG_INFO << "Request: " << boost::lexical_cast<std::string>(adaptor_.remote_endpoint()) << " " << this << " HTTP/" << parser_.http_major << "." << parser_.http_minor << ' '
@@ -296,6 +311,7 @@ namespace crow
 
                 ctx_ = detail::context<Middlewares...>();
                 req.middleware_context = (void*)&ctx_;
+                req.io_service = &adaptor_.get_io_service();
                 detail::middleware_call_helper<0, decltype(ctx_), decltype(*middlewares_), Middlewares...>(*middlewares_, req, res, ctx_);
 
                 if (!res.completed_)
@@ -484,7 +500,7 @@ namespace crow
             //auto self = this->shared_from_this();
             is_writing = true;
             boost::asio::async_write(adaptor_.socket(), buffers_, 
-                [&](const boost::system::error_code& ec, std::size_t bytes_transferred)
+                [&](const boost::system::error_code& ec, std::size_t /*bytes_transferred*/)
                 {
                     is_writing = false;
                     res.clear();
@@ -522,7 +538,7 @@ namespace crow
             timer_queue.cancel(timer_cancel_key_);
         }
 
-        void start_deadline(int timeout = 5)
+        void start_deadline(/*int timeout = 5*/)
         {
             cancel_deadline_timer();
             

@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <cstring>
 #include <functional>
+#include <string>
 
 namespace crow
 {
@@ -14,7 +15,7 @@ namespace crow
 #ifndef CROW_MSVC_WORKAROUND
         struct OutOfRange
         {
-            OutOfRange(unsigned pos, unsigned length) {}
+            OutOfRange(unsigned /*pos*/, unsigned /*length*/) {}
         };
         constexpr unsigned requires_in_range( unsigned i, unsigned len )
         {
@@ -129,7 +130,7 @@ template <> \
 struct parameter_tag<t> \
 { \
     static const int value = i; \
-};
+}
         CROW_INTERNAL_PARAMETER_TAG(int, 1);
         CROW_INTERNAL_PARAMETER_TAG(char, 1);
         CROW_INTERNAL_PARAMETER_TAG(short, 1);
@@ -498,6 +499,48 @@ template <typename F, typename Set>
             template <size_t i>
             using arg = typename std::tuple_element<i, std::tuple<Args...>>::type;
         };
+
+        std::string base64encode(const char* data, size_t size, const char* key = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
+        {
+            std::string ret;
+            ret.resize((size+2) / 3 * 4);
+            auto it = ret.begin();
+            while(size >= 3)
+            {
+                *it++ = key[(((unsigned char)*data)&0xFC)>>2];
+                unsigned char h = (((unsigned char)*data++) & 0x03) << 4;
+                *it++ = key[h|((((unsigned char)*data)&0xF0)>>4)];
+                h = (((unsigned char)*data++) & 0x0F) << 2;
+                *it++ = key[h|((((unsigned char)*data)&0xC0)>>6)];
+                *it++ = key[((unsigned char)*data++)&0x3F];
+
+                size -= 3;
+            }
+            if (size == 1)
+            {
+                *it++ = key[(((unsigned char)*data)&0xFC)>>2];
+                unsigned char h = (((unsigned char)*data++) & 0x03) << 4;
+                *it++ = key[h];
+                *it++ = '=';
+                *it++ = '=';
+            }
+            else if (size == 2)
+            {
+                *it++ = key[(((unsigned char)*data)&0xFC)>>2];
+                unsigned char h = (((unsigned char)*data++) & 0x03) << 4;
+                *it++ = key[h|((((unsigned char)*data)&0xF0)>>4)];
+                h = (((unsigned char)*data++) & 0x0F) << 2;
+                *it++ = key[h];
+                *it++ = '=';
+            }
+            return ret;
+        }
+
+        std::string base64encode_urlsafe(const char* data, size_t size)
+        {
+            return base64encode(data, size, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
+        }
+
 
     } // namespace utility
 }

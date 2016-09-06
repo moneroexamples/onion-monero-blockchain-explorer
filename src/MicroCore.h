@@ -11,7 +11,6 @@
 #include "tx_details.h"
 
 
-
 namespace xmreg
 {
     using namespace cryptonote;

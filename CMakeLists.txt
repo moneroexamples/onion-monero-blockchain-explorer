@@ -31,11 +31,11 @@ find_package(Boost COMPONENTS
 
 # set location of monero static libraries
 set(MONERO_LIBS_DIR
-        /opt/bitmonero-dev/libs)
+        /opt/monero-dev/libs)
 
 # set location of moneroheaders
 set(MONERO_HEADERS_DIR
-        /opt/bitmonero-dev/headers)
+        /opt/monero-dev/headers)
 
 # include monero headers
 include_directories(
@@ -50,20 +50,16 @@ include_directories(
 add_library(common STATIC IMPORTED)
 set_property(TARGET common PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libcommon.a)
 
-
 add_library(blocks STATIC IMPORTED)
 set_property(TARGET blocks PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libblocks.a)
-
 
 add_library(crypto STATIC IMPORTED)
 set_property(TARGET crypto
         PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libcrypto.a)
 
-
 add_library(cryptonote_core STATIC IMPORTED)
 set_property(TARGET cryptonote_core
         PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libcryptonote_core.a)
-
 
 add_library(blockchain_db STATIC IMPORTED)
 set_property(TARGET blockchain_db
@@ -73,6 +69,9 @@ add_library(lmdb STATIC IMPORTED)
 set_property(TARGET lmdb
         PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/liblmdb.a)
 
+add_library(ringct STATIC IMPORTED)
+set_property(TARGET ringct
+        PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libringct.a)
 
 # include boost headers
 include_directories(${Boost_INCLUDE_DIRS})
@@ -125,6 +124,7 @@ target_link_libraries(${PROJECT_NAME}
         blocks
         common
         lmdb
+        ringct
         ${Boost_LIBRARIES}
         pthread
         unbound

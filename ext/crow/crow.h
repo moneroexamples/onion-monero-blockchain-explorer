@@ -9,7 +9,7 @@
 #include <thread>
 
 #include "settings.h"
-#include "logging.h" 
+#include "logging.h"
 #include "utility.h"
 #include "routing.h"
 #include "middleware_context.h"
@@ -41,6 +41,12 @@ namespace crow
         {
         }
 
+		template <typename Adaptor> 
+        void handle_upgrade(const request& req, response& res, Adaptor&& adaptor)
+        {
+            router_.handle_upgrade(req, res, adaptor);
+        }
+
         void handle(const request& req, response& res)
         {
             router_.handle(req, res);
@@ -61,6 +67,12 @@ namespace crow
         self_t& port(std::uint16_t port)
         {
             port_ = port;
+            return *this;
+        }
+
+        self_t& bindaddr(std::string bindaddr)
+        {
+            bindaddr_ = bindaddr;
             return *this;
         }
 
@@ -88,14 +100,28 @@ namespace crow
 #ifdef CROW_ENABLE_SSL
             if (use_ssl_)
             {
-                ssl_server_t server(this, port_, &middlewares_, concurrency_, &ssl_context_);
-                server.run();
+                ssl_server_ = std::move(std::unique_ptr<ssl_server_t>(new ssl_server_t(this, bindaddr_, port_, &middlewares_, concurrency_, &ssl_context_)));
+                ssl_server_->run();
             }
             else
 #endif
             {
-                server_t server(this, port_, &middlewares_, concurrency_, nullptr);
-                server.run();
+                server_ = std::move(std::unique_ptr<server_t>(new server_t(this, bindaddr_, port_, &middlewares_, concurrency_, nullptr)));
+                server_->run();
+            }
+        }
+
+        void stop()
+        {
+#ifdef CROW_ENABLE_SSL
+            if (use_ssl_)
+            {
+                ssl_server_->stop();
+            }
+            else
+#endif
+            {
+                server_->stop();
             }
         }
 
@@ -146,23 +172,23 @@ namespace crow
 
 #else
         template <typename T, typename ... Remain>
-        self_t& ssl_file(T&& t, Remain&&...)
+        self_t& ssl_file(T&&, Remain&&...)
         {
             // We can't call .ssl() member function unless CROW_ENABLE_SSL is defined.
             static_assert(
                     // make static_assert dependent to T; always false
-                    std::is_base_of<T, void>::value, 
+                    std::is_base_of<T, void>::value,
                     "Define CROW_ENABLE_SSL to enable ssl support.");
             return *this;
         }
 
         template <typename T>
-        self_t& ssl(T&& ctx)
+        self_t& ssl(T&&)
         {
             // We can't call .ssl() member function unless CROW_ENABLE_SSL is defined.
             static_assert(
                     // make static_assert dependent to T; always false
-                    std::is_base_of<T, void>::value, 
+                    std::is_base_of<T, void>::value,
                     "Define CROW_ENABLE_SSL to enable ssl support.");
             return *this;
         }
@@ -187,13 +213,17 @@ namespace crow
     private:
         uint16_t port_ = 80;
         uint16_t concurrency_ = 1;
-
+        std::string bindaddr_ = "0.0.0.0";
         Router router_;
 
         std::tuple<Middlewares...> middlewares_;
+
+#ifdef CROW_ENABLE_SSL
+        std::unique_ptr<ssl_server_t> ssl_server_;
+#endif
+        std::unique_ptr<server_t> server_;
     };
     template <typename ... Middlewares>
     using App = Crow<Middlewares...>;
     using SimpleApp = Crow<>;
-};
-
+}

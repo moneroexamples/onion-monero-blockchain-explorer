@@ -20,17 +20,18 @@ namespace crow
 {
     using namespace boost;
     using tcp = asio::ip::tcp;
-    
+
     template <typename Handler, typename Adaptor = SocketAdaptor, typename ... Middlewares>
     class Server
     {
     public:
-        Server(Handler* handler, uint16_t port, std::tuple<Middlewares...>* middlewares = nullptr, uint16_t concurrency = 1, typename Adaptor::context* adaptor_ctx = nullptr)
-            : acceptor_(io_service_, tcp::endpoint(asio::ip::address(), port)), 
+    Server(Handler* handler, std::string bindaddr, uint16_t port, std::tuple<Middlewares...>* middlewares = nullptr, uint16_t concurrency = 1, typename Adaptor::context* adaptor_ctx = nullptr)
+            : acceptor_(io_service_, tcp::endpoint(boost::asio::ip::address::from_string(bindaddr), port)),
             signals_(io_service_, SIGINT, SIGTERM),
-            handler_(handler), 
+            handler_(handler),
             concurrency_(concurrency),
             port_(port),
+            bindaddr_(bindaddr),
             middlewares_(middlewares),
             adaptor_ctx_(adaptor_ctx)
         {
@@ -47,9 +48,10 @@ namespace crow
             timer_queue_pool_.resize(concurrency_);
 
             std::vector<std::future<void>> v;
+            std::atomic<int> init_count(0);
             for(uint16_t i = 0; i < concurrency_; i ++)
                 v.push_back(
-                        std::async(std::launch::async, [this, i]{
+                        std::async(std::launch::async, [this, i, &init_count]{
 
                             // thread local date string get function
                             auto last = std::chrono::steady_clock::now();
@@ -98,20 +100,24 @@ namespace crow
                             };
                             timer.async_wait(handler);
 
-                            io_service_pool_[i]->run();
+                            init_count ++;
+                            try 
+                            {
+                                io_service_pool_[i]->run();
+                            } catch(std::exception& e)
+                            {
+                                CROW_LOG_ERROR << "Worker Crash: An uncaught exception occurred: " << e.what();
+                            }
                         }));
             CROW_LOG_INFO << server_name_ << " server is running, local port " << port_;
 
             signals_.async_wait(
-                [&](const boost::system::error_code& error, int signal_number){
+                [&](const boost::system::error_code& /*error*/, int /*signal_number*/){
                     stop();
                 });
 
-            for (int i = 0; i < concurrency_; i++)
-            {
-                while (timer_queue_pool_[i] == nullptr)
-                    std::this_thread::yield();
-            }
+            while(concurrency_ != init_count)
+                std::this_thread::yield();
 
             do_accept();
 
@@ -145,7 +151,7 @@ namespace crow
                 is, handler_, server_name_, middlewares_,
                 get_cached_date_str_pool_[roundrobin_index_], *timer_queue_pool_[roundrobin_index_],
                 adaptor_ctx_);
-            acceptor_.async_accept(p->socket(), 
+            acceptor_.async_accept(p->socket(),
                 [this, p, &is](boost::system::error_code ec)
                 {
                     if (!ec)
@@ -171,6 +177,7 @@ namespace crow
         uint16_t concurrency_{1};
         std::string server_name_ = "Crow/0.1";
         uint16_t port_;
+        std::string bindaddr_;
         unsigned int roundrobin_index_{};
 
         std::tuple<Middlewares...>* middlewares_;

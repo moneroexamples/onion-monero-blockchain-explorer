@@ -4,6 +4,17 @@
 
 #include "MicroCore.h"
 
+
+
+namespace
+{
+    // NOTE: These values should match blockchain.cpp
+    // TODO: Refactor
+    const uint64_t mainnet_hard_fork_version_1_till = 1009826;
+    const uint64_t testnet_hard_fork_version_1_till = 624633;
+}
+
+
 namespace xmreg
 {
     /**
@@ -46,8 +57,16 @@ namespace xmreg
 
         //db_flags = DEFAULT_FLAGS;
 
+        HardFork* m_hardfork = nullptr;
+
         BlockchainDB* db = nullptr;
-        db = new BlockchainLMDB();                        
+        db = new BlockchainLMDB();
+
+        bool use_testnet {false};
+
+        uint64_t hard_fork_version_1_till = use_testnet ? testnet_hard_fork_version_1_till : mainnet_hard_fork_version_1_till;
+
+        m_hardfork = new HardFork(*db, 1, hard_fork_version_1_till);
 
         try
         {
@@ -69,7 +88,7 @@ namespace xmreg
 
         // initialize Blockchain object to manage
         // the database.
-        return m_blockchain_storage.init(db, false);
+        return m_blockchain_storage.init(db, m_hardfork, false);
     }
 
     /**
