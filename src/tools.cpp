@@ -611,7 +611,7 @@ namespace xmreg
 
             uint64_t timestamp_place = double(timestamp-time0)
                              / double(interval_length)*(time_axis_length-1);
-            //cout << timestamp_place << endl;
+
             empty_time[timestamp_place + 1] = '*';
         }
 

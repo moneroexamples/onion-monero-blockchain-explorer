@@ -755,25 +755,27 @@ namespace xmreg {
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
-                    {"blk_hash"       , blk_hash_str},
-                    {"blk_height"     , _blk_height},
-                    {"blk_timestamp"  , blk_timestamp},
-                    {"prev_hash"      , prev_hash_str},
-                    {"next_hash"      , next_hash_str},
-                    {"have_next_hash" , have_next_hash},
-                    {"have_prev_hash" , have_prev_hash},
-                    {"have_txs"       , have_txs},
-                    {"no_txs"         , std::to_string(blk.tx_hashes.size())},
-                    {"blk_age"        , age.first},
-                    {"delta_time"     , delta_time},
-                    {"blk_nonce"      , blk.nonce},
-                    {"age_format"     , age.second},
-                    {"major_ver"      , std::to_string(blk.major_version)},
-                    {"minor_ver"      , std::to_string(blk.minor_version)},
-                    {"blk_size"       , fmt::format("{:0.4f}",
+                    {"blk_hash"             , blk_hash_str},
+                    {"blk_height"           , _blk_height},
+                    {"blk_timestamp"        , blk_timestamp},
+                    {"blk_timestamp_epoch"  , blk.timestamp},
+                    {"prev_hash"            , prev_hash_str},
+                    {"next_hash"            , next_hash_str},
+                    {"have_next_hash"       , have_next_hash},
+                    {"have_prev_hash"       , have_prev_hash},
+                    {"have_txs"             , have_txs},
+                    {"no_txs"               , std::to_string(
+                                                    blk.tx_hashes.size())},
+                    {"blk_age"              , age.first},
+                    {"delta_time"           , delta_time},
+                    {"blk_nonce"            , blk.nonce},
+                    {"age_format"           , age.second},
+                    {"major_ver"            , std::to_string(blk.major_version)},
+                    {"minor_ver"            , std::to_string(blk.minor_version)},
+                    {"blk_size"             , fmt::format("{:0.4f}",
                                                     static_cast<double>(blk_size) / 1024.0)},
-                    {"coinbase_txs"   , mstch::array{{txd_coinbase.get_mstch_map()}}},
-                    {"blk_txs"        , mstch::array()}
+                    {"coinbase_txs"         , mstch::array{{txd_coinbase.get_mstch_map()}}},
+                    {"blk_txs"              , mstch::array()}
             };
 
             // .push_back(txd_coinbase.get_mstch_map()
