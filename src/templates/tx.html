@@ -46,12 +46,6 @@
 
     </table>
 
-  <h3>JSON representaiton of tx</h3>
-    <div class="center">
-        <code style="white-space: pre-wrap; font-size: 10px">
-            {{tx_json}}
-        </code>
-    </div>
 
   <h3>{{outputs_no}} output(s) for total of {{outputs_xmr_sum}} xmr</h3>
   <div class="center">
@@ -149,6 +143,14 @@
 
       {{/inputs}}
       </table>
+
+
+      <h3>JSON representaiton of tx</h3>
+      <div class="center">
+          <code style="white-space: pre-wrap; font-size: 10px">
+              {{tx_json}}
+          </code>
+      </div>
 
     {{^with_ring_signatures}}
       <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}/1">Show this tx with ring signature for each input</a></h5>
