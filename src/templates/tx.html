@@ -145,11 +145,18 @@
       </table>
 
 
-
     {{^with_ring_signatures}}
       <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}/1">More details</a></h5>
     {{/with_ring_signatures}}
     {{#with_ring_signatures}}
+
+      <h3>JSON representaiton of tx</h3>
+      <div class="center">
+          <code style="white-space: pre-wrap; font-size: 10px">
+              {{tx_json}}
+          </code>
+      </div>
+
       <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}">Less details</a></h5>
     {{/with_ring_signatures}}
 
