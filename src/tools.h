@@ -215,6 +215,15 @@ namespace xmreg
                       uint64_t time0 = 1397818193 /* timestamp of the second block */);
 
 
+    bool
+    decode_ringct(const rct::rctSig & rv,
+                  const crypto::public_key pub,
+                  const crypto::secret_key &sec,
+                  unsigned int i,
+                  rct::key & mask,
+                  uint64_t & amount);
+
+
 }
 
 #endif //XMREG01_TOOLS_H

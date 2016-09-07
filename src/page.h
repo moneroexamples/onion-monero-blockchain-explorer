@@ -1010,6 +1010,13 @@ namespace xmreg {
 
             uint64_t inputs_xmr_sum {0};
 
+            // initialize with some large and some numbers
+            uint64_t min_mix_timestamp = server_timestamp*2L;
+
+            uint64_t max_mix_timestamp {0};
+
+            vector<vector<uint64_t>> mixin_timestamp_groups;
+
             // make timescale maps for mixins in input
             for (const txin_to_key& in_key: txd.input_key_imgs)
             {
@@ -1024,8 +1031,6 @@ namespace xmreg {
                                                       absolute_offsets,
                                                       outputs);
 
-                vector<uint64_t> mixin_timestamps;
-
                 inputs.push_back(mstch::map {
                     {"in_key_img", REMOVE_HASH_BRAKETS(fmt::format("{:s}", in_key.k_image))},
                     {"amount"    , fmt::format("{:0.12f}", XMR_AMOUNT(in_key.amount))},
@@ -1036,6 +1041,7 @@ namespace xmreg {
 
                 inputs_xmr_sum += in_key.amount;
 
+                vector<uint64_t> mixin_timestamps;
 
                 // get reference to mixins array created above
                 mstch::array& mixins = boost::get<mstch::array>(
@@ -1096,6 +1102,12 @@ namespace xmreg {
                             {"mix_idx"        , fmt::format("{:02d}", count)},
                     });
 
+                    if (blk.timestamp < min_mix_timestamp)
+                        min_mix_timestamp = blk.timestamp;
+
+                    if (blk.timestamp > max_mix_timestamp)
+                        max_mix_timestamp = blk.timestamp;
+
                     // get mixin timestamp from its orginal block
                     mixin_timestamps.push_back(blk.timestamp);
 
@@ -1103,24 +1115,38 @@ namespace xmreg {
 
                 } // for (const uint64_t &i: absolute_offsets)
 
+                mixin_timestamp_groups.push_back(mixin_timestamps);
+
+                input_idx++;
+            } // for (const txin_to_key& in_key: txd.input_key_imgs)
+
+            min_mix_timestamp -= 3600;
+            max_mix_timestamp += 3600;
+
+            // make timescale maps for mixins in input with adjusted range
+            for (auto& mixn_timestamps: mixin_timestamp_groups)
+            {
                 // get mixins in time scale for visual representation
                 pair<string, double> mixin_times_scale = xmreg::timestamps_time_scale(
-                                                            mixin_timestamps,
-                                                            server_timestamp, 170);
+                        mixn_timestamps,
+                        max_mix_timestamp,
+                        170,
+                        min_mix_timestamp);
 
                 // save resolution of mixin timescales
                 timescale_scale = mixin_times_scale.second;
 
                 // save the string timescales for later to show
                 mixins_timescales.push_back(mstch::map {
-                    {"timescale", mixin_times_scale.first}});
+                        {"timescale", mixin_times_scale.first}});
+            }
 
-                input_idx++;
-            } // for (const txin_to_key& in_key: txd.input_key_imgs)
 
-            context["inputs_xmr_sum"] = fmt::format("{:0.12f}", XMR_AMOUNT(inputs_xmr_sum));
+            context["inputs_xmr_sum"]   = fmt::format("{:0.12f}", XMR_AMOUNT(inputs_xmr_sum));
             context["server_time"]      = server_time_str;
             context["inputs"]           = inputs;
+            context["min_mix_time"]     = xmreg::timestamp_to_str(min_mix_timestamp);
+            context["max_mix_time"]     = xmreg::timestamp_to_str(max_mix_timestamp);
             context["timescales"]       = mixins_timescales;
             context["timescales_scale"] = fmt::format("{:0.2f}",
                                                 timescale_scale / 3600.0 / 24.0); // in days
@@ -1233,7 +1259,7 @@ namespace xmreg {
             // parse string representing given monero address
             cryptonote::account_public_address address;
 
-            if (!xmreg::parse_str_address(xmr_address_str,  address, 0))
+            if (!xmreg::parse_str_address(xmr_address_str,  address, testnet))
             {
                 cerr << "Cant parse string address: " << xmr_address_str << endl;
                 return string("Cant parse xmr address: " + xmr_address_str);
@@ -1278,7 +1304,8 @@ namespace xmreg {
 
                     blk_timestamp = xmreg::timestamp_to_str(tx_recieve_timestamp);
 
-                    age = get_age(server_timestamp, tx_recieve_timestamp,
+                    age = get_age(server_timestamp,
+                                  tx_recieve_timestamp,
                                   FULL_AGE_FORMAT);
                 }
                 else
@@ -1371,6 +1398,11 @@ namespace xmreg {
 
             uint64_t sum_xmr {0};
 
+            std::vector<uint64_t> money_transfered(tx.vout.size());
+
+            std::deque<rct::key> mask(tx.vout.size());
+
+            uint64_t i {0};
 
             for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
             {
@@ -1388,18 +1420,50 @@ namespace xmreg {
                 // check if generated public key matches the current output's key
                 bool mine_output = (outp.first.key == pubkey);
 
+                // if mine output has RingCT, i.e., tx version is 2
+                if (mine_output && tx.version == 2)
+                {
+
+                    uint64_t rct_amount {0};
+
+                    bool r;
+
+                    r = decode_ringct(tx.rct_signatures,
+                                      txd.pk,
+                                      prv_view_key,
+                                      i,
+                                      tx.rct_signatures.ecdhInfo[i].mask,
+                                      money_transfered[i]);
+
+                    if (!r)
+                    {
+                        cerr << "Cant decode ringCT!" << endl;
+                    }
+
+                    outp.second = money_transfered[i];
+
+                    cout << "i, money_transfered[i]"
+                         << i << ","
+                         << money_transfered[i]
+                         << endl;
+                }
+
                 if (mine_output)
                 {
                     sum_xmr += outp.second;
                 }
 
                 outputs.push_back(mstch::map {
-                    {"out_pub_key"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", outp.first.key))},
-                    {"amount"        , fmt::format("{:0.12f}", XMR_AMOUNT(outp.second))},
+                    {"out_pub_key"   , REMOVE_HASH_BRAKETS(
+                                               fmt::format("{:s}",
+                                                           outp.first.key))},
+                    {"amount"        , fmt::format("{:0.12f}",
+                                                   XMR_AMOUNT(outp.second))},
                     {"mine_output"   , mine_output},
                     {"output_idx"    , fmt::format("{:02d}", output_idx++)}
                 });
 
+                ++i;
             }
 
             cout << "outputs.size(): " << outputs.size() << endl;
