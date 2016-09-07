@@ -110,6 +110,8 @@ namespace xmreg {
         crypto::hash  payment_id  = null_hash; // normal
         crypto::hash8 payment_id8 = null_hash8; // encrypted
 
+        string json_representation;
+
         std::vector<std::vector<crypto::signature> > signatures;
 
         // key images of inputs
@@ -969,6 +971,8 @@ namespace xmreg {
             string pid8_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id8));
 
 
+            string tx_json = obj_to_json_str(tx);
+
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"tx_hash"              , tx_hash_str},
@@ -989,7 +993,9 @@ namespace xmreg {
                     {"payment_id"           , pid_str},
                     {"payment_id8"          , pid8_str},
                     {"extra"                , txd.get_extra_str()},
-                    {"with_ring_signatures" , static_cast<bool>(with_ring_signatures)}
+                    {"with_ring_signatures" , static_cast<bool>(
+                                                      with_ring_signatures)},
+                    {"tx_json"              , tx_json}
             };
 
             string server_time_str = xmreg::timestamp_to_str(server_timestamp, "%F");
@@ -2042,6 +2048,10 @@ namespace xmreg {
             txd.mixin_no    = get_mixin_no(tx);
 
             txd.fee = 0;
+
+            transaction tx_copy = tx;
+
+            txd.json_representation = obj_to_json_str(tx_copy);
 
             if (!coinbase &&  tx.vin.size() > 0)
             {
