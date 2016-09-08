@@ -758,6 +758,7 @@ namespace xmreg {
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
+                    {"testnet"              , testnet},
                     {"blk_hash"             , blk_hash_str},
                     {"blk_height"           , _blk_height},
                     {"blk_timestamp"        , blk_timestamp},
@@ -976,6 +977,7 @@ namespace xmreg {
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
+                    {"testnet"              , testnet},
                     {"tx_hash"              , tx_hash_str},
                     {"tx_pub_key"           , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
                     {"blk_height"           , tx_blk_height_str},
@@ -1360,6 +1362,7 @@ namespace xmreg {
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
+                    {"testnet"              , testnet},
                     {"tx_hash"              , tx_hash_str},
                     {"xmr_address"          , xmr_address_str},
                     {"viewkey"              , viewkey_str},
@@ -1536,19 +1539,19 @@ namespace xmreg {
                 // parse string representing given monero address
                 cryptonote::account_public_address address;
 
-                bool testnet {false};
+                bool testnet_addr {false};
 
                 if (search_text[0] == '9' || search_text[0] == 'A')
-                    testnet = true;
+                    testnet_addr = true;
 
-                if (!xmreg::parse_str_address(search_text, address, testnet))
+                if (!xmreg::parse_str_address(search_text, address, testnet_addr))
                 {
                     cerr << "Cant parse string address: " << search_text << endl;
                     return string("Cant parse address (probably incorrect format): ")
                            + search_text;
                 }
 
-                return show_address_details(address, testnet);
+                return show_address_details(address, testnet_addr);
             }
 
             // check if integrated monero address is given based on its length
@@ -1977,6 +1980,7 @@ namespace xmreg {
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
+                    {"testnet"        , testnet},
                     {"search_text"    , search_text},
                     {"no_results"     , true},
                     {"to_many_results", false}
