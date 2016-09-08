@@ -650,11 +650,13 @@ namespace xmreg
                                                   rct::sk2rct(scalar1),
                                                   i,
                                                   mask);
+                    break;
                 case rct::RCTTypeFull:
                     amount = rct::decodeRct(rv,
                                             rct::sk2rct(scalar1),
                                             i,
                                             mask);
+                    break;
                 default:
                     cerr << "Unsupported rct type: " << rv.type << endl;
                     return false;
