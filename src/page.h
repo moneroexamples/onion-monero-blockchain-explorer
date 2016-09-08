@@ -469,6 +469,7 @@ namespace xmreg {
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
+                    {"testnet"         , testnet},
                     {"refresh"         , refresh_page},
                     {"height"          , std::to_string(height)},
                     {"server_timestamp", xmreg::timestamp_to_str(server_timestamp)},
@@ -478,7 +479,7 @@ namespace xmreg {
                     {"is_page_zero"    , !bool(page_no)},
                     {"next_page"       , std::to_string(page_no + 1)},
                     {"prev_page"       , std::to_string((page_no > 0 ? page_no - 1 : 0))},
-                    {"txs"             , mstch::array()}, // will keep tx to show
+                    {"txs"             , mstch::array()} // will keep tx to show
             };
 
             // get reference to txs mstch map to be field below
