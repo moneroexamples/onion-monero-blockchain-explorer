@@ -147,9 +147,14 @@ namespace xmreg
             // get transaction with given hash
             tx = m_blockchain_storage.get_db().get_tx(tx_hash);
         }
-        catch (const exception& e)
+        catch (const cryptonote::TX_DNE & e)
         {
-            cerr << e.what() << endl;
+            cerr << "MicroCore::get_tx cryptonote::TX_DNE: " << e.what() << endl;
+            return false;
+        }
+        catch (const std::exception& e)
+        {
+            cerr << "MicroCore::get_tx: " << e.what() << endl;
             return false;
         }
 
