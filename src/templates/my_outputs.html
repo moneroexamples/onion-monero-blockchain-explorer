@@ -41,7 +41,16 @@
             <tr>
                 <td>{{output_idx}}: {{out_pub_key}}</td>
                 <td>{{amount}}</td>
+                {{#mine_output}}
+                <td>
+                        <span style="color: #008009;font-weight: bold">
+                        {{mine_output}}
+                        </span>
+                </td>
+                {{/mine_output}}
+                {{^mine_output}}
                 <td>{{mine_output}}</td>
+                {{/mine_output}}
             </tr>
             {{/outputs}}
         </table>
