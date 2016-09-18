@@ -198,6 +198,19 @@ int main(int ac, const char* av[]) {
         return xmrblocks.show_my_outputs(tx_hash, xmr_address, viewkey);
     });
 
+
+    CROW_ROUTE(app, "/prove").methods("GET"_method)
+    ([&](const crow::request& req) {
+
+        string tx_hash     = string(req.url_params.get("txhash"));
+        string tx_prv_key  = string(req.url_params.get("txprvkey"));
+        string xmr_address = string(req.url_params.get("xmraddress"));
+
+        return xmrblocks.show_prove(tx_hash, xmr_address, tx_prv_key);
+    });
+
+
+
     CROW_ROUTE(app, "/search").methods("GET"_method)
     ([&](const crow::request& req) {
         return xmrblocks.search(string(req.url_params.get("value")));

@@ -25,9 +25,16 @@
 
     </table>
 
-    <h3>Checking which outputs belong to the given address and viewkey</h3>
-    <h5>address: {{xmr_address}}</h5>
-    <h5>viewkey: {{viewkey}}</h5>
+    {{^tx_prove}}
+        <h3>Checking which outputs belong to the given address and viewkey</h3>
+        <h5>address: {{xmr_address}}</h5>
+        <h5>viewkey: {{viewkey}}</h5>
+    {{/tx_prove}}
+    {{#tx_prove}}
+        <h3>Prove that you send this tx to the given address</h3>
+        <h5>address: {{xmr_address}}</h5>
+        <h5>Tx private key: {{tx_prv_key}}</h5>
+    {{/tx_prove}}
 
     <h3>Outputs ({{outputs_no}})</h3>
     <div class="center">
