@@ -1529,8 +1529,12 @@ namespace xmreg {
         }
 
         string
-        show_checkandpushtx()
+        show_checkandpushtx(string raw_tx_data, string action)
         {
+
+            cout << raw_tx_data << endl;
+            cout << action << endl;
+
             return {};
         }
 

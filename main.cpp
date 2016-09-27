@@ -216,15 +216,18 @@ int main(int ac, const char* av[]) {
 
     CROW_ROUTE(app, "/checkandpush").methods("POST"_method)
     ([&](const crow::request& req) {
-        //string rawtxdata = string(req.post().get("rawtxdata"));
-        crow::query_string post_data(req.body);
-        //cout << req.url_params.get("rawtxdata") << endl;
-        cout << req.body << endl;
-        //auto j = crow::json::load(req.body);
-        //cout << req.get_header_value("rawtxdata") << endl;
-        //cout << j["rawtxdata"] << endl;
 
-        return xmrblocks.show_checkandpushtx();
+        map<std::string, std::string> post_body = xmreg::parse_crow_post_data(req.body);
+
+        if (post_body.count("rawtxdata") == 0 || post_body.count("action") == 0)
+        {
+            return string("Raw tx data or action not provided");
+        }
+
+        string raw_tx_data = post_body["rawtxdata"];
+        string action      = post_body["action"];
+
+        return xmrblocks.show_checkandpushtx(raw_tx_data, action);
     });
 
     CROW_ROUTE(app, "/search").methods("GET"_method)

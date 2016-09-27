@@ -223,7 +223,11 @@ namespace xmreg
                   rct::key & mask,
                   uint64_t & amount);
 
+    bool
+    url_decode(const std::string& in, std::string& out);
 
+    map<std::string, std::string>
+    parse_crow_post_data(const string& req_body);
 }
 
 #endif //XMREG01_TOOLS_H
