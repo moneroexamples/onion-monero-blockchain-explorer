@@ -37,6 +37,8 @@
 #define TMPL_ADDRESS         TMPL_DIR "/address.html"
 #define TMPL_MY_OUTPUTS      TMPL_DIR "/my_outputs.html"
 #define TMPL_SEARCH_RESULTS  TMPL_DIR "/search_results.html"
+#define TMPL_MY_RAWTX        TMPL_DIR "/rawtx.html"
+
 
 namespace xmreg {
 
@@ -1507,7 +1509,24 @@ namespace xmreg {
             return show_my_outputs(tx_hash_str, xmr_address_str, tx_prv_key_str, true);
         }
 
+        string
+        show_rawtx()
+        {
 
+            // initalise page tempate map with basic info about blockchain
+            mstch::map context {
+                    {"testnet"              , testnet}
+            };
+
+            // read rawtx.html
+            string rawtx_html = xmreg::read(TMPL_MY_RAWTX);
+
+            // add header and footer
+            string full_page =  rawtx_html + xmreg::read(TMPL_FOOTER);
+
+            // render the page
+            return mstch::render(full_page, context);
+        }
 
 
         string

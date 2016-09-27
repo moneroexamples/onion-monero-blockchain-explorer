@@ -209,7 +209,10 @@ int main(int ac, const char* av[]) {
         return xmrblocks.show_prove(tx_hash, xmr_address, tx_prv_key);
     });
 
-
+    CROW_ROUTE(app, "/rawtx")
+    ([&](const crow::request& req) {
+        return xmrblocks.show_rawtx();
+    });
 
     CROW_ROUTE(app, "/search").methods("GET"_method)
     ([&](const crow::request& req) {
