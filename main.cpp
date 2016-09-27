@@ -216,8 +216,11 @@ int main(int ac, const char* av[]) {
 
     CROW_ROUTE(app, "/checkandpush").methods("POST"_method)
     ([&](const crow::request& req) {
-        string rawtxdata = string(req.url_params.get("rawtxdata"));
-        cout << rawtxdata << endl;
+        //string rawtxdata = string(req.post().get("rawtxdata"));
+        //crow::query_string post_data = crow::query_string(req.body);
+        //cout << post_data.get("rawtxdata") << endl;
+        cout << req.body << endl;
+
         return xmrblocks.show_checkandpushtx();
     });
 
