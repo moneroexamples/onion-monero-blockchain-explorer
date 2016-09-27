@@ -1528,6 +1528,12 @@ namespace xmreg {
             return mstch::render(full_page, context);
         }
 
+        string
+        show_checkandpushtx()
+        {
+            return {};
+        }
+
 
         string
         search(string search_text)

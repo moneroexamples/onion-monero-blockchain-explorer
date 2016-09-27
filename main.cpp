@@ -214,6 +214,13 @@ int main(int ac, const char* av[]) {
         return xmrblocks.show_rawtx();
     });
 
+    CROW_ROUTE(app, "/checkandpush").methods("POST"_method)
+    ([&](const crow::request& req) {
+        string rawtxdata = string(req.url_params.get("rawtxdata"));
+        cout << rawtxdata << endl;
+        return xmrblocks.show_checkandpushtx();
+    });
+
     CROW_ROUTE(app, "/search").methods("GET"_method)
     ([&](const crow::request& req) {
         return xmrblocks.search(string(req.url_params.get("value")));
