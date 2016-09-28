@@ -38,6 +38,8 @@
 #define TMPL_MY_OUTPUTS      TMPL_DIR "/my_outputs.html"
 #define TMPL_SEARCH_RESULTS  TMPL_DIR "/search_results.html"
 #define TMPL_MY_RAWTX        TMPL_DIR "/rawtx.html"
+#define TMPL_MY_CHECKRAWTX   TMPL_DIR "/checkrawtx.html"
+
 
 
 namespace xmreg {
@@ -1552,6 +1554,13 @@ namespace xmreg {
                 cout << "UNSIGNED_TX_PREFIX data given" << endl;
             }
 
+            // initalize page template context map
+            mstch::map context {
+                    {"testnet"              , testnet},
+                    {"unsigned_tx_given"    , unsigned_tx_given},
+                    {"txs"                  , mstch::array{}}
+            };
+
             if (unsigned_tx_given)
             {
                 ::tools::wallet2::unsigned_tx_set exported_txs;
@@ -1562,19 +1571,84 @@ namespace xmreg {
                                                 exported_txs);
                 if (r)
                 {
+                    mstch::array& txs = boost::get<mstch::array>(context["txs"]);
 
+                    for (const ::tools::wallet2::tx_construction_data& tx_cd:
+                            exported_txs.txes)
+                    {
+                        size_t no_of_destinations = tx_cd.destinations.size();
+
+                        mstch::map tx_cd_data {
+                                {"no_of_destinations", no_of_destinations},
+                                {"use_rct"           , tx_cd.use_rct},
+                                {"dest_sources"      , mstch::array{}}
+                        };
+
+                        mstch::array& dest_sources = boost::get<mstch::array>(tx_cd_data["dest_sources"]);
+
+                        for (size_t i = 0; i < no_of_destinations; ++i)
+                        {
+                            const tx_destination_entry& tx_dest   = tx_cd.destinations.at(i);
+                            const tx_source_entry&      tx_source = tx_cd.sources.at(i);
+
+                            mstch::map single_dest_source {
+                                    {"single_dest_source"       ,
+                                            get_account_address_as_str(testnet, tx_dest.addr)},
+                                    {"amount"                   ,
+                                            fmt::format("{:0.12f}", XMR_AMOUNT(tx_dest.amount))},
+                                    {"real_output"              , tx_source.real_output},
+                                    {"real_out_tx_key"          , pod_to_hex(tx_source.real_out_tx_key)},
+                                    {"real_output_in_tx_index"  , tx_source.real_output_in_tx_index},
+                                    {"outputs"                  , mstch::array{}}
+                            };
+
+                            cout << tx_source.real_output << endl;
+                            cout << tx_source.real_out_tx_key << endl;
+                            cout << tx_source.real_output_in_tx_index << endl;
+
+                            mstch::array& outputs = boost::get<mstch::array>(single_dest_source["outputs"]);
+
+                            size_t output_i {0};
+
+                            for(const tx_source_entry::output_entry& oe: tx_source.outputs)
+                            {
+
+                                tx_out_index toi = core_storage->get_db()
+                                        .get_output_tx_and_index_from_global(oe.first);
+
+                                mstch::map single_output {
+                                        {"out_index"          , oe.first},
+                                        {"tx_hash"            , pod_to_hex(toi.first)},
+                                        {"ctkey"              , pod_to_hex(oe.second)}
+                                };
+
+                                outputs.push_back(single_output);
+
+                                ++output_i;
+                            }
+
+                            dest_sources.push_back(single_dest_source);
+                        }
+
+                        txs.push_back(tx_cd_data);
+                    }
                 }
                 else
                 {
-                    cout << "deserialization of unsigined tx data NOT sucessful" << endl;
-                    return string("deserialization of unsigined tx data NOT successful. "
+                    cerr << "deserialization of unsigned tx data NOT successful" << endl;
+                    return string("deserialization of unsigned tx data NOT successful. "
                                           "Maybe its not base64 encoded?");
                 }
             }
 
-            cout << action << endl;
+            // read checkrawtx.html
+            string checkrawtx_html = xmreg::read(TMPL_MY_CHECKRAWTX);
 
-            return {};
+            // add header and footer
+            string full_page =  checkrawtx_html + xmreg::read(TMPL_FOOTER);
+
+            // render the page
+            return mstch::render(full_page, context);
         }
 
 
