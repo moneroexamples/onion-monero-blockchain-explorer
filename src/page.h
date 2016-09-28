@@ -1531,8 +1531,47 @@ namespace xmreg {
         string
         show_checkandpushtx(string raw_tx_data, string action)
         {
+            // remove white characters
+            boost::trim(raw_tx_data);
+            boost::erase_all(raw_tx_data, "\r\n");
+            boost::erase_all(raw_tx_data, "\n");
 
             cout << raw_tx_data << endl;
+
+            string decoded_raw_tx_data = epee::string_encoding::base64_decode(raw_tx_data);
+
+            cout << decoded_raw_tx_data << endl;
+
+            const size_t magiclen = strlen(UNSIGNED_TX_PREFIX);
+
+            bool unsigned_tx_given {false};
+
+            if (strncmp(decoded_raw_tx_data.c_str(), UNSIGNED_TX_PREFIX, magiclen) == 0)
+            {
+                unsigned_tx_given = true;
+                cout << "UNSIGNED_TX_PREFIX data given" << endl;
+            }
+
+            if (unsigned_tx_given)
+            {
+                ::tools::wallet2::unsigned_tx_set exported_txs;
+
+                bool r = serialization::parse_binary(std::string(
+                            decoded_raw_tx_data.c_str() + magiclen,
+                            decoded_raw_tx_data.size() - magiclen),
+                                                exported_txs);
+                if (r)
+                {
+
+                }
+                else
+                {
+                    cout << "deserialization of unsigined tx data NOT sucessful" << endl;
+                    return string("deserialization of unsigined tx data NOT successful. "
+                                          "Maybe its not base64 encoded?");
+                }
+            }
+
             cout << action << endl;
 
             return {};

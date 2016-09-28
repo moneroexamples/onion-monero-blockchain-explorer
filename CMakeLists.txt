@@ -73,6 +73,10 @@ add_library(ringct STATIC IMPORTED)
 set_property(TARGET ringct
         PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libringct.a)
 
+add_library(wallet STATIC IMPORTED)
+set_property(TARGET wallet
+        PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libwallet.a)
+
 # include boost headers
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories("ext/mstch/include")
@@ -118,6 +122,7 @@ target_link_libraries(${PROJECT_NAME}
         myxrm
         myext
         mstch
+        wallet
         cryptonote_core
         blockchain_db
         crypto
