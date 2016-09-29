@@ -142,18 +142,19 @@
         {{#txs}}
             no_of_destinations: {{no_of_destinations}} <br/>
             <table class="center" style="width: 80%; margin-top:10px">
-                <tr><td>Address</td><td>Amount</td></tr>
+                <tr><td>Address {{single_dest_source}}</td><td>Amount</td></tr>
                 {{#dest_sources}}
-                    <tr><td>{{single_dest_source}}</td><td>{{amount}}</td></tr>
-                    <tr><td colspan="2">
+                    <tr><td></td><td>{{amount}}</td></tr>
+                    <tr>
+                        <td colspan="2">
                         Outputs used <br/>
-                        <table>
-                            <tr><td>Output Index</td>Stealth address<td>Is this real output</td></tr>
-                            {{#outputs}}
-                                <tr><td>{{out_index}}</td><td><a href="/tx/{{tx_hash}}">{{tx_hash}}</a></td><td></td></tr>
-                                <tr><td colspan="3">&nbsp;  &nbsp; ctkey: {{ctkey}}</td></tr>
-                            {{/outputs}}
-                        </table>
+                            <table>
+                                <tr><td>Output Index</td>Stealth address<td>Is this real output</td></tr>
+                                {{#outputs}}
+                                    <tr><td>{{out_index}}</td><td><a href="/tx/{{tx_hash}}">{{tx_hash}}</a></td><td></td></tr>
+                                    <tr><td colspan="3">&nbsp;  &nbsp; ctkey: {{ctkey}}</td></tr>
+                                {{/outputs}}
+                            </table>
                         </td>
                     </tr>
                 {{/dest_sources}}

@@ -1538,7 +1538,7 @@ namespace xmreg {
             boost::erase_all(raw_tx_data, "\r\n");
             boost::erase_all(raw_tx_data, "\n");
 
-            cout << raw_tx_data << endl;
+            //cout << raw_tx_data << endl;
 
             string decoded_raw_tx_data = epee::string_encoding::base64_decode(raw_tx_data);
 
@@ -1573,29 +1573,31 @@ namespace xmreg {
                 {
                     mstch::array& txs = boost::get<mstch::array>(context["txs"]);
 
-                    for (const ::tools::wallet2::tx_construction_data& tx_cd:
-                            exported_txs.txes)
+                    for (const ::tools::wallet2::tx_construction_data& tx_cd: exported_txs.txes)
                     {
-                        size_t no_of_destinations = tx_cd.destinations.size();
+                        size_t no_of_sources = tx_cd.sources.size();
+
+
+                        // assume single destination for now
+                        const tx_destination_entry& tx_dest   = tx_cd.destinations.at(0);
 
                         mstch::map tx_cd_data {
-                                {"no_of_destinations", no_of_destinations},
-                                {"use_rct"           , tx_cd.use_rct},
-                                {"dest_sources"      , mstch::array{}}
+                                {"no_of_sources"      , no_of_sources},
+                                {"use_rct"            , tx_cd.use_rct},
+                                {"single_dest_source" , get_account_address_as_str(testnet, tx_dest.addr)},
+                                {"dest_sources"       , mstch::array{}}
                         };
 
                         mstch::array& dest_sources = boost::get<mstch::array>(tx_cd_data["dest_sources"]);
 
-                        for (size_t i = 0; i < no_of_destinations; ++i)
+                        for (size_t i = 0; i < no_of_sources; ++i)
                         {
-                            const tx_destination_entry& tx_dest   = tx_cd.destinations.at(i);
+                            //const tx_destination_entry& tx_dest   = tx_cd.destinations.at(i);
                             const tx_source_entry&      tx_source = tx_cd.sources.at(i);
 
                             mstch::map single_dest_source {
-                                    {"single_dest_source"       ,
-                                            get_account_address_as_str(testnet, tx_dest.addr)},
                                     {"amount"                   ,
-                                            fmt::format("{:0.12f}", XMR_AMOUNT(tx_dest.amount))},
+                                            fmt::format("{:0.12f}", XMR_AMOUNT(tx_source.amount))},
                                     {"real_output"              , tx_source.real_output},
                                     {"real_out_tx_key"          , pod_to_hex(tx_source.real_out_tx_key)},
                                     {"real_output_in_tx_index"  , tx_source.real_output_in_tx_index},
@@ -1610,11 +1612,21 @@ namespace xmreg {
 
                             size_t output_i {0};
 
+                            cout << tx_source.amount << endl;
+
                             for(const tx_source_entry::output_entry& oe: tx_source.outputs)
                             {
 
-                                tx_out_index toi = core_storage->get_db()
-                                        .get_output_tx_and_index_from_global(oe.first);
+//                                tx_out_index toi = core_storage->get_db()
+//                                        .get_output_tx_and_index_from_global(oe.first);
+
+                                cout << "oe.first: " << oe.first << endl;
+
+//                                tx_out_index toi =  core_storage->get_db()
+//                                        .get_output_tx_and_index(tx_source.amount, oe.first);
+
+                                tx_out_index toi =  core_storage->get_db()
+                                        .get_output_tx_and_index(0, oe.first);
 
                                 mstch::map single_output {
                                         {"out_index"          , oe.first},
@@ -1626,10 +1638,8 @@ namespace xmreg {
 
                                 ++output_i;
                             }
-
                             dest_sources.push_back(single_dest_source);
                         }
-
                         txs.push_back(tx_cd_data);
                     }
                 }
