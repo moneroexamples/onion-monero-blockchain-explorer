@@ -151,8 +151,8 @@
                             <table>
                                 <tr><td>Output Index</td>Stealth address<td>Is this real output</td></tr>
                                 {{#outputs}}
-                                    <tr><td>{{out_index}}</td><td><a href="/tx/{{tx_hash}}">{{tx_hash}}</a></td><td></td></tr>
-                                    <tr><td colspan="3">&nbsp;  &nbsp; ctkey: {{ctkey}}</td></tr>
+                                    <tr><td>{{out_index}}</td><td><a href="/tx/{{tx_hash}}">{{out_pub_key}}</a></td><td></td></tr>
+                                   <!-- <tr><td colspan="3">&nbsp;  &nbsp; ctkey: {{ctkey}}</td></tr>-->
                                 {{/outputs}}
                             </table>
                         </td>

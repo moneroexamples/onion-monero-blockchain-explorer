@@ -1544,7 +1544,7 @@ namespace xmreg {
 
             string decoded_raw_tx_data = epee::string_encoding::base64_decode(raw_tx_data);
 
-            cout << decoded_raw_tx_data << endl;
+            //cout << decoded_raw_tx_data << endl;
 
             const size_t magiclen = strlen(UNSIGNED_TX_PREFIX);
 
@@ -1630,9 +1630,23 @@ namespace xmreg {
                                 tx_out_index toi =  core_storage->get_db()
                                         .get_output_tx_and_index(0, oe.first);
 
+
+                                transaction tx;
+
+                                if (!mcore->get_tx(toi.first, tx))
+                                {
+                                    cerr << "Cant get tx in blockchain: " << toi.first
+                                         << ". \n Check mempool now" << endl;
+                                        // tx is nowhere to be found :-(
+                                        return string("Cant get tx: " + pod_to_hex(toi.first));
+                                }
+
+                                tx_details txd = get_tx_details(tx);
+
                                 mstch::map single_output {
                                         {"out_index"          , oe.first},
-                                        {"tx_hash"            , pod_to_hex(toi.first)},
+                                        {"tx_hash"            , pod_to_hex(txd.hash)},
+                                        {"out_pub_key"         , pod_to_hex(txd.output_pub_keys[toi.second].first.key)},
                                         {"ctkey"              , pod_to_hex(oe.second)}
                                 };
 
