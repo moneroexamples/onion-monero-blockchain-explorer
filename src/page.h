@@ -1420,7 +1420,7 @@ namespace xmreg {
 
             uint64_t sum_xmr {0};
 
-            std::vector<uint64_t> money_transfered(tx.vout.size());
+            std::vector<uint64_t> money_transfered(tx.vout.size(), 0);
 
             std::deque<rct::key> mask(tx.vout.size());
 
@@ -1445,8 +1445,8 @@ namespace xmreg {
                 // if mine output has RingCT, i.e., tx version is 2
                 if (mine_output && tx.version == 2)
                 {
-
-                    uint64_t rct_amount {0};
+                    // initialize with regular amount
+                    uint64_t rct_amount = money_transfered[i];
 
                     bool r;
 
@@ -1455,19 +1455,21 @@ namespace xmreg {
                                       prv_view_key,
                                       i,
                                       tx.rct_signatures.ecdhInfo[i].mask,
-                                      money_transfered[i]);
+                                      rct_amount);
 
                     if (!r)
                     {
                         cerr << "Cant decode ringCT!" << endl;
                     }
 
-                    outp.second = money_transfered[i];
+                    // cointbase txs have amounts in plain sight.
+                    // so use amount from ringct, only for non-coinbase txs
+                    if (!is_coinbase(tx))
+                    {
+                        outp.second         = rct_amount;
+                        money_transfered[i] = rct_amount;
+                    }
 
-                    cout << "i, money_transfered[i]"
-                         << i << ","
-                         << money_transfered[i]
-                         << endl;
                 }
 
                 if (mine_output)
@@ -1620,7 +1622,7 @@ namespace xmreg {
 //                                tx_out_index toi = core_storage->get_db()
 //                                        .get_output_tx_and_index_from_global(oe.first);
 
-                                cout << "oe.first: " << oe.first << endl;
+                                //cout << "oe.first: " << oe.first << endl;
 
 //                                tx_out_index toi =  core_storage->get_db()
 //                                        .get_output_tx_and_index(tx_source.amount, oe.first);
