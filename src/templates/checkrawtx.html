@@ -141,24 +141,37 @@
         <br/>
         {{#txs}}
             no_of_destinations: {{no_of_destinations}} <br/>
-            <table class="center" style="width: 80%; margin-top:10px">
-                <tr><td>Address {{single_dest_source}}</td><td>Amount</td></tr>
+            <div class="center" style="width: 90%; margin-top:10px">
+                Amount: {{dest_amount}} <br/>
+                To address: {{single_dest_source}} <br/>
+                <h4>Outputs used</h4>
                 {{#dest_sources}}
-                    <tr><td></td><td>{{amount}}</td></tr>
-                    <tr>
-                        <td colspan="2">
-                        Outputs used <br/>
-                            <table>
-                                <tr><td>Output Index</td>Stealth address<td>Is this real output</td></tr>
+                            <table style="width: 80%; margin-top:10px">
+                                <tr>
+                                    <td>Output Index</td>
+                                    <td>Stealth address</td>
+                                    <td>Is this real output</td>
+                                    <td>Age {{age_format}}</td>
+                                    <td>Amount</td>
+                                </tr>
                                 {{#outputs}}
-                                    <tr><td>{{out_index}}</td><td><a href="/tx/{{tx_hash}}">{{out_pub_key}}</a></td><td></td></tr>
+                                    <tr>
+                                        <td>{{out_index}}</td>
+                                        <td><a href="/tx/{{tx_hash}}">{{out_pub_key}}</a></td>
+                                        {{#is_real}}
+                                            <td><span style="color: #008009;font-weight: bold">{{is_real}}</span></td>
+                                        {{/is_real}}
+                                        {{^is_real}}
+                                            <td>{{is_real}}</td>
+                                        {{/is_real}}
+                                        <td>{{output_age}}</td>
+                                        <td>{{output_amount}}</td>
+                                    </tr>
                                    <!-- <tr><td colspan="3">&nbsp;  &nbsp; ctkey: {{ctkey}}</td></tr>-->
                                 {{/outputs}}
                             </table>
-                        </td>
-                    </tr>
                 {{/dest_sources}}
-            </table>
+            </div>
         {{/txs}}
     </div>
 

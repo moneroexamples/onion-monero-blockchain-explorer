@@ -107,6 +107,7 @@ namespace xmreg {
         uint64_t fee;
         uint64_t mixin_no;
         uint64_t size;
+        uint64_t blk_height;
         size_t   version;
         uint64_t unlock_time;
         vector<uint8_t> extra;
@@ -163,6 +164,7 @@ namespace xmreg {
                 {"no_inputs"         , input_key_imgs.size()},
                 {"no_outputs"        , output_pub_keys.size()},
                 {"mixin"             , mixin_str},
+                {"blk_height"        , blk_height},
                 {"version"           , std::to_string(version)},
                 {"has_payment_id"    , payment_id  != null_hash},
                 {"has_payment_id8"   , payment_id8 != null_hash8},
@@ -1587,6 +1589,7 @@ namespace xmreg {
                                 {"no_of_sources"      , no_of_sources},
                                 {"use_rct"            , tx_cd.use_rct},
                                 {"single_dest_source" , get_account_address_as_str(testnet, tx_dest.addr)},
+                                {"dest_amount"        , fmt::format("{:0.12f}", XMR_AMOUNT(tx_dest.amount))},
                                 {"dest_sources"       , mstch::array{}}
                         };
 
@@ -1598,7 +1601,7 @@ namespace xmreg {
                             const tx_source_entry&      tx_source = tx_cd.sources.at(i);
 
                             mstch::map single_dest_source {
-                                    {"amount"                   ,
+                                    {"output_amount"                   ,
                                             fmt::format("{:0.12f}", XMR_AMOUNT(tx_source.amount))},
                                     {"real_output"              , tx_source.real_output},
                                     {"real_out_tx_key"          , pod_to_hex(tx_source.real_out_tx_key)},
@@ -1609,6 +1612,28 @@ namespace xmreg {
                             cout << tx_source.real_output << endl;
                             cout << tx_source.real_out_tx_key << endl;
                             cout << tx_source.real_output_in_tx_index << endl;
+
+                            uint64_t index_of_real_output = tx_source.outputs[tx_source.real_output].first;
+
+                            // get tx of the real output
+                            tx_out_index real_toi =  core_storage->get_db()
+                                    .get_output_tx_and_index(0, index_of_real_output);
+
+                            transaction real_source_tx;
+
+                            if (!mcore->get_tx(real_toi.first, real_source_tx))
+                            {
+                                cerr << "Cant get tx in blockchain: " << real_toi.first << endl;
+                                return string("Cant get tx: " + pod_to_hex(real_toi.first));
+                            }
+
+                            tx_details real_txd = get_tx_details(real_source_tx);
+
+                            public_key real_out_pub_key = real_txd.output_pub_keys[tx_source.real_output_in_tx_index].first.key;
+
+                            cout << "real_txd.hash: " << pod_to_hex(real_txd.hash) << endl;
+                            cout << "real_txd.pk: " << pod_to_hex(real_txd.pk) << endl;
+                            cout << "real_out_pub_key: " << pod_to_hex(real_out_pub_key) << endl;
 
                             mstch::array& outputs = boost::get<mstch::array>(single_dest_source["outputs"]);
 
@@ -1643,12 +1668,30 @@ namespace xmreg {
 
                                 tx_details txd = get_tx_details(tx);
 
+                                public_key out_pub_key = txd.output_pub_keys[toi.second].first.key;
+
+
+                                // get block cointaining this tx
+                                block blk;
+
+                                if (!mcore->get_block_by_height(txd.blk_height, blk))
+                                {
+                                    cerr << "Cant get block: " << txd.blk_height << endl;
+                                    return string("Cant get block: "  + to_string(txd.blk_height));
+                                }
+
+                                pair<string, string> age = get_age(server_timestamp, blk.timestamp);
+
                                 mstch::map single_output {
                                         {"out_index"          , oe.first},
                                         {"tx_hash"            , pod_to_hex(txd.hash)},
-                                        {"out_pub_key"         , pod_to_hex(txd.output_pub_keys[toi.second].first.key)},
-                                        {"ctkey"              , pod_to_hex(oe.second)}
+                                        {"out_pub_key"        , pod_to_hex(out_pub_key)},
+                                        {"ctkey"              , pod_to_hex(oe.second)},
+                                        {"output_age"         , age.first},
+                                        {"is_real"            , (out_pub_key == real_out_pub_key)}
                                 };
+
+                                single_dest_source.insert({"age_format" , age.second});
 
                                 outputs.push_back(single_output);
 
@@ -2324,7 +2367,6 @@ namespace xmreg {
                     // get tx fee
                     txd.fee = get_tx_fee(tx);
                 }
-
             }
 
             get_payment_id(tx, txd.payment_id, txd.payment_id8);
@@ -2345,6 +2387,16 @@ namespace xmreg {
 
             // get unlock time
             txd.unlock_time = tx.unlock_time;
+
+            try
+            {
+                txd.blk_height = core_storage->get_db().get_tx_block_height(txd.hash);
+            }
+            catch (exception& e)
+            {
+                cerr << "Cant get block height: " << txd.hash << e.what() << endl;
+                txd.blk_height = 0;
+            }
 
             return txd;
         }
