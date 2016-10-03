@@ -1,0 +1,197 @@
+
+<div>
+
+    <H4 style="margin:5px">Tx hash: {{tx_hash}}</H4>
+    <H5 style="margin:5px">Tx public key: {{tx_pub_key}}</H5>
+
+
+    {{#has_payment_id}}
+        <H5 style="margin:5px">Payment id: {{payment_id}}</H5>
+    {{/has_payment_id}}
+
+    {{#has_payment_id8}}
+        <H5 style="margin:5px">Payment id (encrypted): {{payment_id8}}</H5>
+    {{/has_payment_id8}}
+
+
+    {{#have_prev_hash}}
+    <H5>Previous tx: <a href="/tx/{{prev_hash}}">{{prev_hash}}</a></H5>
+    {{/have_prev_hash}}
+
+    {{#have_next_hash}}
+    <H5>Next tx: <a href="/tx/{{next_hash}}">{{next_hash}}</a></H5>
+    {{/have_next_hash}}
+
+
+
+    <table class="center" style="width: 80%; margin-top:10px">
+        <tr>
+            <td>Timestamp: {{blk_timestamp_uint}}</td>
+            <td>Timestamp [UCT]: {{blk_timestamp}}</td>
+            <td>Age [y:d:h:m:s]: {{delta_time}}</td>
+        </tr>
+        <tr>
+            <td>Block: <a href="/block/{{blk_height}}">{{blk_height}}</a></td>
+            <td>Fee: {{tx_fee}}</td>
+            <td>Tx size: {{tx_size}} kB</td>
+        </tr>
+        <tr>
+            <td>Tx version: {{tx_version}}</td>
+        </tr>
+
+        <tr>
+            <td colspan="5">Extra: {{extra}}</td>
+        </tr>
+
+
+    </table>
+
+
+  <h3>{{outputs_no}} output(s) for total of {{outputs_xmr_sum}} xmr</h3>
+  <div class="center">
+      <table class="center">
+          <tr>
+              <td>stealth address</td>
+              <td>amount</td>
+              <td>amount idx</td>
+          </tr>
+          {{#outputs}}
+          <tr>
+              <td>{{output_idx}}: {{out_pub_key}}</td>
+              <td>{{amount}}</td>
+              <td>{{amount_idx}} of {{num_outputs}}</td>
+          </tr>
+          {{/outputs}}
+      </table>
+  </div>
+
+    <div class="center" style="width:90%">
+        <div class="tabs">
+
+            <div class="tab">
+                <input type="radio" id="tab-1" name="tab-group-1" checked>
+                <label for="tab-1">Decode outputs</label>
+                <div class="content">
+                    <h4 style="margin: 0px">Check which outputs belong to given Moenro address and viewkey</h4>
+                    <form action="/myoutputs" method="get" style="width:100%; margin-top:2px" class="style-1">
+                        <input type="hidden" name="tx_hash" size="90" value="{{tx_hash}}"><br/>
+                        <input type="text" name="xmr_address" size="90" placeholder="Monero address"><br/>
+                        <input type="text" name="viewkey" size="90" placeholder="viewkey" style="margin-top:5px"><br/>
+                        <input type="submit" value="Decode outputs" style="margin-top:5px" >
+                    </form>
+
+                </div>
+            </div>
+
+            <div class="tab">
+                <input type="radio" id="tab-2" name="tab-group-1">
+                <label for="tab-2">Prove sending</label>
+
+                <div class="content">
+                    <h4 style="margin: 0px">Prove to someone that you send them Monero in this transaction</h4>
+                    <h5 style="margin: 0px">Tx private key can be obtained using <i>get_tx_key</i>
+                        command in  <i>monero-wallet-cli</i> command line tool</h5>
+                    <form action="/prove" method="get" style="width:100%;margin-top:2px" class="style-1">
+                       <input type="hidden" name="txhash" size="90" value="{{tx_hash}}"><br/>
+                       <input type="text" name="txprvkey" size="90" placeholder="Tx private key"><br/>
+                       <input type="text" name="xmraddress" size="90"placeholder="Recipient's Monero Address" style="margin-top:5px"><br/>
+                       <input type="submit" value="Prove" style="margin-top:5px">
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+
+{{#has_inputs}}
+  <h3>Inputs' mixins time scale (from {{min_mix_time}} till {{max_mix_time}};
+    resolution: {{timescales_scale}} days)</h3>
+  <div class="center">
+    <ul class="center">
+      {{#timescales}}
+        <li  style="list-style-type: none; text-align: center; font-size: 8px">|{{timescale}}|</li>
+      {{/timescales}}
+    </ul>
+  </div>
+
+
+  <h3>{{inputs_no}} inputs(s) for total of {{inputs_xmr_sum}} xmr</h3>
+  <div class="center">
+       <table class="center">
+      {{#inputs}}
+        <tr>
+          <td style="text-align: left;">key image  {{input_idx}}: {{in_key_img}}</td>
+          <td>amount: {{amount}}</td>
+       </tr>
+          <tr>
+            <td colspan="2">
+                <table style="width:100%; margin-bottom:20px">
+                <tr>
+                  <td>Mixin stealth address</td>
+                  <td>blk</td>
+                  <td>mixin</td>
+                  <td>in/out</td>
+                  <td>timestamp</td>
+                  <td>age [y:d:h:m:s]</td>
+                </tr>
+             {{#mixins}}
+                <tr>
+                  <td> - {{mix_idx}}: <a href="/tx/{{mix_tx_hash}}">{{mix_pub_key}}</a></td>
+                  <td>{{mix_blk}}</td>
+                  <td>{{mix_mixin_no}}</td>
+                  <td>{{mix_inputs_no}}/{{mix_outputs_no}}</td>
+                  <td>{{mix_timestamp}}</td>
+                  <td>{{mix_age}}</td>
+                </tr>
+             {{/mixins}}
+             </table>
+           </td>
+         </tr>
+
+
+        {{#with_ring_signatures}}
+
+          <tr>
+            <td colspan="2">
+                <table style="width:100%; margin-bottom:20px">
+                <tr>
+                  <td>Ring signature</td>
+                </tr>
+                {{#ring_sigs}}
+                <tr>
+                    <td>{{ring_sig}}</td>
+                </tr>
+                {{/ring_sigs}}
+             </table>
+           </td>
+         </tr>
+
+        {{/with_ring_signatures}}
+
+
+      {{/inputs}}
+      </table>
+
+
+    {{^with_ring_signatures}}
+      <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}/1">More details</a></h5>
+    {{/with_ring_signatures}}
+    {{#with_ring_signatures}}
+
+      <h3>JSON representaiton of tx</h3>
+      <div class="center">
+          <code style="white-space: pre-wrap; font-size: 10px">
+              {{tx_json}}
+          </code>
+      </div>
+
+      <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}">Less details</a></h5>
+    {{/with_ring_signatures}}
+
+  </div>
+
+ {{/has_inputs}}
+
+</div>

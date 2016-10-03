@@ -1652,18 +1652,10 @@ namespace xmreg {
 
                             size_t output_i {0};
 
-                            cout << tx_source.amount << endl;
+                            // cout << tx_source.amount << endl;
 
                             for(const tx_source_entry::output_entry& oe: tx_source.outputs)
                             {
-
-//                                tx_out_index toi = core_storage->get_db()
-//                                        .get_output_tx_and_index_from_global(oe.first);
-
-                                //cout << "oe.first: " << oe.first << endl;
-
-//                                tx_out_index toi =  core_storage->get_db()
-//                                        .get_output_tx_and_index(tx_source.amount, oe.first);
 
                                 tx_out_index toi =  core_storage->get_db()
                                         .get_output_tx_and_index(0, oe.first);
@@ -1725,7 +1717,51 @@ namespace xmreg {
                     return string("deserialization of unsigned tx data NOT successful. "
                                           "Maybe its not base64 encoded?");
                 }
+            } // if (unsigned_tx_given)
+            else
+            {
+                // if raw data is not unsigined tx, then assume it is signed tx
+
+                const size_t magiclen = strlen(SIGNED_TX_PREFIX);
+
+                if (strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
+                {
+                    cout << "The data is neigther unsigned nor signed tx!" << endl;
+                    return string( "The data is neither unsigned nor signed tx!");
+                }
+
+                ::tools::wallet2::signed_tx_set signed_txs;
+
+                bool r = serialization::parse_binary(std::string(
+                        decoded_raw_tx_data.c_str() + magiclen,
+                        decoded_raw_tx_data.size() - magiclen),
+                                                    signed_txs);
+
+                if (!r)
+                {
+                    cerr << "deserialization of signed tx data NOT successful" << endl;
+                    return string("deserialization of signed tx data NOT successful. "
+                                          "Maybe its not base64 encoded?");
+                }
+
+                std::vector<tools::wallet2::pending_tx> ptxs = signed_txs.ptx;
+
+                context.insert({"signed_txs", mstch::array{}});
+
+                for (tools::wallet2::pending_tx& ptx: ptxs)
+                {
+                    tx_details txd = get_tx_details(ptx.tx);
+
+                    mstch::map txd_map = txd.get_mstch_map();
+
+                    boost::get<mstch::array>(context["signed_txs"]).push_back(txd_map);
+                }
+
             }
+
+            map<string, string> partials {
+                    {"tx_details", xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html")},
+            };
 
             // read checkrawtx.html
             string checkrawtx_html = xmreg::read(TMPL_MY_CHECKRAWTX);
@@ -1734,7 +1770,7 @@ namespace xmreg {
             string full_page =  checkrawtx_html + xmreg::read(TMPL_FOOTER);
 
             // render the page
-            return mstch::render(full_page, context);
+            return mstch::render(full_page, context, partials);
         }
 
 
@@ -2405,14 +2441,9 @@ namespace xmreg {
             // get unlock time
             txd.unlock_time = tx.unlock_time;
 
-            try
+            if (core_storage->have_tx(txd.hash))
             {
                 txd.blk_height = core_storage->get_db().get_tx_block_height(txd.hash);
-            }
-            catch (exception& e)
-            {
-                cerr << "Cant get block height: " << txd.hash << e.what() << endl;
-                txd.blk_height = 0;
             }
 
             return txd;
