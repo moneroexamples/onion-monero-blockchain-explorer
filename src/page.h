@@ -1581,19 +1581,29 @@ namespace xmreg {
                     {
                         size_t no_of_sources = tx_cd.sources.size();
 
-
                         // assume single destination for now
-                        const tx_destination_entry& tx_dest   = tx_cd.destinations.at(0);
+                        const tx_destination_entry& tx_dest     = tx_cd.destinations.at(0);
+
+                        for (const tx_destination_entry& a_dest: tx_cd.destinations)
+                        {
+                            cout << "a_dest.addr: " << get_account_address_as_str(testnet, a_dest.addr)
+                                 <<  " " << a_dest.amount << endl;
+                        }
+
+                        const tx_destination_entry& tx_change   = tx_cd.change_dts;
 
                         mstch::map tx_cd_data {
                                 {"no_of_sources"      , no_of_sources},
                                 {"use_rct"            , tx_cd.use_rct},
                                 {"single_dest_source" , get_account_address_as_str(testnet, tx_dest.addr)},
                                 {"dest_amount"        , fmt::format("{:0.12f}", XMR_AMOUNT(tx_dest.amount))},
+                                {"change_amount"      , fmt::format("{:0.12f}", XMR_AMOUNT(tx_change.amount))},
                                 {"dest_sources"       , mstch::array{}}
                         };
 
                         mstch::array& dest_sources = boost::get<mstch::array>(tx_cd_data["dest_sources"]);
+
+                        uint64_t sum_outputs_amounts {0};
 
                         for (size_t i = 0; i < no_of_sources; ++i)
                         {
@@ -1601,17 +1611,19 @@ namespace xmreg {
                             const tx_source_entry&      tx_source = tx_cd.sources.at(i);
 
                             mstch::map single_dest_source {
-                                    {"output_amount"                   ,
-                                            fmt::format("{:0.12f}", XMR_AMOUNT(tx_source.amount))},
-                                    {"real_output"              , tx_source.real_output},
-                                    {"real_out_tx_key"          , pod_to_hex(tx_source.real_out_tx_key)},
-                                    {"real_output_in_tx_index"  , tx_source.real_output_in_tx_index},
-                                    {"outputs"                  , mstch::array{}}
+                                    {"output_amount"              , fmt::format("{:0.12f}",
+                                                                        XMR_AMOUNT(tx_source.amount))},
+                                    {"real_output"                , tx_source.real_output},
+                                    {"real_out_tx_key"            , pod_to_hex(tx_source.real_out_tx_key)},
+                                    {"real_output_in_tx_index"    , tx_source.real_output_in_tx_index},
+                                    {"outputs"                    , mstch::array{}}
                             };
 
-                            cout << tx_source.real_output << endl;
-                            cout << tx_source.real_out_tx_key << endl;
-                            cout << tx_source.real_output_in_tx_index << endl;
+                            sum_outputs_amounts += tx_source.amount;
+
+                            //cout << tx_source.real_output << endl;
+                            //cout << tx_source.real_out_tx_key << endl;
+                            //cout << tx_source.real_output_in_tx_index << endl;
 
                             uint64_t index_of_real_output = tx_source.outputs[tx_source.real_output].first;
 
@@ -1631,9 +1643,9 @@ namespace xmreg {
 
                             public_key real_out_pub_key = real_txd.output_pub_keys[tx_source.real_output_in_tx_index].first.key;
 
-                            cout << "real_txd.hash: " << pod_to_hex(real_txd.hash) << endl;
-                            cout << "real_txd.pk: " << pod_to_hex(real_txd.pk) << endl;
-                            cout << "real_out_pub_key: " << pod_to_hex(real_out_pub_key) << endl;
+                            //cout << "real_txd.hash: " << pod_to_hex(real_txd.hash) << endl;
+                            //cout << "real_txd.pk: " << pod_to_hex(real_txd.pk) << endl;
+                            //cout << "real_out_pub_key: " << pod_to_hex(real_out_pub_key) << endl;
 
                             mstch::array& outputs = boost::get<mstch::array>(single_dest_source["outputs"]);
 
@@ -1691,14 +1703,18 @@ namespace xmreg {
                                         {"is_real"            , (out_pub_key == real_out_pub_key)}
                                 };
 
-                                single_dest_source.insert({"age_format" , age.second});
+                                single_dest_source.insert({"age_format"          , age.second});
 
                                 outputs.push_back(single_output);
 
                                 ++output_i;
                             }
+
                             dest_sources.push_back(single_dest_source);
                         }
+
+                        tx_cd_data.insert({"sum_outputs_amounts" , fmt::format("{:0.12f}", XMR_AMOUNT(sum_outputs_amounts))});
+
                         txs.push_back(tx_cd_data);
                     }
                 }

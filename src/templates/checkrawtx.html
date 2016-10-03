@@ -137,16 +137,16 @@
 
     <div class="center">
         <h3>Details of submitted raw tx data</h3>
-        unsigned_tx_given: {{unsigned_tx_given}}
-        <br/>
+
+        <h4>unsigned_tx_given: {{unsigned_tx_given}}</h4>
         {{#txs}}
-            no_of_destinations: {{no_of_destinations}} <br/>
-            <div class="center" style="width: 90%; margin-top:10px">
+            <div class="center" style="width: 95%; margin-top:10px">
+                <h4>Destination information</h4>
                 Amount: {{dest_amount}} <br/>
-                To address: {{single_dest_source}} <br/>
-                <h4>Outputs used</h4>
+                Destination address: {{single_dest_source}}
+                <h4>Outputs selected for this tx (total: {{sum_outputs_amounts}})</h4>
                 {{#dest_sources}}
-                            <table style="width: 80%; margin-top:10px">
+                            <table style="width: 100%; margin-top:10px">
                                 <tr>
                                     <td>Output Index</td>
                                     <td>Stealth address</td>
@@ -171,6 +171,8 @@
                                 {{/outputs}}
                             </table>
                 {{/dest_sources}}
+                <h4>Change to be returned to the sender</h4>
+                Amount: {{change_amount}}
             </div>
         {{/txs}}
     </div>
