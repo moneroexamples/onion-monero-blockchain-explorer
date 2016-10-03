@@ -140,10 +140,13 @@
 
         <h4>unsigned_tx_given: {{unsigned_tx_given}}</h4>
         {{#txs}}
-            <div class="center" style="width: 95%; margin-top:10px">
+            <div class="center" style="width: 100%; margin-top:10px">
                 <h4>Destination information</h4>
-                Amount: {{dest_amount}} <br/>
-                Destination address: {{single_dest_source}}
+                <div class="center" style="width: 100%;">
+                     {{#dest_infos}}
+                        Send {{dest_amount}} to {{dest_address}}<br/>
+                    {{/dest_infos}}
+                </div>
                 <h4>Outputs selected for this tx (total: {{sum_outputs_amounts}})</h4>
                 {{#dest_sources}}
                             <table style="width: 100%; margin-top:10px">

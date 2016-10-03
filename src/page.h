@@ -1581,33 +1581,34 @@ namespace xmreg {
                     {
                         size_t no_of_sources = tx_cd.sources.size();
 
-                        // assume single destination for now
-                        const tx_destination_entry& tx_dest     = tx_cd.destinations.at(0);
-
-                        for (const tx_destination_entry& a_dest: tx_cd.destinations)
-                        {
-                            cout << "a_dest.addr: " << get_account_address_as_str(testnet, a_dest.addr)
-                                 <<  " " << a_dest.amount << endl;
-                        }
-
                         const tx_destination_entry& tx_change   = tx_cd.change_dts;
 
                         mstch::map tx_cd_data {
                                 {"no_of_sources"      , no_of_sources},
                                 {"use_rct"            , tx_cd.use_rct},
-                                {"single_dest_source" , get_account_address_as_str(testnet, tx_dest.addr)},
-                                {"dest_amount"        , fmt::format("{:0.12f}", XMR_AMOUNT(tx_dest.amount))},
                                 {"change_amount"      , fmt::format("{:0.12f}", XMR_AMOUNT(tx_change.amount))},
-                                {"dest_sources"       , mstch::array{}}
+                                {"dest_sources"       , mstch::array{}},
+                                {"dest_infos"          , mstch::array{}},
                         };
 
                         mstch::array& dest_sources = boost::get<mstch::array>(tx_cd_data["dest_sources"]);
+                        mstch::array& dest_infos = boost::get<mstch::array>(tx_cd_data["dest_infos"]);
+
+                        for (const tx_destination_entry& a_dest: tx_cd.destinations)
+                        {
+                            mstch::map dest_info {
+                                    {"dest_address"  , get_account_address_as_str(testnet, a_dest.addr)},
+                                    {"dest_amount"   , fmt::format("{:0.12f}", XMR_AMOUNT(a_dest.amount))}
+                            };
+
+                            dest_infos.push_back(dest_info);
+                        }
 
                         uint64_t sum_outputs_amounts {0};
 
                         for (size_t i = 0; i < no_of_sources; ++i)
                         {
-                            //const tx_destination_entry& tx_dest   = tx_cd.destinations.at(i);
+
                             const tx_source_entry&      tx_source = tx_cd.sources.at(i);
 
                             mstch::map single_dest_source {
