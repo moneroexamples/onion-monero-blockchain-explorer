@@ -943,7 +943,15 @@ namespace xmreg {
                 }
             }
 
-            mstch::map context = construct_tx_context(tx, with_ring_signatures);
+            mstch::map tx_context = construct_tx_context(tx, with_ring_signatures);
+
+            mstch::map context {{"txs", mstch::array{}}};
+
+            boost::get<mstch::array>(context["txs"]).push_back(tx_context);
+
+            map<string, string> partials {
+                    {"tx_details", xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html")},
+            };
 
             // read tx.html
             string tx_html = xmreg::read(TMPL_TX);
@@ -952,7 +960,7 @@ namespace xmreg {
             string full_page = get_full_page(tx_html);
 
             // render the page
-            return mstch::render(full_page, context);
+            return mstch::render(full_page, context, partials);
         }
 
         string
@@ -1462,7 +1470,7 @@ namespace xmreg {
 
                 std::vector<tools::wallet2::pending_tx> ptxs = signed_txs.ptx;
 
-                context.insert({"signed_txs", mstch::array{}});
+                context.insert({"txs", mstch::array{}});
 
                 for (tools::wallet2::pending_tx& ptx: ptxs)
                 {
@@ -1470,7 +1478,7 @@ namespace xmreg {
 
                     mstch::map txd_map = txd.get_mstch_map();
 
-                    boost::get<mstch::array>(context["signed_txs"]).push_back(txd_map);
+                    boost::get<mstch::array>(context["txs"]).push_back(txd_map);
                 }
 
             }

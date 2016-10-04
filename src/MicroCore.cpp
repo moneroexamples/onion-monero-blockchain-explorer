@@ -142,21 +142,17 @@ namespace xmreg
     bool
     MicroCore::get_tx(const crypto::hash& tx_hash, transaction& tx)
     {
-        try
+        if (m_blockchain_storage.have_tx(tx_hash))
         {
             // get transaction with given hash
             tx = m_blockchain_storage.get_db().get_tx(tx_hash);
         }
-        catch (const cryptonote::TX_DNE & e)
+        else
         {
-            cerr << "MicroCore::get_tx cryptonote::TX_DNE: " << e.what() << endl;
+            cerr << "MicroCore::get_tx tx does not exist in blockchain: " << tx_hash << endl;
             return false;
         }
-        catch (const std::exception& e)
-        {
-            cerr << "MicroCore::get_tx: " << e.what() << endl;
-            return false;
-        }
+
 
         return true;
     }
