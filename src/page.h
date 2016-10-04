@@ -943,291 +943,7 @@ namespace xmreg {
                 }
             }
 
-            tx_details txd = get_tx_details(tx);
-
-            uint64_t tx_blk_height {0};
-
-            bool tx_blk_found {false};
-
-            try
-            {
-                tx_blk_height = core_storage->get_db().get_tx_block_height(tx_hash);
-                tx_blk_found = true;
-            }
-            catch (exception& e)
-            {
-                cerr << "Cant get block height: " << tx_hash
-                     << e.what() << endl;
-            }
-
-
-            // get block cointaining this tx
-            block blk;
-
-            if (tx_blk_found && !mcore->get_block_by_height(tx_blk_height, blk))
-            {
-                cerr << "Cant get block: " << tx_blk_height << endl;
-            }
-
-            string tx_blk_height_str {"N/A"};
-
-            if (tx_blk_found)
-            {
-                // calculate difference between tx and server timestamps
-                age = get_age(server_timestamp, blk.timestamp, FULL_AGE_FORMAT);
-
-                blk_timestamp = xmreg::timestamp_to_str(blk.timestamp);
-
-                tx_blk_height_str = std::to_string(tx_blk_height);
-            }
-
-            // payments id. both normal and encrypted (payment_id8)
-            string pid_str   = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id));
-            string pid8_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id8));
-
-
-            string tx_json = obj_to_json_str(tx);
-
-            // initalise page tempate map with basic info about blockchain
-            mstch::map context {
-                    {"testnet"              , testnet},
-                    {"tx_hash"              , tx_hash_str},
-                    {"tx_pub_key"           , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
-                    {"blk_height"           , tx_blk_height_str},
-                    {"tx_size"              , fmt::format("{:0.4f}",
-                                                   static_cast<double>(txd.size) / 1024.0)},
-                    {"tx_fee"               , fmt::format("{:0.12f}", XMR_AMOUNT(txd.fee))},
-                    {"tx_version"           , fmt::format("{:d}", txd.version)},
-                    {"blk_timestamp"        , blk_timestamp},
-                    {"blk_timestamp_uint"   , blk.timestamp},
-                    {"delta_time"           , age.first},
-                    {"inputs_no"            , txd.input_key_imgs.size()},
-                    {"has_inputs"           , !txd.input_key_imgs.empty()},
-                    {"outputs_no"           , txd.output_pub_keys.size()},
-                    {"has_payment_id"       , txd.payment_id  != null_hash},
-                    {"has_payment_id8"      , txd.payment_id8 != null_hash8},
-                    {"payment_id"           , pid_str},
-                    {"payment_id8"          , pid8_str},
-                    {"extra"                , txd.get_extra_str()},
-                    {"with_ring_signatures" , static_cast<bool>(
-                                                      with_ring_signatures)},
-                    {"tx_json"              , tx_json}
-            };
-
-            string server_time_str = xmreg::timestamp_to_str(server_timestamp, "%F");
-
-            mstch::array inputs = mstch::array{};
-
-            mstch::array mixins_timescales;
-
-            double timescale_scale {0.0}; // size of one '_' in days
-
-            uint64_t input_idx {0};
-
-            uint64_t inputs_xmr_sum {0};
-
-            // initialize with some large and some numbers
-            uint64_t min_mix_timestamp = server_timestamp*2L;
-
-            uint64_t max_mix_timestamp {0};
-
-            vector<vector<uint64_t>> mixin_timestamp_groups;
-
-            // make timescale maps for mixins in input
-            for (const txin_to_key& in_key: txd.input_key_imgs)
-            {
-                // get absolute offsets of mixins
-                std::vector<uint64_t> absolute_offsets
-                        = cryptonote::relative_output_offsets_to_absolute(
-                                in_key.key_offsets);
-
-                // get public keys of outputs used in the mixins that match to the offests
-                std::vector<cryptonote::output_data_t> outputs;
-                core_storage->get_db().get_output_key(in_key.amount,
-                                                      absolute_offsets,
-                                                      outputs);
-
-                inputs.push_back(mstch::map {
-                    {"in_key_img", REMOVE_HASH_BRAKETS(fmt::format("{:s}", in_key.k_image))},
-                    {"amount"    , fmt::format("{:0.12f}", XMR_AMOUNT(in_key.amount))},
-                    {"input_idx" , fmt::format("{:02d}", input_idx)},
-                    {"mixins"    , mstch::array{}},
-                    {"ring_sigs" , txd.get_ring_sig_for_input(input_idx)}
-                });
-
-                inputs_xmr_sum += in_key.amount;
-
-                vector<uint64_t> mixin_timestamps;
-
-                // get reference to mixins array created above
-                mstch::array& mixins = boost::get<mstch::array>(
-                            boost::get<mstch::map>(inputs.back())["mixins"]);
-
-                // mixin counter
-                size_t count = 0;
-
-                // for each found output public key find its block to get timestamp
-                for (const uint64_t &i: absolute_offsets)
-                {
-                    // get basic information about mixn's output
-                    cryptonote::output_data_t output_data = outputs.at(count);
-
-                    // get pair pair<crypto::hash, uint64_t> where first is tx hash
-                    // and second is local index of the output i in that tx
-                    tx_out_index tx_out_idx =
-                            core_storage->get_db().get_output_tx_and_index(in_key.amount, i);
-
-                    // get block of given height, as we want to get its timestamp
-                    cryptonote::block blk;
-
-                    if (!mcore->get_block_by_height(output_data.height, blk))
-                    {
-                        cerr << "- cant get block of height: " << output_data.height << endl;
-                        return fmt::format("- cant get block of height: {}", output_data.height);
-                    }
-
-                    // get age of mixin relative to server time
-                    pair<string, string> mixin_age = get_age(server_timestamp,
-                                                             blk.timestamp,
-                                                             FULL_AGE_FORMAT);
-                    // get mixin transaction
-                    transaction mixin_tx;
-
-                    if (!mcore->get_tx(tx_out_idx.first, mixin_tx))
-                    {
-                        cerr << "Cant get tx: " << tx_out_idx.first << endl;
-                        return fmt::format("Cant get tx: {:s}", tx_out_idx.first);
-                    }
-
-                     // mixin tx details
-                    tx_details mixin_txd = get_tx_details(mixin_tx, true);
-
-                    mixins.push_back(mstch::map {
-                            {"mix_blk"        , fmt::format("{:08d}", output_data.height)},
-                            {"mix_pub_key"    , REMOVE_HASH_BRAKETS(fmt::format("{:s}",
-                                                    output_data.pubkey))},
-                            {"mix_tx_hash"    , REMOVE_HASH_BRAKETS(fmt::format("{:s}",
-                                                    tx_out_idx.first))},
-                            {"mix_out_indx"   , fmt::format("{:d}", tx_out_idx.second)},
-                            {"mix_timestamp"  , xmreg::timestamp_to_str(blk.timestamp)},
-                            {"mix_age"        , mixin_age.first},
-                            {"mix_mixin_no"   , mixin_txd.mixin_no},
-                            {"mix_inputs_no"  , mixin_txd.input_key_imgs.size()},
-                            {"mix_outputs_no" , mixin_txd.output_pub_keys.size()},
-                            {"mix_age_format" , mixin_age.second},
-                            {"mix_idx"        , fmt::format("{:02d}", count)},
-                    });
-
-                    if (blk.timestamp < min_mix_timestamp)
-                        min_mix_timestamp = blk.timestamp;
-
-                    if (blk.timestamp > max_mix_timestamp)
-                        max_mix_timestamp = blk.timestamp;
-
-                    // get mixin timestamp from its orginal block
-                    mixin_timestamps.push_back(blk.timestamp);
-
-                    ++count;
-
-                } // for (const uint64_t &i: absolute_offsets)
-
-                mixin_timestamp_groups.push_back(mixin_timestamps);
-
-                input_idx++;
-            } // for (const txin_to_key& in_key: txd.input_key_imgs)
-
-            min_mix_timestamp -= 3600;
-            max_mix_timestamp += 3600;
-
-            // make timescale maps for mixins in input with adjusted range
-            for (auto& mixn_timestamps: mixin_timestamp_groups)
-            {
-                // get mixins in time scale for visual representation
-                pair<string, double> mixin_times_scale = xmreg::timestamps_time_scale(
-                        mixn_timestamps,
-                        max_mix_timestamp,
-                        170,
-                        min_mix_timestamp);
-
-                // save resolution of mixin timescales
-                timescale_scale = mixin_times_scale.second;
-
-                // save the string timescales for later to show
-                mixins_timescales.push_back(mstch::map {
-                        {"timescale", mixin_times_scale.first}});
-            }
-
-
-            context["inputs_xmr_sum"]   = fmt::format("{:0.12f}", XMR_AMOUNT(inputs_xmr_sum));
-            context["server_time"]      = server_time_str;
-            context["inputs"]           = inputs;
-            context["min_mix_time"]     = xmreg::timestamp_to_str(min_mix_timestamp);
-            context["max_mix_time"]     = xmreg::timestamp_to_str(max_mix_timestamp);
-            context["timescales"]       = mixins_timescales;
-            context["timescales_scale"] = fmt::format("{:0.2f}",
-                                                timescale_scale / 3600.0 / 24.0); // in days
-
-            // get indices of outputs in amounts tables
-            vector<uint64_t> out_amount_indices;
-
-            try
-            {
-
-                uint64_t tx_index;
-
-                if (core_storage->get_db().tx_exists(txd.hash, tx_index))
-                {
-                    out_amount_indices = core_storage->get_db()
-                            .get_tx_amount_output_indices(tx_index);
-                }
-                else
-                {
-                    cerr << "get_tx_outputs_gindexs failed to find transaction with id = " << txd.hash;
-                }
-
-            }
-            catch(const exception& e)
-            {
-                cerr << e.what() << endl;
-            }
-
-            uint64_t output_idx {0};
-
-            mstch::array outputs;
-
-            uint64_t outputs_xmr_sum {0};
-
-            for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
-            {
-
-                // total number of ouputs in the blockchain for this amount
-                uint64_t num_outputs_amount = core_storage->get_db()
-                                                .get_num_outputs(outp.second);
-
-                string out_amount_index_str {"N/A"};
-
-                // outputs in tx in them mempool dont have yet global indices
-                // thus for them, we print N/A
-                if (!out_amount_indices.empty())
-                {
-                    out_amount_index_str = fmt::format("{:d}",
-                                            out_amount_indices.at(output_idx));
-                }
-
-                outputs_xmr_sum += outp.second;
-
-                outputs.push_back(mstch::map {
-                      {"out_pub_key"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", outp.first.key))},
-                      {"amount"        , fmt::format("{:0.12f}", XMR_AMOUNT(outp.second))},
-                      {"amount_idx"    , out_amount_index_str},
-                      {"num_outputs"   , fmt::format("{:d}", num_outputs_amount)},
-                      {"output_idx"    , fmt::format("{:02d}", output_idx++)}
-                });
-            }
-
-            context["outputs_xmr_sum"] = fmt::format("{:0.12f}", XMR_AMOUNT(outputs_xmr_sum));
-
-            context["outputs"] = outputs;
+            mstch::map context = construct_tx_context(tx, with_ring_signatures);
 
             // read tx.html
             string tx_html = xmreg::read(TMPL_TX);
@@ -2384,8 +2100,312 @@ namespace xmreg {
         }
 
 
-
     private:
+
+        mstch::map
+        construct_tx_context(transaction tx, uint with_ring_signatures = 0)
+        {
+
+            tx_details txd = get_tx_details(tx);
+
+            crypto::hash tx_hash = txd.hash;
+
+            string tx_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", tx_hash));
+
+            uint64_t tx_blk_height {0};
+
+            bool tx_blk_found {false};
+
+            if (core_storage->have_tx(tx_hash))
+            {
+                tx_blk_height = core_storage->get_db().get_tx_block_height(tx_hash);
+                tx_blk_found = true;
+            }
+
+            // get block cointaining this tx
+            block blk;
+
+            if (tx_blk_found && !mcore->get_block_by_height(tx_blk_height, blk))
+            {
+                cerr << "Cant get block: " << tx_blk_height << endl;
+            }
+
+            string tx_blk_height_str {"N/A"};
+
+            // tx age
+            pair<string, string> age;
+
+            string blk_timestamp {"N/A"};
+
+            if (tx_blk_found)
+            {
+                // calculate difference between tx and server timestamps
+                age = get_age(server_timestamp, blk.timestamp, FULL_AGE_FORMAT);
+
+                blk_timestamp = xmreg::timestamp_to_str(blk.timestamp);
+
+                tx_blk_height_str = std::to_string(tx_blk_height);
+            }
+
+            // payments id. both normal and encrypted (payment_id8)
+            string pid_str   = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id));
+            string pid8_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id8));
+
+
+            string tx_json = obj_to_json_str(tx);
+
+            // initalise page tempate map with basic info about blockchain
+            mstch::map context {
+                    {"testnet"              , testnet},
+                    {"tx_hash"              , tx_hash_str},
+                    {"tx_pub_key"           , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
+                    {"blk_height"           , tx_blk_height_str},
+                    {"tx_size"              , fmt::format("{:0.4f}",
+                                                          static_cast<double>(txd.size) / 1024.0)},
+                    {"tx_fee"               , fmt::format("{:0.12f}", XMR_AMOUNT(txd.fee))},
+                    {"tx_version"           , fmt::format("{:d}", txd.version)},
+                    {"blk_timestamp"        , blk_timestamp},
+                    {"blk_timestamp_uint"   , blk.timestamp},
+                    {"delta_time"           , age.first},
+                    {"inputs_no"            , txd.input_key_imgs.size()},
+                    {"has_inputs"           , !txd.input_key_imgs.empty()},
+                    {"outputs_no"           , txd.output_pub_keys.size()},
+                    {"has_payment_id"       , txd.payment_id  != null_hash},
+                    {"has_payment_id8"      , txd.payment_id8 != null_hash8},
+                    {"payment_id"           , pid_str},
+                    {"payment_id8"          , pid8_str},
+                    {"extra"                , txd.get_extra_str()},
+                    {"with_ring_signatures" , static_cast<bool>(
+                                                      with_ring_signatures)},
+                    {"tx_json"              , tx_json},
+                    {"has_error"            , false},
+                    {"error_msg"            , string("")}
+            };
+
+            string server_time_str = xmreg::timestamp_to_str(server_timestamp, "%F");
+
+            mstch::array inputs = mstch::array{};
+
+            mstch::array mixins_timescales;
+
+            double timescale_scale {0.0}; // size of one '_' in days
+
+            uint64_t input_idx {0};
+
+            uint64_t inputs_xmr_sum {0};
+
+            // initialize with some large and some numbers
+            uint64_t min_mix_timestamp = server_timestamp*2L;
+
+            uint64_t max_mix_timestamp {0};
+
+            vector<vector<uint64_t>> mixin_timestamp_groups;
+
+            // make timescale maps for mixins in input
+            for (const txin_to_key& in_key: txd.input_key_imgs)
+            {
+                // get absolute offsets of mixins
+                std::vector<uint64_t> absolute_offsets
+                        = cryptonote::relative_output_offsets_to_absolute(
+                                in_key.key_offsets);
+
+                // get public keys of outputs used in the mixins that match to the offests
+                std::vector<cryptonote::output_data_t> outputs;
+                core_storage->get_db().get_output_key(in_key.amount,
+                                                      absolute_offsets,
+                                                      outputs);
+
+                inputs.push_back(mstch::map {
+                        {"in_key_img", REMOVE_HASH_BRAKETS(fmt::format("{:s}", in_key.k_image))},
+                        {"amount"    , fmt::format("{:0.12f}", XMR_AMOUNT(in_key.amount))},
+                        {"input_idx" , fmt::format("{:02d}", input_idx)},
+                        {"mixins"    , mstch::array{}},
+                        {"ring_sigs" , txd.get_ring_sig_for_input(input_idx)}
+                });
+
+                inputs_xmr_sum += in_key.amount;
+
+                vector<uint64_t> mixin_timestamps;
+
+                // get reference to mixins array created above
+                mstch::array& mixins = boost::get<mstch::array>(
+                        boost::get<mstch::map>(inputs.back())["mixins"]);
+
+                // mixin counter
+                size_t count = 0;
+
+                // for each found output public key find its block to get timestamp
+                for (const uint64_t &i: absolute_offsets)
+                {
+                    // get basic information about mixn's output
+                    cryptonote::output_data_t output_data = outputs.at(count);
+
+                    // get pair pair<crypto::hash, uint64_t> where first is tx hash
+                    // and second is local index of the output i in that tx
+                    tx_out_index tx_out_idx =
+                            core_storage->get_db().get_output_tx_and_index(in_key.amount, i);
+
+                    // get block of given height, as we want to get its timestamp
+                    cryptonote::block blk;
+
+                    if (!mcore->get_block_by_height(output_data.height, blk))
+                    {
+                        cerr << "- cant get block of height: " << output_data.height << endl;
+
+                        context["has_error"] = true;
+                        context["error_msg"] = fmt::format("- cant get block of height: {}",
+                                                            output_data.height);
+                    }
+
+                    // get age of mixin relative to server time
+                    pair<string, string> mixin_age = get_age(server_timestamp,
+                                                             blk.timestamp,
+                                                             FULL_AGE_FORMAT);
+                    // get mixin transaction
+                    transaction mixin_tx;
+
+                    if (!mcore->get_tx(tx_out_idx.first, mixin_tx))
+                    {
+                        cerr << "Cant get tx: " << tx_out_idx.first << endl;
+
+                        context["has_error"] = true;
+                        context["error_msg"] = fmt::format("Cant get tx: {:s}", tx_out_idx.first);
+                    }
+
+                    // mixin tx details
+                    tx_details mixin_txd = get_tx_details(mixin_tx, true);
+
+                    mixins.push_back(mstch::map {
+                            {"mix_blk"        , fmt::format("{:08d}", output_data.height)},
+                            {"mix_pub_key"    , REMOVE_HASH_BRAKETS(fmt::format("{:s}",
+                                                                                output_data.pubkey))},
+                            {"mix_tx_hash"    , REMOVE_HASH_BRAKETS(fmt::format("{:s}",
+                                                                                tx_out_idx.first))},
+                            {"mix_out_indx"   , fmt::format("{:d}", tx_out_idx.second)},
+                            {"mix_timestamp"  , xmreg::timestamp_to_str(blk.timestamp)},
+                            {"mix_age"        , mixin_age.first},
+                            {"mix_mixin_no"   , mixin_txd.mixin_no},
+                            {"mix_inputs_no"  , mixin_txd.input_key_imgs.size()},
+                            {"mix_outputs_no" , mixin_txd.output_pub_keys.size()},
+                            {"mix_age_format" , mixin_age.second},
+                            {"mix_idx"        , fmt::format("{:02d}", count)},
+                    });
+
+                    if (blk.timestamp < min_mix_timestamp)
+                        min_mix_timestamp = blk.timestamp;
+
+                    if (blk.timestamp > max_mix_timestamp)
+                        max_mix_timestamp = blk.timestamp;
+
+                    // get mixin timestamp from its orginal block
+                    mixin_timestamps.push_back(blk.timestamp);
+
+                    ++count;
+
+                } // for (const uint64_t &i: absolute_offsets)
+
+                mixin_timestamp_groups.push_back(mixin_timestamps);
+
+                input_idx++;
+            } // for (const txin_to_key& in_key: txd.input_key_imgs)
+
+            min_mix_timestamp -= 3600;
+            max_mix_timestamp += 3600;
+
+            // make timescale maps for mixins in input with adjusted range
+            for (auto& mixn_timestamps: mixin_timestamp_groups)
+            {
+                // get mixins in time scale for visual representation
+                pair<string, double> mixin_times_scale = xmreg::timestamps_time_scale(
+                        mixn_timestamps,
+                        max_mix_timestamp,
+                        170,
+                        min_mix_timestamp);
+
+                // save resolution of mixin timescales
+                timescale_scale = mixin_times_scale.second;
+
+                // save the string timescales for later to show
+                mixins_timescales.push_back(mstch::map {
+                        {"timescale", mixin_times_scale.first}});
+            }
+
+
+            context["inputs_xmr_sum"]   = fmt::format("{:0.12f}", XMR_AMOUNT(inputs_xmr_sum));
+            context["server_time"]      = server_time_str;
+            context["inputs"]           = inputs;
+            context["min_mix_time"]     = xmreg::timestamp_to_str(min_mix_timestamp);
+            context["max_mix_time"]     = xmreg::timestamp_to_str(max_mix_timestamp);
+            context["timescales"]       = mixins_timescales;
+            context["timescales_scale"] = fmt::format("{:0.2f}",
+                                                      timescale_scale / 3600.0 / 24.0); // in days
+
+            // get indices of outputs in amounts tables
+            vector<uint64_t> out_amount_indices;
+
+            try
+            {
+
+                uint64_t tx_index;
+
+                if (core_storage->get_db().tx_exists(txd.hash, tx_index))
+                {
+                    out_amount_indices = core_storage->get_db()
+                            .get_tx_amount_output_indices(tx_index);
+                }
+                else
+                {
+                    cerr << "get_tx_outputs_gindexs failed to find transaction with id = " << txd.hash;
+                }
+
+            }
+            catch(const exception& e)
+            {
+                cerr << e.what() << endl;
+            }
+
+            uint64_t output_idx {0};
+
+            mstch::array outputs;
+
+            uint64_t outputs_xmr_sum {0};
+
+            for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
+            {
+
+                // total number of ouputs in the blockchain for this amount
+                uint64_t num_outputs_amount = core_storage->get_db()
+                        .get_num_outputs(outp.second);
+
+                string out_amount_index_str {"N/A"};
+
+                // outputs in tx in them mempool dont have yet global indices
+                // thus for them, we print N/A
+                if (!out_amount_indices.empty())
+                {
+                    out_amount_index_str = fmt::format("{:d}",
+                                                       out_amount_indices.at(output_idx));
+                }
+
+                outputs_xmr_sum += outp.second;
+
+                outputs.push_back(mstch::map {
+                        {"out_pub_key"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", outp.first.key))},
+                        {"amount"        , fmt::format("{:0.12f}", XMR_AMOUNT(outp.second))},
+                        {"amount_idx"    , out_amount_index_str},
+                        {"num_outputs"   , fmt::format("{:d}", num_outputs_amount)},
+                        {"output_idx"    , fmt::format("{:02d}", output_idx++)}
+                });
+            }
+
+            context["outputs_xmr_sum"] = fmt::format("{:0.12f}", XMR_AMOUNT(outputs_xmr_sum));
+
+            context["outputs"] = outputs;
+
+
+            return context;
+        }
+
 
         tx_details
         get_tx_details(const transaction& tx, bool coinbase = false)
