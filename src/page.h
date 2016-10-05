@@ -1286,6 +1286,7 @@ namespace xmreg {
             mstch::map context {
                     {"testnet"              , testnet},
                     {"unsigned_tx_given"    , unsigned_tx_given},
+                    {"have_raw_tx"          , true},
                     {"txs"                  , mstch::array{}}
             };
 
@@ -1474,11 +1475,9 @@ namespace xmreg {
 
                 for (tools::wallet2::pending_tx& ptx: ptxs)
                 {
-                    tx_details txd = get_tx_details(ptx.tx);
+                    mstch::map tx_context = construct_tx_context(ptx.tx);
 
-                    mstch::map txd_map = txd.get_mstch_map();
-
-                    boost::get<mstch::array>(context["txs"]).push_back(txd_map);
+                    boost::get<mstch::array>(context["txs"]).push_back(tx_context);
                 }
 
             }

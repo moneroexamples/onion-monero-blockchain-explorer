@@ -25,11 +25,13 @@
 
 
     <table class="center" style="width: 80%; margin-top:10px">
+        {{^have_raw_tx}}
         <tr>
             <td>Timestamp: {{blk_timestamp_uint}}</td>
             <td>Timestamp [UCT]: {{blk_timestamp}}</td>
             <td>Age [y:d:h:m:s]: {{delta_time}}</td>
         </tr>
+        {{/have_raw_tx}}
         <tr>
             <td>Block: <a href="/block/{{blk_height}}">{{blk_height}}</a></td>
             <td>Fee: {{tx_fee}}</td>
@@ -65,6 +67,7 @@
       </table>
   </div>
 
+    {{^have_raw_tx}}
     <div class="center" style="width:90%">
         <div class="tabs">
 
@@ -100,8 +103,8 @@
                 </div>
             </div>
         </div>
-
     </div>
+    {{/have_raw_tx}}
 
 
 
@@ -175,20 +178,22 @@
       </table>
 
 
-    {{^with_ring_signatures}}
-      <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}/1">More details</a></h5>
-    {{/with_ring_signatures}}
-    {{#with_ring_signatures}}
+    {{^have_raw_tx}}
+        {{^with_ring_signatures}}
+          <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}/1">More details</a></h5>
+        {{/with_ring_signatures}}
+        {{#with_ring_signatures}}
 
-      <h3>JSON representaiton of tx</h3>
-      <div class="center">
-          <code style="white-space: pre-wrap; font-size: 10px">
-              {{tx_json}}
-          </code>
-      </div>
+          <h3>JSON representation of tx</h3>
+          <div class="center">
+              <code style="white-space: pre-wrap; font-size: 10px">
+                  {{tx_json}}
+              </code>
+          </div>
 
-      <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}">Less details</a></h5>
-    {{/with_ring_signatures}}
+          <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}">Less details</a></h5>
+        {{/with_ring_signatures}}
+    {{/have_raw_tx}}
 
   </div>
 
