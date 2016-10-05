@@ -1475,7 +1475,64 @@ namespace xmreg {
 
                 for (tools::wallet2::pending_tx& ptx: ptxs)
                 {
+                    // get public keys of real outputs
+
+                    vector<string> real_output_pub_keys;
+
+                    for (const tx_source_entry&  tx_source: ptx.construction_data.sources)
+                    {
+                        transaction real_source_tx;
+
+                        uint64_t index_of_real_output = tx_source.outputs[tx_source.real_output].first;
+
+                        // get tx of the real output
+                        tx_out_index real_toi =  core_storage->get_db()
+                                .get_output_tx_and_index(0, index_of_real_output);
+
+                        if (!mcore->get_tx(real_toi.first, real_source_tx))
+                        {
+                            cerr << "Cant get tx in blockchain: " << real_toi.first << endl;
+                            return string("Cant get tx: " + pod_to_hex(real_toi.first));
+                        }
+
+                        tx_details real_txd = get_tx_details(real_source_tx);
+
+                        public_key real_out_pub_key = real_txd.output_pub_keys[tx_source.real_output_in_tx_index].first.key;
+
+                        real_output_pub_keys.push_back(
+                                REMOVE_HASH_BRAKETS(fmt::format("{:s}",real_out_pub_key))
+                        );
+                    }
+
                     mstch::map tx_context = construct_tx_context(ptx.tx);
+
+                    // get reference to inputs array created of the tx
+                    mstch::array& inputs = boost::get<mstch::array>(tx_context["inputs"]);
+
+                    for (mstch::node& input_node: inputs)
+                    {
+                        mstch::array& mixins = boost::get<mstch::array>(
+                                boost::get<mstch::map>(input_node)["mixins"]
+                        );
+
+                        for (mstch::node& mixin_node: mixins)
+                        {
+                            mstch::map& mixin = boost::get<mstch::map>(mixin_node);
+
+                            string mix_pub_key_str = boost::get<string>(mixin["mix_pub_key"]);
+
+                            //cout << mix_pub_key_str << endl;
+
+                            if (std::find(
+                                    real_output_pub_keys.begin(),
+                                    real_output_pub_keys.end(),
+                                    mix_pub_key_str) != real_output_pub_keys.end())
+                            {
+                                mixin["mix_is_it_real"] = true;
+                            }
+                        }
+
+                    }
 
                     boost::get<mstch::array>(context["txs"]).push_back(tx_context);
                 }
@@ -2296,6 +2353,7 @@ namespace xmreg {
                             {"mix_outputs_no" , mixin_txd.output_pub_keys.size()},
                             {"mix_age_format" , mixin_age.second},
                             {"mix_idx"        , fmt::format("{:02d}", count)},
+                            {"mix_is_it_real" , false}, // a placeholder for future
                     });
 
                     if (blk.timestamp < min_mix_timestamp)

@@ -133,20 +133,34 @@
                 <table style="width:100%; margin-bottom:20px">
                 <tr>
                   <td>Mixin stealth address</td>
+                  {{#have_raw_tx}}
+                    <td>Is it real?</td>
+                  {{/have_raw_tx}}
                   <td>blk</td>
                   <td>mixin</td>
+
                   <td>in/out</td>
                   <td>timestamp</td>
                   <td>age [y:d:h:m:s]</td>
+
                 </tr>
              {{#mixins}}
                 <tr>
                   <td> - {{mix_idx}}: <a href="/tx/{{mix_tx_hash}}">{{mix_pub_key}}</a></td>
+                  {{#have_raw_tx}}
+                    {{#mix_is_it_real}}
+                        <td><span style="color: #008009;font-weight: bold">{{mix_is_it_real}}</span></td>
+                    {{/mix_is_it_real}}
+                    {{^mix_is_it_real}}
+                        <td>{{mix_is_it_real}}</td>
+                    {{/mix_is_it_real}}
+                  {{/have_raw_tx}}
                   <td>{{mix_blk}}</td>
                   <td>{{mix_mixin_no}}</td>
                   <td>{{mix_inputs_no}}/{{mix_outputs_no}}</td>
                   <td>{{mix_timestamp}}</td>
                   <td>{{mix_age}}</td>
+
                 </tr>
              {{/mixins}}
              </table>
