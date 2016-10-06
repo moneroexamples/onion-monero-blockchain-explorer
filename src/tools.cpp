@@ -590,7 +590,9 @@ namespace xmreg
 
     pair<string, double>
     timestamps_time_scale(const vector<uint64_t>& timestamps,
-                          uint64_t timeN, uint64_t resolution, uint64_t time0)
+                          uint64_t timeN,
+                          uint64_t resolution,
+                          uint64_t time0)
     {
         string empty_time =  string(resolution, '_');
 
@@ -610,7 +612,7 @@ namespace xmreg
             }
 
             uint64_t timestamp_place = double(timestamp-time0)
-                             / double(interval_length)*(time_axis_length-1);
+                             / double(interval_length)*(time_axis_length - 1);
 
             empty_time[timestamp_place + 1] = '*';
         }

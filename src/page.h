@@ -1477,7 +1477,8 @@ namespace xmreg {
                 {
                     // get public keys of real outputs
 
-                    vector<string> real_output_pub_keys;
+                    vector<string>   real_output_pub_keys;
+                    vector<uint64_t> real_output_indices;
 
                     for (const tx_source_entry&  tx_source: ptx.construction_data.sources)
                     {
@@ -1502,6 +1503,8 @@ namespace xmreg {
                         real_output_pub_keys.push_back(
                                 REMOVE_HASH_BRAKETS(fmt::format("{:s}",real_out_pub_key))
                         );
+
+                        real_output_indices.push_back(tx_source.real_output);
                     }
 
                     mstch::map tx_context = construct_tx_context(ptx.tx);
@@ -1509,6 +1512,7 @@ namespace xmreg {
                     // get reference to inputs array created of the tx
                     mstch::array& inputs = boost::get<mstch::array>(tx_context["inputs"]);
 
+                    // mark which mixin is real in each input's mstch context
                     for (mstch::node& input_node: inputs)
                     {
                         mstch::array& mixins = boost::get<mstch::array>(
@@ -1531,8 +1535,31 @@ namespace xmreg {
                                 mixin["mix_is_it_real"] = true;
                             }
                         }
-
                     }
+
+                    // mark real mixing in the mixins timescale graph
+                    mstch::array& mixins_timescales
+                            = boost::get<mstch::array>(tx_context["timescales"]);
+
+
+                    uint64_t idx {0};
+
+                    for (mstch::node& timescale_node: mixins_timescales)
+                    {
+
+                        string& timescale = boost::get<string>(
+                                boost::get<mstch::map>(timescale_node)["timescale"]
+                        );
+
+                        boost::iterator_range<string::iterator> r
+                                = boost::find_nth(timescale, "*", real_output_indices.at(idx));
+
+                        *(r.begin()) = 'R';
+                       //timescale.insert(*(r.begin()), "<span>*</span>");
+
+                        ++idx;
+                    }
+
 
                     boost::get<mstch::array>(context["txs"]).push_back(tx_context);
                 }
