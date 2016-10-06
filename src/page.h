@@ -1479,6 +1479,7 @@ namespace xmreg {
 
                     vector<string>   real_output_pub_keys;
                     vector<uint64_t> real_output_indices;
+                    vector<uint64_t> real_amounts;
 
                     for (const tx_source_entry&  tx_source: ptx.construction_data.sources)
                     {
@@ -1505,6 +1506,7 @@ namespace xmreg {
                         );
 
                         real_output_indices.push_back(tx_source.real_output);
+                        real_amounts.push_back(tx_source.amount);
                     }
 
                     mstch::map tx_context = construct_tx_context(ptx.tx);
@@ -1512,9 +1514,19 @@ namespace xmreg {
                     // get reference to inputs array created of the tx
                     mstch::array& inputs = boost::get<mstch::array>(tx_context["inputs"]);
 
+                    uint64_t input_idx {0};
+
                     // mark which mixin is real in each input's mstch context
                     for (mstch::node& input_node: inputs)
                     {
+
+                        // show input amount
+                        string& amount = boost::get<string>(
+                                boost::get<mstch::map>(input_node)["amount"]
+                        );
+
+                        amount = fmt::format("{:0.12f}", XMR_AMOUNT(real_amounts.at(input_idx)));
+
                         mstch::array& mixins = boost::get<mstch::array>(
                                 boost::get<mstch::map>(input_node)["mixins"]
                         );
@@ -1535,12 +1547,13 @@ namespace xmreg {
                                 mixin["mix_is_it_real"] = true;
                             }
                         }
+
+                        ++input_idx;
                     }
 
                     // mark real mixing in the mixins timescale graph
                     mstch::array& mixins_timescales
                             = boost::get<mstch::array>(tx_context["timescales"]);
-
 
                     uint64_t idx {0};
 
