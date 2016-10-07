@@ -125,7 +125,19 @@
        <table class="center">
       {{#inputs}}
         <tr>
-          <td style="text-align: left;">key image  {{input_idx}}: {{in_key_img}}</td>
+          <td style="text-align: left;">
+              key image  {{input_idx}}: {{in_key_img}}
+              {{#have_raw_tx}}
+               Already spent:
+                {{#already_spent}}
+                    <span style="color: red; font-weight: bold;">True</span>
+                {{/already_spent}}
+              {{^already_spent}}
+                False
+              {{/already_spent}}
+
+              {{/#have_raw_tx}}
+          </td>
           <td>amount: {{amount}}</td>
        </tr>
           <tr>

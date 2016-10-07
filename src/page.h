@@ -1520,12 +1520,30 @@ namespace xmreg {
                     for (mstch::node& input_node: inputs)
                     {
 
+                        mstch::map& input_map = boost::get<mstch::map>(input_node);
+
                         // show input amount
                         string& amount = boost::get<string>(
                                 boost::get<mstch::map>(input_node)["amount"]
                         );
 
                         amount = fmt::format("{:0.12f}", XMR_AMOUNT(real_amounts.at(input_idx)));
+
+                        // check if key images are spend or not
+
+                        string& in_key_img_str = boost::get<string>(
+                                boost::get<mstch::map>(input_node)["in_key_img"]
+                        );
+
+                        key_image key_imgage;
+
+                        if (epee::string_tools::hex_to_pod(in_key_img_str, key_imgage))
+                        {
+
+                            input_map["already_spent"] = core_storage->get_db().has_key_image(key_imgage);
+                        }
+
+                        // mark real mixings
 
                         mstch::array& mixins = boost::get<mstch::array>(
                                 boost::get<mstch::map>(input_node)["mixins"]
@@ -1572,7 +1590,6 @@ namespace xmreg {
 
                         ++idx;
                     }
-
 
                     boost::get<mstch::array>(context["txs"]).push_back(tx_context);
                 }
@@ -2320,11 +2337,12 @@ namespace xmreg {
                                                       outputs);
 
                 inputs.push_back(mstch::map {
-                        {"in_key_img", REMOVE_HASH_BRAKETS(fmt::format("{:s}", in_key.k_image))},
-                        {"amount"    , fmt::format("{:0.12f}", XMR_AMOUNT(in_key.amount))},
-                        {"input_idx" , fmt::format("{:02d}", input_idx)},
-                        {"mixins"    , mstch::array{}},
-                        {"ring_sigs" , txd.get_ring_sig_for_input(input_idx)}
+                        {"in_key_img"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", in_key.k_image))},
+                        {"amount"       , fmt::format("{:0.12f}", XMR_AMOUNT(in_key.amount))},
+                        {"input_idx"    , fmt::format("{:02d}", input_idx)},
+                        {"mixins"       , mstch::array{}},
+                        {"ring_sigs"    , txd.get_ring_sig_for_input(input_idx)},
+                        {"already_spent", false} // placeholder for later
                 });
 
                 inputs_xmr_sum += in_key.amount;
