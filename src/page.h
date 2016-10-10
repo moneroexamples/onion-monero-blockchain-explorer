@@ -2300,7 +2300,8 @@ namespace xmreg {
                                                       with_ring_signatures)},
                     {"tx_json"              , tx_json},
                     {"has_error"            , false},
-                    {"error_msg"            , string("")}
+                    {"error_msg"            , string("")},
+                    {"have_raw_tx"          , false},
             };
 
             string server_time_str = xmreg::timestamp_to_str(server_timestamp, "%F");
