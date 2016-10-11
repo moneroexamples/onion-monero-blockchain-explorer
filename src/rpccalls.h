@@ -105,6 +105,38 @@ namespace xmreg
 
             return true;
         }
+
+
+        bool
+        commit_tx(tools::wallet2::pending_tx& ptx, string& error_msg)
+        {
+            COMMAND_RPC_SEND_RAW_TX::request  req;
+            COMMAND_RPC_SEND_RAW_TX::response res;
+
+            req.tx_as_hex = epee::string_tools::buff_to_hex_nodelimer(
+                    tx_to_blob(ptx.tx)
+            );
+
+            req.do_not_relay = false;
+
+            std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
+
+            bool r = epee::net_utils::invoke_http_json_remote_command2(deamon_url
+                                                                       + "/sendrawtransaction",
+                                                                       req, res,
+                                                                       m_http_client, 200000);;
+
+            if (!r || res.status == "Failed")
+            {
+                error_msg = res.reason;
+
+                cerr << "Error sending tx: " << res.reason << endl;
+                return false;
+            }
+
+            return true;
+        }
+
     };
 
 

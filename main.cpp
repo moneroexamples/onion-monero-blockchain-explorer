@@ -214,7 +214,7 @@ int main(int ac, const char* av[]) {
         return xmrblocks.show_rawtx();
     });
 
-    CROW_ROUTE(app, "/checkrawtx").methods("POST"_method)
+    CROW_ROUTE(app, "/checkandpush").methods("POST"_method)
     ([&](const crow::request& req) {
 
         map<std::string, std::string> post_body = xmreg::parse_crow_post_data(req.body);
@@ -227,23 +227,11 @@ int main(int ac, const char* av[]) {
         string raw_tx_data = post_body["rawtxdata"];
         string action      = post_body["action"];
 
-        return xmrblocks.show_checkrawtx(raw_tx_data, action);
-    });
+        if (action == "check")
+            return xmrblocks.show_checkrawtx(raw_tx_data, action);
+        else if (action == "push")
+            return xmrblocks.show_pushrawtx(raw_tx_data, action);
 
-    CROW_ROUTE(app, "/pushrawtx").methods("POST"_method)
-    ([&](const crow::request& req) {
-
-        map<std::string, std::string> post_body = xmreg::parse_crow_post_data(req.body);
-
-        if (post_body.count("rawtxdata") == 0 || post_body.count("action") == 0)
-        {
-            return string("Raw tx data or action not provided");
-        }
-
-        string raw_tx_data = post_body["rawtxdata"];
-        string action      = post_body["action"];
-
-        return xmrblocks.show_pushrawtx(raw_tx_data, action);
     });
 
 

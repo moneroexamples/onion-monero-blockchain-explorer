@@ -1511,6 +1511,9 @@ namespace xmreg {
 
                     mstch::map tx_context = construct_tx_context(ptx.tx);
 
+                    // mark that we have signed tx data for use in mstch
+                    tx_context["have_raw_tx"] = true;
+
                     // get reference to inputs array created of the tx
                     mstch::array& inputs = boost::get<mstch::array>(tx_context["inputs"]);
 
@@ -1622,7 +1625,7 @@ namespace xmreg {
 
             const size_t magiclen = strlen(SIGNED_TX_PREFIX);
 
-            if (!strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
+            if (strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
             {
                 cout << "The data does not appear to be signed raw tx!" << endl;
                 return string( "The data does not appear to be signed raw tx!");
@@ -1647,9 +1650,60 @@ namespace xmreg {
             // actually commit the transactions
             while (!ptx_vector.empty())
             {
-                auto & ptx = ptx_vector.back();
-                //m_wallet->commit_tx(ptx);
-                //success_msg_writer(true) << tr("Money successfully sent, transaction: ") << get_transaction_hash(ptx.tx);
+                tools::wallet2::pending_tx& ptx = ptx_vector.back();
+
+                tx_details txd = get_tx_details(ptx.tx);
+
+                string tx_hash_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.hash));
+
+                // check in mempool already contains tx to be submited
+                vector<pair<tx_info, transaction>> found_mempool_txs
+                        = search_mempool(txd.hash);
+
+                if (!found_mempool_txs.empty())
+                {
+                    cerr << "Tx already exist in the mempool: " << tx_hash_str << endl;
+                    return string("Tx already exist in the mempool: " + tx_hash_str);
+                }
+
+                // check if tx to be submited already exists in the blockchain
+                if (core_storage->have_tx(txd.hash))
+                {
+                    cerr << "Tx already exist in the blockchain: " << tx_hash_str << endl;
+                    return string("Tx already exist in the blockchain: " + tx_hash_str);
+                }
+
+                // check if any key images of the tx to be submited are already spend
+                vector<key_image> key_images_spent;
+
+                for (const txin_to_key& tx_in: txd.input_key_imgs)
+                {
+                    if (core_storage->have_tx_keyimg_as_spent(tx_in.k_image))
+                        key_images_spent.push_back(tx_in.k_image);
+                }
+
+                if (!key_images_spent.empty())
+                {
+                    string key_images_str("Already spent inputs's key images: <br/>");
+
+                    for (key_image& k_img: key_images_spent)
+                    {
+                        key_images_str += REMOVE_HASH_BRAKETS(fmt::format("{:s}", k_img));
+                        key_images_str += "</br>";
+                    }
+
+                    cerr << "submitting signed tx has already spend inputs: " << key_images_str << endl;
+
+                    return string("submitting signed tx has already spend inputs: " + key_images_str);
+                }
+
+                string error_msg;
+
+                if (!rpc.commit_tx(ptx, error_msg))
+                {
+                    cerr << "submitting signed tx to daemon failed: " << error_msg << endl;
+                    return string("submitting signed tx to daemon failed: " + error_msg);
+                }
 
                 // if no exception, remove element from vector
                 ptx_vector.pop_back();
