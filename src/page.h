@@ -1259,7 +1259,7 @@ namespace xmreg {
         }
 
         string
-        show_checkandpushtx(string raw_tx_data, string action)
+        show_checkrawtx(string raw_tx_data, string action)
         {
             // remove white characters
             boost::trim(raw_tx_data);
@@ -1608,6 +1608,54 @@ namespace xmreg {
 
             // render the page
             return mstch::render(full_page, context, partials);
+        }
+
+        string
+        show_pushrawtx(string raw_tx_data, string action)
+        {
+            // remove white characters
+            boost::trim(raw_tx_data);
+            boost::erase_all(raw_tx_data, "\r\n");
+            boost::erase_all(raw_tx_data, "\n");
+
+            string decoded_raw_tx_data = epee::string_encoding::base64_decode(raw_tx_data);
+
+            const size_t magiclen = strlen(SIGNED_TX_PREFIX);
+
+            if (!strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
+            {
+                cout << "The data does not appear to be signed raw tx!" << endl;
+                return string( "The data does not appear to be signed raw tx!");
+            }
+
+            ::tools::wallet2::signed_tx_set signed_txs;
+
+            bool r = serialization::parse_binary(std::string(
+                    decoded_raw_tx_data.c_str() + magiclen,
+                    decoded_raw_tx_data.size() - magiclen),
+                                                 signed_txs);
+
+            if (!r)
+            {
+                cerr << "deserialization of signed tx data NOT successful" << endl;
+                return string("deserialization of signed tx data NOT successful. "
+                                      "Maybe its not base64 encoded?");
+            }
+
+            std::vector<tools::wallet2::pending_tx> ptx_vector = signed_txs.ptx;
+
+            // actually commit the transactions
+            while (!ptx_vector.empty())
+            {
+                auto & ptx = ptx_vector.back();
+                //m_wallet->commit_tx(ptx);
+                //success_msg_writer(true) << tr("Money successfully sent, transaction: ") << get_transaction_hash(ptx.tx);
+
+                // if no exception, remove element from vector
+                ptx_vector.pop_back();
+            }
+
+            return string{};
         }
 
 
