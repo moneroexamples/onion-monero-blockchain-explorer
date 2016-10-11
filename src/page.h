@@ -1475,11 +1475,36 @@ namespace xmreg {
 
                 for (tools::wallet2::pending_tx& ptx: ptxs)
                 {
-                    // get public keys of real outputs
+                    mstch::map tx_context = construct_tx_context(ptx.tx);
 
+                    vector<uint64_t> address_amounts;
+
+                    // get amounts for stealth addresses
+                    for (tx_destination_entry& dest: ptx.construction_data.destinations)
+                    {
+                        //stealth_address_amount.insert({dest.addr, dest.amount});
+                        //cout << pod_to_hex(dest.addr) << endl;
+                        address_amounts.push_back(dest.amount);
+                    }
+
+                    // get reference to inputs array created of the tx
+                    mstch::array& outputs = boost::get<mstch::array>(tx_context["outputs"]);
+
+                    // mark which mixin is real in each input's mstch context
+                    for (size_t i = 0; i < outputs.size(); ++i)
+                    {
+                        mstch::map& output_map = boost::get<mstch::map>(outputs.at(i));
+
+                        //cout << boost::get<string>(output_map["out_pub_key"])  <<", " << address_amounts.at(i) << endl;
+                        cout << boost::get<string>(output_map["out_pub_key"])  << endl;
+                    }
+
+                    // get public keys of real outputs
                     vector<string>   real_output_pub_keys;
                     vector<uint64_t> real_output_indices;
                     vector<uint64_t> real_amounts;
+
+                    uint64_t inputs_xmr_sum {0};
 
                     for (const tx_source_entry&  tx_source: ptx.construction_data.sources)
                     {
@@ -1507,12 +1532,15 @@ namespace xmreg {
 
                         real_output_indices.push_back(tx_source.real_output);
                         real_amounts.push_back(tx_source.amount);
-                    }
 
-                    mstch::map tx_context = construct_tx_context(ptx.tx);
+                        inputs_xmr_sum += tx_source.amount;
+                    }
 
                     // mark that we have signed tx data for use in mstch
                     tx_context["have_raw_tx"] = true;
+
+                    // provide total mount of inputs xmr
+                    tx_context["inputs_xmr_sum"] = fmt::format("{:0.12f}", XMR_AMOUNT(inputs_xmr_sum));
 
                     // get reference to inputs array created of the tx
                     mstch::array& inputs = boost::get<mstch::array>(tx_context["inputs"]);
