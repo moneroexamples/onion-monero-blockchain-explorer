@@ -1643,9 +1643,6 @@ namespace xmreg {
                                 = boost::find_nth(timescale, "*", point_to_find);
 
                         *(r.begin()) = 'R';
-                       //timescale.insert(*(r.begin()), "<span>*</span>");
-
-                        cout << timescale << endl;
 
                         ++idx;
                     }
