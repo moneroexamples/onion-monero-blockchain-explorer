@@ -668,7 +668,7 @@ namespace xmreg {
                                              delta_time[3], delta_time[4]);
                 }
 
-                cout << _tx_info.tx_json << endl;
+                //cout << _tx_info.tx_json << endl;
 
                 // sum xmr in inputs and ouputs in the given tx
                 pair<uint64_t, uint64_t> sum_inputs  = sum_xmr_inputs(_tx_info.tx_json);
@@ -708,8 +708,21 @@ namespace xmreg {
         string
         show_block(uint64_t _blk_height)
         {
+
             // get block at the given height i
             block blk;
+
+            cout << "_blk_height: " << _blk_height << endl;
+
+            if (_blk_height > core_storage->get_current_blockchain_height())
+            {
+                cerr << "Cant get block: " << _blk_height
+                     << " since its higher than current blockchain height"
+                     << endl;
+                return fmt::format("Cant get block {:d} since its higher than current blockchain height!",
+                                   _blk_height);
+            }
+
 
             if (!mcore->get_block_by_height(_blk_height, blk))
             {
@@ -873,16 +886,11 @@ namespace xmreg {
 
             uint64_t blk_height;
 
-            try
+            if (core_storage->have_block(blk_hash))
             {
                 blk_height = core_storage->get_db().get_block_height(blk_hash);
             }
-            catch (const BLOCK_DNE& e)
-            {
-                cerr << "Block does not exist: " << blk_hash << endl;
-                return fmt::format("Cant get block {:s} because it does not exist!", blk_hash);
-            }
-            catch (const std::exception& e)
+            else
             {
                 cerr << "Cant get block: " << blk_hash << endl;
                 return fmt::format("Cant get block {:s} for some uknown reason", blk_hash);
@@ -1874,16 +1882,17 @@ namespace xmreg {
 
             vector<pair<string, vector<string>>> all_possible_tx_hashes;
 
-
-
-
             try
             {
                 unique_ptr<xmreg::MyLMDB> mylmdb;
 
                 if (!bf::is_directory(lmdb2_path))
                 {
-                    throw std::runtime_error(lmdb2_path + " does not exist");
+                    cout << "Custom lmdb database seem does not exist at: " << lmdb2_path << endl;
+
+                    result_html = show_search_results(search_text, all_possible_tx_hashes);
+
+                    return result_html;
                 }
 
                 cout << "Custom lmdb database seem to exist at: " << lmdb2_path << endl;
