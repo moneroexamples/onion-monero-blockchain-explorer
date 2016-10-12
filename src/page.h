@@ -1345,7 +1345,7 @@ namespace xmreg {
                         for (size_t i = 0; i < no_of_sources; ++i)
                         {
 
-                            const tx_source_entry&      tx_source = tx_cd.sources.at(i);
+                            const tx_source_entry&  tx_source = tx_cd.sources.at(i);
 
                             mstch::map single_dest_source {
                                     {"output_amount"              , fmt::format("{:0.12f}",
@@ -1358,15 +1358,17 @@ namespace xmreg {
 
                             sum_outputs_amounts += tx_source.amount;
 
-                            //cout << tx_source.real_output << endl;
-                            //cout << tx_source.real_out_tx_key << endl;
-                            //cout << tx_source.real_output_in_tx_index << endl;
+                            //cout << "tx_source.real_output: "             << tx_source.real_output << endl;
+                            //cout << "tx_source.real_out_tx_key: "         << tx_source.real_out_tx_key << endl;
+                            //cout << "tx_source.real_output_in_tx_index: " << tx_source.real_output_in_tx_index << endl;
 
                             uint64_t index_of_real_output = tx_source.outputs[tx_source.real_output].first;
 
+                            tx_out_index real_toi;
+
                             // get tx of the real output
-                            tx_out_index real_toi =  core_storage->get_db()
-                                    .get_output_tx_and_index(0, index_of_real_output);
+                            real_toi = core_storage->get_db()
+                                    .get_output_tx_and_index(tx_source.amount, index_of_real_output);
 
                             transaction real_source_tx;
 
@@ -1380,8 +1382,8 @@ namespace xmreg {
 
                             public_key real_out_pub_key = real_txd.output_pub_keys[tx_source.real_output_in_tx_index].first.key;
 
-                            //cout << "real_txd.hash: " << pod_to_hex(real_txd.hash) << endl;
-                            //cout << "real_txd.pk: " << pod_to_hex(real_txd.pk) << endl;
+                            //cout << "real_txd.hash: "    << pod_to_hex(real_txd.hash) << endl;
+                            //cout << "real_txd.pk: "      << pod_to_hex(real_txd.pk) << endl;
                             //cout << "real_out_pub_key: " << pod_to_hex(real_out_pub_key) << endl;
 
                             mstch::array& outputs = boost::get<mstch::array>(single_dest_source["outputs"]);
@@ -1393,9 +1395,11 @@ namespace xmreg {
                             for(const tx_source_entry::output_entry& oe: tx_source.outputs)
                             {
 
-                                tx_out_index toi =  core_storage->get_db()
-                                        .get_output_tx_and_index(0, oe.first);
+                                tx_out_index toi;
 
+                                // get tx of the real output
+                                toi = core_storage->get_db()
+                                        .get_output_tx_and_index(tx_source.amount, oe.first);
 
                                 transaction tx;
 
@@ -1525,7 +1529,7 @@ namespace xmreg {
 
                         // get tx of the real output
                         tx_out_index real_toi =  core_storage->get_db()
-                                .get_output_tx_and_index(0, index_of_real_output);
+                                .get_output_tx_and_index(tx_source.amount, index_of_real_output);
 
                         if (!mcore->get_tx(real_toi.first, real_source_tx))
                         {
@@ -1535,7 +1539,8 @@ namespace xmreg {
 
                         tx_details real_txd = get_tx_details(real_source_tx);
 
-                        public_key real_out_pub_key = real_txd.output_pub_keys[tx_source.real_output_in_tx_index].first.key;
+                        public_key real_out_pub_key
+                                = real_txd.output_pub_keys[tx_source.real_output_in_tx_index].first.key;
 
                         real_output_pub_keys.push_back(
                                 REMOVE_HASH_BRAKETS(fmt::format("{:s}",real_out_pub_key))
@@ -1624,11 +1629,23 @@ namespace xmreg {
                                 boost::get<mstch::map>(timescale_node)["timescale"]
                         );
 
+                        // claculated number of timescale points
+                        // due to resolution, no of points might be lower than no of mixins
+                        size_t no_points = std::count(timescale.begin(), timescale.end(), '*');
+
+                        size_t point_to_find = real_output_indices.at(idx);
+
+                        // adjust point to find based on total number of points
+                        if (point_to_find >= no_points)
+                            point_to_find = no_points  - 1;
+
                         boost::iterator_range<string::iterator> r
-                                = boost::find_nth(timescale, "*", real_output_indices.at(idx));
+                                = boost::find_nth(timescale, "*", point_to_find);
 
                         *(r.begin()) = 'R';
                        //timescale.insert(*(r.begin()), "<span>*</span>");
+
+                        cout << timescale << endl;
 
                         ++idx;
                     }
