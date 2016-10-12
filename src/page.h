@@ -953,7 +953,10 @@ namespace xmreg {
 
             mstch::map tx_context = construct_tx_context(tx, with_ring_signatures);
 
-            mstch::map context {{"txs", mstch::array{}}};
+            mstch::map context {
+                    {"txs"     , mstch::array{}},
+                    {"testnet" , this->testnet}
+            };
 
             boost::get<mstch::array>(context["txs"]).push_back(tx_context);
 
