@@ -2462,10 +2462,6 @@ namespace xmreg {
 
             mstch::array inputs = mstch::array{};
 
-            mstch::array mixins_timescales;
-
-            double timescale_scale {0.0}; // size of one '_' in days
-
             uint64_t input_idx {0};
 
             uint64_t inputs_xmr_sum {0};
@@ -2586,6 +2582,10 @@ namespace xmreg {
 
                 input_idx++;
             } // for (const txin_to_key& in_key: txd.input_key_imgs)
+
+            mstch::array mixins_timescales;
+
+            double timescale_scale {0.0}; // size of one '_' in days
 
             min_mix_timestamp -= 3600;
             max_mix_timestamp += 3600;
