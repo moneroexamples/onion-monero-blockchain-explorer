@@ -1390,8 +1390,6 @@ namespace xmreg {
 
                             size_t output_i {0};
 
-                            // cout << tx_source.amount << endl;
-
                             for(const tx_source_entry::output_entry& oe: tx_source.outputs)
                             {
 
