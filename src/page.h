@@ -1340,6 +1340,8 @@ namespace xmreg {
                             dest_infos.push_back(dest_info);
                         }
 
+                        vector<vector<uint64_t>> mixin_timestamp_groups;
+
                         uint64_t sum_outputs_amounts {0};
 
                         for (size_t i = 0; i < no_of_sources; ++i)
@@ -1387,6 +1389,8 @@ namespace xmreg {
                             //cout << "real_out_pub_key: " << pod_to_hex(real_out_pub_key) << endl;
 
                             mstch::array& outputs = boost::get<mstch::array>(single_dest_source["outputs"]);
+
+                            vector<uint64_t> mixin_timestamps;
 
                             size_t output_i {0};
 
@@ -1438,10 +1442,13 @@ namespace xmreg {
 
                                 outputs.push_back(single_output);
 
+                                mixin_timestamps.push_back(blk.timestamp);
+
                                 ++output_i;
                             }
 
                             dest_sources.push_back(single_dest_source);
+                            mixin_timestamp_groups.push_back(mixin_timestamps);
                         }
 
                         tx_cd_data.insert({"sum_outputs_amounts" , fmt::format("{:0.12f}", XMR_AMOUNT(sum_outputs_amounts))});
@@ -2583,30 +2590,9 @@ namespace xmreg {
                 input_idx++;
             } // for (const txin_to_key& in_key: txd.input_key_imgs)
 
-            mstch::array mixins_timescales;
 
-            double timescale_scale {0.0}; // size of one '_' in days
-
-            min_mix_timestamp -= 3600;
-            max_mix_timestamp += 3600;
-
-            // make timescale maps for mixins in input with adjusted range
-            for (auto& mixn_timestamps: mixin_timestamp_groups)
-            {
-                // get mixins in time scale for visual representation
-                pair<string, double> mixin_times_scale = xmreg::timestamps_time_scale(
-                        mixn_timestamps,
-                        max_mix_timestamp,
-                        170,
-                        min_mix_timestamp);
-
-                // save resolution of mixin timescales
-                timescale_scale = mixin_times_scale.second;
-
-                // save the string timescales for later to show
-                mixins_timescales.push_back(mstch::map {
-                        {"timescale", mixin_times_scale.first}});
-            }
+            pair<mstch::array, double> mixins_timescales
+                    = construct_mstch_mixin_timescales(mixin_timestamp_groups);
 
 
             context["inputs_xmr_sum"]   = fmt::format("{:0.12f}", XMR_AMOUNT(inputs_xmr_sum));
@@ -2614,9 +2600,9 @@ namespace xmreg {
             context["inputs"]           = inputs;
             context["min_mix_time"]     = xmreg::timestamp_to_str(min_mix_timestamp);
             context["max_mix_time"]     = xmreg::timestamp_to_str(max_mix_timestamp);
-            context["timescales"]       = mixins_timescales;
+            context["timescales"]       = mixins_timescales.first;
             context["timescales_scale"] = fmt::format("{:0.2f}",
-                                                      timescale_scale / 3600.0 / 24.0); // in days
+                                              mixins_timescales.second / 3600.0 / 24.0); // in days
 
             // get indices of outputs in amounts tables
             vector<uint64_t> out_amount_indices;
@@ -2682,6 +2668,57 @@ namespace xmreg {
 
 
             return context;
+        }
+
+        pair<mstch::array, double>
+        construct_mstch_mixin_timescales(const vector<vector<uint64_t>>& mixin_timestamp_groups)
+        {
+            mstch::array mixins_timescales;
+
+            double timescale_scale {0.0};     // size of one '_' in days
+
+            // initialize with some large and some numbers
+            uint64_t min_mix_timestamp = server_timestamp*2L;
+            uint64_t max_mix_timestamp {0};
+
+            // find min and maximum timestamps
+            for (const vector<uint64_t>& mixn_timestamps : mixin_timestamp_groups)
+            {
+
+                uint64_t min_found = *min_element(mixn_timestamps.begin(), mixn_timestamps.end());
+                uint64_t max_found = *max_element(mixn_timestamps.begin(), mixn_timestamps.end());
+
+                if (min_found < min_mix_timestamp)
+                    min_mix_timestamp = min_found;
+
+                if (max_found > max_mix_timestamp)
+                    max_mix_timestamp = max_found;
+            }
+
+
+            min_mix_timestamp -= 3600;
+            max_mix_timestamp += 3600;
+
+            // make timescale maps for mixins in input with adjusted range
+            for (auto& mixn_timestamps : mixin_timestamp_groups)
+            {
+                // get mixins in time scale for visual representation
+                pair<string, double> mixin_times_scale = xmreg::timestamps_time_scale(
+                        mixn_timestamps,
+                        max_mix_timestamp,
+                        170,
+                        min_mix_timestamp);
+
+                // save resolution of mixin timescales
+                timescale_scale = mixin_times_scale.second;
+
+                // save the string timescales for later to show
+                mixins_timescales.push_back(mstch::map {
+                        {"timescale", mixin_times_scale.first}
+                });
+            }
+
+            return make_pair(mixins_timescales, timescale_scale);
         }
 
 
