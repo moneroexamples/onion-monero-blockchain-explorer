@@ -872,7 +872,7 @@ namespace xmreg {
             // read block.html
             string block_html = xmreg::read(TMPL_BLOCK);
 
-            context["css_styles"]   = this->css_styles;
+            add_css_style(context);
 
             // add header and footer
             string full_page = get_full_page(block_html);
@@ -981,7 +981,7 @@ namespace xmreg {
             // read tx.html
             string tx_html = xmreg::read(TMPL_TX);
 
-            context["css_styles"]   = this->css_styles;
+            add_css_style(context);
 
             // add header and footer
             string full_page = get_full_page(tx_html);
@@ -1254,7 +1254,7 @@ namespace xmreg {
             // add header and footer
             string full_page = get_full_page(my_outputs_html);
 
-            context["css_styles"]   = this->css_styles;
+            add_css_style(context);
 
             // render the page
             return mstch::render(full_page, context);
@@ -1283,7 +1283,7 @@ namespace xmreg {
             // add header and footer
             string full_page =  rawtx_html + xmreg::read(TMPL_FOOTER);
 
-            context["css_styles"]   = this->css_styles;
+            add_css_style(context);
 
             // render the page
             return mstch::render(full_page, context);
@@ -1747,7 +1747,7 @@ namespace xmreg {
             // add header and footer
             string full_page =  checkrawtx_html + xmreg::read(TMPL_FOOTER);
 
-            context["css_styles"]   = this->css_styles;
+            add_css_style(context);
 
             // render the page
             return mstch::render(full_page, context, partials);
@@ -2241,7 +2241,7 @@ namespace xmreg {
             // add header and footer
             string full_page = get_full_page(address_html);
 
-            context["css_styles"]   = this->css_styles;
+            add_css_style(context);
 
             // render the page
             return mstch::render(full_page, context);
@@ -2271,7 +2271,7 @@ namespace xmreg {
             // read address.html
             string address_html = xmreg::read(TMPL_ADDRESS);
 
-            context["css_styles"]   = this->css_styles;
+            add_css_style(context);
 
             // add header and footer
             string full_page = get_full_page(address_html);
@@ -2490,7 +2490,7 @@ namespace xmreg {
                 {"tx_table_row" , xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html")}
             };
 
-            context["css_styles"]   = this->css_styles;
+            add_css_style(context);
 
             // render the page
             return  mstch::render(full_page, context, partials);
@@ -3222,9 +3222,8 @@ namespace xmreg {
         void
         add_css_style(mstch::map& context)
         {
-            context["css_styles"] = this->css_styles;
-            context["unrendered"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
-                return text;
+            context["css_styles"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
+                return this->css_styles;
             }};
         }
 
