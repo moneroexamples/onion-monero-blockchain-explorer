@@ -27,6 +27,7 @@
 
 #define TMPL_DIR             "./templates"
 #define TMPL_PARIALS_DIR     TMPL_DIR "/partials"
+#define TMPL_CSS_STYLES      TMPL_DIR "/css/style.css"
 #define TMPL_INDEX           TMPL_DIR "/index.html"
 #define TMPL_INDEX2          TMPL_DIR "/index2.html"
 #define TMPL_MEMPOOL         TMPL_DIR "/mempool.html"
@@ -242,6 +243,8 @@ namespace xmreg {
 
         string lmdb2_path;
 
+        string css_styles;
+
         bool testnet;
 
 
@@ -256,7 +259,7 @@ namespace xmreg {
                   lmdb2_path {_lmdb2_path},
                   testnet {_testnet}
         {
-
+            css_styles = xmreg::read(TMPL_CSS_STYLES);
         }
 
 
@@ -447,6 +450,8 @@ namespace xmreg {
             // add header and footer
             string full_page = get_full_page(index_html);
 
+            context["css_styles"]   = this->css_styles;
+
             // render the page
             return mstch::render(full_page, context);
         }
@@ -611,6 +616,8 @@ namespace xmreg {
 
             // add header and footer
             string full_page = get_full_page(index2_html);
+
+            add_css_style(context);
 
             // render the page
             return mstch::render(full_page, context);
@@ -865,6 +872,8 @@ namespace xmreg {
             // read block.html
             string block_html = xmreg::read(TMPL_BLOCK);
 
+            context["css_styles"]   = this->css_styles;
+
             // add header and footer
             string full_page = get_full_page(block_html);
 
@@ -971,6 +980,8 @@ namespace xmreg {
 
             // read tx.html
             string tx_html = xmreg::read(TMPL_TX);
+
+            context["css_styles"]   = this->css_styles;
 
             // add header and footer
             string full_page = get_full_page(tx_html);
@@ -1243,6 +1254,8 @@ namespace xmreg {
             // add header and footer
             string full_page = get_full_page(my_outputs_html);
 
+            context["css_styles"]   = this->css_styles;
+
             // render the page
             return mstch::render(full_page, context);
         }
@@ -1269,6 +1282,8 @@ namespace xmreg {
 
             // add header and footer
             string full_page =  rawtx_html + xmreg::read(TMPL_FOOTER);
+
+            context["css_styles"]   = this->css_styles;
 
             // render the page
             return mstch::render(full_page, context);
@@ -1731,6 +1746,8 @@ namespace xmreg {
 
             // add header and footer
             string full_page =  checkrawtx_html + xmreg::read(TMPL_FOOTER);
+
+            context["css_styles"]   = this->css_styles;
 
             // render the page
             return mstch::render(full_page, context, partials);
@@ -2224,6 +2241,8 @@ namespace xmreg {
             // add header and footer
             string full_page = get_full_page(address_html);
 
+            context["css_styles"]   = this->css_styles;
+
             // render the page
             return mstch::render(full_page, context);
         }
@@ -2251,6 +2270,8 @@ namespace xmreg {
 
             // read address.html
             string address_html = xmreg::read(TMPL_ADDRESS);
+
+            context["css_styles"]   = this->css_styles;
 
             // add header and footer
             string full_page = get_full_page(address_html);
@@ -2468,6 +2489,8 @@ namespace xmreg {
                 {"tx_table_head", xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html")},
                 {"tx_table_row" , xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html")}
             };
+
+            context["css_styles"]   = this->css_styles;
 
             // render the page
             return  mstch::render(full_page, context, partials);
@@ -3195,6 +3218,16 @@ namespace xmreg {
                    + middle
                    + xmreg::read(TMPL_FOOTER);
         }
+
+        void
+        add_css_style(mstch::map& context)
+        {
+            context["css_styles"] = this->css_styles;
+            context["unrendered"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
+                return text;
+            }};
+        }
+
 
     };
 }

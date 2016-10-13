@@ -1,0 +1,114 @@
+body {
+    margin: 0;
+    padding: 0;
+    color: white;
+    background-color: black;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    text-align: center;
+}
+
+.center {
+    margin: auto;
+    width: 96%;
+    /*border: 1px solid #73AD21;
+    padding: 10px;*/
+}
+
+tr, li, #pages {
+    font-family: "Lucida Console", Monaco, monospace;
+    font-size  : 12px;
+    height: 22px;
+}
+
+#pages
+{
+    margin-top: 15px;
+}
+
+td {
+    text-align: center;
+}
+
+a:link {
+    text-decoration: none;
+    color: white;
+}
+
+a:visited {
+    text-decoration: none;
+    color: white;
+}
+
+a:hover {
+    text-decoration: underline;
+    color: white;
+}
+
+a:active {
+    text-decoration: none;
+    color: white;
+}
+
+form {
+    display: inline-block;
+    text-align: center;
+}
+
+.style-1 input[type="text"] {
+    padding: 2px;
+    border: solid 1px #dcdcdc;
+    transition: box-shadow 0.3s, border 0.3s;
+}
+.style-1 input[type="text"]:focus,
+.style-1 input[type="text"].focus {
+    border: solid 1px #707070;
+    box-shadow: 0 0 5px 1px #969696;
+}
+
+
+.tabs {
+    position: relative;
+    min-height: 200px; /* This part sucks */
+    clear: both;
+    margin: 25px 0;
+}
+
+.tab {
+    float: left;
+}
+
+.tab label {
+    background: black;
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin-left: -1px;
+    position: relative;
+    left: 1px;
+}
+
+.tab [type=radio] {
+    display: none;
+}
+
+.content {
+    position: absolute;
+    top: 28px;
+    left: 0;
+    background: black;
+    right: 0;
+    bottom: 0;
+    padding: 20px;
+    border: 1px solid #ccc;
+}
+
+[type=radio]:checked ~ label {
+    background: #505050 ;
+    border-bottom: 1px solid white;
+    z-index: 2;
+}
+
+[type=radio]:checked ~ label ~ .content {
+    z-index: 1;
+}
