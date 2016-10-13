@@ -147,6 +147,20 @@
                             Send {{dest_amount}} to {{dest_address}}<br/>
                         {{/dest_infos}}
                     </div>
+
+                    <h3>
+                        Inputs' mixins time scale (from {{min_mix_time}} till {{max_mix_time}};
+                        resolution: {{timescales_scale}} days{{#have_raw_tx}}; R - real mixin {{/have_raw_tx}})
+                    </h3>
+                    <div class="center">
+                        <ul class="center">
+                            {{#timescales}}
+                            <li  style="list-style-type: none; text-align: center; font-size: 8px">|{{timescale}}|</li>
+                            {{/timescales}}
+                        </ul>
+                    </div>
+
+
                     <h4>Outputs selected for this tx (total: {{sum_outputs_amounts}})</h4>
                     {{#dest_sources}}
                                 <table style="width: 100%; margin-top:10px">

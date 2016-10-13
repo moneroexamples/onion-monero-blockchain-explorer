@@ -953,6 +953,11 @@ namespace xmreg {
 
             mstch::map tx_context = construct_tx_context(tx, with_ring_signatures);
 
+            if (boost::get<bool>(tx_context["has_error"]))
+            {
+                return boost::get<string>(tx_context["error_msg"]);
+            }
+
             mstch::map context {
                     {"txs"     , mstch::array{}},
                     {"testnet" , this->testnet}
@@ -1341,6 +1346,7 @@ namespace xmreg {
                         }
 
                         vector<vector<uint64_t>> mixin_timestamp_groups;
+                        vector<uint64_t> real_output_indices;
 
                         uint64_t sum_outputs_amounts {0};
 
@@ -1368,9 +1374,29 @@ namespace xmreg {
 
                             tx_out_index real_toi;
 
-                            // get tx of the real output
-                            real_toi = core_storage->get_db()
-                                    .get_output_tx_and_index(tx_source.amount, index_of_real_output);
+                            uint64_t tx_source_amount = (tx_source.rct ? 0 : tx_source.amount);
+
+                            try
+                            {
+                                // get tx of the real output
+                                real_toi = core_storage->get_db()
+                                        .get_output_tx_and_index(tx_source_amount,
+                                                                 index_of_real_output);
+                            }
+                            catch (const OUTPUT_DNE& e)
+                            {
+
+                                string out_msg = fmt::format(
+                                        "Output with amount {:d} and index {:d} does not exist!",
+                                        tx_source_amount, index_of_real_output
+                                );
+
+                                cerr << out_msg << endl;
+
+                                return string(out_msg);
+                            }
+
+
 
                             transaction real_source_tx;
 
@@ -1381,6 +1407,8 @@ namespace xmreg {
                             }
 
                             tx_details real_txd = get_tx_details(real_source_tx);
+
+                            real_output_indices.push_back(tx_source.real_output);
 
                             public_key real_out_pub_key = real_txd.output_pub_keys[tx_source.real_output_in_tx_index].first.key;
 
@@ -1399,9 +1427,25 @@ namespace xmreg {
 
                                 tx_out_index toi;
 
-                                // get tx of the real output
-                                toi = core_storage->get_db()
-                                        .get_output_tx_and_index(tx_source.amount, oe.first);
+                                try
+                                {
+
+                                    // get tx of the real output
+                                    toi = core_storage->get_db()
+                                            .get_output_tx_and_index(tx_source_amount, oe.first);
+                                }
+                                catch (OUTPUT_DNE& e)
+                                {
+
+                                    string out_msg = fmt::format(
+                                            "Output with amount {:d} and index {:d} does not exist!",
+                                            tx_source_amount, oe.first
+                                    );
+
+                                    cerr << out_msg << endl;
+
+                                    return string(out_msg);
+                                }
 
                                 transaction tx;
 
@@ -1445,16 +1489,41 @@ namespace xmreg {
                                 mixin_timestamps.push_back(blk.timestamp);
 
                                 ++output_i;
-                            }
+                            } // for(const tx_source_entry::output_entry& oe: tx_source.outputs)
 
                             dest_sources.push_back(single_dest_source);
-                            mixin_timestamp_groups.push_back(mixin_timestamps);
-                        }
 
-                        tx_cd_data.insert({"sum_outputs_amounts" , fmt::format("{:0.12f}", XMR_AMOUNT(sum_outputs_amounts))});
+                            mixin_timestamp_groups.push_back(mixin_timestamps);
+
+                        } //  for (size_t i = 0; i < no_of_sources; ++i)
+
+                        tx_cd_data.insert({"sum_outputs_amounts" ,
+                                           fmt::format("{:0.12f}", XMR_AMOUNT(sum_outputs_amounts))});
+
+
+                        uint64_t min_mix_timestamp;
+                        uint64_t max_mix_timestamp;
+
+                        pair<mstch::array, double> mixins_timescales
+                                = construct_mstch_mixin_timescales(
+                                  mixin_timestamp_groups,
+                                  min_mix_timestamp,
+                                  max_mix_timestamp
+                                );
+
+                        tx_cd_data["timescales"]       = mixins_timescales.first;
+                        tx_cd_data["min_mix_time"]     = xmreg::timestamp_to_str(min_mix_timestamp);
+                        tx_cd_data["max_mix_time"]     = xmreg::timestamp_to_str(max_mix_timestamp);
+                        tx_cd_data["timescales_scale"] = fmt::format("{:0.2f}",
+                                                                  mixins_timescales.second
+                                                                  / 3600.0 / 24.0); // in days
+
+                        // mark real mixing in the mixins timescale graph
+                        mark_real_mixins_on_timescales(real_output_indices, tx_cd_data);
 
                         txs.push_back(tx_cd_data);
-                    }
+
+                    } // for (const ::tools::wallet2::tx_construction_data& tx_cd: exported_txs.txes)
                 }
                 else
                 {
@@ -1497,6 +1566,11 @@ namespace xmreg {
                 {
                     mstch::map tx_context = construct_tx_context(ptx.tx);
 
+                    if (boost::get<bool>(tx_context["has_error"]))
+                    {
+                        return boost::get<string>(tx_context["error_msg"]);
+                    }
+
                     vector<uint64_t> address_amounts;
 
                     // get amounts for stealth addresses
@@ -1532,9 +1606,28 @@ namespace xmreg {
 
                         uint64_t index_of_real_output = tx_source.outputs[tx_source.real_output].first;
 
-                        // get tx of the real output
-                        tx_out_index real_toi =  core_storage->get_db()
-                                .get_output_tx_and_index(tx_source.amount, index_of_real_output);
+                        uint64_t tx_source_amount = (tx_source.rct ? 0 : tx_source.amount);
+
+                        tx_out_index real_toi;
+
+                        try
+                        {
+                            // get tx of the real output
+                            real_toi =  core_storage->get_db()
+                                    .get_output_tx_and_index(tx_source_amount, index_of_real_output);
+                        }
+                        catch (const OUTPUT_DNE& e)
+                        {
+
+                            string out_msg = fmt::format(
+                                    "Output with amount {:d} and index {:d} does not exist!",
+                                    tx_source_amount, index_of_real_output
+                            );
+
+                            cerr << out_msg << endl;
+
+                            return string(out_msg);
+                        }
 
                         if (!mcore->get_tx(real_toi.first, real_source_tx))
                         {
@@ -1622,35 +1715,7 @@ namespace xmreg {
                     }
 
                     // mark real mixing in the mixins timescale graph
-                    mstch::array& mixins_timescales
-                            = boost::get<mstch::array>(tx_context["timescales"]);
-
-                    uint64_t idx {0};
-
-                    for (mstch::node& timescale_node: mixins_timescales)
-                    {
-
-                        string& timescale = boost::get<string>(
-                                boost::get<mstch::map>(timescale_node)["timescale"]
-                        );
-
-                        // claculated number of timescale points
-                        // due to resolution, no of points might be lower than no of mixins
-                        size_t no_points = std::count(timescale.begin(), timescale.end(), '*');
-
-                        size_t point_to_find = real_output_indices.at(idx);
-
-                        // adjust point to find based on total number of points
-                        if (point_to_find >= no_points)
-                            point_to_find = no_points  - 1;
-
-                        boost::iterator_range<string::iterator> r
-                                = boost::find_nth(timescale, "*", point_to_find);
-
-                        *(r.begin()) = 'R';
-
-                        ++idx;
-                    }
+                    mark_real_mixins_on_timescales(real_output_indices, tx_context);
 
                     boost::get<mstch::array>(context["txs"]).push_back(tx_context);
                 }
@@ -1989,14 +2054,25 @@ namespace xmreg {
                                 search_text.substr(4));
 
 
-                        //cout << "global_idx: " << global_idx << endl;
+                        output_data_t output_data;
 
-                        // get info about output of a given global index
-                        output_data_t output_data = core_storage->get_db()
-                                .get_output_key(global_idx);
+                        try
+                        {
+                            // get info about output of a given global index
+                            output_data = core_storage->get_db()
+                                    .get_output_key(global_idx);
+                        }
+                        catch (const OUTPUT_DNE& e)
+                        {
+                            string out_msg = fmt::format(
+                                    "Output with index {:d} does not exist!",
+                                    global_idx
+                            );
 
-                        //tx_out_index tx_out = core_storage->get_db()
-                        //                    .get_output_tx_and_index_from_global(global_idx);
+                            cerr << out_msg << endl;
+
+                            return out_msg;
+                        }
 
                         //cout << "tx_out.first: " << tx_out.first << endl;
                         //cout << "tx_out.second: " << tx_out.second << endl;
@@ -2021,7 +2097,7 @@ namespace xmreg {
                     catch(boost::bad_lexical_cast &e)
                     {
                         cerr << "Cant cast global_idx string: "
-                        << search_text.substr(4) << endl;
+                             << search_text.substr(4) << endl;
                     }
                 } //  if (search_for_global_output_idx)
 
@@ -2055,10 +2131,26 @@ namespace xmreg {
                         //cout << "amount_idx: " << amount_idx << endl;
                         //cout << "amount: "     << amount << endl;
 
-                        // get info about output of a given global index
-                        output_data_t output_data = core_storage->get_db()
-                                .get_output_key(
-                                        amount, amount_idx);
+                        output_data_t output_data;
+
+                        try
+                        {
+                            // get info about output of a given global index
+                            output_data = core_storage->get_db()
+                                    .get_output_key(
+                                            amount, amount_idx);
+                        }
+                        catch (const OUTPUT_DNE& e)
+                        {
+                            string out_msg = fmt::format(
+                                    "Output with amount {:d} and index {:d} does not exist!",
+                                    amount, amount_idx
+                            );
+
+                            cerr << out_msg << endl;
+
+                            return out_msg;
+                        }
 
                         string output_pub_key = pod_to_hex(output_data.pubkey);
 
@@ -2082,7 +2174,7 @@ namespace xmreg {
                         cerr << "Cant parse amout index and amout string: "
                              << search_text.substr(4) << endl;
                     }
-                    catch(OUTPUT_DNE& e)
+                    catch(const OUTPUT_DNE& e)
                     {
                         cerr << "Output not found in the blockchain: "
                              << search_text.substr(4) << endl;
@@ -2384,6 +2476,44 @@ namespace xmreg {
 
     private:
 
+
+        void
+        mark_real_mixins_on_timescales(
+                const vector<uint64_t>& real_output_indices,
+                mstch::map& tx_context)
+        {
+            // mark real mixing in the mixins timescale graph
+            mstch::array& mixins_timescales
+                    = boost::get<mstch::array>(tx_context["timescales"]);
+
+            uint64_t idx {0};
+
+            for (mstch::node& timescale_node: mixins_timescales)
+            {
+
+                string& timescale = boost::get<string>(
+                        boost::get<mstch::map>(timescale_node)["timescale"]
+                );
+
+                // claculated number of timescale points
+                // due to resolution, no of points might be lower than no of mixins
+                size_t no_points = std::count(timescale.begin(), timescale.end(), '*');
+
+                size_t point_to_find = real_output_indices.at(idx);
+
+                // adjust point to find based on total number of points
+                if (point_to_find >= no_points)
+                    point_to_find = no_points  - 1;
+
+                boost::iterator_range<string::iterator> r
+                        = boost::find_nth(timescale, "*", point_to_find);
+
+                *(r.begin()) = 'R';
+
+                ++idx;
+            }
+        }
+
         mstch::map
         construct_tx_context(transaction tx, uint with_ring_signatures = 0)
         {
@@ -2473,11 +2603,6 @@ namespace xmreg {
 
             uint64_t inputs_xmr_sum {0};
 
-            // initialize with some large and some numbers
-            uint64_t min_mix_timestamp = server_timestamp*2L;
-
-            uint64_t max_mix_timestamp {0};
-
             vector<vector<uint64_t>> mixin_timestamp_groups;
 
             // make timescale maps for mixins in input
@@ -2490,9 +2615,32 @@ namespace xmreg {
 
                 // get public keys of outputs used in the mixins that match to the offests
                 std::vector<cryptonote::output_data_t> outputs;
-                core_storage->get_db().get_output_key(in_key.amount,
-                                                      absolute_offsets,
-                                                      outputs);
+
+                try
+                {
+                    core_storage->get_db().get_output_key(in_key.amount,
+                                                          absolute_offsets,
+                                                          outputs);
+                }
+                catch (const OUTPUT_DNE& e)
+                {
+                    string out_msg = fmt::format(
+                            "Outputs with amount {:d} do not exist and indexes ",
+                            in_key.amount
+                    );
+
+                    for (auto offset: absolute_offsets)
+                        out_msg += ", " + to_string(offset);
+
+                    out_msg += " don't exist!";
+
+                    cerr << out_msg << endl;
+
+                    context["has_error"] = true;
+                    context["error_msg"] = out_msg;
+
+                    return context;
+                }
 
                 inputs.push_back(mstch::map {
                         {"in_key_img"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", in_key.k_image))},
@@ -2520,10 +2668,31 @@ namespace xmreg {
                     // get basic information about mixn's output
                     cryptonote::output_data_t output_data = outputs.at(count);
 
-                    // get pair pair<crypto::hash, uint64_t> where first is tx hash
-                    // and second is local index of the output i in that tx
-                    tx_out_index tx_out_idx =
-                            core_storage->get_db().get_output_tx_and_index(in_key.amount, i);
+                    tx_out_index tx_out_idx;
+
+                    try
+                    {
+                      // get pair pair<crypto::hash, uint64_t> where first is tx hash
+                      // and second is local index of the output i in that tx
+                      tx_out_idx = core_storage->get_db()
+                          .get_output_tx_and_index(in_key.amount, i);
+                    }
+                    catch (const OUTPUT_DNE& e)
+                    {
+
+                        string out_msg = fmt::format(
+                                "Output with amount {:d} and index {:d} does not exist!",
+                                in_key.amount, i
+                        );
+
+                        cerr << out_msg << endl;
+
+                        context["has_error"] = true;
+                        context["error_msg"] = out_msg;
+
+                        return context;
+                    }
+
 
                     // get block of given height, as we want to get its timestamp
                     cryptonote::block blk;
@@ -2572,12 +2741,6 @@ namespace xmreg {
                             {"mix_is_it_real" , false}, // a placeholder for future
                     });
 
-                    if (blk.timestamp < min_mix_timestamp)
-                        min_mix_timestamp = blk.timestamp;
-
-                    if (blk.timestamp > max_mix_timestamp)
-                        max_mix_timestamp = blk.timestamp;
-
                     // get mixin timestamp from its orginal block
                     mixin_timestamps.push_back(blk.timestamp);
 
@@ -2590,9 +2753,15 @@ namespace xmreg {
                 input_idx++;
             } // for (const txin_to_key& in_key: txd.input_key_imgs)
 
+            uint64_t min_mix_timestamp;
+            uint64_t max_mix_timestamp;
 
             pair<mstch::array, double> mixins_timescales
-                    = construct_mstch_mixin_timescales(mixin_timestamp_groups);
+                    = construct_mstch_mixin_timescales(
+                            mixin_timestamp_groups,
+                            min_mix_timestamp,
+                            max_mix_timestamp
+                    );
 
 
             context["inputs_xmr_sum"]   = fmt::format("{:0.12f}", XMR_AMOUNT(inputs_xmr_sum));
@@ -2671,15 +2840,19 @@ namespace xmreg {
         }
 
         pair<mstch::array, double>
-        construct_mstch_mixin_timescales(const vector<vector<uint64_t>>& mixin_timestamp_groups)
+        construct_mstch_mixin_timescales(
+                const vector<vector<uint64_t>>& mixin_timestamp_groups,
+                uint64_t& min_mix_timestamp,
+                uint64_t& max_mix_timestamp
+        )
         {
             mstch::array mixins_timescales;
 
             double timescale_scale {0.0};     // size of one '_' in days
 
             // initialize with some large and some numbers
-            uint64_t min_mix_timestamp = server_timestamp*2L;
-            uint64_t max_mix_timestamp {0};
+            min_mix_timestamp = server_timestamp*2L;
+            max_mix_timestamp = 0;
 
             // find min and maximum timestamps
             for (const vector<uint64_t>& mixn_timestamps : mixin_timestamp_groups)
