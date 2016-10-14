@@ -40,6 +40,7 @@
 #define TMPL_SEARCH_RESULTS  TMPL_DIR "/search_results.html"
 #define TMPL_MY_RAWTX        TMPL_DIR "/rawtx.html"
 #define TMPL_MY_CHECKRAWTX   TMPL_DIR "/checkrawtx.html"
+#define TMPL_MY_PUSHRAWTX   TMPL_DIR "/pushrawtx.html"
 
 
 
@@ -1765,10 +1766,31 @@ namespace xmreg {
 
             const size_t magiclen = strlen(SIGNED_TX_PREFIX);
 
+            // initalize page template context map
+            mstch::map context {
+                    {"testnet"              , testnet},
+                    {"have_raw_tx"          , true},
+                    {"has_error"            , false},
+                    {"error_msg"            , string {}},
+                    {"txs"                  , mstch::array{}}
+            };
+
+            // read pushrawtx.html
+            string pushrawtx_html = xmreg::read(TMPL_MY_PUSHRAWTX);
+
+            // add header and footer
+            string full_page =  pushrawtx_html + xmreg::read(TMPL_FOOTER);
+
+            add_css_style(context);
+
             if (strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
             {
-                cout << "The data does not appear to be signed raw tx!" << endl;
-                return string( "The data does not appear to be signed raw tx!");
+                string error_msg = fmt::format("The data does not appear to be signed raw tx!");
+
+                context["has_error"] = true;
+                context["error_msg"] = error_msg;
+
+                return mstch::render(full_page, context);
             }
 
             ::tools::wallet2::signed_tx_set signed_txs;
@@ -1780,10 +1802,16 @@ namespace xmreg {
 
             if (!r)
             {
-                cerr << "deserialization of signed tx data NOT successful" << endl;
-                return string("deserialization of signed tx data NOT successful. "
-                                      "Maybe its not base64 encoded?");
+                string error_msg = fmt::format("Deserialization of signed tx data NOT successful! "
+                                               "Maybe its not base64 encoded?");
+
+                context["has_error"] = true;
+                context["error_msg"] = error_msg;
+
+                return mstch::render(full_page, context);
             }
+
+            mstch::array& txs = boost::get<mstch::array>(context["txs"]);
 
             std::vector<tools::wallet2::pending_tx> ptx_vector = signed_txs.ptx;
 
@@ -1796,21 +1824,35 @@ namespace xmreg {
 
                 string tx_hash_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.hash));
 
+                mstch::map tx_cd_data {
+                        {"tx_hash"          , tx_hash_str}
+                };
+
                 // check in mempool already contains tx to be submited
                 vector<pair<tx_info, transaction>> found_mempool_txs
                         = search_mempool(txd.hash);
 
                 if (!found_mempool_txs.empty())
                 {
-                    cerr << "Tx already exist in the mempool: " << tx_hash_str << endl;
-                    return string("Tx already exist in the mempool: " + tx_hash_str);
+                    string error_msg = fmt::format("Tx already exist in the mempool: {:s}\n",
+                                                   tx_hash_str);
+
+                    context["has_error"] = true;
+                    context["error_msg"] = error_msg;
+
+                    break;
                 }
 
                 // check if tx to be submited already exists in the blockchain
                 if (core_storage->have_tx(txd.hash))
                 {
-                    cerr << "Tx already exist in the blockchain: " << tx_hash_str << endl;
-                    return string("Tx already exist in the blockchain: " + tx_hash_str);
+                    string error_msg = fmt::format("Tx already exist in the blockchain: {:s}\n",
+                                   tx_hash_str);
+
+                    context["has_error"] = true;
+                    context["error_msg"] = error_msg;
+
+                    break;
                 }
 
                 // check if any key images of the tx to be submited are already spend
@@ -1824,32 +1866,43 @@ namespace xmreg {
 
                 if (!key_images_spent.empty())
                 {
-                    string key_images_str("Already spent inputs's key images: <br/>");
+                    string error_msg = fmt::format("Tx with hash {:s} has already spent inputs\n",
+                                                   tx_hash_str);
 
                     for (key_image& k_img: key_images_spent)
                     {
-                        key_images_str += REMOVE_HASH_BRAKETS(fmt::format("{:s}", k_img));
-                        key_images_str += "</br>";
+                        error_msg += REMOVE_HASH_BRAKETS(fmt::format("{:s}", k_img));
+                        error_msg += "</br>";
                     }
 
-                    cerr << "submitting signed tx has already spend inputs: " << key_images_str << endl;
+                    context["has_error"] = true;
+                    context["error_msg"] = error_msg;
 
-                    return string("submitting signed tx has already spend inputs: " + key_images_str);
+                    break;
                 }
 
-                string error_msg;
+                string rpc_error_msg;
 
-                if (!rpc.commit_tx(ptx, error_msg))
+                if (!rpc.commit_tx(ptx, rpc_error_msg))
                 {
-                    cerr << "submitting signed tx to daemon failed: " << error_msg << endl;
-                    return string("submitting signed tx to daemon failed: " + error_msg);
+                    string error_msg = fmt::format(
+                            "Submitting signed tx {:s} to daemon failed: {:s}\n",
+                            tx_hash_str, rpc_error_msg);
+
+                    context["has_error"] = true;
+                    context["error_msg"] = error_msg;
+
+                    break;
                 }
+
+                txs.push_back(tx_cd_data);
 
                 // if no exception, remove element from vector
                 ptx_vector.pop_back();
             }
 
-            return string{};
+            // render the page
+            return mstch::render(full_page, context);
         }
 
 
