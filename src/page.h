@@ -112,6 +112,7 @@ namespace xmreg {
         uint64_t blk_height;
         size_t   version;
         uint64_t unlock_time;
+        uint64_t no_confirmations;
         vector<uint8_t> extra;
 
         crypto::hash  payment_id  = null_hash; // normal
@@ -171,6 +172,7 @@ namespace xmreg {
                 {"has_payment_id"    , payment_id  != null_hash},
                 {"has_payment_id8"   , payment_id8 != null_hash8},
                 {"payment_id"        , pid_str},
+                {"confirmations"     , no_confirmations},
                 {"extra"             , get_extra_str()},
                 {"payment_id8"       , pid8_str},
                 {"unlock_time"       , std::to_string(unlock_time)},
@@ -720,7 +722,7 @@ namespace xmreg {
             // get block at the given height i
             block blk;
 
-            cout << "_blk_height: " << _blk_height << endl;
+            //cout << "_blk_height: " << _blk_height << endl;
 
             if (_blk_height > core_storage->get_current_blockchain_height())
             {
@@ -1244,7 +1246,7 @@ namespace xmreg {
                 ++i;
             }
 
-            cout << "outputs.size(): " << outputs.size() << endl;
+            //cout << "outputs.size(): " << outputs.size() << endl;
 
             context["outputs"] = outputs;
             context["sum_xmr"] = XMR_AMOUNT(sum_xmr);
@@ -2660,6 +2662,7 @@ namespace xmreg {
                     {"outputs_no"           , txd.output_pub_keys.size()},
                     {"has_payment_id"       , txd.payment_id  != null_hash},
                     {"has_payment_id8"      , txd.payment_id8 != null_hash8},
+                    {"confirmations"        , txd.no_confirmations},
                     {"payment_id"           , pid_str},
                     {"payment_id8"          , pid8_str},
                     {"extra"                , txd.get_extra_str()},
@@ -2995,6 +2998,7 @@ namespace xmreg {
 
             txd.json_representation = obj_to_json_str(tx_copy);
 
+
             if (!coinbase &&  tx.vin.size() > 0)
             {
                 // check if not miner tx
@@ -3025,9 +3029,17 @@ namespace xmreg {
             // get unlock time
             txd.unlock_time = tx.unlock_time;
 
+            txd.no_confirmations = 0;
+
             if (core_storage->have_tx(txd.hash))
             {
                 txd.blk_height = core_storage->get_db().get_tx_block_height(txd.hash);
+
+                // get the current blockchain height. Just to check
+                uint64_t bc_height =
+                        xmreg::MyLMDB::get_blockchain_height(mcore->get_blkchain_path()) - 1;
+
+                txd.no_confirmations = bc_height - (txd.blk_height - 1);
             }
 
             return txd;
