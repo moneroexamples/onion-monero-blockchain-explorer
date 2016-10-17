@@ -2447,7 +2447,7 @@ namespace xmreg {
                 // tx hashes for key_image searched were found
                 context.insert({"has_" + found_txs.first, !found_txs.second.empty()});
 
-                cout << "found_txs.first: " << found_txs.first << endl;
+                // cout << "found_txs.first: " << found_txs.first << endl;
 
                 // insert new array based on what we found to context if not exist
                 pair< mstch::map::iterator, bool> res

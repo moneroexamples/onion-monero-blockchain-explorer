@@ -590,7 +590,7 @@ namespace xmreg
                 return height;
             }
 
-            cout << height << endl;
+            // cout << height << endl;
 
             return height;
 
