@@ -1603,15 +1603,24 @@ namespace xmreg {
                         return boost::get<string>(tx_context["error_msg"]);
                     }
 
-                    vector<uint64_t> address_amounts;
+                    mstch::array destination_addresses;
 
-                    // get amounts for stealth addresses
-                    for (tx_destination_entry& dest: ptx.construction_data.destinations)
+                    // destiantion address for this tx
+                    for (tx_destination_entry& a_dest: ptx.construction_data.destinations)
                     {
                         //stealth_address_amount.insert({dest.addr, dest.amount});
-                        //cout << pod_to_hex(dest.addr) << endl;
-                        address_amounts.push_back(dest.amount);
+                        cout << get_account_address_as_str(testnet, a_dest.addr) << endl;
+                        //address_amounts.push_back(a_dest.amount);
+
+                        destination_addresses.push_back(
+                                mstch::map {
+                                        {"dest_address", get_account_address_as_str(testnet, a_dest.addr)},
+                                        {"dest_amount" , fmt::format("{:0.12f}", XMR_AMOUNT(a_dest.amount))}
+                                }
+                        );
                     }
+
+                    tx_context.insert({"dest_infos", destination_addresses});
 
                     // get reference to inputs array created of the tx
                     mstch::array& outputs = boost::get<mstch::array>(tx_context["outputs"]);
@@ -1622,7 +1631,7 @@ namespace xmreg {
                         mstch::map& output_map = boost::get<mstch::map>(outputs.at(i));
 
                         //cout << boost::get<string>(output_map["out_pub_key"])  <<", " << address_amounts.at(i) << endl;
-                        cout << boost::get<string>(output_map["out_pub_key"])  << endl;
+                        //cout << boost::get<string>(output_map["out_pub_key"])  << endl;
                     }
 
                     // get public keys of real outputs
@@ -1716,7 +1725,6 @@ namespace xmreg {
 
                         if (epee::string_tools::hex_to_pod(in_key_img_str, key_imgage))
                         {
-
                             input_map["already_spent"] = core_storage->get_db().has_key_image(key_imgage);
                         }
 
