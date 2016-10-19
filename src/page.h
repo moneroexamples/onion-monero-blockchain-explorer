@@ -1342,12 +1342,26 @@ namespace xmreg {
 
                         const tx_destination_entry& tx_change   = tx_cd.change_dts;
 
+                        crypto::hash payment_id   = null_hash;
+                        crypto::hash8 payment_id8 = null_hash8;
+
+                        get_payment_id(tx_cd.extra, payment_id, payment_id8);
+
+                        // payments id. both normal and encrypted (payment_id8)
+                        string pid_str   = REMOVE_HASH_BRAKETS(fmt::format("{:s}", payment_id));
+                        string pid8_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", payment_id8));
+
+
                         mstch::map tx_cd_data {
                                 {"no_of_sources"      , no_of_sources},
                                 {"use_rct"            , tx_cd.use_rct},
                                 {"change_amount"      , fmt::format("{:0.12f}", XMR_AMOUNT(tx_change.amount))},
+                                {"has_payment_id"     , (payment_id  != null_hash)},
+                                {"has_payment_id8"    , (payment_id8 != null_hash8)},
+                                {"payment_id"         , pid_str},
+                                {"payment_id8"        , pid8_str},
                                 {"dest_sources"       , mstch::array{}},
-                                {"dest_infos"          , mstch::array{}},
+                                {"dest_infos"         , mstch::array{}},
                         };
 
                         mstch::array& dest_sources = boost::get<mstch::array>(tx_cd_data["dest_sources"]);

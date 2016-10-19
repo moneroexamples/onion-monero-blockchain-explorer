@@ -164,6 +164,11 @@ namespace xmreg
 
 
     bool
+    get_payment_id(const vector<uint8_t>& extra,
+                   crypto::hash& payment_id,
+                   crypto::hash8& payment_id8);
+
+    bool
     get_payment_id(const transaction& tx,
                    crypto::hash& payment_id,
                    crypto::hash8& payment_id8);

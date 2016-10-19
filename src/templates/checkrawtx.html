@@ -27,11 +27,19 @@
 
             {{#txs}}
                 <div class="center" style="width: 100%; margin-top:10px">
-                    <h4>Destination information</h4>
+                    <h4>Basic information</h4>
                     <div class="center" style="width: 100%;">
                          {{#dest_infos}}
                             Send {{dest_amount}} to {{dest_address}}<br/>
                         {{/dest_infos}}
+
+                        {{#has_payment_id}}
+                            Payment id: {{payment_id}}<br/>
+                        {{/has_payment_id}}
+
+                        {{#has_payment_id8}}
+                           Payment id (encrypted): {{payment_id8}}<br/>
+                        {{/has_payment_id8}}
                     </div>
 
                     <h3>
