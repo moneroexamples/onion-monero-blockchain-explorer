@@ -2118,10 +2118,6 @@ namespace xmreg {
                     {
                         secret_key recovery_key = tx_prv_key;
 
-                        cout << "tx_prv_key: " << tx_prv_key << endl;
-
-                        //crypto::generate_keys(tx_pub_key, tx_prv_key, recovery_key);
-
                         const unsigned char * tx_prv_key_ptr = reinterpret_cast<const unsigned char *>(&tx_prv_key);
                         unsigned char * tx_pub_key_ptr = reinterpret_cast<unsigned char *>(&tx_pub_key);
 
@@ -2132,9 +2128,6 @@ namespace xmreg {
                         ge_p3_tobytes(tx_pub_key_ptr, &point);
 
                         string tx_pub_key_str = pod_to_hex(tx_pub_key);
-
-                        cout << "tx_prv_key: " << tx_prv_key << endl;
-                        cout << "tx_pub_key: " << tx_pub_key_str << endl;
 
                         mylmdb->search(tx_pub_key_str,
                                        tx_search_results["tx_public_keys"],
