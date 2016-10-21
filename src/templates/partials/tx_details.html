@@ -3,6 +3,9 @@
 
     <H4 style="margin:5px">Tx hash: {{tx_hash}}</H4>
     <H5 style="margin:5px">Tx public key: {{tx_pub_key}}</H5>
+    {{#have_raw_tx}}
+        <!--<H5 style="margin:5px">Tx private key: {{tx_prv_key}}</H5>-->
+    {{/have_raw_tx}}
 
 
     {{#has_payment_id}}

@@ -1603,6 +1603,8 @@ namespace xmreg {
                         return boost::get<string>(tx_context["error_msg"]);
                     }
 
+                    tx_context["tx_prv_key"] =  fmt::format("{:s}", ptx.tx_key);
+
                     mstch::array destination_addresses;
 
                     // destiantion address for this tx
