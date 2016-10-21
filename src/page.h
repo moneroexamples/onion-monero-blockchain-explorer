@@ -1178,7 +1178,7 @@ namespace xmreg {
 
             std::vector<uint64_t> money_transfered(tx.vout.size(), 0);
 
-            std::deque<rct::key> mask(tx.vout.size());
+            //std::deque<rct::key> mask(tx.vout.size());
 
             uint64_t i {0};
 
