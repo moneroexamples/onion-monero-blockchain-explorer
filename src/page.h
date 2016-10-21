@@ -2100,9 +2100,52 @@ namespace xmreg {
                                tx_search_results["tx_public_keys"],
                                "tx_public_keys");
 
-                all_possible_tx_hashes.push_back(
-                        make_pair("tx_public_keys",
-                                  tx_search_results["tx_public_keys"]));
+                if (!tx_search_results["tx_public_keys"].empty())
+                {
+                    all_possible_tx_hashes.push_back(
+                            make_pair("tx_public_keys",
+                                      tx_search_results["tx_public_keys"]));
+                }
+                else
+                {
+                    // if private tx key is added, use it to obtained tx_public_key
+                    // and than search for corresponding tx
+
+                    public_key tx_pub_key = null_pkey;
+                    secret_key tx_prv_key;
+
+                    if (hex_to_pod(search_text, tx_prv_key))
+                    {
+                        secret_key recovery_key = tx_prv_key;
+
+                        cout << "tx_prv_key: " << tx_prv_key << endl;
+
+                        //crypto::generate_keys(tx_pub_key, tx_prv_key, recovery_key);
+
+                        const unsigned char * tx_prv_key_ptr = reinterpret_cast<const unsigned char *>(&tx_prv_key);
+                        unsigned char * tx_pub_key_ptr = reinterpret_cast<unsigned char *>(&tx_pub_key);
+
+                        //memcpy(&tx_pub_key.data, reinterpret_cast<char*>(tx_pub_key_ptr), sizeof(tx_pub_key.data));
+
+                        ge_p3 point;
+                        ge_scalarmult_base(&point, tx_prv_key_ptr);
+                        ge_p3_tobytes(tx_pub_key_ptr, &point);
+
+                        string tx_pub_key_str = pod_to_hex(tx_pub_key);
+
+                        cout << "tx_prv_key: " << tx_prv_key << endl;
+                        cout << "tx_pub_key: " << tx_pub_key_str << endl;
+
+                        mylmdb->search(tx_pub_key_str,
+                                       tx_search_results["tx_public_keys"],
+                                       "tx_public_keys");
+
+                        all_possible_tx_hashes.push_back(
+                                make_pair("tx_public_keys",
+                                          tx_search_results["tx_public_keys"]));
+                    }
+                }
+
 
                 // search the custum lmdb for payments_id and append the result
                 // to those from the mempool search if found
