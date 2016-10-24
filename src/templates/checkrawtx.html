@@ -93,7 +93,12 @@
             {{#txs}}
                 <h5>
                     {{#dest_infos}}
-                    Send {{dest_amount}} to {{dest_address}}<br/>
+                        {{^is_this_change}}
+                            Send {{dest_amount}} to {{dest_address}}<br/>
+                        {{/is_this_change}}
+                        {{#is_this_change}}
+                            Change {{dest_amount}} back to {{dest_address}}<br/>
+                        {{/is_this_change}}
                     {{/dest_infos}}
                 </h5>
                 {{>tx_details}}

@@ -1572,7 +1572,7 @@ namespace xmreg {
 
                 if (strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
                 {
-                    cout << "The data is neigther unsigned nor signed tx!" << endl;
+                    cout << "The data is neither unsigned nor signed tx!" << endl;
                     return string( "The data is neither unsigned nor signed tx!");
                 }
 
@@ -1616,11 +1616,24 @@ namespace xmreg {
 
                         destination_addresses.push_back(
                                 mstch::map {
-                                        {"dest_address", get_account_address_as_str(testnet, a_dest.addr)},
-                                        {"dest_amount" , fmt::format("{:0.12f}", XMR_AMOUNT(a_dest.amount))}
+                                        {"dest_address"   , get_account_address_as_str(testnet, a_dest.addr)},
+                                        {"dest_amount"    , fmt::format("{:0.12f}", XMR_AMOUNT(a_dest.amount))},
+                                        {"is_this_change" , false}
                                 }
                         );
                     }
+
+                    // get change address and amount info
+                    if (ptx.construction_data.change_dts.amount > 0)
+                    {
+                        destination_addresses.push_back(
+                                mstch::map {
+                                        {"dest_address"   , get_account_address_as_str(testnet, ptx.construction_data.change_dts.addr)},
+                                        {"dest_amount"    , fmt::format("{:0.12f}", XMR_AMOUNT(ptx.construction_data.change_dts.amount))},
+                                        {"is_this_change" , true}
+                                }
+                        );
+                    };
 
                     tx_context.insert({"dest_infos", destination_addresses});
 
@@ -1632,8 +1645,8 @@ namespace xmreg {
                     {
                         mstch::map& output_map = boost::get<mstch::map>(outputs.at(i));
 
-                        //cout << boost::get<string>(output_map["out_pub_key"])  <<", " << address_amounts.at(i) << endl;
-                        //cout << boost::get<string>(output_map["out_pub_key"])  << endl;
+                        cout << boost::get<string>(output_map["out_pub_key"])
+                             <<", " <<  boost::get<string>(output_map["amount"]) << endl;
                     }
 
                     // get public keys of real outputs
