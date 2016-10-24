@@ -92,12 +92,12 @@ int main(int ac, const char* av[]) {
     else
     {
         // if not given assume it is located in ~./bitmonero/lmdb2 folder
+        // or ~./bitmonero/testnet/lmdb2 for testnet network
         custom_db_path_str = blockchain_path.parent_path().string()
                              + string("/lmdb2");
     }
 
     custom_db_path_str = xmreg::remove_trailing_path_separator(custom_db_path_str);
-
 
 
     string deamon_url {*deamon_url_opt};
