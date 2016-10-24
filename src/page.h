@@ -1606,6 +1606,7 @@ namespace xmreg {
                     tx_context["tx_prv_key"] =  fmt::format("{:s}", ptx.tx_key);
 
                     mstch::array destination_addresses;
+                    vector<uint64_t> real_ammounts;
 
                     // destiantion address for this tx
                     for (tx_destination_entry& a_dest: ptx.construction_data.destinations)
@@ -1621,6 +1622,8 @@ namespace xmreg {
                                         {"is_this_change" , false}
                                 }
                         );
+
+                        real_ammounts.push_back(a_dest.amount);
                     }
 
                     // get change address and amount info
@@ -1633,6 +1636,8 @@ namespace xmreg {
                                         {"is_this_change" , true}
                                 }
                         );
+
+                        real_ammounts.push_back(ptx.construction_data.change_dts.amount);
                     };
 
                     tx_context.insert({"dest_infos", destination_addresses});
@@ -1640,13 +1645,26 @@ namespace xmreg {
                     // get reference to inputs array created of the tx
                     mstch::array& outputs = boost::get<mstch::array>(tx_context["outputs"]);
 
-                    // mark which mixin is real in each input's mstch context
+                    // show real output amount for ringct outputs.
+                    // otherwise its only 0.000000000
                     for (size_t i = 0; i < outputs.size(); ++i)
                     {
                         mstch::map& output_map = boost::get<mstch::map>(outputs.at(i));
 
-                        cout << boost::get<string>(output_map["out_pub_key"])
-                             <<", " <<  boost::get<string>(output_map["amount"]) << endl;
+                        string& out_amount_str = boost::get<string>(output_map["amount"]);
+
+                        //cout << boost::get<string>(output_map["out_pub_key"])
+                        //    <<", " <<  out_amount_str << endl;
+
+                        uint64_t output_amount;
+
+                        if (parse_amount(output_amount, out_amount_str))
+                        {
+                            if (output_amount == 0)
+                            {
+                                out_amount_str = fmt::format("{:0.12f}", XMR_AMOUNT(real_ammounts.at(i)));
+                            }
+                        }
                     }
 
                     // get public keys of real outputs
