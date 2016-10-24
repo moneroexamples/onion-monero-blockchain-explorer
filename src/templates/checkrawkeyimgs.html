@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <META HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+    {{#refresh}}
+    <meta http-equiv="refresh" content="10">
+    {{/refresh}}
+    <title>Onion Monero Blockchain Explorer</title>
+    <!--<link rel="stylesheet" type="text/css" href="/css/style.css">-->
+    <style type="text/css">
+        {{#css_styles}}{{/css_styles}}
+    </style>
+
+</head>
+<body>
+<div>
+
+    <div class="center">
+        <h1 class="center"><a href="/">Onion Monero Signed Key Images Checker</a></h1>
+        <h4 style="font-size: 15px; margin: 0px">(no javascript - no cookies - no web analytics trackers - no images - open sourced)</h4>
+    </div>
+
+    <h4>Key images for address: {{address}}</h4>
+
+    <div class="center">
+        <table class="center" style="width:80%">
+            <tr><td>Key no.</td><td>Key image</td><td>Is spent?</td></tr>
+            {{#key_imgs}}
+                <tr>
+                    <td>{{key_no}}</td>
+                    <td>{{key_image}}</td>
+                    {{#is_spent}}
+                    <td><span style="color: #008009;font-weight: bold">{{is_spent}}</span></td>
+                    {{/is_spent}}
+                    {{^is_spent}}
+                    <td>{{is_spent}}</td>
+                    {{/is_spent}}
+                </tr>
+            {{/key_imgs}}
+        </table>
+    </div>
+
+
+</div>

@@ -25,24 +25,26 @@
 #include <limits>
 #include <ctime>
 
-#define TMPL_DIR             "./templates"
-#define TMPL_PARIALS_DIR     TMPL_DIR "/partials"
-#define TMPL_CSS_STYLES      TMPL_DIR "/css/style.css"
-#define TMPL_INDEX           TMPL_DIR "/index.html"
-#define TMPL_INDEX2          TMPL_DIR "/index2.html"
-#define TMPL_MEMPOOL         TMPL_DIR "/mempool.html"
-#define TMPL_HEADER          TMPL_DIR "/header.html"
-#define TMPL_FOOTER          TMPL_DIR "/footer.html"
-#define TMPL_BLOCK           TMPL_DIR "/block.html"
-#define TMPL_TX              TMPL_DIR "/tx.html"
-#define TMPL_ADDRESS         TMPL_DIR "/address.html"
-#define TMPL_MY_OUTPUTS      TMPL_DIR "/my_outputs.html"
-#define TMPL_SEARCH_RESULTS  TMPL_DIR "/search_results.html"
-#define TMPL_MY_RAWTX        TMPL_DIR "/rawtx.html"
-#define TMPL_MY_CHECKRAWTX   TMPL_DIR "/checkrawtx.html"
-#define TMPL_MY_PUSHRAWTX   TMPL_DIR "/pushrawtx.html"
+#define TMPL_DIR                 "./templates"
+#define TMPL_PARIALS_DIR         TMPL_DIR "/partials"
+#define TMPL_CSS_STYLES          TMPL_DIR "/css/style.css"
+#define TMPL_INDEX               TMPL_DIR "/index.html"
+#define TMPL_INDEX2              TMPL_DIR "/index2.html"
+#define TMPL_MEMPOOL             TMPL_DIR "/mempool.html"
+#define TMPL_HEADER              TMPL_DIR "/header.html"
+#define TMPL_FOOTER              TMPL_DIR "/footer.html"
+#define TMPL_BLOCK               TMPL_DIR "/block.html"
+#define TMPL_TX                  TMPL_DIR "/tx.html"
+#define TMPL_ADDRESS             TMPL_DIR "/address.html"
+#define TMPL_MY_OUTPUTS          TMPL_DIR "/my_outputs.html"
+#define TMPL_SEARCH_RESULTS      TMPL_DIR "/search_results.html"
+#define TMPL_MY_RAWTX            TMPL_DIR "/rawtx.html"
+#define TMPL_MY_CHECKRAWTX       TMPL_DIR "/checkrawtx.html"
+#define TMPL_MY_PUSHRAWTX        TMPL_DIR "/pushrawtx.html"
+#define TMPL_MY_RAWKEYIMGS       TMPL_DIR "/rawkeyimgs.html"
+#define TMPL_MY_CHECKRAWKEYIMGS  TMPL_DIR "/checkrawkeyimgs.html"
 
-
+#define KEY_IMAGE_EXPORT_FILE_MAGIC "Monero key image export\001"
 
 namespace xmreg {
 
@@ -1957,6 +1959,105 @@ namespace xmreg {
                 // if no exception, remove element from vector
                 ptx_vector.pop_back();
             }
+
+            // render the page
+            return mstch::render(full_page, context);
+        }
+
+
+        string
+        show_rawkeyimgs()
+        {
+            // initalize page template context map
+            mstch::map context {
+                    {"testnet"              , testnet}
+            };
+
+            // read checkrawtx.html
+            string rawkeyimgs_html = xmreg::read(TMPL_MY_RAWKEYIMGS);
+
+            // add header and footer
+            string full_page =  rawkeyimgs_html + xmreg::read(TMPL_FOOTER);
+
+            add_css_style(context);
+
+            // render the page
+            return mstch::render(full_page, context);
+        }
+
+        string
+        show_checkrawkeyimgs(string raw_data)
+        {
+            // remove white characters
+            boost::trim(raw_data);
+            boost::erase_all(raw_data, "\r\n");
+            boost::erase_all(raw_data, "\n");
+
+            string decoded_raw_data = epee::string_encoding::base64_decode(raw_data);
+
+
+            const size_t magiclen = strlen(KEY_IMAGE_EXPORT_FILE_MAGIC);
+
+            if (strncmp(decoded_raw_data.c_str(), KEY_IMAGE_EXPORT_FILE_MAGIC, magiclen) == 0)
+            {
+                cout << "KEY_IMAGE_EXPORT_FILE_MAGIC data given" << endl;
+            }
+
+            // header is magic + public spend and keys
+            const size_t header_lenght = magiclen + 2 * sizeof(crypto::public_key);
+            const size_t key_img_size  = sizeof(crypto::key_image);
+            const size_t record_lenght = key_img_size + sizeof(crypto::signature);
+
+            if ((decoded_raw_data.size() - header_lenght) % record_lenght)
+            {
+                cerr << "Bad data size from submitted key images raw data" << endl;
+                return string {"Bad data size from submitted key images raw data"};
+            }
+
+            // get xmr address stored in this key image file
+             const account_public_address* xmr_address =
+                    reinterpret_cast<const account_public_address*>(
+                            decoded_raw_data.data() + magiclen);
+
+            // initalize page template context map
+            mstch::map context {
+                    {"testnet"              , testnet},
+                    {"address"              , xmreg::print_address(*xmr_address, testnet)},
+                    {"key_imgs"             , mstch::array{}}
+            };
+
+            size_t no_key_images = (decoded_raw_data.size() - header_lenght) / record_lenght;
+
+            //vector<pair<crypto::key_image, crypto::signature>> signed_key_images;
+
+            mstch::array& key_imgs_ctx = boost::get<mstch::array>(context["key_imgs"]);
+
+            for (size_t n = 0; n < no_key_images; ++n)
+            {
+                const char* record_ptr = decoded_raw_data.data() + header_lenght + n * record_lenght;
+
+                crypto::key_image key_image
+                        = *reinterpret_cast<const crypto::key_image*>(record_ptr);
+
+                crypto::signature signature
+                        = *reinterpret_cast<const crypto::signature*>(record_ptr + key_img_size);
+
+                key_imgs_ctx.push_back(mstch::map{
+                        {"key_no"              , fmt::format("{:03d}", n)},
+                        {"key_image"           , REMOVE_HASH_BRAKETS(fmt::format("{:s}", key_image))},
+                        {"signature"           , fmt::format("{:s}", signature)},
+                        {"is_spent"            , core_storage->have_tx_keyimg_as_spent(key_image)}
+                });
+
+                //signed_key_images.push_back(make_pair(key_image, signature));
+            }
+
+            string checkrawkeyimgs_html = xmreg::read(TMPL_MY_CHECKRAWKEYIMGS);
+
+            // add footer
+            string full_page =  checkrawkeyimgs_html + xmreg::read(TMPL_FOOTER);
+
+            add_css_style(context);
 
             // render the page
             return mstch::render(full_page, context);

@@ -234,6 +234,26 @@ int main(int ac, const char* av[]) {
 
     });
 
+    CROW_ROUTE(app, "/rawkeyimgs")
+    ([&](const crow::request& req) {
+        return xmrblocks.show_rawkeyimgs();
+    });
+
+    CROW_ROUTE(app, "/checkrawkeyimgs").methods("POST"_method)
+    ([&](const crow::request& req) {
+
+        map<std::string, std::string> post_body = xmreg::parse_crow_post_data(req.body);
+
+        if (post_body.count("rawkeyimgsdata") == 0)
+        {
+            return string("Raw key images data not given");
+        }
+
+        string raw_data = post_body["rawkeyimgsdata"];
+
+        return xmrblocks.show_checkrawkeyimgs(raw_data);
+    });
+
 
     CROW_ROUTE(app, "/search").methods("GET"_method)
     ([&](const crow::request& req) {

@@ -17,21 +17,17 @@
 <div>
 
     <div class="center">
-        <h1 class="center"><a href="/">Onion Monero Transaction Pusher</a></h1>
+        <h1 class="center"><a href="/">Onion Monero Signed Key Images Checker</a></h1>
         <h4 style="font-size: 15px; margin: 0px">(no javascript - no cookies - no web analytics trackers - no images - open sourced)</h4>
     </div>
 
-
     <div class="center">
-        <form action="/checkandpush" method="post" style="width:100%; margin-top:15px" class="style-1">
-            Paste base64 encoded, signed transaction data here<br/>
-            (In Linux, can get base64 signed raw tx data: <i>base64 signed_monero_tx | xclip -selection clipboard</i>)<br/>
-            <textarea name="rawtxdata" rows="20" cols="80"></textarea>
+        <form action="/checkrawkeyimgs" method="post" style="width:100%; margin-top:15px" class="style-1">
+            Paste base64 encoded, signed key images data here<br/>
+            (In Linux, can get base64 signed raw tx data: <i>base64 signed_key_images | xclip -selection clipboard</i>)<br/>
+            <textarea name="rawkeyimgsdata" rows="20" cols="80"></textarea>
             <br/>
             <input type="submit" name="action" value="check">
-            &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp;
-            &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp;
-            <input type="submit" name="action" value="push">
         </form>
     </div>
 
