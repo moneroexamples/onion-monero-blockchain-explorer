@@ -22,9 +22,13 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
 
 ## Address
 
-Tor users:
+Tor users (main Monero network):
 
  - [http://xmrblocksvckbwvx.onion](http://xmrblocksvckbwvx.onion)
+ 
+Tor users (testnet Monero network):
+ 
+ - [http://xmrtestbbzl275vy.onion](http://xmrtestbbzl275vy.onion)
 
 Non tor users, can use its clearnet version (thanks to [Gingeropolous](https://github.com/Gingeropolous)):
 
@@ -41,8 +45,7 @@ The key features of the Onion Monero Blockchain Explorer are
  - made fully in C++,
  - the only explorer showing encrypted payments ID,
  - the only explorer with the ability to search by encrypted payments ID, tx public
- keys, stealth addresses, input key images,
- output amount index and its amount,
+ and private keys, stealth addresses, input key images,
  - the only explorer showing ring signatures,
  - the only explorer showing transaction extra field,
  - the only explorer showing public components of Monero addresses,
