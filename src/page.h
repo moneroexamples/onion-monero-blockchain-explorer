@@ -2026,12 +2026,10 @@ namespace xmreg {
                     {"key_imgs"             , mstch::array{}}
             };
 
-
             unique_ptr<xmreg::MyLMDB> mylmdb;
 
             if (bf::is_directory(lmdb2_path))
             {
-
                 mylmdb = make_unique<xmreg::MyLMDB>(lmdb2_path);
             }
             else
@@ -2040,14 +2038,11 @@ namespace xmreg {
             }
 
 
-
-
             size_t no_key_images = (decoded_raw_data.size() - header_lenght) / record_lenght;
 
             //vector<pair<crypto::key_image, crypto::signature>> signed_key_images;
 
             mstch::array& key_imgs_ctx = boost::get<mstch::array>(context["key_imgs"]);
-
 
 
             for (size_t n = 0; n < no_key_images; ++n)
