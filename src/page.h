@@ -2026,11 +2026,29 @@ namespace xmreg {
                     {"key_imgs"             , mstch::array{}}
             };
 
+
+            unique_ptr<xmreg::MyLMDB> mylmdb;
+
+            if (bf::is_directory(lmdb2_path))
+            {
+
+                mylmdb = make_unique<xmreg::MyLMDB>(lmdb2_path);
+            }
+            else
+            {
+                cout << "Custom lmdb database seem does not exist at: " << lmdb2_path << endl;
+            }
+
+
+
+
             size_t no_key_images = (decoded_raw_data.size() - header_lenght) / record_lenght;
 
             //vector<pair<crypto::key_image, crypto::signature>> signed_key_images;
 
             mstch::array& key_imgs_ctx = boost::get<mstch::array>(context["key_imgs"]);
+
+
 
             for (size_t n = 0; n < no_key_images; ++n)
             {
@@ -2042,12 +2060,53 @@ namespace xmreg {
                 crypto::signature signature
                         = *reinterpret_cast<const crypto::signature*>(record_ptr + key_img_size);
 
-                key_imgs_ctx.push_back(mstch::map{
+
+                vector<string> found_tx_hashes;
+
+                if (mylmdb)
+                {
+                    mylmdb->search(epee::string_tools::pod_to_hex(key_image),
+                                   found_tx_hashes, "key_images");
+                }
+
+                mstch::map key_img_info {
                         {"key_no"              , fmt::format("{:03d}", n)},
                         {"key_image"           , REMOVE_HASH_BRAKETS(fmt::format("{:s}", key_image))},
                         {"signature"           , fmt::format("{:s}", signature)},
-                        {"is_spent"            , core_storage->have_tx_keyimg_as_spent(key_image)}
-                });
+                        {"is_spent"            , core_storage->have_tx_keyimg_as_spent(key_image)},
+                        {"tx_hash_found"       , !found_tx_hashes.empty()},
+                        {"tx_hash"             , string{}},
+                };
+
+
+                if (!found_tx_hashes.empty())
+                {
+
+                    string tx_hash_str = found_tx_hashes.at(0);
+
+                    key_img_info["tx_hash"]   = tx_hash_str;
+                    key_img_info["timestamp"] = "0";
+
+                    transaction tx;
+
+                    if (mcore->get_tx(tx_hash_str, tx))
+                    {
+                        crypto::hash tx_hash;
+
+                        epee::string_tools::hex_to_pod(tx_hash_str, tx_hash);
+
+                        // get timestamp of the tx's block
+                        uint64_t blk_height    = core_storage
+                                ->get_db().get_tx_block_height(tx_hash);
+
+                        uint64_t blk_timestamp = core_storage
+                                ->get_db().get_block_timestamp(blk_height);
+
+                        key_img_info["timestamp"] = xmreg::timestamp_to_str(blk_timestamp);
+                    }
+                }
+
+                key_imgs_ctx.push_back(key_img_info);
 
                 //signed_key_images.push_back(make_pair(key_image, signature));
             }

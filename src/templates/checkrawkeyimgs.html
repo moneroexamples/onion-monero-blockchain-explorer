@@ -25,17 +25,27 @@
 
     <div class="center">
         <table class="center" style="width:80%">
-            <tr><td>Key no.</td><td>Key image</td><td>Is spent?</td></tr>
+            <tr><td>Key no.</td><td>Key image</td><td>Timestamp</td></td><td>Is spent?</td></tr>
             {{#key_imgs}}
                 <tr>
                     <td>{{key_no}}</td>
-                    <td>{{key_image}}</td>
-                    {{#is_spent}}
-                    <td><span style="color: #008009;font-weight: bold">{{is_spent}}</span></td>
-                    {{/is_spent}}
-                    {{^is_spent}}
-                    <td>{{is_spent}}</td>
-                    {{/is_spent}}
+                    <td>
+                        {{#tx_hash_found}}
+                            <a href="/tx/{{tx_hash}}">{{key_image}}</a>
+                        {{/tx_hash_found}}
+                        {{^tx_hash_found}}
+                            {{key_image}}
+                        {{/tx_hash_found}}
+                    </td>
+                    <td>{{timestamp}}</td>
+                    <td>
+                        {{#is_spent}}
+                            <span style="color: #008009;font-weight: bold">{{is_spent}}</span>
+                        {{/is_spent}}
+                        {{^is_spent}}
+                            {{is_spent}}
+                        {{/is_spent}}
+                    </td>
                 </tr>
             {{/key_imgs}}
         </table>
