@@ -1852,6 +1852,16 @@ namespace xmreg {
                 return mstch::render(full_page, context);
             }
 
+            if (!testnet)
+            {
+                string error_msg = fmt::format("Pushing disabled for mainet network!");
+
+                context["has_error"] = true;
+                context["error_msg"] = error_msg;
+
+                return mstch::render(full_page, context);
+            }
+
             ::tools::wallet2::signed_tx_set signed_txs;
 
             bool r = serialization::parse_binary(std::string(
