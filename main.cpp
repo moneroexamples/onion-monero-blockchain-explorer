@@ -254,6 +254,20 @@ int main(int ac, const char* av[]) {
         return xmrblocks.show_checkrawkeyimgs(raw_data);
     });
 
+    CROW_ROUTE(app, "/genrawkeyimgs").methods("POST"_method)
+    ([&](const crow::request& req) {
+
+        map<std::string, std::string> post_body = xmreg::parse_crow_post_data(req.body);
+
+        for (auto& kv: post_body)
+        {
+            cout << kv.first << ": " << kv.second << endl;
+        }
+
+
+        return xmrblocks.show_checkrawkeyimgs(string{});
+    });
+
 
     CROW_ROUTE(app, "/search").methods("GET"_method)
     ([&](const crow::request& req) {
