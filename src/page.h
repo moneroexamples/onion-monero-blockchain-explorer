@@ -1607,6 +1607,7 @@ namespace xmreg {
 
                     mstch::array destination_addresses;
                     vector<uint64_t> real_ammounts;
+                    uint64_t outputs_xmr_sum {0};
 
                     // destiantion address for this tx
                     for (tx_destination_entry& a_dest: ptx.construction_data.splitted_dsts)
@@ -1622,6 +1623,8 @@ namespace xmreg {
                                         {"is_this_change" , false}
                                 }
                         );
+
+                        outputs_xmr_sum += a_dest.amount;
 
                         real_ammounts.push_back(a_dest.amount);
                     }
@@ -1639,6 +1642,8 @@ namespace xmreg {
 
                         real_ammounts.push_back(ptx.construction_data.change_dts.amount);
                     };
+
+                    tx_context["outputs_xmr_sum"] = fmt::format("{:0.12f}", XMR_AMOUNT(outputs_xmr_sum));
 
                     tx_context.insert({"dest_infos", destination_addresses});
 
