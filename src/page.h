@@ -2033,6 +2033,8 @@ namespace xmreg {
             mstch::map context {
                     {"testnet"              , testnet},
                     {"address"              , xmreg::print_address(*xmr_address, testnet)},
+                    {"has_total_xmr"       , false},
+                    {"total_xmr"           , string{}},
                     {"key_imgs"             , mstch::array{}}
             };
 
@@ -2053,6 +2055,8 @@ namespace xmreg {
             //vector<pair<crypto::key_image, crypto::signature>> signed_key_images;
 
             mstch::array& key_imgs_ctx = boost::get<mstch::array>(context["key_imgs"]);
+
+            uint64_t total_xmr {0};
 
 
             for (size_t n = 0; n < no_key_images; ++n)
@@ -2119,6 +2123,7 @@ namespace xmreg {
                         if (it != tx_key_imgs.end())
                         {
                             key_img_info["amount"] = fmt::format("{:0.12f}", XMR_AMOUNT((*it).amount));
+                            total_xmr += (*it).amount;
                         }
 
                         key_img_info["timestamp"] = xmreg::timestamp_to_str(blk_timestamp);
@@ -2128,6 +2133,12 @@ namespace xmreg {
                 key_imgs_ctx.push_back(key_img_info);
 
                 //signed_key_images.push_back(make_pair(key_image, signature));
+            }
+
+            if (total_xmr > 0)
+            {
+                context["has_total_xmr"] = true;
+                context["total_xmr"] = fmt::format("{:0.12f}", XMR_AMOUNT(total_xmr));
             }
 
             string checkrawkeyimgs_html = xmreg::read(TMPL_MY_CHECKRAWKEYIMGS);
