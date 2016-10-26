@@ -28,7 +28,7 @@
             {{#txs}}
                 <div class="center" style="width: 100%; margin-top:10px">
                     <h4>Basic information</h4>
-                    <div class="center" style="width: 100%;">
+                    <h5>
                          {{#dest_infos}}
                             Send {{dest_amount}} to {{dest_address}}<br/>
                         {{/dest_infos}}
@@ -40,7 +40,7 @@
                         {{#has_payment_id8}}
                            Payment id (encrypted): {{payment_id8}}<br/>
                         {{/has_payment_id8}}
-                    </div>
+                    </h5>
 
                     <h3>
                         Inputs' mixins time scale (from {{min_mix_time}} till {{max_mix_time}};
