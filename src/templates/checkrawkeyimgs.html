@@ -31,6 +31,7 @@
                     <td>Key no.</td>
                     <td>Key image</td>
                     <td>Timestamp</td>
+                    <td>Amount</td>
                     <td>Is spent?</td>
                 </tr>
                 {{#key_imgs}}
@@ -46,6 +47,7 @@
                             {{/tx_hash_found}}
                         </td>
                         <td>{{timestamp}}</td>
+                        <td>{{amount}}</td>
                         <td>
                             {{#is_spent}}
                                 <span style="color: #008009;font-weight: bold">{{is_spent}}</span>

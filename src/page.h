@@ -2078,9 +2078,11 @@ namespace xmreg {
                         {"key_no"              , fmt::format("{:03d}", n)},
                         {"key_image"           , REMOVE_HASH_BRAKETS(fmt::format("{:s}", key_image))},
                         {"signature"           , fmt::format("{:s}", signature)},
+                        {"address"             , xmreg::print_address(*xmr_address, testnet)},
+                        {"amount"              , string{}},
                         {"is_spent"            , core_storage->have_tx_keyimg_as_spent(key_image)},
                         {"tx_hash_found"       , !found_tx_hashes.empty()},
-                        {"tx_hash"             , string{}},
+                        {"tx_hash"             , string{}}
                 };
 
 
@@ -2090,7 +2092,7 @@ namespace xmreg {
                     string tx_hash_str = found_tx_hashes.at(0);
 
                     key_img_info["tx_hash"]   = tx_hash_str;
-                    key_img_info["timestamp"] = "0";
+                    key_img_info["timestamp"] = "";
 
                     transaction tx;
 
@@ -2106,6 +2108,18 @@ namespace xmreg {
 
                         uint64_t blk_timestamp = core_storage
                                 ->get_db().get_block_timestamp(blk_height);
+
+                        vector<txin_to_key> tx_key_imgs = get_key_images(tx);
+
+                        const vector<txin_to_key>::const_iterator it = find_if(tx_key_imgs.begin(), tx_key_imgs.end(), [&](txin_to_key tx_in)
+                                {
+                                    return tx_in.k_image == key_image;
+                                });
+
+                        if (it != tx_key_imgs.end())
+                        {
+                            key_img_info["amount"] = fmt::format("{:0.12f}", XMR_AMOUNT((*it).amount));
+                        }
 
                         key_img_info["timestamp"] = xmreg::timestamp_to_str(blk_timestamp);
                     }
