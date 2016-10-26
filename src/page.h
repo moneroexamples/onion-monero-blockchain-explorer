@@ -44,8 +44,6 @@
 #define TMPL_MY_RAWKEYIMGS       TMPL_DIR "/rawkeyimgs.html"
 #define TMPL_MY_CHECKRAWKEYIMGS  TMPL_DIR "/checkrawkeyimgs.html"
 
-#define KEY_IMAGE_EXPORT_FILE_MAGIC "Monero key image export\001"
-
 namespace xmreg {
 
 
@@ -2008,9 +2006,10 @@ namespace xmreg {
 
             const size_t magiclen = strlen(KEY_IMAGE_EXPORT_FILE_MAGIC);
 
-            if (strncmp(decoded_raw_data.c_str(), KEY_IMAGE_EXPORT_FILE_MAGIC, magiclen) == 0)
+            if (!strncmp(decoded_raw_data.c_str(), KEY_IMAGE_EXPORT_FILE_MAGIC, magiclen) == 0)
             {
-                cout << "KEY_IMAGE_EXPORT_FILE_MAGIC data given" << endl;
+                cout << "This does not seem to be key image export data" << endl;
+                return string {"This does not seem to be key image export data"};
             }
 
             // header is magic + public spend and keys

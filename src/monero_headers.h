@@ -9,6 +9,7 @@
 #define BLOCKCHAIN_DB DB_LMDB
 
 
+#define KEY_IMAGE_EXPORT_FILE_MAGIC "Monero key image export\001"
 #define UNSIGNED_TX_PREFIX "Monero unsigned tx set\002"
 #define SIGNED_TX_PREFIX "Monero signed tx set\002"
 
