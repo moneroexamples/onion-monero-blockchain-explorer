@@ -1369,7 +1369,7 @@ namespace xmreg {
                         mstch::array& dest_sources = boost::get<mstch::array>(tx_cd_data["dest_sources"]);
                         mstch::array& dest_infos = boost::get<mstch::array>(tx_cd_data["dest_infos"]);
 
-                        for (const tx_destination_entry& a_dest: tx_cd.destinations)
+                        for (const tx_destination_entry& a_dest: tx_cd.splitted_dsts)
                         {
                             mstch::map dest_info {
                                     {"dest_address"  , get_account_address_as_str(testnet, a_dest.addr)},
@@ -1611,7 +1611,7 @@ namespace xmreg {
                     vector<uint64_t> real_ammounts;
 
                     // destiantion address for this tx
-                    for (tx_destination_entry& a_dest: ptx.construction_data.destinations)
+                    for (tx_destination_entry& a_dest: ptx.construction_data.splitted_dsts)
                     {
                         //stealth_address_amount.insert({dest.addr, dest.amount});
                         cout << get_account_address_as_str(testnet, a_dest.addr) << endl;

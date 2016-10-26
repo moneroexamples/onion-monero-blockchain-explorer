@@ -9,8 +9,8 @@
 #define BLOCKCHAIN_DB DB_LMDB
 
 
-#define UNSIGNED_TX_PREFIX "Monero unsigned tx set\001"
-#define SIGNED_TX_PREFIX "Monero signed tx set\001"
+#define UNSIGNED_TX_PREFIX "Monero unsigned tx set\002"
+#define SIGNED_TX_PREFIX "Monero signed tx set\002"
 
 
 #include "net/http_base.h"
