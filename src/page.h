@@ -2040,11 +2040,11 @@ namespace xmreg {
             const size_t chacha_length = sizeof(crypto::chacha8_key);
 
 
-            cout << header_lenght << endl;
-            cout << key_img_size << endl;
-            cout << record_lenght << endl;
-            cout << decoded_raw_data.size() - header_lenght << endl;
-            cout << (decoded_raw_data.size() - header_lenght) % record_lenght << endl;
+//            cout << header_lenght << endl;
+//            cout << key_img_size << endl;
+//            cout << record_lenght << endl;
+//            cout << decoded_raw_data.size() - header_lenght << endl;
+//            cout << (decoded_raw_data.size() - header_lenght) % record_lenght << endl;
 
             if (decoded_raw_data.size() < header_lenght)
             {
