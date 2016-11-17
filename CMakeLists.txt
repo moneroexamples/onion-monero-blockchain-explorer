@@ -61,6 +61,10 @@ add_library(cryptonote_core STATIC IMPORTED)
 set_property(TARGET cryptonote_core
         PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libcryptonote_core.a)
 
+add_library(cryptonote_protocol STATIC IMPORTED)
+set_property(TARGET cryptonote_protocol
+        PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libcryptonote_protocol.a)
+
 add_library(blockchain_db STATIC IMPORTED)
 set_property(TARGET blockchain_db
         PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libblockchain_db.a)
@@ -124,12 +128,13 @@ target_link_libraries(${PROJECT_NAME}
         mstch
         wallet
         cryptonote_core
+        cryptonote_protocol
         blockchain_db
         crypto
         blocks
-        common
         lmdb
         ringct
+        common
         ${Boost_LIBRARIES}
         pthread
         unbound
