@@ -2018,7 +2018,7 @@ namespace xmreg {
             }
 
             // header is magic + public spend and keys
-            const size_t header_lenght = magiclen + 2 * sizeof(crypto::public_key);
+            const size_t header_lenght = 2 * sizeof(crypto::public_key);
             const size_t key_img_size  = sizeof(crypto::key_image);
             const size_t record_lenght = key_img_size + sizeof(crypto::signature);
 
@@ -2035,11 +2035,11 @@ namespace xmreg {
 
             // initalize page template context map
             mstch::map context {
-                    {"testnet"              , testnet},
-                    {"address"              , xmreg::print_address(*xmr_address, testnet)},
+                    {"testnet"             , testnet},
+                    {"address"             , xmreg::print_address(*xmr_address, testnet)},
                     {"has_total_xmr"       , false},
                     {"total_xmr"           , string{}},
-                    {"key_imgs"             , mstch::array{}}
+                    {"key_imgs"            , mstch::array{}}
             };
 
             unique_ptr<xmreg::MyLMDB> mylmdb;
