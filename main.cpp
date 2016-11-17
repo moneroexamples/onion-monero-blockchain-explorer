@@ -249,23 +249,15 @@ int main(int ac, const char* av[]) {
             return string("Raw key images data not given");
         }
 
-        string raw_data = post_body["rawkeyimgsdata"];
-
-        return xmrblocks.show_checkrawkeyimgs(raw_data);
-    });
-
-    CROW_ROUTE(app, "/genrawkeyimgs").methods("POST"_method)
-    ([&](const crow::request& req) {
-
-        map<std::string, std::string> post_body = xmreg::parse_crow_post_data(req.body);
-
-        for (auto& kv: post_body)
+        if (post_body.count("viewkey") == 0)
         {
-            cout << kv.first << ": " << kv.second << endl;
+            return string("Viewkey not provided. Cant decrypt key image file without it");
         }
 
+        string raw_data = post_body["rawkeyimgsdata"];
+        string viewkey  = post_body["viewkey"];
 
-        return xmrblocks.show_checkrawkeyimgs(string{});
+        return xmrblocks.show_checkrawkeyimgs(raw_data, viewkey);
     });
 
 

@@ -1999,25 +1999,34 @@ namespace xmreg {
         }
 
         string
-        show_checkrawkeyimgs(string raw_data)
+        show_checkrawkeyimgs(string raw_data, string viewkey_str)
         {
             // remove white characters
             boost::trim(raw_data);
             boost::erase_all(raw_data, "\r\n");
             boost::erase_all(raw_data, "\n");
 
-            string decoded_raw_data = epee::string_encoding::base64_decode(raw_data);
+            // remove white characters
+            boost::trim(viewkey_str);
 
+            string decoded_raw_data = epee::string_encoding::base64_decode(raw_data);
+            secret_key prv_view_key;
+
+            if (!xmreg::parse_str_secret_key(viewkey_str, prv_view_key))
+            {
+                cerr << "Cant parse the private key: " << viewkey_str << endl;
+                return string("Cant parse private key: " + viewkey_str);
+            }
 
             const size_t magiclen = strlen(KEY_IMAGE_EXPORT_FILE_MAGIC);
 
-            if (!strncmp(decoded_raw_data.c_str(), KEY_IMAGE_EXPORT_FILE_MAGIC, magiclen) == 0)
-            {
-                cout << "This does not seem to be key image export data" << endl;
-                return string {"This does not seem to be key image export data"};
-            }
+//            if (!strncmp(decoded_raw_data.c_str(), KEY_IMAGE_EXPORT_FILE_MAGIC, magiclen) == 0)
+//            {
+//                cout << "This does not seem to be key image export data" << endl;
+//                return string {"This does not seem to be key image export data"};
+//            }
 
-            // header is magic + public spend and keys
+            // header is public spend and keys
             const size_t header_lenght = 2 * sizeof(crypto::public_key);
             const size_t key_img_size  = sizeof(crypto::key_image);
             const size_t record_lenght = key_img_size + sizeof(crypto::signature);
@@ -2036,7 +2045,8 @@ namespace xmreg {
             // initalize page template context map
             mstch::map context {
                     {"testnet"             , testnet},
-                    {"address"             , xmreg::print_address(*xmr_address, testnet)},
+                    {"address"             , REMOVE_HASH_BRAKETS(xmreg::print_address(*xmr_address, testnet))},
+                    {"viewkey"             , REMOVE_HASH_BRAKETS(fmt::format("{:s}", prv_view_key))},
                     {"has_total_xmr"       , false},
                     {"total_xmr"           , string{}},
                     {"key_imgs"            , mstch::array{}}
