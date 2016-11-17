@@ -2020,18 +2020,33 @@ namespace xmreg {
 
             const size_t magiclen = strlen(KEY_IMAGE_EXPORT_FILE_MAGIC);
 
-//            if (!strncmp(decoded_raw_data.c_str(), KEY_IMAGE_EXPORT_FILE_MAGIC, magiclen) == 0)
-//            {
-//                cout << "This does not seem to be key image export data" << endl;
-//                return string {"This does not seem to be key image export data"};
-//            }
+            if (!strncmp(decoded_raw_data.c_str(), KEY_IMAGE_EXPORT_FILE_MAGIC, magiclen) == 0)
+            {
+                cout << "This does not seem to be key image export data" << endl;
+                return string {"This does not seem to be key image export data"};
+            }
+
+            // decrypt key images data using private view key
+            // dont use authentication (i.e., false), as we are
+            // not interested if this key image data is properly signed
+            decoded_raw_data = xmreg::decrypt(
+                    std::string(decoded_raw_data, magiclen),
+                    prv_view_key, false);
 
             // header is public spend and keys
             const size_t header_lenght = 2 * sizeof(crypto::public_key);
             const size_t key_img_size  = sizeof(crypto::key_image);
             const size_t record_lenght = key_img_size + sizeof(crypto::signature);
+            const size_t chacha_length = sizeof(crypto::chacha8_key);
 
-            if ((decoded_raw_data.size() - header_lenght) % record_lenght)
+
+            cout << header_lenght << endl;
+            cout << key_img_size << endl;
+            cout << record_lenght << endl;
+            cout << decoded_raw_data.size() - header_lenght << endl;
+            cout << (decoded_raw_data.size() - header_lenght) % record_lenght << endl;
+
+            if (decoded_raw_data.size() < header_lenght)
             {
                 cerr << "Bad data size from submitted key images raw data" << endl;
                 return string {"Bad data size from submitted key images raw data"};
@@ -2040,7 +2055,7 @@ namespace xmreg {
             // get xmr address stored in this key image file
              const account_public_address* xmr_address =
                     reinterpret_cast<const account_public_address*>(
-                            decoded_raw_data.data() + magiclen);
+                            decoded_raw_data.data());
 
             // initalize page template context map
             mstch::map context {

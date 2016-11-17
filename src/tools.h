@@ -237,6 +237,13 @@ namespace xmreg
     bool
     get_dummy_account_keys(account_keys& dummy_keys, bool testnet = false);
 
+
+    // from wallet2::decrypt
+    string
+    decrypt(const std::string &ciphertext,
+            const crypto::secret_key &skey,
+            bool authenticated = true);
+
 }
 
 #endif //XMREG01_TOOLS_H
