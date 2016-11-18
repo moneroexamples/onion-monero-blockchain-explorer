@@ -2198,6 +2198,36 @@ namespace xmreg {
             // such search start with "aoi_", e.g., "aoi_444-23.00"
             bool search_for_amount_output_idx = (search_text.substr(0, 4) == "aoi_");
 
+
+            // check if date given in format: 2005-04-55
+            // this is 10 characters
+            if (search_text.length() == 10)
+            {
+                uint64_t estimated_blk_height {0};
+
+                // first parse the string date into boost's ptime object
+                dateparser parser {"%Y-%m-%d"};
+
+                if (parser(search_text))
+                {
+                    // seems we have a correct date!
+                    // so try to estimate block height from it.
+
+                    // estimate blockchain height from the start date provided
+                    estimated_blk_height = xmreg::estimate_bc_height(search_text);
+
+                    result_html = show_block(estimated_blk_height);
+
+                    // nasty check if output is "Cant get" as a sign of
+                    // a not found tx. Later need to think of something better.
+                    if (result_html.find("Cant get") == string::npos)
+                    {
+                        return result_html;
+                    }
+                }
+            }
+
+
             // first check if searching for block of given height
             if (search_text.size() < 12 &&
                                 (search_for_global_output_idx == false
@@ -2274,7 +2304,6 @@ namespace xmreg {
 
                 return show_integrated_address_details(address, encrypted_payment_id, testnet);
             }
-
 
             // second let try searching for tx
             result_html = show_tx(search_text);
