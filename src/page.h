@@ -2027,24 +2027,21 @@ namespace xmreg {
             }
 
             // decrypt key images data using private view key
-            // dont use authentication (i.e., false), as we are
-            // not interested if this key image data is properly signed
             decoded_raw_data = xmreg::decrypt(
                     std::string(decoded_raw_data, magiclen),
-                    prv_view_key, false);
+                    prv_view_key, true);
+
+            if (decoded_raw_data.empty())
+            {
+                return string {"Failed to authenticate key images data. "
+                               "Maybe wrong viewkey was porvided?"};
+            }
 
             // header is public spend and keys
             const size_t header_lenght = 2 * sizeof(crypto::public_key);
             const size_t key_img_size  = sizeof(crypto::key_image);
             const size_t record_lenght = key_img_size + sizeof(crypto::signature);
             const size_t chacha_length = sizeof(crypto::chacha8_key);
-
-
-//            cout << header_lenght << endl;
-//            cout << key_img_size << endl;
-//            cout << record_lenght << endl;
-//            cout << decoded_raw_data.size() - header_lenght << endl;
-//            cout << (decoded_raw_data.size() - header_lenght) % record_lenght << endl;
 
             if (decoded_raw_data.size() < header_lenght)
             {

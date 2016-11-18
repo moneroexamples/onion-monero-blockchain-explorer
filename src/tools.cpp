@@ -793,16 +793,18 @@ namespace xmreg
             const crypto::secret_key &skey,
             bool authenticated)
     {
+
+        const size_t prefix_size = sizeof(chacha8_iv)
+                                   + (authenticated ? sizeof(crypto::signature) : 0);
+
         crypto::chacha8_key key;
 
         crypto::generate_chacha8_key(&skey, sizeof(skey), key);
 
         const crypto::chacha8_iv &iv = *(const crypto::chacha8_iv*)&ciphertext[0];
-
         std::string plaintext;
 
-        plaintext.resize(ciphertext.size() - sizeof(iv) -
-                                 (authenticated ? sizeof(crypto::signature) : 0));
+        plaintext.resize(ciphertext.size() - prefix_size);
 
         if (authenticated)
         {
@@ -811,8 +813,9 @@ namespace xmreg
             crypto::public_key pkey;
             crypto::secret_key_to_public_key(skey, pkey);
 
-            const crypto::signature &signature
-                    = *(const crypto::signature*)&ciphertext[ciphertext.size() - sizeof(crypto::signature)];
+            const crypto::signature &signature =
+                    *(const crypto::signature*)&ciphertext[ciphertext.size()
+                                                           - sizeof(crypto::signature)];
 
             if (!crypto::check_signature(hash, pkey, signature))
             {
@@ -822,10 +825,9 @@ namespace xmreg
 
         }
 
-        crypto::chacha8(
-                ciphertext.data() + sizeof(iv),
-                ciphertext.size() - sizeof(iv),
-                key, iv, &plaintext[0]);
+        crypto::chacha8(ciphertext.data() + sizeof(iv),
+                        ciphertext.size() - prefix_size,
+                        key, iv, &plaintext[0]);
 
         return plaintext;
     }
