@@ -822,11 +822,6 @@ namespace xmreg
                     *(const crypto::signature*)&ciphertext[ciphertext.size()
                                                            - sizeof(crypto::signature)];
 
-
-            const crypto::signature &signature =
-                    *(const crypto::signature*)&ciphertext[ciphertext.size()
-                                                           - sizeof(crypto::signature)];
-
             if (!crypto::check_signature(hash, pkey, signature))
             {
                 cerr << "Failed to authenticate criphertext" << endl;
