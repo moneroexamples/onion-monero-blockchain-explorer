@@ -725,13 +725,13 @@ namespace xmreg {
             //cout << "_blk_height: " << _blk_height << endl;
 
             uint64_t current_blockchain_height
-                    = core_storage->get_current_blockchain_height();
+                    = xmreg::MyLMDB::get_blockchain_height(mcore->get_blkchain_path()) - 1;
 
             if (_blk_height > current_blockchain_height)
             {
                 cerr << "Cant get block: " << _blk_height
                      << " since its higher than current blockchain height"
-                     << "i.e., " <<  current_blockchain_height
+                     << " i.e., " <<  current_blockchain_height
                      << endl;
                 return fmt::format("Cant get block {:d} since its higher than current blockchain height!",
                                    _blk_height);
