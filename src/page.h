@@ -228,52 +228,6 @@ namespace xmreg {
 
              return ss.str();
         }
-
-
-        // based on
-        // crypto::public_key wallet2::get_tx_pub_key_from_received_outs(const tools::wallet2::transfer_details &td) const
-        public_key
-        get_tx_pub_key_from_received_outs(const transaction &tx) const
-        {
-            std::vector<tx_extra_field> tx_extra_fields;
-
-            if(!parse_tx_extra(tx.extra, tx_extra_fields))
-            {
-                // Extra may only be partially parsed, it's OK if tx_extra_fields contains public key
-            }
-
-            // Due to a previous bug, there might be more than one tx pubkey in extra, one being
-            // the result of a previously discarded signature.
-            // For speed, since scanning for outputs is a slow process, we check whether extra
-            // contains more than one pubkey. If not, the first one is returned. If yes, they're
-            // checked for whether they yield at least one output
-            tx_extra_pub_key pub_key_field;
-
-            if (!find_tx_extra_field_by_type(tx_extra_fields, pub_key_field, 0))
-            {
-                return null_pkey;
-            }
-
-            public_key tx_pub_key = pub_key_field.pub_key;
-
-            bool two_found = find_tx_extra_field_by_type(tx_extra_fields, pub_key_field, 1);
-
-            if (!two_found)
-            {
-                // easy case, just one found
-                return tx_pub_key;
-            }
-            else
-            {
-                // just return second one if there are two.
-                // this does not require private view key, as
-                // its not needed for my use case.
-                return pub_key_field.pub_key;
-            }
-
-            return null_pkey;
-        }
-
     };
 
     class page {
@@ -3373,7 +3327,7 @@ namespace xmreg {
             // this check if there are two public keys
             // due to previous bug with sining txs:
             // https://github.com/monero-project/monero/pull/1358/commits/7abfc5474c0f86e16c405f154570310468b635c2
-            txd.pk = txd.get_tx_pub_key_from_received_outs(tx);
+            txd.pk = xmreg::get_tx_pub_key_from_received_outs(tx);
 
             // sum xmr in inputs and ouputs in the given tx
             txd.xmr_inputs  = sum_money_in_inputs(tx);
