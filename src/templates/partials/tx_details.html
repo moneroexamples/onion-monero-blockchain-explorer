@@ -43,10 +43,11 @@
         <tr>
             <td>Tx version: {{tx_version}}</td>
             <td>No of confirmations: {{confirmations}}</td>
+            <td></td>
         </tr>
 
         <tr>
-            <td colspan="5">Extra: {{extra}}</td>
+            <td colspan="3">Extra: {{extra}}</td>
         </tr>
 
 
@@ -81,7 +82,7 @@
                 <div class="content">
                     <h4 style="margin: 0px">Check which outputs belong to given Moenro address and viewkey</h4>
                     <form action="/myoutputs" method="get" style="width:100%; margin-top:2px" class="style-1">
-                        <input type="hidden" name="tx_hash" size="90" value="{{tx_hash}}"><br/>
+                        <input type="hidden" name="tx_hash" value="{{tx_hash}}"><br/>
                         <input type="text" name="xmr_address" size="90" placeholder="Monero address"><br/>
                         <input type="text" name="viewkey" size="90" placeholder="viewkey" style="margin-top:5px"><br/>
                         <input type="submit" value="Decode outputs" style="margin-top:5px" >
@@ -99,9 +100,9 @@
                     <h5 style="margin: 0px">Tx private key can be obtained using <i>get_tx_key</i>
                         command in  <i>monero-wallet-cli</i> command line tool</h5>
                     <form action="/prove" method="get" style="width:100%;margin-top:2px" class="style-1">
-                       <input type="hidden" name="txhash" size="90" value="{{tx_hash}}"><br/>
+                       <input type="hidden" name="txhash" value="{{tx_hash}}"><br/>
                        <input type="text" name="txprvkey" size="90" placeholder="Tx private key"><br/>
-                       <input type="text" name="xmraddress" size="90"placeholder="Recipient's Monero Address" style="margin-top:5px"><br/>
+                       <input type="text" name="xmraddress" size="90" placeholder="Recipient's Monero Address" style="margin-top:5px"><br/>
                        <input type="submit" value="Prove" style="margin-top:5px">
                     </form>
                 </div>
