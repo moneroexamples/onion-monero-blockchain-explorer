@@ -629,6 +629,8 @@ namespace xmreg
         return make_pair(empty_time, scale);
     }
 
+    // useful reference to get epoch time in correct timezon
+    // http://www.boost.org/doc/libs/1_41_0/doc/html/date_time/examples.html#date_time.examples.seconds_since_epoch
     time_t
     ptime_to_time_t(const pt::ptime& in_ptime)
     {

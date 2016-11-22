@@ -43,7 +43,7 @@ namespace xmreg
     namespace bf = boost::filesystem;
     namespace pt = boost::posix_time;
     namespace gt = boost::gregorian;
-
+    namespace lt = boost::local_time;
 
 
     struct outputs_visitor
