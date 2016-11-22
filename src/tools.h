@@ -18,6 +18,7 @@
 
 #include "../ext/dateparser.h"
 #include "../ext/infix_iterator.h"
+#include "../ext/date/tz.h"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
