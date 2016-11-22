@@ -220,6 +220,9 @@ namespace xmreg
                       uint64_t time0 = 1397818193 /* timestamp of the second block */);
 
 
+    time_t
+    ptime_to_time_t(const pt::ptime& in_ptime);
+
     bool
     decode_ringct(const rct::rctSig & rv,
                   const crypto::public_key pub,

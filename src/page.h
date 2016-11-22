@@ -2248,20 +2248,21 @@ namespace xmreg {
             // such search start with "aoi_", e.g., "aoi_444-23.00"
             bool search_for_amount_output_idx = (search_text.substr(0, 4) == "aoi_");
 
-
             // check if date given in format: 2005-04-55
             // this is 10 characters
-            if (search_text.length() == 10)
+            if (search_text.length() == 19)
             {
                 uint64_t estimated_blk_height {0};
 
                 // first parse the string date into boost's ptime object
-                dateparser parser {"%Y-%m-%d"};
+                dateparser parser {"%Y-%m-%d %H:%M:%S"};
 
                 if (parser(search_text))
                 {
                     // seems we have a correct date!
                     // so try to estimate block height from it.
+
+                    cout << "timestamp: " << xmreg::ptime_to_time_t(parser.pt) << endl;
 
                     // estimate blockchain height from the start date provided
                     estimated_blk_height = xmreg::estimate_bc_height(search_text);

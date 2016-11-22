@@ -629,6 +629,13 @@ namespace xmreg
         return make_pair(empty_time, scale);
     }
 
+    time_t
+    ptime_to_time_t(const pt::ptime& in_ptime)
+    {
+        static pt::ptime epoch(gt::date(1970, 1, 1));
+        pt::time_duration::sec_type no_seconds = (in_ptime - epoch).total_seconds();
+        return time_t(no_seconds);
+    }
 
     bool
     decode_ringct(const rct::rctSig& rv,
