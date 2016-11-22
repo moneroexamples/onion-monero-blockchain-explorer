@@ -117,18 +117,6 @@ int main(int ac, const char* av[]) {
 
     CROW_ROUTE(app, "/")
     ([&](const crow::request& req) {
-
-        for (const auto& m : req.headers)
-            cout << m.first << ": " << m.second << endl;
-
-        // there is some robot scanning everything
-        // on the explorer. I block it with this
-        if (!xmreg::does_header_has(req, "Accept", "q=.2, */*; q=.2").empty())
-        {
-            cout << "Scanner with q=.2, */*; q=.2 blocked!" << endl;
-            return crow::response(400);
-        }
-
         return crow::response(xmrblocks.index2());
     });
 
@@ -139,47 +127,16 @@ int main(int ac, const char* av[]) {
 
     CROW_ROUTE(app, "/block/<uint>")
     ([&](const crow::request& req, size_t block_height) {
-
-        // there is some robot scanning everything
-        // on the explorer. I block it with this
-        if (!xmreg::does_header_has(req, "Accept", "q=.2, */*; q=.2").empty())
-        {
-            cout << "Scanner with q=.2, */*; q=.2 blocked!" << endl;
-            return crow::response(400);
-        }
-
         return crow::response(xmrblocks.show_block(block_height));
     });
 
     CROW_ROUTE(app, "/block/<string>")
     ([&](const crow::request& req, string block_hash) {
-
-        // there is some robot scanning everything
-        // on the explorer. I block it with this
-        if (!xmreg::does_header_has(req, "Accept", "q=.2, */*; q=.2").empty())
-        {
-            cout << "Scanner with q=.2, */*; q=.2 blocked!" << endl;
-            return crow::response(400);
-        }
-
         return crow::response(xmrblocks.show_block(block_hash));
     });
 
     CROW_ROUTE(app, "/tx/<string>")
     ([&](const crow::request& req, string tx_hash) {
-
-
-        for (const auto& m : req.headers)
-            cout << m.first << ": " << m.second << endl;
-
-        // there is some robot scanning everything
-        // on the explorer. I block it with this
-        if (!xmreg::does_header_has(req, "Accept", "q=.2, */*; q=.2").empty())
-        {
-            cout << "Scanner with q=.2, */*; q=.2 blocked!" << endl;
-            return crow::response(400);
-        }
-
         return crow::response(xmrblocks.show_tx(tx_hash));
     });
 
@@ -266,12 +223,12 @@ int main(int ac, const char* av[]) {
         return xmrblocks.search(string(req.url_params.get("value")));
     });
 
-    CROW_ROUTE(app, "/robots.txt")
-    ([&]() {
-        string text = "User-agent: *\n"
-                      "Disallow: ";
-        return text;
-    });
+//    CROW_ROUTE(app, "/robots.txt")
+//    ([&]() {
+//        string text = "User-agent: *\n"
+//                      "Disallow: ";
+//        return text;
+//    });
 
     CROW_ROUTE(app, "/autorefresh")
     ([&]() {
