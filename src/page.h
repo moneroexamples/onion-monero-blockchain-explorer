@@ -2333,7 +2333,7 @@ namespace xmreg {
 
                 mylmdb = make_unique<xmreg::MyLMDB>(lmdb2_path);
 
-                // check if date given in format: 2005-04-55 12:02:33
+                // check if date given in format: 2015-04-15 12:02:33
                 // this is 19 characters
                 if (search_text.length() == 19)
                 {
