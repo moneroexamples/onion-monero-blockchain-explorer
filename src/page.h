@@ -2202,38 +2202,6 @@ namespace xmreg {
             // such search start with "aoi_", e.g., "aoi_444-23.00"
             bool search_for_amount_output_idx = (search_text.substr(0, 4) == "aoi_");
 
-            // check if date given in format: 2005-04-55
-            // this is 10 characters
-            if (search_text.length() == 19)
-            {
-                uint64_t estimated_blk_height {0};
-
-                // first parse the string date sys_seconds and then to timestamp
-                // since epoch
-                uint64_t blk_timestamp_utc = parse(search_text).time_since_epoch().count();
-
-                if (blk_timestamp_utc)
-                {
-                    // seems we have a correct date!
-                    // so try to estimate block height from it.
-
-                    cout << "timestamp: " << blk_timestamp_utc << endl;
-
-//                    // estimate blockchain height from the start date provided
-//                    estimated_blk_height = xmreg::estimate_bc_height(search_text);
-//
-//                    result_html = show_block(estimated_blk_height);
-//
-//                    // nasty check if output is "Cant get" as a sign of
-//                    // a not found tx. Later need to think of something better.
-//                    if (result_html.find("Cant get") == string::npos)
-//                    {
-//                        return result_html;
-//                    }
-                }
-            }
-
-
             // first check if searching for block of given height
             if (search_text.size() < 12 &&
                                 (search_for_global_output_idx == false
@@ -2364,6 +2332,39 @@ namespace xmreg {
                 cout << "So lets try to search there for what we are after." << endl;
 
                 mylmdb = make_unique<xmreg::MyLMDB>(lmdb2_path);
+
+                // check if date given in format: 2005-04-55 12:02:33
+                // this is 19 characters
+                if (search_text.length() == 19)
+                {
+                    uint64_t estimated_blk_height {0};
+
+                    // first parse the string to date::sys_seconds and then to timestamp
+                    // since epoch
+                    uint64_t blk_timestamp_utc = parse(search_text).time_since_epoch().count();
+
+                    if (blk_timestamp_utc)
+                    {
+                        // seems we have a correct date!
+                        // so try to estimate block height from it.
+                        //
+                        // to find block we can use our lmdb outputs_info table
+                        // its indexes are timestamps.
+
+                        vector<xmreg::output_info> out_infos;
+
+                        if (mylmdb->get_output_info(blk_timestamp_utc, out_infos))
+                        {
+                            // since many outputs can be in a single block
+                            // just get the first one to obtained its block
+
+                            uint64_t found_blk_height = core_storage->get_db()
+                                    .get_tx_block_height(out_infos.at(0).tx_hash);
+
+                            return show_block(found_blk_height);
+                        }
+                    }
+                }
 
 
                 mylmdb->search(search_text,
