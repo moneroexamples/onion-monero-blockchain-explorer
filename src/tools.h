@@ -16,7 +16,6 @@
 #include "monero_headers.h"
 #include "tx_details.h"
 
-#include "../ext/dateparser.h"
 #include "../ext/infix_iterator.h"
 #include "../ext/date/tz.h"
 
@@ -169,10 +168,6 @@ enable_monero_log() {
     epee::log_space::get_set_log_detalisation_level(true, log_level);
     epee::log_space::log_singletone::add_logger(LOGGER_CONSOLE, NULL, NULL);
 }
-
-
-uint64_t
-estimate_bc_height(const string& date, const char* format = "%Y-%m-%d");
 
 
 inline double

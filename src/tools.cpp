@@ -507,36 +507,6 @@ namespace xmreg
     }
 
 
-    /**
-     * Rough estimate of block height from the time provided
-     *
-     */
-    uint64_t
-    estimate_bc_height(const string& date, const char* format)
-    {
-        const pt::ptime MONERO_START {gt::date(2014,04,18)};
-        const uint64_t MONERO_BLOCK_TIME {60}; // seconds
-
-        dateparser parser {format};
-
-        if (!parser(date))
-        {
-           throw runtime_error(string("Date format is incorrect: ") + date);
-        }
-
-        pt::ptime requested_date = parser.pt;
-
-        if (requested_date < MONERO_START)
-        {
-            return 0;
-        }
-
-        pt::time_duration td = requested_date - MONERO_START;
-
-        return static_cast<uint64_t>(td.total_seconds()) / MONERO_BLOCK_TIME;
-    }
-
-
     array<size_t, 5>
     timestamp_difference(uint64_t t1, uint64_t t2)
     {
