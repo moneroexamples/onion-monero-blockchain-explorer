@@ -1,2 +1,0 @@
-/usr/bin/ar qc libmyext.a  CMakeFiles/myext.dir/format.cc.o CMakeFiles/myext.dir/dateparser.cpp.o CMakeFiles/myext.dir/date/tz.cpp.o
-/usr/bin/ranlib libmyext.a

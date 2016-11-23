@@ -1,2 +1,0 @@
-/usr/bin/ar qc libmyxrm.a  CMakeFiles/myxrm.dir/MicroCore.cpp.o CMakeFiles/myxrm.dir/tools.cpp.o CMakeFiles/myxrm.dir/CmdLineOptions.cpp.o CMakeFiles/myxrm.dir/tx_details.cpp.o CMakeFiles/myxrm.dir/rpccalls.cpp.o
-/usr/bin/ranlib libmyxrm.a
