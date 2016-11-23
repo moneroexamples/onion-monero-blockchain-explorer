@@ -3624,9 +3624,18 @@ namespace xmreg {
         string
         get_full_page(string& middle)
         {
+            // set last git commit date based on
+            // autogenrated version.h during compilation
+            static const mstch::map footer_context {
+                    {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
+                    {"last_git_commit_date", string {GIT_COMMIT_DATETIME}}
+            };
+
+            string footer_html = mstch::render(xmreg::read(TMPL_FOOTER), footer_context);
+
             return xmreg::read(TMPL_HEADER)
                    + middle
-                   + xmreg::read(TMPL_FOOTER);
+                   + footer_html;
         }
 
         void

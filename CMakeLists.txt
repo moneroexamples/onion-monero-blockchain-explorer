@@ -119,7 +119,7 @@ execute_process(
 
 # Get the date and time of last commit
 execute_process(
-        COMMAND git log -1 --format=%cd
+        COMMAND git log -1 --format=%cd --date=short
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         OUTPUT_VARIABLE GIT_COMMIT_DATETIME
         OUTPUT_STRIP_TRAILING_WHITESPACE
