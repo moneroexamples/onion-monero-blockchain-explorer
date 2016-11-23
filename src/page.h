@@ -12,6 +12,7 @@
 #include "../ext/format.h"
 #include "../ext/member_checker.h"
 
+#include "version.h"
 
 #include "monero_headers.h"
 

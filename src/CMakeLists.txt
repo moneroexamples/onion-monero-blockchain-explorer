@@ -14,7 +14,7 @@ set(SOURCE_FILES
 		CmdLineOptions.cpp
 		tx_details.cpp
 		page.h
-		rpccalls.cpp rpccalls.h)
+		rpccalls.cpp rpccalls.h version.h.in)
 
 # make static library called libmyxrm
 # that we are going to link to
