@@ -143,23 +143,14 @@ namespace xmreg
         return bf::path(remove_trailing_path_separator(path_str));
     }
 
-
     string
     timestamp_to_str(time_t timestamp, const char* format)
     {
+        auto a_time_point = chrono::system_clock::from_time_t(timestamp);
+        auto utc          = date::to_utc_time(chrono::system_clock::from_time_t(timestamp));
+        auto sys_time     = date::to_sys_time(utc);
 
-        const int TIME_LENGTH = 60;
-
-        char str_buff[TIME_LENGTH];
-
-        tm *tm_ptr;
-        tm_ptr = localtime(&timestamp);
-
-        size_t len;
-
-        len = std::strftime(str_buff, TIME_LENGTH, format, tm_ptr);
-
-        return string(str_buff, len);
+        return date::format(format, date::floor<chrono::seconds>(sys_time));
     }
 
 
@@ -889,6 +880,22 @@ namespace xmreg
 
         return null_pkey;
     }
+
+    date::sys_seconds
+    parse(const std::string& str, string format)
+    {
+        std::istringstream in(str);
+        date::sys_seconds tp;
+        in >> date::parse(format, tp);
+        if (in.fail())
+        {
+            in.clear();
+            in.str(str);
+            in >> date::parse(format, tp);
+        }
+        return tp;
+    }
+
 
 }
 

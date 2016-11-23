@@ -2208,27 +2208,28 @@ namespace xmreg {
             {
                 uint64_t estimated_blk_height {0};
 
-                // first parse the string date into boost's ptime object
-                dateparser parser {"%Y-%m-%d %H:%M:%S"};
+                // first parse the string date sys_seconds and then to timestamp
+                // since epoch
+                uint64_t blk_timestamp_utc = parse(search_text).time_since_epoch().count();
 
-                if (parser(search_text))
+                if (blk_timestamp_utc)
                 {
                     // seems we have a correct date!
                     // so try to estimate block height from it.
 
-                    cout << "timestamp: " << xmreg::ptime_to_time_t(parser.pt) << endl;
+                    cout << "timestamp: " << blk_timestamp_utc << endl;
 
-                    // estimate blockchain height from the start date provided
-                    estimated_blk_height = xmreg::estimate_bc_height(search_text);
-
-                    result_html = show_block(estimated_blk_height);
-
-                    // nasty check if output is "Cant get" as a sign of
-                    // a not found tx. Later need to think of something better.
-                    if (result_html.find("Cant get") == string::npos)
-                    {
-                        return result_html;
-                    }
+//                    // estimate blockchain height from the start date provided
+//                    estimated_blk_height = xmreg::estimate_bc_height(search_text);
+//
+//                    result_html = show_block(estimated_blk_height);
+//
+//                    // nasty check if output is "Cant get" as a sign of
+//                    // a not found tx. Later need to think of something better.
+//                    if (result_html.find("Cant get") == string::npos)
+//                    {
+//                        return result_html;
+//                    }
                 }
             }
 

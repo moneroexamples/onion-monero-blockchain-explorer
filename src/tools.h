@@ -253,6 +253,9 @@ namespace xmreg
     public_key
     get_tx_pub_key_from_received_outs(const transaction &tx);
 
+    date::sys_seconds
+    parse(const std::string& str, string format="%Y-%m-%d %H:%M:%S");
+
 }
 
 #endif //XMREG01_TOOLS_H

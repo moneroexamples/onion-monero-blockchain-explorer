@@ -139,4 +139,5 @@ target_link_libraries(${PROJECT_NAME}
         pthread
         unbound
         unwind
+        curl
         dl)
