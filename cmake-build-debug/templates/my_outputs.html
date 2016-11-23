@@ -1,0 +1,69 @@
+
+<div>
+
+    <H4 style="margin:5px">Tx hash: {{tx_hash}}</H4>
+    <H5 style="margin:5px">Tx public key: {{tx_pub_key}}</H5>
+
+
+    {{#has_payment_id}}
+        <H5 style="margin:5px">Payment id: {{payment_id}}</H5>
+    {{/has_payment_id}}
+
+    {{#has_payment_id8}}
+        <H5 style="margin:5px">Payment id (encrypted): {{payment_id8}}</H5>
+    {{/has_payment_id8}}
+
+
+    <table class="center" style="width: 80%; margin-top:10px">
+        <tr>
+            <td>Block: {{blk_height}}</td>
+            <td>Timestamp [UCT]: {{blk_timestamp}}</td>
+            <td>Age [y:d:h:m:s]: {{delta_time}}</td>
+            <td>Fee: {{tx_fee}}</td>
+            <td>Tx size: {{tx_size}} kB</td>
+        </tr>
+
+    </table>
+
+    {{^tx_prove}}
+        <h3>Checking which outputs belong to the given address and viewkey</h3>
+        <h5>address: {{xmr_address}}</h5>
+        <h5>viewkey: {{viewkey}}</h5>
+    {{/tx_prove}}
+    {{#tx_prove}}
+        <h3>Prove that you send this tx to the given address</h3>
+        <h5>address: {{xmr_address}}</h5>
+        <h5>Tx private key: {{viewkey}}</h5>
+    {{/tx_prove}}
+
+    <h3>Outputs ({{outputs_no}})</h3>
+    <div class="center">
+        <table class="center" >
+            <tr>
+                <td>Stealth address</td>
+                <td>amount</td>
+                <td>output match?</td>
+            </tr>
+            {{#outputs}}
+            <tr>
+                <td>{{output_idx}}: {{out_pub_key}}</td>
+                <td>{{amount}}</td>
+                {{#mine_output}}
+                <td>
+                        <span style="color: #008009;font-weight: bold">
+                        {{mine_output}}
+                        </span>
+                </td>
+                {{/mine_output}}
+                {{^mine_output}}
+                    <td>{{mine_output}}</td>
+                {{/mine_output}}
+            </tr>
+            {{/outputs}}
+        </table>
+
+        <h3>Sum XMR from matched outputs: {{sum_xmr}}</h3>
+    </div>
+
+
+</div>

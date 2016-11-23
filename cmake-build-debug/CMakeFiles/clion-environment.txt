@@ -1,0 +1,1 @@
+CMake: 3.6.2@/opt/clion-2016.2.2/bin/cmake/bin/cmake

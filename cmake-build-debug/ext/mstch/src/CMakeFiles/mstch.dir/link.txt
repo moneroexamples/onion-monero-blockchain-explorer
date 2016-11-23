@@ -1,0 +1,2 @@
+/usr/bin/ar qc libmstch.a  CMakeFiles/mstch.dir/state/in_section.cpp.o CMakeFiles/mstch.dir/state/outside_section.cpp.o CMakeFiles/mstch.dir/mstch.cpp.o CMakeFiles/mstch.dir/render_context.cpp.o CMakeFiles/mstch.dir/template_type.cpp.o CMakeFiles/mstch.dir/token.cpp.o CMakeFiles/mstch.dir/utils.cpp.o
+/usr/bin/ranlib libmstch.a

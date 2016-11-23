@@ -1,0 +1,51 @@
+
+<div>
+    <br/>
+    <H4 style="margin:5px">Address:<br/>{{xmr_address}}</H4>
+    <br/>
+
+    {{#testnet}}
+        <H4 style="margin:5px">Testnet address: Yes</H4>
+    {{/testnet}}
+    {{^testnet}}
+        <H4 style="margin:5px">Testnet address: No</H4>
+    {{/testnet}}
+
+    <br/>
+    <H4 style="margin:5px">Associated public keys</H4>
+
+    <H4 style="margin:5px">View key: {{public_viewkey}}</H4>
+    <H4 style="margin:5px">Spend key: {{public_spendkey}}</H4>
+    <br/>
+
+    {{#is_integrated_addr}}
+        <H4 style="margin:5px">Payment id: {{encrypted_payment_id}}</H4>
+    <br/>
+
+    <!--
+        <H4 style="margin:5px">
+            <a href="/search?value={{encrypted_payment_id}}">--&gt; Search for transactions associated with this encrypted payment id &lt;--</a>
+        </H4>
+    {{/is_integrated_addr}}
+    {{^is_integrated_addr}}
+        <H4 style="margin:5px">
+            Transactions:<br/> Sorry, its not possible to find txs associated with
+            normal addresses in Monero
+        </H4>
+    {{/is_integrated_addr}}
+    -->
+
+    <H4 style="margin:5px">
+        Transactions:<br/> Sorry, its not possible to find txs associated with
+        normal addresses in Monero
+    </H4>
+
+    <br/>
+
+
+
+
+
+</div>
+<br/>
+<br/>

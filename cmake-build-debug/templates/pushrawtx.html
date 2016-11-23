@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <META HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+    {{#refresh}}
+    <meta http-equiv="refresh" content="10">
+    {{/refresh}}
+    <title>Onion Monero Blockchain Explorer</title>
+    <!--<link rel="stylesheet" type="text/css" href="/css/style.css">-->
+    <style type="text/css">
+        {{#css_styles}}{{/css_styles}}
+    </style>
+
+</head>
+<body>
+<div>
+
+    <div class="center">
+        <h1 class="center"><a href="/">Onion Monero Transaction Pusher</a></h1>
+        <h4 style="font-size: 15px; margin: 0px">(no javascript - no cookies - no web analytics trackers - no images - open sourced)</h4>
+    </div>
+
+    <div class="center">
+
+        {{#txs}}
+            <h3>Attempting to push tx: {{tx_hash}}</h3>
+        {{/txs}}
+
+        {{#has_error}}
+            <h4 style="color:red">Attempt failed</h4>
+            <h4>{{error_msg}}</h4>
+        {{/has_error}}
+        {{^has_error}}
+            <h4 style="color:green">Success</h4>
+            <h4>
+                Your tx should be already in the mempool waiting to be included
+                in an upcoming block.
+            </h4>
+
+            {{#txs}}
+                <h4>Go to tx: <a href="/tx/{{tx_hash}}">{{tx_hash}}</a></h4>
+            {{/txs}}
+
+        {{/has_error}}
+
+    </div>
+
+</div>

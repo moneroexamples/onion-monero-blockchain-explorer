@@ -1,0 +1,32 @@
+<h2>
+   Memory pool (size: {{mempool_size}})
+</h2>
+<div class="center">
+    
+      <table class="center">
+            <tr>
+                <td>height</td>
+                <td>age [h:m:s]</td>
+                <td>transaction hash</td>
+                <td>fee</td>
+                <td>outputs</td>
+                <td>in/out</td>
+                <td>mixin</td>
+                <td>size [kB]</td>
+            </tr>
+            {{#mempooltxs}}
+            <tr>
+                <td>N/A</td>
+                <td>{{age}}</td>
+                <td><a href="/tx/{{hash}}">{{hash}}</a></td>
+                <td>{{fee}}</td>
+                <td>{{xmr_outputs}}</td>
+                <td>{{no_inputs}}/{{no_outputs}}</td>
+                <td>{{mixin}}</td>
+                <td>{{txsize}}</td>
+            </tr>
+            {{/mempooltxs}}
+        </table>
+
+
+</div>

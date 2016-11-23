@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <META HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+    {{#refresh}}
+    <meta http-equiv="refresh" content="10">
+    {{/refresh}}
+    <title>Onion Monero Blockchain Explorer</title>
+    <!--<link rel="stylesheet" type="text/css" href="/css/style.css">-->
+    <style type="text/css">
+        {{#css_styles}}{{/css_styles}}
+    </style>
+
+</head>
+<body>
+<div>
+
+    <div class="center">
+        <h1 class="center"><a href="/">Onion Monero Transaction Pusher</a></h1>
+        <h4 style="font-size: 15px; margin: 0px">(no javascript - no cookies - no web analytics trackers - no images - open sourced)</h4>
+    </div>
+
+    <div class="center">
+        {{#unsigned_tx_given}}
+            <h3>Details of unsigned raw tx data given</h3>
+
+            {{#txs}}
+                <div class="center" style="width: 100%; margin-top:10px">
+                    <h4>Basic information</h4>
+                    <h5>
+                         {{#dest_infos}}
+                            Send {{dest_amount}} to {{dest_address}}<br/>
+                        {{/dest_infos}}
+
+                        {{#has_payment_id}}
+                            Payment id: {{payment_id}}<br/>
+                        {{/has_payment_id}}
+
+                        {{#has_payment_id8}}
+                           Payment id (encrypted): {{payment_id8}}<br/>
+                        {{/has_payment_id8}}
+                    </h5>
+
+                    <h3>
+                        Inputs' mixins time scale (from {{min_mix_time}} till {{max_mix_time}};
+                        resolution: {{timescales_scale}} days{{#have_raw_tx}}; R - real mixin {{/have_raw_tx}})
+                    </h3>
+                    <div class="center">
+                        <ul class="center">
+                            {{#timescales}}
+                            <li  style="list-style-type: none; text-align: center; font-size: 8px">|{{timescale}}|</li>
+                            {{/timescales}}
+                        </ul>
+                    </div>
+
+
+                    <h4>Outputs selected for this tx (total: {{sum_outputs_amounts}})</h4>
+                    {{#dest_sources}}
+                                <table style="width: 100%; margin-top:10px">
+                                    <tr>
+                                        <td>Output Index</td>
+                                        <td>Stealth address</td>
+                                        <td>Is this real output</td>
+                                        <td>Age {{age_format}}</td>
+                                        <td>Amount</td>
+                                    </tr>
+                                    {{#outputs}}
+                                        <tr>
+                                            <td>{{out_index}}</td>
+                                            <td><a href="/tx/{{tx_hash}}">{{out_pub_key}}</a></td>
+                                            {{#is_real}}
+                                                <td><span style="color: #008009;font-weight: bold">{{is_real}}</span></td>
+                                            {{/is_real}}
+                                            {{^is_real}}
+                                                <td>{{is_real}}</td>
+                                            {{/is_real}}
+                                            <td>{{output_age}}</td>
+                                            <td>{{output_amount}}</td>
+                                        </tr>
+                                       <!-- <tr><td colspan="3">&nbsp;  &nbsp; ctkey: {{ctkey}}</td></tr>-->
+                                    {{/outputs}}
+                                </table>
+                    {{/dest_sources}}
+                    <h4>Change to be returned to the sender: {{change_amount}}</h4>
+                </div>
+            {{/txs}}
+        {{/unsigned_tx_given}}
+
+        {{^unsigned_tx_given}}
+            <h3>Details of signed raw tx data given</h3>
+            {{#txs}}
+                <h5>
+                    {{#dest_infos}}
+                        {{^is_this_change}}
+                            Send {{dest_amount}} to {{dest_address}}<br/>
+                        {{/is_this_change}}
+                        {{#is_this_change}}
+                            Total change {{dest_amount}} back to {{dest_address}}<br/>
+                        {{/is_this_change}}
+                    {{/dest_infos}}
+                </h5>
+                {{>tx_details}}
+            {{/txs}}
+
+        {{/unsigned_tx_given}}
+
+
+    </div>
+
+
+</div>

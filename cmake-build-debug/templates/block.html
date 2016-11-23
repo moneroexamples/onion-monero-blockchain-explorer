@@ -1,0 +1,82 @@
+
+<div>
+
+    <H4>Block hash (height): {{blk_hash}} ({{blk_height}})</H4>
+
+
+    {{#have_prev_hash}}
+    <H5>Previous block: <a href="/block/{{prev_hash}}">{{prev_hash}}</a></H5>
+    {{/have_prev_hash}}
+
+    {{#have_next_hash}}
+    <H5>Next block: <a href="/block/{{next_hash}}">{{next_hash}}</a></H5>
+    {{/have_next_hash}}
+
+
+
+    <table class="center">
+        <tr>
+            <td>Timestamp [UCT] (epoch):</td><td>{{blk_timestamp}} ({{blk_timestamp_epoch}})</td>
+            <td>Age {{age_format}}:</td><td>{{blk_age}}</td>
+            <td>Δ [h:m:s]:</td><td>{{delta_time}}</td>
+        </tr>
+        <tr>
+            <td>Major.minor version:</td><td>{{major_ver}}.{{minor_ver}}</td>
+            <td>Block reward:</td><td>{{blk_reward}}</td>
+            <td>Block size [kB]:</td><td>{{blk_size}}</td>
+        </tr>
+        <tr>
+            <td>nonce:</td><td>{{blk_nonce}}</td>
+            <td>Total fees:</td><td>{{sum_fees}}</td>
+            <td>No of txs:</td><td>{{no_txs}}</td>
+        </tr>
+    </table>
+
+    <h3>Miner reward transaction</h3>
+    <table class="center">
+        <tr>
+            <td>hash</td>
+            <td>outputs</td>
+            <td>size [kB]</td>
+            <td>version</td>
+        </tr>
+        {{#coinbase_txs}}
+            <tr>
+                <td><a href="/tx/{{hash}}">{{hash}}</a>
+                <td>{{sum_outputs}}</td>
+                <td>{{tx_size}}</td>
+                <td>{{version}}</td>
+            </tr>
+        {{/coinbase_txs}}
+
+    </table>
+
+
+
+    <h3>Transactions ({{no_txs}})</h3>
+    {{#have_txs}}
+        <table class="center" style="width:80%">
+            <tr>
+                <td>hash</td>
+                <td>outputs</td>
+                <td>fee</td>
+                <td>mixin</td>
+                <td>in/out</td>
+                <td>size [kB]</td>
+                <td>version</td>
+            </tr>
+            {{#blk_txs}}
+                <tr>
+                    <td><a href="/tx/{{hash}}">{{hash}}</a></td>
+                    <td>{{sum_outputs}}</td>
+                    <td>{{tx_fee}}</td>
+                    <td>{{mixin}}</td>
+                    <td>{{no_inputs}}/{{no_outputs}}</td>                    
+                    <td>{{tx_size}}</td>
+                    <td>{{version}}</td>
+                </tr>
+            {{/blk_txs}}
+        </table>
+    {{/have_txs}}
+
+</div>

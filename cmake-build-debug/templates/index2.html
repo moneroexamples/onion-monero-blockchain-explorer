@@ -1,0 +1,67 @@
+
+<div class="center">
+     <h3 style="font-size: 12px; margin-top: 20px">
+
+        Server time: {{server_timestamp}} | <a href="/rawtx">Tx pusher </a>
+         | <a href="/rawkeyimgs">Key images checker</a> |
+
+        {{#refresh}}
+            <a href="/">Autorefresh is ON (10 s)</a>
+        {{/refresh}}
+        {{^refresh}}
+            <a href="/autorefresh">Autorefresh is OFF</a>
+        {{/refresh}}
+         {{#testnet}}
+          |
+            This is <span style="color:#ff6b62">testnet</span> blockchian
+         {{/testnet}}
+
+        </h3>
+</div>
+
+    {{{mempool_info}}}
+
+    {{#is_page_zero}}
+      <h2>Transactions in the last 25 blocks</h2>
+    {{/is_page_zero}}
+    {{^is_page_zero}}
+      <h2>Transactions in older blocks<!--(height: {{height}})--></h2>
+    {{/is_page_zero}}
+
+    <div class="center">
+
+            <table class="center">
+                <tr>
+                    <td>height</td>
+                    <td>age {{age_format}}<!--(Δm)--></td>
+                    <td>tx hash</td>
+                    <td>fees</td>
+                    <td>outputs</td>
+                    <td>in/out</td>
+                    <td>mixin</td>
+                    <td>size [kB]</td>
+                </tr>
+                {{#txs}}
+                <tr>
+                    <td><a href="/block/{{height}}">{{height}}</a></td>
+                    <td>{{age}}<!--{{time_delta}}--></td>
+                    <td><a href="/tx/{{hash}}">{{hash}}</a></td>
+                    <td>{{tx_fee_short}}</td>
+                    <td>{{sum_outputs_short}}</td>
+                    <td>{{no_inputs}}/{{no_outputs}}</td>
+                    <td>{{mixin}}</td>
+                    <td>{{tx_size_short}}</td>
+                </tr>
+                {{/txs}}
+            </table>
+
+            <div id="pages" class="center" style="text-align: center;">
+             {{^is_page_zero}}
+               <a href="/page/{{prev_page}}">previous page</a> |
+               <a href="/">first page</a> |
+             {{/is_page_zero}}
+                current page: {{page_no}}/<a href="/page/{{total_page_no}}">{{total_page_no}}</a>
+                | <a href="/page/{{next_page}}">next page</a>
+            </div>
+
+    </div>

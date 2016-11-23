@@ -1,0 +1,475 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="xmrblocks"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;CMake Files\ext\;CMake Files\ext\mstch\;CMake Files\ext\mstch\src\;CMake Files\src\;CMake Files\src\templates\;CMake Files\src\templates\css\;CMake Files\src\templates\partials\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="xmrblocks">
+				<Option output="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/xmrblocks" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/monero-dev/headers/src"/>
+					<Add directory="/opt/monero-dev/headers/external"/>
+					<Add directory="/opt/monero-dev/headers/contrib/epee/include"/>
+					<Add directory="/opt/monero-dev/headers/external/db_drivers/liblmdb"/>
+					<Add directory="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/include"/>
+					<Add directory="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/mstch/src"/>
+					<Add directory="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/6/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/include/c++/6"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/6"/>
+					<Add directory="/usr/include/c++/6/backward"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 xmrblocks"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="xmrblocks/fast">
+				<Option output="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/xmrblocks" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/monero-dev/headers/src"/>
+					<Add directory="/opt/monero-dev/headers/external"/>
+					<Add directory="/opt/monero-dev/headers/contrib/epee/include"/>
+					<Add directory="/opt/monero-dev/headers/external/db_drivers/liblmdb"/>
+					<Add directory="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/include"/>
+					<Add directory="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/mstch/src"/>
+					<Add directory="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/6/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/include/c++/6"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/6"/>
+					<Add directory="/usr/include/c++/6/backward"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 xmrblocks/fast"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="myext">
+				<Option output="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/libmyext.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/monero-dev/headers/src"/>
+					<Add directory="/opt/monero-dev/headers/external"/>
+					<Add directory="/opt/monero-dev/headers/contrib/epee/include"/>
+					<Add directory="/opt/monero-dev/headers/external/db_drivers/liblmdb"/>
+					<Add directory="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/6/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/include/c++/6"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/6"/>
+					<Add directory="/usr/include/c++/6/backward"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/Makefile&quot;  VERBOSE=1 myext"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="myext/fast">
+				<Option output="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/libmyext.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/monero-dev/headers/src"/>
+					<Add directory="/opt/monero-dev/headers/external"/>
+					<Add directory="/opt/monero-dev/headers/contrib/epee/include"/>
+					<Add directory="/opt/monero-dev/headers/external/db_drivers/liblmdb"/>
+					<Add directory="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/6/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/include/c++/6"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/6"/>
+					<Add directory="/usr/include/c++/6/backward"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/Makefile&quot;  VERBOSE=1 myext/fast"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="mstch">
+				<Option output="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/mstch/src/libmstch.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/mstch/src"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/mstch/src"/>
+					<Add directory="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src"/>
+					<Add directory="/opt/monero-dev/headers/src"/>
+					<Add directory="/opt/monero-dev/headers/external"/>
+					<Add directory="/opt/monero-dev/headers/contrib/epee/include"/>
+					<Add directory="/opt/monero-dev/headers/external/db_drivers/liblmdb"/>
+					<Add directory="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/6/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/include/c++/6"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/6"/>
+					<Add directory="/usr/include/c++/6/backward"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/mstch/src/Makefile&quot;  VERBOSE=1 mstch"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/mstch/src/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/mstch/src/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/mstch/src/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="mstch/fast">
+				<Option output="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/mstch/src/libmstch.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/mstch/src"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/mstch/src"/>
+					<Add directory="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src"/>
+					<Add directory="/opt/monero-dev/headers/src"/>
+					<Add directory="/opt/monero-dev/headers/external"/>
+					<Add directory="/opt/monero-dev/headers/contrib/epee/include"/>
+					<Add directory="/opt/monero-dev/headers/external/db_drivers/liblmdb"/>
+					<Add directory="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/6/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/include/c++/6"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/6"/>
+					<Add directory="/usr/include/c++/6/backward"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/mstch/src/Makefile&quot;  VERBOSE=1 mstch/fast"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/mstch/src/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/mstch/src/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/ext/mstch/src/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="myxrm">
+				<Option output="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/src/libmyxrm.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/src"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/monero-dev/headers/src"/>
+					<Add directory="/opt/monero-dev/headers/external"/>
+					<Add directory="/opt/monero-dev/headers/contrib/epee/include"/>
+					<Add directory="/opt/monero-dev/headers/external/db_drivers/liblmdb"/>
+					<Add directory="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/6/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/include/c++/6"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/6"/>
+					<Add directory="/usr/include/c++/6/backward"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/src/Makefile&quot;  VERBOSE=1 myxrm"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/src/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/src/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/src/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="myxrm/fast">
+				<Option output="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/src/libmyxrm.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/src"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/monero-dev/headers/src"/>
+					<Add directory="/opt/monero-dev/headers/external"/>
+					<Add directory="/opt/monero-dev/headers/contrib/epee/include"/>
+					<Add directory="/opt/monero-dev/headers/external/db_drivers/liblmdb"/>
+					<Add directory="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/6/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/include/c++/6"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/6"/>
+					<Add directory="/usr/include/c++/6/backward"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/src/Makefile&quot;  VERBOSE=1 myxrm/fast"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/src/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/src/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/mwo/onion-monero-blockchain-explorer/cmake-build-debug/src/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/date/tz.cpp">
+			<Option target="myext"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/date/tz.h">
+			<Option target="myext"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/dateparser.cpp">
+			<Option target="myext"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/dateparser.h">
+			<Option target="myext"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/format.cc">
+			<Option target="myext"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/format.h">
+			<Option target="myext"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/mstch.cpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/render_context.cpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/render_context.hpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/state/in_section.cpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/state/in_section.hpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/state/outside_section.cpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/state/outside_section.hpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/state/render_state.hpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/template_type.cpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/template_type.hpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/token.cpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/token.hpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/utils.cpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/utils.hpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/visitor/get_token.hpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/visitor/has_token.hpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/visitor/is_node_empty.hpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/visitor/render_node.hpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/visitor/render_section.hpp">
+			<Option target="mstch"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/main.cpp">
+			<Option target="xmrblocks"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/CmdLineOptions.cpp">
+			<Option target="myxrm"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/CmdLineOptions.h">
+			<Option target="myxrm"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/MicroCore.cpp">
+			<Option target="myxrm"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/MicroCore.h">
+			<Option target="myxrm"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/page.h">
+			<Option target="myxrm"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/rpccalls.cpp">
+			<Option target="myxrm"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/rpccalls.h">
+			<Option target="myxrm"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/tools.cpp">
+			<Option target="myxrm"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/tools.h">
+			<Option target="myxrm"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/tx_details.cpp">
+			<Option target="myxrm"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/tx_details.h">
+			<Option target="myxrm"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\ext\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\ext\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\ext\mstch\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\ext\mstch\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\ext\mstch\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\ext\mstch\src\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\ext\mstch\src\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/ext/mstch/src/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\ext\mstch\src\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\src\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\src\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/address.html">
+			<Option virtualFolder="CMake Files\src\templates\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/block.html">
+			<Option virtualFolder="CMake Files\src\templates\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/checkrawkeyimgs.html">
+			<Option virtualFolder="CMake Files\src\templates\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/checkrawtx.html">
+			<Option virtualFolder="CMake Files\src\templates\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/footer.html">
+			<Option virtualFolder="CMake Files\src\templates\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/header.html">
+			<Option virtualFolder="CMake Files\src\templates\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/index.html">
+			<Option virtualFolder="CMake Files\src\templates\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/index2.html">
+			<Option virtualFolder="CMake Files\src\templates\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/mempool.html">
+			<Option virtualFolder="CMake Files\src\templates\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/my_outputs.html">
+			<Option virtualFolder="CMake Files\src\templates\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/pushrawtx.html">
+			<Option virtualFolder="CMake Files\src\templates\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/rawkeyimgs.html">
+			<Option virtualFolder="CMake Files\src\templates\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/rawtx.html">
+			<Option virtualFolder="CMake Files\src\templates\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/search_results.html">
+			<Option virtualFolder="CMake Files\src\templates\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/tx.html">
+			<Option virtualFolder="CMake Files\src\templates\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/css/style.css">
+			<Option virtualFolder="CMake Files\src\templates\css\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/partials/tx_details.html">
+			<Option virtualFolder="CMake Files\src\templates\partials\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/partials/tx_table_header.html">
+			<Option virtualFolder="CMake Files\src\templates\partials\"/>
+		</Unit>
+		<Unit filename="/home/mwo/onion-monero-blockchain-explorer/src/templates/partials/tx_table_row.html">
+			<Option virtualFolder="CMake Files\src\templates\partials\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
