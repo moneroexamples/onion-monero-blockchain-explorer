@@ -8,7 +8,8 @@ Curently available Monero blockchain explorer websites have several limitations 
  - are closed sourced,
  - are not available as hidden services,
  - provide only basic search capabilities,
- - can't identify users outputs based on provided Monero address and viewkey.
+ - can't identify users outputs based on provided Monero address and viewkey, or private tx key,
+ - do not support Monero testnet, i.e., they dont work with RingCT transactions
 
 
 In this example, these limitations are addressed by development of
@@ -55,13 +56,14 @@ The key features of the Onion Monero Blockchain Explorer are
  - the only explorer that can be used to prove that you send Monero to someone,
  - the only explorer showing detailed information about mixins, such as, mixins'
  age, timescale, mixin of mixins,
- - the only explorer showing number of amount output indices.
+ - the only explorer showing number of amount output indices,
+ - the only explorer supporting Monero testnet network and RingCT.
 
 ## Prerequisite
 
 Everything here was done and tested using Monero 0.9.4 on Ubuntu 16.04 x86_64.
 
-Instruction for Monero 0.9 compilation and Monero headers and libraries setup are
+Instruction for Monero 0.10 compilation and Monero headers and libraries setup are
 as shown here:
  - [Compile Monero 0.9 on Ubuntu 16.04 x64](https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04)
  - [lmdbcpp-monero](https://github.com/moneroexamples/lmdbcpp-monero.git)
