@@ -24,8 +24,9 @@ int main(int ac, const char* av[]) {
     // get command line options
     xmreg::CmdLineOptions opts {ac, av};
 
-    auto help_opt    = opts.get_option<bool>("help");
-    auto testnet_opt = opts.get_option<bool>("testnet");
+    auto help_opt          = opts.get_option<bool>("help");
+    auto testnet_opt       = opts.get_option<bool>("testnet");
+    auto enable_pusher_opt = opts.get_option<bool>("enable-pusher");
 
     // if help was chosen, display help text and finish
     if (*help_opt)
@@ -33,12 +34,14 @@ int main(int ac, const char* av[]) {
         return EXIT_SUCCESS;
     }
 
-    bool testnet {*testnet_opt};
+    bool testnet       {*testnet_opt};
+    bool enable_pusher {*enable_pusher_opt};
 
     auto port_opt           = opts.get_option<string>("port");
     auto bc_path_opt        = opts.get_option<string>("bc-path");
     auto custom_db_path_opt = opts.get_option<string>("custom-db-path");
     auto deamon_url_opt     = opts.get_option<string>("deamon-url");
+
 
     //cast port number in string to uint16
     uint16_t app_port = boost::lexical_cast<uint16_t>(*port_opt);
@@ -107,10 +110,12 @@ int main(int ac, const char* av[]) {
 
     // create instance of page class which
     // contains logic for the website
-    xmreg::page xmrblocks(&mcore, core_storage,
+    xmreg::page xmrblocks(&mcore,
+                          core_storage,
                           deamon_url,
                           custom_db_path_str,
-                          testnet);
+                          testnet,
+                          enable_pusher);
 
     // crow instance
     crow::SimpleApp app;

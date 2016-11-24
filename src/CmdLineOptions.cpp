@@ -25,6 +25,8 @@ namespace xmreg
                  "produce help message")
                 ("testnet,t", value<bool>()->default_value(false)->implicit_value(true),
                  "use testnet blockchain")
+                ("enable-pusher", value<bool>()->default_value(false)->implicit_value(true),
+                 "enable pushing signed tx")
                 ("port,p", value<string>()->default_value("8081"),
                  "default port")
                 ("bc-path,b", value<string>(),

@@ -251,17 +251,21 @@ class page {
 
     bool testnet;
 
+    bool enable_pusher;
+
 
 public:
 
     page(MicroCore* _mcore, Blockchain* _core_storage,
-         string _deamon_url, string _lmdb2_path, bool _testnet)
+         string _deamon_url, string _lmdb2_path,
+         bool _testnet, bool _enable_pusher)
             : mcore {_mcore},
               core_storage {_core_storage},
               rpc {_deamon_url},
               server_timestamp {std::time(nullptr)},
               lmdb2_path {_lmdb2_path},
-              testnet {_testnet}
+              testnet {_testnet},
+              enable_pusher {_enable_pusher}
     {
         css_styles = xmreg::read(TMPL_CSS_STYLES);
     }
@@ -1959,6 +1963,18 @@ public:
             }
 
             string rpc_error_msg;
+
+            if (this->enable_pusher == false)
+            {
+                string error_msg = fmt::format(
+                        "Pushing signed transactions is disabled. "
+                        "Run explorer with --enable-pusher flag to enable it.\n");
+
+                context["has_error"] = true;
+                context["error_msg"] = error_msg;
+
+                break;
+            }
 
             if (!rpc.commit_tx(ptx, rpc_error_msg))
             {
