@@ -101,6 +101,8 @@ remove_trailing_path_separator(const bf::path& in_path);
 string
 timestamp_to_str(time_t timestamp, const char* format = "%F %T");
 
+string
+timestamp_to_str_local(time_t timestamp, const char* format = "%F %T");
 
 ostream&
 operator<< (ostream& os, const account_public_address& addr);

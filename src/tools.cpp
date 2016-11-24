@@ -147,10 +147,41 @@ namespace xmreg
     timestamp_to_str(time_t timestamp, const char* format)
     {
         auto a_time_point = chrono::system_clock::from_time_t(timestamp);
-        auto utc          = date::to_utc_time(chrono::system_clock::from_time_t(timestamp));
-        auto sys_time     = date::to_sys_time(utc);
 
-        return date::format(format, date::floor<chrono::seconds>(sys_time));
+        try
+        {
+            auto utc          = date::to_utc_time(chrono::system_clock::from_time_t(timestamp));
+            auto sys_time     = date::to_sys_time(utc);
+
+            return date::format(format, date::floor<chrono::seconds>(sys_time));
+        }
+        catch (std::runtime_error& e)
+        {
+            cerr << "xmreg::timestamp_to_str: " << e.what() << endl;
+            cerr << "Seems cant convert to UTC timezone using date libary. "
+                    "So just use local timezone." <<endl;
+
+            return timestamp_to_str_local(timestamp, format);
+        }
+    }
+
+
+    string
+    timestamp_to_str_local(time_t timestamp, const char* format)
+    {
+
+        const int TIME_LENGTH = 60;
+
+        char str_buff[TIME_LENGTH];
+
+        tm *tm_ptr;
+        tm_ptr = localtime(&timestamp);
+
+        size_t len;
+
+        len = std::strftime(str_buff, TIME_LENGTH, format, tm_ptr);
+
+        return string(str_buff, len);
     }
 
 
