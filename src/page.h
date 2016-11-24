@@ -1256,7 +1256,7 @@ public:
         //cout << "outputs.size(): " << outputs.size() << endl;
 
         context["outputs"] = outputs;
-        context["sum_xmr"] = XMR_AMOUNT(sum_xmr);
+        context["sum_xmr"] = xmreg::xmr_amount_to_str(sum_xmr);
 
         // read my_outputs.html
         string my_outputs_html = xmreg::read(TMPL_MY_OUTPUTS);
