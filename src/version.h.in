@@ -1,0 +1,13 @@
+//
+// Created by mwo on 23/11/16.
+//
+
+#ifndef XMRBLOCKS_VERSION_H_IN_H
+#define XMRBLOCKS_VERSION_H_IN_H
+
+#define GIT_BRANCH "@GIT_BRANCH@"
+#define GIT_COMMIT_HASH "@GIT_COMMIT_HASH@"
+#define GIT_COMMIT_DATETIME "@GIT_COMMIT_DATETIME@"
+
+
+#endif //XMRBLOCKS_VERSION_H_IN_H
