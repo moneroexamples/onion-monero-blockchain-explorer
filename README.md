@@ -8,7 +8,8 @@ Curently available Monero blockchain explorer websites have several limitations 
  - are closed sourced,
  - are not available as hidden services,
  - provide only basic search capabilities,
- - can't identify users outputs based on provided Monero address and viewkey.
+ - can't identify users outputs based on provided Monero address and viewkey, or private tx key,
+ - do not support Monero testnet, i.e., they dont work with RingCT transactions
 
 
 In this example, these limitations are addressed by development of
@@ -18,7 +19,8 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
  - [lmdb++](https://github.com/bendiken/lmdbxx) - C++ wrapper for the LMDB
  - [mstch](https://github.com/no1msd/mstch) - C++ {{mustache}} templates
  - [rapidjson](https://github.com/miloyip/rapidjson) - C++ JSON parser/generator
-
+ - [date](https://github.com/HowardHinnant/date) - C++ date and time library
+ - [fmt](https://github.com/fmtlib/fmt) - Small, safe and fast string formatting library
 
 ## Address
 
@@ -33,8 +35,8 @@ Tor users (testnet Monero network):
 Non tor users, can use its clearnet version (thanks to [Gingeropolous](https://github.com/Gingeropolous)):
 
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com)
-
-
+ 
+ 
 ## Onion Monero Blockchain Explorer features
 
 The key features of the Onion Monero Blockchain Explorer are
@@ -45,7 +47,8 @@ The key features of the Onion Monero Blockchain Explorer are
  - made fully in C++,
  - the only explorer showing encrypted payments ID,
  - the only explorer with the ability to search by encrypted payments ID, tx public
- and private keys, stealth addresses, input key images,
+ and private keys, stealth addresses, input key images, block timestamps 
+ (UTC time, e.g., 2016-11-23 14:03:05)
  - the only explorer showing ring signatures,
  - the only explorer showing transaction extra field,
  - the only explorer showing public components of Monero addresses,
@@ -53,13 +56,14 @@ The key features of the Onion Monero Blockchain Explorer are
  - the only explorer that can be used to prove that you send Monero to someone,
  - the only explorer showing detailed information about mixins, such as, mixins'
  age, timescale, mixin of mixins,
- - the only explorer showing number of amount output indices.
+ - the only explorer showing number of amount output indices,
+ - the only explorer supporting Monero testnet network and RingCT.
 
 ## Prerequisite
 
 Everything here was done and tested using Monero 0.9.4 on Ubuntu 16.04 x86_64.
 
-Instruction for Monero 0.9 compilation and Monero headers and libraries setup are
+Instruction for Monero 0.10 compilation and Monero headers and libraries setup are
 as shown here:
  - [Compile Monero 0.9 on Ubuntu 16.04 x64](https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04)
  - [lmdbcpp-monero](https://github.com/moneroexamples/lmdbcpp-monero.git)
@@ -230,8 +234,11 @@ git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
 # enter the downloaded sourced code folder
 cd onion-monero-blockchain-explorer
 
+# make a build folder and enter it
+mkdir build && cd build
+
 # create the makefile
-cmake .
+cmake ..
 
 # compile
 make

@@ -8,11 +8,11 @@ project(myext)
 set(SOURCE_HEADERS
         minicsv.h
         format.h
-        dateparser.h)
+        )
 
 set(SOURCE_FILES
         format.cc
-        dateparser.cpp)
+        date/tz.cpp)
 
 # make static library called libmyxrm
 # that we are going to link to
