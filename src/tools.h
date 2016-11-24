@@ -18,6 +18,7 @@
 
 #include "../ext/dateparser.h"
 #include "../ext/infix_iterator.h"
+#include "../ext/date/tz.h"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
@@ -251,6 +252,9 @@ namespace xmreg
     // crypto::public_key wallet2::get_tx_pub_key_from_received_outs(const tools::wallet2::transfer_details &td) const
     public_key
     get_tx_pub_key_from_received_outs(const transaction &tx);
+
+    date::sys_seconds
+    parse(const std::string& str, string format="%Y-%m-%d %H:%M:%S");
 
 }
 
