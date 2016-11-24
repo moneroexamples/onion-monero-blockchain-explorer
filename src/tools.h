@@ -18,6 +18,7 @@
 
 #include "../ext/infix_iterator.h"
 #include "../ext/date/tz.h"
+#include "../ext/format.h"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
@@ -238,6 +239,13 @@ get_tx_pub_key_from_received_outs(const transaction &tx);
 
 date::sys_seconds
 parse(const std::string& str, string format="%Y-%m-%d %H:%M:%S");
+
+static
+string
+xmr_amount_to_str(const uint64_t& xmr_amount, string format="{:0.12f}")
+{
+    return fmt::format("{:0.12f}", XMR_AMOUNT(xmr_amount));
+}
 
 }
 

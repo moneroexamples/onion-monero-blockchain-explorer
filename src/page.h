@@ -9,7 +9,6 @@
 
 #include "mstch/mstch.hpp"
 #include "rapidjson/document.h"
-#include "../ext/format.h"
 #include "../ext/member_checker.h"
 
 #include "version.h"
@@ -702,9 +701,9 @@ public:
                     {"timestamp"     , xmreg::timestamp_to_str(_tx_info.receive_time)},
                     {"age"           , age_str},
                     {"hash"          , fmt::format("{:s}", _tx_info.id_hash)},
-                    {"fee"           , fmt::format("{:0.3f}", XMR_AMOUNT(_tx_info.fee))},
-                    {"xmr_inputs"    , fmt::format("{:0.2f}", XMR_AMOUNT(sum_inputs.first))},
-                    {"xmr_outputs"   , fmt::format("{:0.2f}", XMR_AMOUNT(sum_outputs.first))},
+                    {"fee"           , xmreg::xmr_amount_to_str(_tx_info.fee     , "{:0.3f}")},
+                    {"xmr_inputs"    , xmreg::xmr_amount_to_str(sum_inputs.first , "{:0.2f}")},
+                    {"xmr_outputs"   , xmreg::xmr_amount_to_str(sum_outputs.first, "{:0.2f}")},
                     {"no_inputs"     , sum_inputs.second},
                     {"no_outputs"    , sum_outputs.second},
                     {"mixin"         , fmt::format("{:d}", mixin_no)},
@@ -874,12 +873,12 @@ public:
 
 
         // add total fees in the block to the context
-        context["sum_fees"]   = fmt::format("{:0.6f}",
-                                     XMR_AMOUNT(sum_fees));
+        context["sum_fees"]
+                = xmreg::xmr_amount_to_str(sum_fees, "{:0.6f}");
 
         // get xmr in the block reward
-        context["blk_reward"] = fmt::format("{:0.6f}",
-                                     XMR_AMOUNT(txd_coinbase.xmr_outputs - sum_fees));
+        context["blk_reward"]
+                = xmreg::xmr_amount_to_str(txd_coinbase.xmr_outputs - sum_fees, "{:0.6f}");
 
         // read block.html
         string block_html = xmreg::read(TMPL_BLOCK);
@@ -1151,7 +1150,7 @@ public:
                 {"blk_height"           , tx_blk_height_str},
                 {"tx_size"              , fmt::format("{:0.4f}",
                                                       static_cast<double>(txd.size) / 1024.0)},
-                {"tx_fee"               , fmt::format("{:0.12f}", XMR_AMOUNT(txd.fee))},
+                {"tx_fee"               , xmreg::xmr_amount_to_str(txd.fee)},
                 {"blk_timestamp"        , blk_timestamp},
                 {"delta_time"           , age.first},
                 {"outputs_no"           , txd.output_pub_keys.size()},
@@ -1246,8 +1245,7 @@ public:
                 {"out_pub_key"   , REMOVE_HASH_BRAKETS(
                                            fmt::format("{:s}",
                                                        outp.first.key))},
-                {"amount"        , fmt::format("{:0.12f}",
-                                               XMR_AMOUNT(outp.second))},
+                {"amount"        , xmreg::xmr_amount_to_str(outp.second)},
                 {"mine_output"   , mine_output},
                 {"output_idx"    , fmt::format("{:02d}", output_idx++)}
             });
@@ -1364,7 +1362,7 @@ public:
                     mstch::map tx_cd_data {
                             {"no_of_sources"      , no_of_sources},
                             {"use_rct"            , tx_cd.use_rct},
-                            {"change_amount"      , fmt::format("{:0.12f}", XMR_AMOUNT(tx_change.amount))},
+                            {"change_amount"      , xmreg::xmr_amount_to_str(tx_change.amount)},
                             {"has_payment_id"     , (payment_id  != null_hash)},
                             {"has_payment_id8"    , (payment_id8 != null_hash8)},
                             {"payment_id"         , pid_str},
@@ -1380,7 +1378,7 @@ public:
                     {
                         mstch::map dest_info {
                                 {"dest_address"  , get_account_address_as_str(testnet, a_dest.addr)},
-                                {"dest_amount"   , fmt::format("{:0.12f}", XMR_AMOUNT(a_dest.amount))}
+                                {"dest_amount"   , xmreg::xmr_amount_to_str(a_dest.amount)}
                         };
 
                         dest_infos.push_back(dest_info);
@@ -1397,12 +1395,11 @@ public:
                         const tx_source_entry&  tx_source = tx_cd.sources.at(i);
 
                         mstch::map single_dest_source {
-                                {"output_amount"              , fmt::format("{:0.12f}",
-                                                                    XMR_AMOUNT(tx_source.amount))},
-                                {"real_output"                , tx_source.real_output},
-                                {"real_out_tx_key"            , pod_to_hex(tx_source.real_out_tx_key)},
-                                {"real_output_in_tx_index"    , tx_source.real_output_in_tx_index},
-                                {"outputs"                    , mstch::array{}}
+                            {"output_amount"              , xmreg::xmr_amount_to_str(tx_source.amount)},
+                            {"real_output"                , tx_source.real_output},
+                            {"real_out_tx_key"            , pod_to_hex(tx_source.real_out_tx_key)},
+                            {"real_output_in_tx_index"    , tx_source.real_output_in_tx_index},
+                            {"outputs"                    , mstch::array{}}
                         };
 
                         sum_outputs_amounts += tx_source.amount;
@@ -1539,7 +1536,7 @@ public:
                     } //  for (size_t i = 0; i < no_of_sources; ++i)
 
                     tx_cd_data.insert({"sum_outputs_amounts" ,
-                                       fmt::format("{:0.12f}", XMR_AMOUNT(sum_outputs_amounts))});
+                                       xmreg::xmr_amount_to_str(sum_outputs_amounts)});
 
 
                     uint64_t min_mix_timestamp;
@@ -1628,7 +1625,7 @@ public:
                     destination_addresses.push_back(
                             mstch::map {
                                     {"dest_address"   , get_account_address_as_str(testnet, a_dest.addr)},
-                                    {"dest_amount"    , fmt::format("{:0.12f}", XMR_AMOUNT(a_dest.amount))},
+                                    {"dest_amount"    , xmreg::xmr_amount_to_str(a_dest.amount)},
                                     {"is_this_change" , false}
                             }
                     );
@@ -1644,7 +1641,7 @@ public:
                     destination_addresses.push_back(
                             mstch::map {
                                     {"dest_address"   , get_account_address_as_str(testnet, ptx.construction_data.change_dts.addr)},
-                                    {"dest_amount"    , fmt::format("{:0.12f}", XMR_AMOUNT(ptx.construction_data.change_dts.amount))},
+                                    {"dest_amount"    , xmreg::xmr_amount_to_str(ptx.construction_data.change_dts.amount)},
                                     {"is_this_change" , true}
                             }
                     );
@@ -1652,7 +1649,7 @@ public:
                     real_ammounts.push_back(ptx.construction_data.change_dts.amount);
                 };
 
-                tx_context["outputs_xmr_sum"] = fmt::format("{:0.12f}", XMR_AMOUNT(outputs_xmr_sum));
+                tx_context["outputs_xmr_sum"] = xmreg::xmr_amount_to_str(outputs_xmr_sum);
 
                 tx_context.insert({"dest_infos", destination_addresses});
 
@@ -1676,7 +1673,7 @@ public:
                     {
                         if (output_amount == 0)
                         {
-                            out_amount_str = fmt::format("{:0.12f}", XMR_AMOUNT(real_ammounts.at(i)));
+                            out_amount_str = xmreg::xmr_amount_to_str(real_ammounts.at(i));
                         }
                     }
                 }
@@ -1742,7 +1739,7 @@ public:
                 tx_context["have_raw_tx"] = true;
 
                 // provide total mount of inputs xmr
-                tx_context["inputs_xmr_sum"] = fmt::format("{:0.12f}", XMR_AMOUNT(inputs_xmr_sum));
+                tx_context["inputs_xmr_sum"] = xmreg::xmr_amount_to_str(inputs_xmr_sum);
 
                 // get reference to inputs array created of the tx
                 mstch::array& inputs = boost::get<mstch::array>(tx_context["inputs"]);
@@ -1760,7 +1757,7 @@ public:
                             boost::get<mstch::map>(input_node)["amount"]
                     );
 
-                    amount = fmt::format("{:0.12f}", XMR_AMOUNT(real_amounts.at(input_idx)));
+                    amount = xmreg::xmr_amount_to_str(real_amounts.at(input_idx));
 
                     // check if key images are spend or not
 
@@ -2162,14 +2159,17 @@ public:
 
                     vector<txin_to_key> tx_key_imgs = get_key_images(tx);
 
-                    const vector<txin_to_key>::const_iterator it = find_if(tx_key_imgs.begin(), tx_key_imgs.end(), [&](txin_to_key tx_in)
-                            {
-                                return tx_in.k_image == key_image;
-                            });
+                    const vector<txin_to_key>::const_iterator it
+                            = find_if(tx_key_imgs.begin(), tx_key_imgs.end(),
+                              [&](txin_to_key tx_in)
+                              {
+                                  return tx_in.k_image == key_image;
+                              });
 
                     if (it != tx_key_imgs.end())
                     {
-                        key_img_info["amount"] = fmt::format("{:0.12f}", XMR_AMOUNT((*it).amount));
+                        uint64_t xmr_amount = XMR_AMOUNT((*it).amount);
+                        key_img_info["amount"] = xmreg::xmr_amount_to_str(xmr_amount);
                         total_xmr += (*it).amount;
                     }
 
@@ -2185,7 +2185,7 @@ public:
         if (total_xmr > 0)
         {
             context["has_total_xmr"] = true;
-            context["total_xmr"] = fmt::format("{:0.12f}", XMR_AMOUNT(total_xmr));
+            context["total_xmr"] = xmreg::xmr_amount_to_str(total_xmr);
         }
 
         string checkrawkeyimgs_html = xmreg::read(TMPL_MY_CHECKRAWKEYIMGS);
@@ -3012,7 +3012,7 @@ private:
                 {"blk_height"           , tx_blk_height_str},
                 {"tx_size"              , fmt::format("{:0.4f}",
                                                       static_cast<double>(txd.size) / 1024.0)},
-                {"tx_fee"               , fmt::format("{:0.12f}", XMR_AMOUNT(txd.fee))},
+                {"tx_fee"               , xmreg::xmr_amount_to_str(txd.fee)},
                 {"tx_version"           , fmt::format("{:d}", txd.version)},
                 {"blk_timestamp"        , blk_timestamp},
                 {"blk_timestamp_uint"   , blk.timestamp},
@@ -3083,7 +3083,7 @@ private:
 
             inputs.push_back(mstch::map {
                     {"in_key_img"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", in_key.k_image))},
-                    {"amount"       , fmt::format("{:0.12f}", XMR_AMOUNT(in_key.amount))},
+                    {"amount"       , xmreg::xmr_amount_to_str(in_key.amount)},
                     {"input_idx"    , fmt::format("{:02d}", input_idx)},
                     {"mixins"       , mstch::array{}},
                     {"ring_sigs"    , txd.get_ring_sig_for_input(input_idx)},
@@ -3203,7 +3203,7 @@ private:
                 );
 
 
-        context["inputs_xmr_sum"]   = fmt::format("{:0.12f}", XMR_AMOUNT(inputs_xmr_sum));
+        context["inputs_xmr_sum"]   = xmreg::xmr_amount_to_str(inputs_xmr_sum);
         context["server_time"]      = server_time_str;
         context["inputs"]           = inputs;
         context["min_mix_time"]     = xmreg::timestamp_to_str(min_mix_timestamp);
@@ -3263,14 +3263,14 @@ private:
 
             outputs.push_back(mstch::map {
                     {"out_pub_key"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", outp.first.key))},
-                    {"amount"        , fmt::format("{:0.12f}", XMR_AMOUNT(outp.second))},
+                    {"amount"        , xmreg::xmr_amount_to_str(outp.second)},
                     {"amount_idx"    , out_amount_index_str},
                     {"num_outputs"   , fmt::format("{:d}", num_outputs_amount)},
                     {"output_idx"    , fmt::format("{:02d}", output_idx++)}
             });
         }
 
-        context["outputs_xmr_sum"] = fmt::format("{:0.12f}", XMR_AMOUNT(outputs_xmr_sum));
+        context["outputs_xmr_sum"] = xmreg::xmr_amount_to_str(outputs_xmr_sum);
 
         context["outputs"] = outputs;
 
