@@ -451,7 +451,7 @@ namespace xmreg
 
 
                 // set cursor the the first item
-                if (cr.get(key_to_find, info_val, MDB_SET))
+                if (cr.get(key_to_find, info_val, MDB_SET_RANGE))
                 {
                     out_infos.push_back(*(info_val.data<output_info>()));
 
