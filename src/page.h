@@ -3640,15 +3640,6 @@ private:
                + footer_html;
     }
 
-
-    string
-    get_full_page(string& middle)
-    {
-        return xmreg::read(TMPL_HEADER)
-               + middle
-               + xmreg::read(TMPL_FOOTER);
-    }
-
     void
     add_css_style(mstch::map& context)
     {
