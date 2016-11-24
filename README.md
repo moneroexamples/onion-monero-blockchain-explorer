@@ -31,6 +31,10 @@ Tor users (main Monero network):
 Tor users (testnet Monero network):
  
  - [http://xmrtestbbzl275vy.onion](http://xmrtestbbzl275vy.onion)
+ 
+i2p users (main Monero network):
+
+ - [http://monerotools.i2p](http://monerotools.i2p)
 
 Non tor users, can use its clearnet version (thanks to [Gingeropolous](https://github.com/Gingeropolous)):
 
