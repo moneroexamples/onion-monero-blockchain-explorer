@@ -2402,7 +2402,7 @@ public:
 
                     // add 60 seconds, i.e. 1 min
                     uint64_t blk_timestamp_utc_end
-                            = blk_timestamp_utc_start + 60;
+                            = blk_timestamp_utc_start + 59;
 
                     // so try to get blocks in the timestamp range
 
