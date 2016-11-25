@@ -2394,6 +2394,8 @@ public:
                         = parse(search_text, "%Y-%m-%d %H:%M")
                                 .time_since_epoch().count();
 
+                cout << "blk_timestamp_utc_start: " << blk_timestamp_utc_start << endl;
+
                 if (blk_timestamp_utc_start)
                 {
                     // seems we have a correct date!
@@ -2413,11 +2415,19 @@ public:
                         // we found something. add all unique tx found to
                         // the vector we are going to show results with
 
+//                        auto sort_by_timestamp =
+//                                [](const pair<uint64_t, crypto::hash>& l,
+//                                   const pair<uint64_t, crypto::hash>& r)
+//                        {
+//                                l.first < l.second;
+//                        };
+
                         set<string> unique_tx_found;
 
                         for (const auto &out_info: out_infos)
                         {
                             //cout << "   - " << out_info << endl;
+                            //unique_tx_found.insert(pod_to_hex(out_info.tx_hash));
                             unique_tx_found.insert(pod_to_hex(out_info.tx_hash));
                         }
 
@@ -2426,7 +2436,6 @@ public:
                                           vector<string>(unique_tx_found.begin(),
                                                          unique_tx_found.end()))
                         );
-
                     }
                 }
             }

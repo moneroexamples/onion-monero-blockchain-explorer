@@ -478,10 +478,7 @@ namespace xmreg
                                       sizeof(key_timestamp)};
                 lmdb::val info_val;
 
-
-
                 lmdb::cursor cr = lmdb::cursor::open(rtxn, rdbi);
-
 
                 // set cursor the the first item
                 if (cr.get(key_to_find, info_val, MDB_SET_RANGE))
@@ -523,7 +520,6 @@ namespace xmreg
 
             try
             {
-
                 lmdb::txn rtxn  = lmdb::txn::begin(m_env, nullptr, MDB_RDONLY);
                 lmdb::dbi rdbi  = lmdb::dbi::open(rtxn, db_name.c_str(), flags);
 
@@ -531,12 +527,9 @@ namespace xmreg
                                       sizeof(key_timestamp_start)};
                 lmdb::val info_val;
 
-
-
                 lmdb::cursor cr = lmdb::cursor::open(rtxn, rdbi);
 
                 uint64_t current_timestamp = key_timestamp_start;
-
 
                 // set cursor the the first item
                 if (cr.get(key_to_find, info_val, MDB_SET_RANGE))
@@ -547,12 +540,13 @@ namespace xmreg
                     while (cr.get(key_to_find, info_val, MDB_NEXT))
                     {
                         current_timestamp = *key_to_find.data<uint64_t>();
-                        //cout << current_timestamp << endl;
-                        out_infos.push_back(*(info_val.data<output_info>()));
+
                         if (current_timestamp > key_timestamp_end)
                         {
                             break;
                         }
+
+                        out_infos.push_back(*(info_val.data<output_info>()));
                     }
                 }
                 else
