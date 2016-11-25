@@ -2382,13 +2382,60 @@ public:
                     }
                 }
             }
+            else if (search_text.length() == 16)
+            {
+                // check if date given in format: 2015-04-15 12:02
+                // this is 16 characters, i.e., only minut given
+                // so search all blocks made within that minute
 
+                // first parse the string to date::sys_seconds and then to timestamp
+                // since epoch
+                uint64_t blk_timestamp_utc_start
+                        = parse(search_text, "%Y-%m-%d %H:%M")
+                                .time_since_epoch().count();
+
+                if (blk_timestamp_utc_start)
+                {
+                    // seems we have a correct date!
+
+                    // add 60 seconds, i.e. 1 min
+                    uint64_t blk_timestamp_utc_end
+                            = blk_timestamp_utc_start + 60;
+
+                    // so try to get blocks in the timestamp range
+
+                    vector<xmreg::output_info> out_infos;
+
+                    if (mylmdb->get_output_info_range(blk_timestamp_utc_start,
+                                                      blk_timestamp_utc_end,
+                                                      out_infos))
+                    {
+                        // we found something. add all unique tx found to
+                        // the vector we are going to show results with
+
+                        set<string> unique_tx_found;
+
+                        for (const auto &out_info: out_infos)
+                        {
+                            //cout << "   - " << out_info << endl;
+                            unique_tx_found.insert(pod_to_hex(out_info.tx_hash));
+                        }
+
+                        all_possible_tx_hashes.push_back(
+                                make_pair("tx_public_keys",
+                                          vector<string>(unique_tx_found.begin(),
+                                                         unique_tx_found.end()))
+                        );
+
+                    }
+                }
+            }
 
             mylmdb->search(search_text,
                            tx_search_results["key_images"],
                            "key_images");
 
-            cout << "size: " << tx_search_results["key_images"].size() << endl;
+            //cout << "size: " << tx_search_results["key_images"].size() << endl;
 
             all_possible_tx_hashes.push_back(
                     make_pair("key_images",
