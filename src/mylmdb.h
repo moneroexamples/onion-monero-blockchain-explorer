@@ -189,7 +189,9 @@ namespace xmreg
 
                 uint64_t index_in_tx = std::get<2>(output);
 
-                output_info out_info {out_pub_key, tx_hash, tx_pub_key, amount, index_in_tx};
+                output_info out_info {out_pub_key, tx_hash,
+                                      tx_pub_key, amount,
+                                      index_in_tx};
 
                 uint64_t out_timestamp = blk.timestamp;
 
@@ -342,6 +344,37 @@ namespace xmreg
             return true;
         }
 
+//        // this seems to be not needed as outputs are written based on timestamps
+//
+//        bool
+//        write_block_timestamp(uint64_t& blk_timestamp, uint64_t& blk_height)
+//        {
+//
+//            unsigned int flags = MDB_CREATE | MDB_INTEGERKEY;
+//
+//            try
+//            {
+//                lmdb::txn wtxn = lmdb::txn::begin(m_env);
+//                lmdb::dbi wdbi = lmdb::dbi::open(wtxn, "block_timestamps", flags);
+//
+//                lmdb::val blk_timestamp_val {static_cast<void*>(&blk_timestamp),
+//                                             sizeof(blk_timestamp)};
+//                lmdb::val blk_height_val    {static_cast<void*>(&blk_height),
+//                                             sizeof(blk_height)};
+//
+//                wdbi.put(wtxn, blk_timestamp_val, blk_height_val);
+//
+//                wtxn.commit();
+//            }
+//            catch (lmdb::error& e)
+//            {
+//                cerr << e.what() << endl;
+//                return false;
+//            }
+//
+//            return true;
+//        }
+
         bool
         search(const string& key,
                vector<string>& found_tx_hashes,
@@ -479,6 +512,66 @@ namespace xmreg
             return true;
         }
 
+        bool
+        get_output_info_range(uint64_t key_timestamp_start,
+                              uint64_t key_timestamp_end,
+                              vector<output_info>& out_infos,
+                              const string& db_name = "output_info")
+        {
+
+            unsigned int flags = 0;
+
+            try
+            {
+
+                lmdb::txn rtxn  = lmdb::txn::begin(m_env, nullptr, MDB_RDONLY);
+                lmdb::dbi rdbi  = lmdb::dbi::open(rtxn, db_name.c_str(), flags);
+
+                lmdb::val key_to_find{static_cast<void*>(&key_timestamp_start),
+                                      sizeof(key_timestamp_start)};
+                lmdb::val info_val;
+
+
+
+                lmdb::cursor cr = lmdb::cursor::open(rtxn, rdbi);
+
+                uint64_t current_timestamp = key_timestamp_start;
+
+
+                // set cursor the the first item
+                if (cr.get(key_to_find, info_val, MDB_SET_RANGE))
+                {
+                    out_infos.push_back(*(info_val.data<output_info>()));
+
+                    // process other values for the same key
+                    while (cr.get(key_to_find, info_val, MDB_NEXT))
+                    {
+                        current_timestamp = *key_to_find.data<uint64_t>();
+                        //cout << current_timestamp << endl;
+                        out_infos.push_back(*(info_val.data<output_info>()));
+                        if (current_timestamp > key_timestamp_end)
+                        {
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+
+                rtxn.abort();
+
+            }
+            catch (lmdb::error& e)
+            {
+                cerr << e.what() << endl;
+                return false;
+            }
+
+            return true;
+        }
+
 
         void
         for_all_outputs(
@@ -590,7 +683,7 @@ namespace xmreg
                 return height;
             }
 
-            // cout << height << endl;
+            cout << height << endl;
 
             return height;
 
