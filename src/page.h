@@ -2403,7 +2403,7 @@ public:
                             = blk_timestamp_utc_start + 59;
 
                     all_possible_tx_hashes.push_back(
-                            make_pair("tx_public_keys", vector<string>{}));
+                            make_pair("tx_in_the_minute", vector<string>{}));
 
                     vector<string>& txs_found_ref
                             = all_possible_tx_hashes.back().second;
@@ -2436,7 +2436,7 @@ public:
                             = blk_timestamp_utc_start + 3599;
 
                     all_possible_tx_hashes.push_back(
-                            make_pair("tx_public_keys", vector<string>{}));
+                            make_pair("tx_in_the_hour", vector<string>{}));
 
                     vector<string>& txs_found_ref
                             = all_possible_tx_hashes.back().second;
@@ -2469,7 +2469,7 @@ public:
                             = blk_timestamp_utc_start + 86399;
 
                     all_possible_tx_hashes.push_back(
-                            make_pair("tx_public_keys", vector<string>{}));
+                            make_pair("tx_in_the_day", vector<string>{}));
 
                     vector<string>& txs_found_ref
                             = all_possible_tx_hashes.back().second;

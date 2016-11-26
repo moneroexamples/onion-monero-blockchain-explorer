@@ -3,7 +3,7 @@
 
   {{#no_results}}
     <h4 style="margin-bottom:2px">Nothing in the blockchain has been found that matches the search term :-(</h4>
-    <h5 style="margin:2px">Note: there might be 1-2 min delay betweem my blockchain and others</h5>
+    <h5 style="margin:2px">Note: there might be 1-2 min delay between my blockchain and others</h5>
   {{/no_results}}
 
    {{#to_many_results}}
@@ -125,5 +125,57 @@
     </table>
 
     {{/has_output_public_keys_based_on_amount_idx}}
+
+  </div>
+
+
+  <div>
+
+      {{#has_tx_in_the_minute}}
+
+      <h3>Transactions performed in the given minute</h3>
+
+      <table class="center" style="width:90%">
+          {{>tx_table_head}}
+          {{#tx_in_the_minute}}
+          {{>tx_table_row}}
+          {{/tx_in_the_minute}}
+      </table>
+
+      {{/has_tx_in_the_minute}}
+
+  </div>
+
+  <div>
+
+      {{#has_tx_in_the_hour}}
+
+      <h3>Transactions performed in the given hour</h3>
+
+      <table class="center" style="width:90%">
+          {{>tx_table_head}}
+          {{#tx_in_the_hour}}
+          {{>tx_table_row}}
+          {{/tx_in_the_hour}}
+      </table>
+
+      {{/has_tx_in_the_hour}}
+
+  </div>
+
+  <div>
+
+      {{#has_tx_in_the_day}}
+
+      <h3>Transactions performed in the given day</h3>
+
+      <table class="center" style="width:90%">
+          {{>tx_table_head}}
+          {{#tx_in_the_day}}
+          {{>tx_table_row}}
+          {{/tx_in_the_day}}
+      </table>
+
+      {{/has_tx_in_the_day}}
 
   </div>
