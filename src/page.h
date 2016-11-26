@@ -2238,11 +2238,11 @@ public:
                 {
                      return result_html;
                 }
-
             }
             catch(boost::bad_lexical_cast &e)
             {
-                return result_html;
+                cerr << fmt::format("Parsing {:s} into uint64_t failed", search_text)
+                     << endl;
             }
         }
 
@@ -2394,8 +2394,6 @@ public:
                         = parse(search_text, "%Y-%m-%d %H:%M")
                                 .time_since_epoch().count();
 
-                cout << "blk_timestamp_utc_start: " << blk_timestamp_utc_start << endl;
-
                 if (blk_timestamp_utc_start)
                 {
                     // seems we have a correct date!
@@ -2404,39 +2402,83 @@ public:
                     uint64_t blk_timestamp_utc_end
                             = blk_timestamp_utc_start + 59;
 
-                    // so try to get blocks in the timestamp range
+                    all_possible_tx_hashes.push_back(
+                            make_pair("tx_public_keys", vector<string>{}));
 
-                    vector<xmreg::output_info> out_infos;
+                    vector<string>& txs_found_ref
+                            = all_possible_tx_hashes.back().second;
 
-                    if (mylmdb->get_output_info_range(blk_timestamp_utc_start,
-                                                      blk_timestamp_utc_end,
-                                                      out_infos))
-                    {
-                        // we found something. add all unique tx found to
-                        // the vector we are going to show results with
+                    get_txs_from_timestamp_range(
+                            blk_timestamp_utc_start,
+                            blk_timestamp_utc_end,
+                            mylmdb,
+                            txs_found_ref);
+                }
+            }
+            else if (search_text.length() == 13)
+            {
+                // check if date given in format: 2015-04-15 12
+                // this is 13 characters, i.e., only hour given
+                // so search all blocks made within that hour
 
-//                        auto sort_by_timestamp =
-//                                [](const pair<uint64_t, crypto::hash>& l,
-//                                   const pair<uint64_t, crypto::hash>& r)
-//                        {
-//                                l.first < l.second;
-//                        };
+                // first parse the string to date::sys_seconds and then to timestamp
+                // since epoch
+                uint64_t blk_timestamp_utc_start
+                        = parse(search_text, "%Y-%m-%d %H")
+                                .time_since_epoch().count();
 
-                        set<string> unique_tx_found;
+                if (blk_timestamp_utc_start)
+                {
+                    // seems we have a correct date!
 
-                        for (const auto &out_info: out_infos)
-                        {
-                            //cout << "   - " << out_info << endl;
-                            //unique_tx_found.insert(pod_to_hex(out_info.tx_hash));
-                            unique_tx_found.insert(pod_to_hex(out_info.tx_hash));
-                        }
+                    // add 60 seconds, i.e. 1 hour
+                    uint64_t blk_timestamp_utc_end
+                            = blk_timestamp_utc_start + 3599;
 
-                        all_possible_tx_hashes.push_back(
-                                make_pair("tx_public_keys",
-                                          vector<string>(unique_tx_found.begin(),
-                                                         unique_tx_found.end()))
-                        );
-                    }
+                    all_possible_tx_hashes.push_back(
+                            make_pair("tx_public_keys", vector<string>{}));
+
+                    vector<string>& txs_found_ref
+                            = all_possible_tx_hashes.back().second;
+
+                    get_txs_from_timestamp_range(
+                            blk_timestamp_utc_start,
+                            blk_timestamp_utc_end,
+                            mylmdb,
+                            txs_found_ref);
+                }
+            }
+            else if (search_text.length() == 10)
+            {
+                // check if date given in format: 2015-04-15
+                // this is 10 characters, i.e., only day given
+                // so search all blocks made within that day
+
+                // first parse the string to date::sys_seconds and then to timestamp
+                // since epoch
+                uint64_t blk_timestamp_utc_start
+                        = parse(search_text, "%Y-%m-%d")
+                                .time_since_epoch().count();
+
+                if (blk_timestamp_utc_start)
+                {
+                    // seems we have a correct date!
+
+                    // add 60 seconds, i.e. 1 day
+                    uint64_t blk_timestamp_utc_end
+                            = blk_timestamp_utc_start + 86399;
+
+                    all_possible_tx_hashes.push_back(
+                            make_pair("tx_public_keys", vector<string>{}));
+
+                    vector<string>& txs_found_ref
+                            = all_possible_tx_hashes.back().second;
+
+                    get_txs_from_timestamp_range(
+                            blk_timestamp_utc_start,
+                            blk_timestamp_utc_end,
+                            mylmdb,
+                            txs_found_ref);
                 }
             }
 
@@ -3462,6 +3504,33 @@ private:
         }
 
         return txd;
+    }
+
+    bool
+    get_txs_from_timestamp_range(
+            uint64_t timestamp_start,
+            uint64_t timestamp_end,
+            const unique_ptr<xmreg::MyLMDB>& mylmdb,
+            vector<string>& out_txs)
+    {
+
+        vector<crypto::hash> txs_found;
+
+        if (mylmdb->get_txs_from_timestamp_range(
+                timestamp_start,
+                timestamp_end,
+                txs_found))
+        {
+
+            for (auto tf: txs_found)
+            {
+                out_txs.push_back(pod_to_hex(tf));
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     vector<pair<tx_info, transaction>>
