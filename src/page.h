@@ -2031,18 +2031,52 @@ public:
         string decoded_raw_data = epee::string_encoding::base64_decode(raw_data);
         secret_key prv_view_key;
 
+        // initalize page template context map
+        mstch::map context{
+                {"testnet"  ,    testnet},
+                {"has_error",    false},
+                {"error_msg",    string{}},
+        };
+
+        // read page template
+        string checkrawkeyimgs_html = xmreg::read(TMPL_MY_CHECKRAWKEYIMGS);
+
+        // add footer
+        string full_page =  checkrawkeyimgs_html + xmreg::read(TMPL_FOOTER);
+
+        add_css_style(context);
+
+        if (viewkey_str.empty())
+        {
+            string error_msg = fmt::format("View key not given. Cant decode "
+                                           "the key image data without it!");
+
+            context["has_error"] = true;
+            context["error_msg"] = error_msg;
+
+            return mstch::render(full_page, context);
+        }
+
         if (!xmreg::parse_str_secret_key(viewkey_str, prv_view_key))
         {
-            cerr << "Cant parse the private key: " << viewkey_str << endl;
-            return string("Cant parse private key: " + viewkey_str);
+            string error_msg = fmt::format("Cant parse the private key: " + viewkey_str);
+
+            context["has_error"] = true;
+            context["error_msg"] = error_msg;
+
+            return mstch::render(full_page, context);
         }
 
         const size_t magiclen = strlen(KEY_IMAGE_EXPORT_FILE_MAGIC);
 
         if (!strncmp(decoded_raw_data.c_str(), KEY_IMAGE_EXPORT_FILE_MAGIC, magiclen) == 0)
         {
-            cout << "This does not seem to be key image export data" << endl;
-            return string {"This does not seem to be key image export data"};
+            string error_msg = fmt::format("This does not seem to be key image export data.");
+
+            context["has_error"] = true;
+            context["error_msg"] = error_msg;
+
+            return mstch::render(full_page, context);
         }
 
         // decrypt key images data using private view key
@@ -2052,8 +2086,13 @@ public:
 
         if (decoded_raw_data.empty())
         {
-            return string {"Failed to authenticate key images data. "
-                           "Maybe wrong viewkey was porvided?"};
+            string error_msg = fmt::format("Failed to authenticate key images data. "
+                                           "Maybe wrong viewkey was porvided?");
+
+            context["has_error"] = true;
+            context["error_msg"] = error_msg;
+
+            return mstch::render(full_page, context);
         }
 
         // header is public spend and keys
@@ -2064,8 +2103,13 @@ public:
 
         if (decoded_raw_data.size() < header_lenght)
         {
-            cerr << "Bad data size from submitted key images raw data" << endl;
-            return string {"Bad data size from submitted key images raw data"};
+            string error_msg = fmt::format("Bad data size from submitted key images raw data.");
+
+            context["has_error"] = true;
+            context["error_msg"] = error_msg;
+
+            return mstch::render(full_page, context);
+
         }
 
         // get xmr address stored in this key image file
@@ -2073,15 +2117,11 @@ public:
                 reinterpret_cast<const account_public_address*>(
                         decoded_raw_data.data());
 
-        // initalize page template context map
-        mstch::map context {
-                {"testnet"             , testnet},
-                {"address"             , REMOVE_HASH_BRAKETS(xmreg::print_address(*xmr_address, testnet))},
-                {"viewkey"             , REMOVE_HASH_BRAKETS(fmt::format("{:s}", prv_view_key))},
-                {"has_total_xmr"       , false},
-                {"total_xmr"           , string{}},
-                {"key_imgs"            , mstch::array{}}
-        };
+        context.insert({"address"        , REMOVE_HASH_BRAKETS(xmreg::print_address(*xmr_address, testnet))});
+        context.insert({"viewkey"        , REMOVE_HASH_BRAKETS(fmt::format("{:s}", prv_view_key))});
+        context.insert({"has_total_xmr"  , false});
+        context.insert({"total_xmr"      , string{}});
+        context.insert({"key_imgs"       , mstch::array{}});
 
         unique_ptr<xmreg::MyLMDB> mylmdb;
 
@@ -2188,13 +2228,6 @@ public:
             context["has_total_xmr"] = true;
             context["total_xmr"] = xmreg::xmr_amount_to_str(total_xmr);
         }
-
-        string checkrawkeyimgs_html = xmreg::read(TMPL_MY_CHECKRAWKEYIMGS);
-
-        // add footer
-        string full_page =  checkrawkeyimgs_html + xmreg::read(TMPL_FOOTER);
-
-        add_css_style(context);
 
         // render the page
         return mstch::render(full_page, context);
