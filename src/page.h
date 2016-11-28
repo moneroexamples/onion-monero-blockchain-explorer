@@ -2167,9 +2167,9 @@ public:
 
                     if (it != tx_key_imgs.end())
                     {
-                        uint64_t xmr_amount = XMR_AMOUNT((*it).amount);
+                        uint64_t xmr_amount = (*it).amount;
                         key_img_info["amount"] = xmreg::xmr_amount_to_str(xmr_amount);
-                        total_xmr += (*it).amount;
+                        total_xmr += xmr_amount;
                     }
 
                     key_img_info["timestamp"] = xmreg::timestamp_to_str(blk_timestamp);
