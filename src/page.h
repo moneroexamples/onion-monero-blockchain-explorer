@@ -752,7 +752,12 @@ public:
         crypto::hash blk_hash = core_storage->get_block_id_by_height(_blk_height);
 
         crypto::hash prev_hash = blk.prev_id;
-        crypto::hash next_hash = core_storage->get_block_id_by_height(_blk_height + 1);
+        crypto::hash next_hash = null_hash;
+
+        if (_blk_height + 1 <= current_blockchain_height)
+        {
+            next_hash = core_storage->get_block_id_by_height(_blk_height + 1);
+        }
 
         bool have_next_hash = (next_hash == null_hash ? false : true);
         bool have_prev_hash = (prev_hash == null_hash ? false : true);
