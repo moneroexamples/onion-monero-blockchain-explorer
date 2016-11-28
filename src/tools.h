@@ -14,7 +14,6 @@
     a_hash.substr(1, a_hash.size()-2)
 
 #include "monero_headers.h"
-#include "tx_details.h"
 
 #include "../ext/infix_iterator.h"
 #include "../ext/date/tz.h"
@@ -248,6 +247,13 @@ xmr_amount_to_str(const uint64_t& xmr_amount, string format="{:0.12f}")
 {
     return fmt::format("{:0.12f}", XMR_AMOUNT(xmr_amount));
 }
+
+bool
+is_output_ours(const size_t& output_index,
+               const transaction& tx,
+               const public_key& pub_tx_key,
+               const secret_key& private_view_key,
+               const public_key& public_spend_key);
 
 }
 

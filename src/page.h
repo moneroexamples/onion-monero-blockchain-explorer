@@ -2210,6 +2210,23 @@ public:
                     if (it != tx_key_imgs.end())
                     {
                         uint64_t xmr_amount = (*it).amount;
+
+                        // RingCT, i.e., tx version is 2
+                        // thus need to decode the amounts
+                        // otherwise they all appear to be zero.
+                        // so to find the amount, first we need to find
+                        // our output in the key images's mixins, and then
+
+                        if (tx.version == 2)
+                        {
+//                            bool r = decode_ringct(tx.rct_signatures,
+//                                                   txd.pk,
+//                                                   prv_view_key,
+//                                                   i,
+//                                                   tx.rct_signatures.ecdhInfo[i].mask,
+//                                                   rct_amount);
+                        }
+
                         key_img_info["amount"] = xmreg::xmr_amount_to_str(xmr_amount);
                         total_xmr += xmr_amount;
                     }
