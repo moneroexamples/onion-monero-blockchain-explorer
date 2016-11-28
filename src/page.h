@@ -783,14 +783,13 @@ public:
         }
 
         // get block size in bytes
-        uint64_t blk_size = get_object_blobsize(blk);
+        uint64_t blk_size = core_storage->get_db().get_block_size(_blk_height);
 
         // miner reward tx
         transaction coinbase_tx = blk.miner_tx;
 
         // transcation in the block
         vector<crypto::hash> tx_hashes = blk.tx_hashes;
-
 
         bool have_txs = !blk.tx_hashes.empty();
 
@@ -3473,8 +3472,13 @@ private:
 
         get_payment_id(tx, txd.payment_id, txd.payment_id8);
 
+
+        //blobdata tx_blob = t_serializable_object_to_blob(tx);
+
         // get tx size in bytes
         txd.size = get_object_blobsize(tx);
+        //txd.size = tx_blob.size();
+        //txd.size = core_storage->get_db().get_block_size();
 
         txd.input_key_imgs  = get_key_images(tx);
         txd.output_pub_keys = get_ouputs(tx);
