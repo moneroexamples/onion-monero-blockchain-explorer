@@ -1860,9 +1860,11 @@ public:
             return mstch::render(full_page, context);
         }
 
-        if (!testnet)
+        if (this->enable_pusher == false)
         {
-            string error_msg = fmt::format("Pushing disabled for mainet network!");
+            string error_msg = fmt::format(
+                    "Pushing disabled!\n "
+                    "Run explorer with --enable-pusher flag to enable it.");
 
             context["has_error"] = true;
             context["error_msg"] = error_msg;
