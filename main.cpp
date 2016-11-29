@@ -223,6 +223,34 @@ int main(int ac, const char* av[]) {
     });
 
 
+    CROW_ROUTE(app, "/rawoutputkeys")
+    ([&](const crow::request& req) {
+        return xmrblocks.show_rawoutputkeys();
+    });
+
+    CROW_ROUTE(app, "/checkrawoutputkeys").methods("POST"_method)
+            ([&](const crow::request& req) {
+
+                map<std::string, std::string> post_body = xmreg::parse_crow_post_data(req.body);
+
+                if (post_body.count("rawoutputkeysdata") == 0)
+                {
+                    return string("Raw output keys data not given");
+                }
+
+                if (post_body.count("viewkey") == 0)
+                {
+                    return string("Viewkey not provided. Cant decrypt key image file without it");
+                }
+
+                string raw_data = post_body["rawoutputkeysdata"];
+                string viewkey  = post_body["viewkey"];
+
+                return xmrblocks.show_checkcheckrawoutput(raw_data, viewkey);
+            });
+
+
+
     CROW_ROUTE(app, "/search").methods("GET"_method)
     ([&](const crow::request& req) {
         return xmrblocks.search(string(req.url_params.get("value")));

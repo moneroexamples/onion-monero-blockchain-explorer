@@ -25,24 +25,26 @@
 #include <limits>
 #include <ctime>
 
-#define TMPL_DIR                 "./templates"
-#define TMPL_PARIALS_DIR         TMPL_DIR "/partials"
-#define TMPL_CSS_STYLES          TMPL_DIR "/css/style.css"
-#define TMPL_INDEX               TMPL_DIR "/index.html"
-#define TMPL_INDEX2              TMPL_DIR "/index2.html"
-#define TMPL_MEMPOOL             TMPL_DIR "/mempool.html"
-#define TMPL_HEADER              TMPL_DIR "/header.html"
-#define TMPL_FOOTER              TMPL_DIR "/footer.html"
-#define TMPL_BLOCK               TMPL_DIR "/block.html"
-#define TMPL_TX                  TMPL_DIR "/tx.html"
-#define TMPL_ADDRESS             TMPL_DIR "/address.html"
-#define TMPL_MY_OUTPUTS          TMPL_DIR "/my_outputs.html"
-#define TMPL_SEARCH_RESULTS      TMPL_DIR "/search_results.html"
-#define TMPL_MY_RAWTX            TMPL_DIR "/rawtx.html"
-#define TMPL_MY_CHECKRAWTX       TMPL_DIR "/checkrawtx.html"
-#define TMPL_MY_PUSHRAWTX        TMPL_DIR "/pushrawtx.html"
-#define TMPL_MY_RAWKEYIMGS       TMPL_DIR "/rawkeyimgs.html"
-#define TMPL_MY_CHECKRAWKEYIMGS  TMPL_DIR "/checkrawkeyimgs.html"
+#define TMPL_DIR                    "./templates"
+#define TMPL_PARIALS_DIR            TMPL_DIR "/partials"
+#define TMPL_CSS_STYLES             TMPL_DIR "/css/style.css"
+#define TMPL_INDEX                  TMPL_DIR "/index.html"
+#define TMPL_INDEX2                 TMPL_DIR "/index2.html"
+#define TMPL_MEMPOOL                TMPL_DIR "/mempool.html"
+#define TMPL_HEADER                 TMPL_DIR "/header.html"
+#define TMPL_FOOTER                 TMPL_DIR "/footer.html"
+#define TMPL_BLOCK                  TMPL_DIR "/block.html"
+#define TMPL_TX                     TMPL_DIR "/tx.html"
+#define TMPL_ADDRESS                TMPL_DIR "/address.html"
+#define TMPL_MY_OUTPUTS             TMPL_DIR "/my_outputs.html"
+#define TMPL_SEARCH_RESULTS         TMPL_DIR "/search_results.html"
+#define TMPL_MY_RAWTX               TMPL_DIR "/rawtx.html"
+#define TMPL_MY_CHECKRAWTX          TMPL_DIR "/checkrawtx.html"
+#define TMPL_MY_PUSHRAWTX           TMPL_DIR "/pushrawtx.html"
+#define TMPL_MY_RAWKEYIMGS          TMPL_DIR "/rawkeyimgs.html"
+#define TMPL_MY_CHECKRAWKEYIMGS     TMPL_DIR "/checkrawkeyimgs.html"
+#define TMPL_MY_RAWOUTPUTKEYS       TMPL_DIR "/rawoutputkeys.html"
+#define TMPL_MY_CHECKRAWOUTPUTKEYS  TMPL_DIR "/checkrawoutputkeys.html"
 
 namespace xmreg {
 
@@ -2010,11 +2012,31 @@ public:
                 {"testnet"              , testnet}
         };
 
-        // read checkrawtx.html
+        // read rawkeyimgs.html
         string rawkeyimgs_html = xmreg::read(TMPL_MY_RAWKEYIMGS);
 
         // add header and footer
-        string full_page =  rawkeyimgs_html + xmreg::read(TMPL_FOOTER);
+        string full_page =  rawkeyimgs_html + get_footer();
+
+        add_css_style(context);
+
+        // render the page
+        return mstch::render(full_page, context);
+    }
+
+    string
+    show_rawoutputkeys()
+    {
+        // initalize page template context map
+        mstch::map context {
+                {"testnet"              , testnet}
+        };
+
+        // read rawoutputkeys.html
+        string rawoutputkeys_html = xmreg::read(TMPL_MY_RAWOUTPUTKEYS);
+
+        // add header and footer
+        string full_page =  rawoutputkeys_html + get_footer();
 
         add_css_style(context);
 
@@ -2047,7 +2069,7 @@ public:
         string checkrawkeyimgs_html = xmreg::read(TMPL_MY_CHECKRAWKEYIMGS);
 
         // add footer
-        string full_page =  checkrawkeyimgs_html + xmreg::read(TMPL_FOOTER);
+        string full_page =  checkrawkeyimgs_html + get_footer();
 
         add_css_style(context);
 
@@ -2378,11 +2400,173 @@ public:
         return mstch::render(full_page, context);
     }
 
+    string
+    show_checkcheckrawoutput(string raw_data, string viewkey_str)
+    {
+
+        // remove white characters
+        boost::trim(raw_data);
+        boost::erase_all(raw_data, "\r\n");
+        boost::erase_all(raw_data, "\n");
+
+        // remove white characters
+        boost::trim(viewkey_str);
+
+        string decoded_raw_data = epee::string_encoding::base64_decode(raw_data);
+        secret_key prv_view_key;
+
+        // initalize page template context map
+        mstch::map context{
+                {"testnet",   testnet},
+                {"has_error", false},
+                {"error_msg", string{}},
+        };
+
+
+        // read page template
+        string checkoutputkeys_html = xmreg::read(TMPL_MY_CHECKRAWOUTPUTKEYS);
+
+        // add footer
+        string full_page = checkoutputkeys_html + get_footer();
+
+        add_css_style(context);
+
+        if (viewkey_str.empty())
+        {
+            string error_msg = fmt::format("View key not given. Cant decode "
+                                                   "the key image data without it!");
+
+            context["has_error"] = true;
+            context["error_msg"] = error_msg;
+
+            return mstch::render(full_page, context);
+        }
+
+        if (!xmreg::parse_str_secret_key(viewkey_str, prv_view_key))
+        {
+            string error_msg = fmt::format("Cant parse the private key: " + viewkey_str);
+
+            context["has_error"] = true;
+            context["error_msg"] = error_msg;
+
+            return mstch::render(full_page, context);
+        }
+
+        const size_t magiclen = strlen(OUTPUT_EXPORT_FILE_MAGIC);
+
+
+        if (!strncmp(decoded_raw_data.c_str(), OUTPUT_EXPORT_FILE_MAGIC, magiclen) == 0)
+        {
+            string error_msg = fmt::format("This does not seem to be output keys export data.");
+
+            context["has_error"] = true;
+            context["error_msg"] = error_msg;
+
+            return mstch::render(full_page, context);
+        }
+
+        // decrypt key images data using private view key
+        decoded_raw_data = xmreg::decrypt(
+                std::string(decoded_raw_data, magiclen),
+                prv_view_key, true);
+
+
+        // header is public spend and keys
+        const size_t header_lenght    = 2 * sizeof(crypto::public_key);
+
+        // get xmr address stored in this key image file
+        const account_public_address* xmr_address =
+                reinterpret_cast<const account_public_address*>(
+                        decoded_raw_data.data());
+
+        context.insert({"address"        , REMOVE_HASH_BRAKETS(xmreg::print_address(*xmr_address, testnet))});
+        context.insert({"viewkey"        , REMOVE_HASH_BRAKETS(fmt::format("{:s}", prv_view_key))});
+        context.insert({"has_total_xmr"  , false});
+        context.insert({"total_xmr"      , string{}});
+        context.insert({"output_keys"    , mstch::array{}});
+
+        mstch::array& output_keys_ctx = boost::get<mstch::array>(context["output_keys"]);
+
+        unique_ptr<xmreg::MyLMDB> mylmdb;
+
+        if (bf::is_directory(lmdb2_path))
+        {
+            mylmdb = make_unique<xmreg::MyLMDB>(lmdb2_path);
+        }
+        else
+        {
+            cout << "Custom lmdb database seem does not exist at: " << lmdb2_path << endl;
+        }
+
+        std::vector<tools::wallet2::transfer_details> outputs;
+
+        try
+        {
+            std::string body(decoded_raw_data, header_lenght);
+            std::stringstream iss;
+            iss << body;
+            boost::archive::binary_iarchive ar(iss);
+
+            ar >> outputs;
+
+            //size_t n_outputs = m_wallet->import_outputs(outputs);
+        }
+        catch (const std::exception &e)
+        {
+
+            string error_msg = fmt::format("Failed to import outputs: {:s}", e.what());
+
+            context["has_error"] = true;
+            context["error_msg"] = error_msg;
+
+            return mstch::render(full_page, context);
+        }
+
+        uint64_t total_xmr {0};
+        uint64_t output_no {0};
+
+        for (const tools::wallet2::transfer_details& td: outputs)
+        {
+
+            const transaction_prefix& txp = td.m_tx;
+
+            txout_to_key txout_key = boost::get<txout_to_key>(
+                    txp.vout[td.m_internal_output_index].target);
+
+            uint64_t xmr_amount = td.amount();
+
+            uint64_t blk_timestamp = core_storage
+                    ->get_db().get_block_timestamp(td.m_block_height);
+
+            mstch::map output_info {
+                    {"output_no"           , fmt::format("{:03d}", output_no)},
+                    {"output_pub_key"      , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txout_key.key))},
+                    {"amount"              , xmreg::xmr_amount_to_str(xmr_amount)},
+                    {"tx_hash"             , REMOVE_HASH_BRAKETS(fmt::format("{:s}", td.m_txid))},
+                    {"timestamp"           , xmreg::timestamp_to_str(blk_timestamp)},
+                    {"is_ringct"           , td.m_rct}
+            };
+
+            ++output_no;
+
+            total_xmr += xmr_amount;
+
+            output_keys_ctx.push_back(output_info);
+        }
+
+        if (total_xmr > 0)
+        {
+            context["has_total_xmr"] = true;
+            context["total_xmr"] = xmreg::xmr_amount_to_str(total_xmr);
+        }
+
+        return mstch::render(full_page, context);;
+    }
+
 
     string
     search(string search_text)
     {
-
         // remove white characters
         boost::trim(search_text);
 
@@ -3951,6 +4135,14 @@ private:
     string
     get_full_page(string& middle)
     {
+        return xmreg::read(TMPL_HEADER)
+               + middle
+               + get_footer();
+    }
+
+    string
+    get_footer()
+    {
         // set last git commit date based on
         // autogenrated version.h during compilation
         static const mstch::map footer_context {
@@ -3960,9 +4152,7 @@ private:
 
         string footer_html = mstch::render(xmreg::read(TMPL_FOOTER), footer_context);
 
-        return xmreg::read(TMPL_HEADER)
-               + middle
-               + footer_html;
+        return footer_html;
     }
 
     void
