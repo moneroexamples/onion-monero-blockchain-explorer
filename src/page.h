@@ -2182,7 +2182,6 @@ public:
 
             if (!found_tx_hashes.empty())
             {
-
                 string tx_hash_str = found_tx_hashes.at(0);
 
                 key_img_info["tx_hash"]   = tx_hash_str;
@@ -2205,15 +2204,13 @@ public:
 
                     vector<txin_to_key> tx_key_imgs = get_key_images(tx);
 
-                    const vector<txin_to_key>::const_iterator it
-                            = find_if(tx_key_imgs.begin(), tx_key_imgs.end(),
-                              [&](txin_to_key tx_in)
-                              {
-                                  return tx_in.k_image == key_image;
-                              });
-
-                    if (it != tx_key_imgs.end())
+                    for (auto it = tx_key_imgs.begin(); it != tx_key_imgs.end(); ++it)
                     {
+                        if ((*it).k_image != key_image)
+                        {
+                            continue;
+                        }
+
                         uint64_t xmr_amount = (*it).amount;
 
                         // RingCT, i.e., tx version is 2
@@ -2221,29 +2218,155 @@ public:
                         // otherwise they all appear to be zero.
                         // so to find the amount, first we need to find
                         // our output in the key images's mixins, and then
-
+                        // decode it using ringct.
+                        // this requires to loop over mixins of each key image,
+                        // get its source txs, get mixin index in that tx,
+                        // and check if its our mixin or not using private_view_key
+                        // and public_spend_key_provided
                         if (tx.version == 2)
                         {
-//                            bool r = decode_ringct(tx.rct_signatures,
-//                                                   txd.pk,
-//                                                   prv_view_key,
-//                                                   i,
-//                                                   tx.rct_signatures.ecdhInfo[i].mask,
-//                                                   rct_amount);
-                        }
 
-                        key_img_info["amount"] = xmreg::xmr_amount_to_str(xmr_amount);
+                            vector<uint64_t> absolute_offsets
+                                    = relative_output_offsets_to_absolute((*it).key_offsets);
+
+                            // need to go through each mixin, fetch its tx
+                            // find its index in that txs, obtain tx_public_key
+                            // derive a deriviec_key, compare derived output key
+                            // with the output key in txs, and decode rct amount
+                            // if equal
+                            for (uint64_t out_idx: absolute_offsets)
+                            {
+
+                                //tx_out_index is pair<transaction hash, output index>
+                                tx_out_index toi;
+
+                                try
+                                {
+                                    // get pair<transaction hash, output index>
+                                    toi = core_storage->get_db()
+                                            .get_output_tx_and_index((*it).amount, out_idx);
+                                }
+                                catch (const OUTPUT_DNE& e)
+                                {
+                                    string error_msg = fmt::format(
+                                            "Output with amount {:d} and index {:d} does not exist!",
+                                            (*it).amount, out_idx);
+
+                                    context["has_error"] = true;
+                                    context["error_msg"] = error_msg;
+
+                                    return mstch::render(full_page, context);
+                                }
+
+                                // get actual transaction structure from tx_hash
+                                transaction output_source_tx;
+
+                                if (!mcore->get_tx(toi.first, output_source_tx))
+                                {
+                                    string error_msg = fmt::format(
+                                            "Cant get tx in blockchain: {:s}", toi.first);
+
+                                    context["has_error"] = true;
+                                    context["error_msg"] = error_msg;
+
+                                    return mstch::render(full_page, context);
+                                }
+
+                                uint64_t output_idx_in_tx = toi.second;
+
+                                // get tx outpout key
+                                const txout_to_key& output_pub_key
+                                        = boost::get<txout_to_key>(
+                                                output_source_tx.vout[output_idx_in_tx].target);
+
+                                uint64_t rct_amount = output_source_tx.vout[output_idx_in_tx].amount;
+
+                                public_key tx_pub_key = xmreg::get_tx_pub_key_from_received_outs(
+                                        output_source_tx);
+
+                                // public transaction key is combined with our viewkey
+                                // to create, so called, derived key.
+                                key_derivation derivation;
+
+                                if (!generate_key_derivation(tx_pub_key, prv_view_key, derivation))
+                                {
+                                    string error_msg = fmt::format(
+                                            "Cant get derived key for "
+                                            "pub_tx_key: {:s}, prv_view_key: {:s}"
+                                            , tx_pub_key, prv_view_key);
+
+                                    context["has_error"] = true;
+                                    context["error_msg"] = error_msg;
+
+                                    return mstch::render(full_page, context);
+                                }
+
+                                // get the tx output public key
+                                // that normally would be generated for us,
+                                // if someone had sent us some xmr.
+                                public_key derived_output_pubkey;
+
+                                derive_public_key(derivation,
+                                                  output_idx_in_tx,
+                                                  xmr_address->m_spend_public_key,
+                                                  derived_output_pubkey);
+
+                                // check if generated public key matches the current output's key
+                                bool mine_output = (output_pub_key.key == derived_output_pubkey);
+
+                                if (mine_output)
+                                {
+                                    // seems we found our output. so now lets decode its amount
+                                    // using ringct
+
+                                    bool r;
+
+                                    r = decode_ringct(output_source_tx.rct_signatures,
+                                                      tx_pub_key,
+                                                      prv_view_key,
+                                                      output_idx_in_tx,
+                                                      output_source_tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask,
+                                                      rct_amount);
+
+                                    if (!r)
+                                    {
+                                        string error_msg = fmt::format(
+                                                "Cant decode ringCT for "
+                                                "pub_tx_key: {:s} "
+                                                "using prv_view_key: {:s}",
+                                                tx_pub_key, prv_view_key);
+
+                                        context["has_error"] = true;
+                                        context["error_msg"] = error_msg;
+
+                                        return mstch::render(full_page, context);
+                                    }
+
+                                    xmr_amount = rct_amount;
+
+                                    break;
+
+                                } // if (mine_output)
+
+                            } // for (uint64_t out_idx: (*it).key_offsets)
+
+                        } // if (tx.version == 2)
+
+                        key_img_info["amount"]    = xmreg::xmr_amount_to_str(xmr_amount);
+                        key_img_info["is_ringct"] = tx.version == 2 ? true: false;
                         total_xmr += xmr_amount;
-                    }
+
+                    } // for (it = tx_key_imgs.begin(); it != tx_key_imgs.end(); ++it)
 
                     key_img_info["timestamp"] = xmreg::timestamp_to_str(blk_timestamp);
-                }
-            }
+
+                } // if (mcore->get_tx(tx_hash_str, tx))
+
+            } // if (!found_tx_hashes.empty())
 
             key_imgs_ctx.push_back(key_img_info);
 
-            //signed_key_images.push_back(make_pair(key_image, signature));
-        }
+        } // for (size_t n = 0; n < no_key_images; ++n)
 
         if (total_xmr > 0)
         {

@@ -948,5 +948,20 @@ is_output_ours(const size_t& output_index,
     return false;
 }
 
+
+bool
+get_real_output_for_key_image(const key_image& ki,
+                              const transaction& tx,
+                              const secret_key& private_view_key,
+                              const public_key& public_spend_key,
+                              uint64_t output_idx,
+                              public_key output_pub_key)
+{
+
+
+
+    return false;
+}
+
 }
 

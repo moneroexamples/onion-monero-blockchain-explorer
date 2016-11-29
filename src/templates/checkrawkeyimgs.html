@@ -41,6 +41,7 @@
                         <td>Key no.</td>
                         <td>Key image</td>
                         <td>Timestamp</td>
+                        <td>RingCT</td>
                         <td>Amount</td>
                         <td>Is spent?</td>
                     </tr>
@@ -57,6 +58,7 @@
                                 {{/tx_hash_found}}
                             </td>
                             <td>{{timestamp}}</td>
+                            <td>{{is_ringct}}</td>
                             <td>{{amount}}</td>
                             <td>
                                 {{#is_spent}}
