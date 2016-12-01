@@ -2513,7 +2513,6 @@ public:
         }
         catch (const std::exception &e)
         {
-
             string error_msg = fmt::format("Failed to import outputs: {:s}", e.what());
 
             context["has_error"] = true;
@@ -2534,6 +2533,45 @@ public:
                     txp.vout[td.m_internal_output_index].target);
 
             uint64_t xmr_amount = td.amount();
+
+            // if the output is RingCT, i.e., tx version is 2
+            // need to decode its amount
+            if (td.m_tx.version == 2)
+            {
+                // get tx associated with the given output
+                transaction tx;
+
+                if (!mcore->get_tx(td.m_txid, tx))
+                {
+                    string error_msg = fmt::format("Cant get tx of hash: {:s}", td.m_txid);
+
+                    context["has_error"] = true;
+                    context["error_msg"] = error_msg;
+
+                    return mstch::render(full_page, context);
+                }
+
+                public_key tx_pub_key = xmreg::get_tx_pub_key_from_received_outs(tx);
+
+                bool r = decode_ringct(tx.rct_signatures,
+                                       tx_pub_key,
+                                       prv_view_key,
+                                       td.m_internal_output_index,
+                                       tx.rct_signatures.ecdhInfo[td.m_internal_output_index].mask,
+                                       xmr_amount);
+
+                if (!r)
+                {
+                    string error_msg = fmt::format(
+                            "Cant decode RingCT for output: {:s}",
+                            txout_key.key);
+
+                    context["has_error"] = true;
+                    context["error_msg"] = error_msg;
+
+                    return mstch::render(full_page, context);
+                }
+            }
 
             uint64_t blk_timestamp = core_storage
                     ->get_db().get_block_timestamp(td.m_block_height);
