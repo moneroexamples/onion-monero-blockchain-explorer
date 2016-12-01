@@ -2538,18 +2538,26 @@ public:
             uint64_t blk_timestamp = core_storage
                     ->get_db().get_block_timestamp(td.m_block_height);
 
+            const key_image& output_key_img = td.m_key_image;
+
+            bool is_output_spent = core_storage->have_tx_keyimg_as_spent(output_key_img);
+
             mstch::map output_info {
                     {"output_no"           , fmt::format("{:03d}", output_no)},
                     {"output_pub_key"      , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txout_key.key))},
                     {"amount"              , xmreg::xmr_amount_to_str(xmr_amount)},
                     {"tx_hash"             , REMOVE_HASH_BRAKETS(fmt::format("{:s}", td.m_txid))},
                     {"timestamp"           , xmreg::timestamp_to_str(blk_timestamp)},
+                    {"is_spent"            , is_output_spent},
                     {"is_ringct"           , td.m_rct}
             };
 
             ++output_no;
 
-            total_xmr += xmr_amount;
+            if (!is_output_spent)
+            {
+                total_xmr += xmr_amount;
+            }
 
             output_keys_ctx.push_back(output_info);
         }
