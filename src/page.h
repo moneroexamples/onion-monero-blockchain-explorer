@@ -475,9 +475,20 @@ public:
     string
     index2(uint64_t page_no = 0, bool refresh_page = false)
     {
-
         //get current server timestamp
         server_timestamp = std::time(nullptr);
+
+
+
+        // @TODO need to make this tx from _tx_info.tx_json
+        transaction tx;
+
+        if (!xmreg::make_tx_from_json(string{}, tx))
+        {
+            cerr << "Cant make tx from _tx_info.tx_json" << endl;
+            return string {"Cant make tx from _tx_info.tx_json"};
+        }
+
 
         // number of last blocks to show
         uint64_t no_of_last_blocks {25 + 1};
