@@ -275,6 +275,9 @@ get_real_output_for_key_image(const key_image& ki,
                               uint64_t output_idx,
                               public_key output_pub_key);
 
+bool
+make_tx_from_json(const string& json_str, transaction& tx);
+
 }
 
 #endif //XMREG01_TOOLS_H

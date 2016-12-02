@@ -4016,9 +4016,34 @@ private:
         }
         else
         {
-            // @TODO make tx_info from json
-            // if dont have tx_blob member, construct tx_info
+            // if dont have tx_blob member, construct tx
             // from json obtained from the rpc call
+
+            for (size_t i = 0; i < mempool_txs.size(); ++i)
+            {
+                // get transaction info of the tx in the mempool
+                tx_info _tx_info = mempool_txs.at(i);
+
+                crypto::hash mem_tx_hash = null_hash;
+
+                if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
+                {
+                    // @TODO need to make this tx from _tx_info.tx_json
+                    transaction tx;
+
+                    if (!xmreg::make_tx_from_json(_tx_info.tx_json, tx))
+                    {
+                        cerr << "Cant make tx from _tx_info.tx_json" << endl;
+                        continue;
+                    }
+
+                    if (tx_hash == mem_tx_hash)
+                    {
+                        found_txs.push_back(make_pair(_tx_info, tx));
+                        break;
+                    }
+                }
+            }
         }
 
         return found_txs;
