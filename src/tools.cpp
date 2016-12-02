@@ -306,7 +306,28 @@ sum_money_in_outputs(const transaction& tx)
     return sum_xmr;
 }
 
+pair<uint64_t, uint64_t>
+sum_money_in_outputs(const string& json_str)
+{
+    pair<uint64_t, uint64_t> sum_xmr {0, 0};
 
+    cout << json_str << endl;
+
+
+    json j;
+    try
+    {
+       j = json::parse( json_str);
+    }
+    catch (std::invalid_argument& e)
+    {
+        cerr << "sum_money_in_outputs: " << e.what() << endl;
+    }
+
+    cout << j.dump() << endl;
+
+    return sum_xmr;
+};
 
 uint64_t
 sum_money_in_inputs(const transaction& tx)

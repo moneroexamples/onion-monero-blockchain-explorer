@@ -690,6 +690,8 @@ public:
             pair<uint64_t, uint64_t> sum_inputs  = sum_xmr_inputs(_tx_info.tx_json);
             pair<uint64_t, uint64_t> sum_outputs = sum_xmr_outputs(_tx_info.tx_json);
 
+            sum_money_in_outputs(_tx_info.tx_json);
+
             // get mixin number in each transaction
             vector<uint64_t> mixin_numbers = get_mixin_no_in_txs(_tx_info.tx_json);
 

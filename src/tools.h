@@ -47,6 +47,7 @@ namespace pt = boost::posix_time;
 namespace gt = boost::gregorian;
 namespace lt = boost::local_time;
 
+using json = nlohmann::json;
 
 struct outputs_visitor
 {
@@ -126,11 +127,16 @@ get_blockchain_path(const boost::optional<string>& bc_path,
 uint64_t
 sum_money_in_outputs(const transaction& tx);
 
+pair<uint64_t, uint64_t>
+sum_money_in_outputs(const string& json_str);
+
 uint64_t
 sum_money_in_inputs(const transaction& tx);
 
 array<uint64_t, 2>
 sum_money_in_tx(const transaction& tx);
+
+
 
 array<uint64_t, 2>
 sum_money_in_txs(const vector<transaction>& txs);
