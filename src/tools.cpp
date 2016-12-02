@@ -329,6 +329,8 @@ sum_money_in_outputs(const string& json_str)
     return sum_xmr;
 };
 
+
+
 uint64_t
 sum_money_in_inputs(const transaction& tx)
 {
@@ -354,7 +356,27 @@ sum_money_in_inputs(const transaction& tx)
     return sum_xmr;
 }
 
+pair<uint64_t, uint64_t>
+sum_money_in_inputs(const string& json_str)
+{
+    pair<uint64_t, uint64_t> sum_xmr {0, 0};
 
+    cout << json_str << endl;
+
+    json j;
+    try
+    {
+        j = json::parse( json_str);
+    }
+    catch (std::invalid_argument& e)
+    {
+        cerr << "sum_money_in_outputs: " << e.what() << endl;
+    }
+
+    cout << j.dump() << endl;
+
+    return sum_xmr;
+};
 
 array<uint64_t, 2>
 sum_money_in_tx(const transaction& tx)
@@ -472,6 +494,13 @@ get_mixin_no(const transaction& tx)
             break;
         }
     }
+
+    return mixin_no;
+}
+vector<uint64_t>
+get_mixin_no(const string& json_str)
+{
+    vector<uint64_t> mixin_no;
 
     return mixin_no;
 }

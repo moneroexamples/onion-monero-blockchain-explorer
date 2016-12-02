@@ -19,6 +19,7 @@
 #include "../ext/date/tz.h"
 #include "../ext/format.h"
 #include "../ext/json.hpp"
+#include "../ext/member_checker.h"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
@@ -133,10 +134,11 @@ sum_money_in_outputs(const string& json_str);
 uint64_t
 sum_money_in_inputs(const transaction& tx);
 
+pair<uint64_t, uint64_t>
+sum_money_in_inputs(const string& json_str);
+
 array<uint64_t, 2>
 sum_money_in_tx(const transaction& tx);
-
-
 
 array<uint64_t, 2>
 sum_money_in_txs(const vector<transaction>& txs);
@@ -146,6 +148,9 @@ sum_fees_in_txs(const vector<transaction>& txs);
 
 uint64_t
 get_mixin_no(const transaction& tx);
+
+vector<uint64_t>
+get_mixin_no(const string& json_str);
 
 vector<uint64_t>
 get_mixin_no_in_txs(const vector<transaction>& txs);
