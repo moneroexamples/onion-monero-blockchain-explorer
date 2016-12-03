@@ -4048,6 +4048,14 @@ private:
                         continue;
                     }
 
+                    if (_tx_info.id_hash != pod_to_hex(get_transaction_hash(tx)))
+                    {
+                        cerr << "Hash of reconstructed tx from json does not match "
+                                "what we should get!"
+                             << endl;
+                        continue;
+                    }
+
                     if (tx_hash == mem_tx_hash)
                     {
                         found_txs.push_back(make_pair(_tx_info, tx));
