@@ -275,6 +275,29 @@ get_real_output_for_key_image(const key_image& ki,
                               uint64_t output_idx,
                               public_key output_pub_key);
 
+// based on http://stackoverflow.com/a/9943098/248823
+template<typename Iterator, typename Func>
+void chunks(Iterator begin,
+            Iterator end,
+            iterator_traits<string::iterator>::difference_type k,
+            Func f)
+{
+    Iterator chunk_begin;
+    Iterator chunk_end;
+    chunk_end = chunk_begin = begin;
+
+    do
+    {
+        if(std::distance(chunk_end, end) < k)
+            chunk_end = end;
+        else
+            std::advance(chunk_end, k);
+        f(chunk_begin,chunk_end);
+        chunk_begin = chunk_end;
+    }
+    while(std::distance(chunk_begin,end) > 0);
+}
+
 bool
 make_tx_from_json(const string& json_str, transaction& tx);
 

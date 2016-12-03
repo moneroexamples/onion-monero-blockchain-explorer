@@ -480,14 +480,14 @@ public:
 
 
 
-        // @TODO need to make this tx from _tx_info.tx_json
-        transaction tx;
-
-        if (!xmreg::make_tx_from_json(string{}, tx))
-        {
-            cerr << "Cant make tx from _tx_info.tx_json" << endl;
-            return string {"Cant make tx from _tx_info.tx_json"};
-        }
+//        // @TODO need to make this tx from _tx_info.tx_json
+//        transaction tx;
+//
+//        if (!xmreg::make_tx_from_json(string{}, tx))
+//        {
+//            cerr << "Cant make tx from _tx_info.tx_json" << endl;
+//            //return string {"Cant make tx from _tx_info.tx_json"};
+//        }
 
 
         // number of last blocks to show
