@@ -1028,58 +1028,7 @@ get_real_output_for_key_image(const key_image& ki,
 bool
 make_tx_from_json(const string& json_str, transaction& tx)
 {
-
     json j;
-
-    cout << json_str << endl;
-
-    const char * raw = R"V0G0N(
-                       {
-  "version": 1,
-  "unlock_time": 0,
-  "vin": [ {
-      "key": {
-        "amount": 500000000000,
-        "key_offsets": [ 970946, 74679, 42349
-        ],
-        "k_image": "a3569b74ac6072a09ff7aa87d6a71f4960b736166fe991ffd9ae6e023b8fccaa"
-      }
-    }, {
-      "key": {
-        "amount": 6000000000000,
-        "key_offsets": [ 76729, 115575, 6350
-        ],
-        "k_image": "15e6094d135fe034eacff7d905da915fabbeddb055cd4f2f56628ab74c149ba7"
-      }
-    }
-  ],
-  "vout": [ {
-      "amount": 90000000000,
-      "target": {
-        "key": "017ec135fd5a83ef71e1733c6b8514b90b6af3a39bf048298a4cadcb527cb44d"
-      }
-    }, {
-      "amount": 400000000000,
-      "target": {
-        "key": "f54dd59afbff69d0f963dba339c036c61149431ea4767b8f48bd687cb95ce863"
-      }
-    }, {
-      "amount": 1000000000000,
-      "target": {
-        "key": "983eb1aef254a90cf1c053ca67f355c7d232b792219d4ab4e25c2e8c839e0daf"
-      }
-    }, {
-      "amount": 5000000000000,
-      "target": {
-        "key": "b5d6f08ae20031ad2e904795b16c5336325a437293d9c4ec8d282d2f856245f3"
-      }
-    }
-  ],
-  "extra": [ 2, 33, 0, 16, 251, 80, 43, 162, 245, 74, 116, 191, 231, 90, 127, 157, 163, 123, 50, 55, 169, 21, 169, 213, 159, 79, 30, 148, 88, 38, 122, 80, 254, 174, 155, 1, 3, 187, 28, 103, 133, 53, 170, 134, 103, 235, 120, 47, 87, 205, 202, 40, 30, 129, 27, 27, 192, 122, 192, 209, 190, 161, 249, 75, 147, 29, 42, 15
-  ],
-  "signatures": [ "023714291f36e2ec9985417f0792425ce192434bcfcb4c600806f94ff2215007299d16a105f5741e2ab75e4592b8b8f3f604a114ea8e9a6edc8360fbe07da80c3a108fa6a5861c684f20aecbe1c6bde30eae22e2f69aeff2ed605c8ac9e3a004e181eec999af9e9ec7ba4379dbe78f0c7ee41d77276c0472b071b33df83419065c5cd2ffb7ed4bfacbd67ec3aa304e3f59a00d310a455db1718d14c789adc8062c97c75bb421e1579e9df1ddadfd59a06fccd01c054cf39b1e93f8b43e4f5405", "4984136e387023b499fbff72a1b88bac64e3dcb54a0213ce2deb412de2781d0f41a0f0160dd6c07b98d6d63adc91b672cc3f2ff6f447d48bea09d54b87ab440310459fbb9a7cc59a2e4ac80d4bb41c9ea2500515a7ceaf6b1e23849965395501af1761413dc4d79eaba190ca72c00e0bdc3737502fb46bf705f714741e6434070a82684d5f441de2991989aff2c7f806ad4adaf93fb649a3d2715760d1ea870fd2a402b1678dafa172d2830e713ce60e776cede47367185fa00d78910d21f00d"]
-}
-)V0G0N";
 
     try
     {
@@ -1216,17 +1165,17 @@ make_tx_from_json(const string& json_str, transaction& tx)
 
         for (json& pk: j["rct_signatures"]["outPk"])
         {
-            rct::key a_key;
+            outPk.push_back(rct::ctkey {rct::zero(), rct::zero()});
 
-            if (!epee::string_tools::hex_to_pod(pk, a_key))
+            rct::key& mask = outPk.back().mask;
+
+            if (!epee::string_tools::hex_to_pod(pk, mask))
             {
                 cerr << "Faild to parse rct::key of an outPk from json" << endl;
                 return false;
             }
 
-            // dont have second value, i.e. mask, in the json
-            // so I just put whatever, same key for exmaple
-            outPk.push_back(rct::ctkey{a_key, a_key});
+            cout << "dest: " << epee::string_tools::pod_to_hex(outPk.back().mask) << endl;
         }
 
         rct_signatures.txnFee = j["rct_signatures"]["txnFee"].get<uint64_t>();
@@ -1237,37 +1186,86 @@ make_tx_from_json(const string& json_str, transaction& tx)
 
     if (j.find("rctsig_prunable") != j.end())
     {
-        rct::rctSigPrunable &rctsig_prunable = tx.rct_signatures.p;
+        rct::rctSigPrunable& rctsig_prunable = tx.rct_signatures.p;
 
         vector<rct::rangeSig>& range_sigs = rctsig_prunable.rangeSigs;
 
-//        for (json& range_s: j["rctsig_prunable"]["rangeSigs"])
-//        {
-//            rct::asnlSig asig;
-//
-//            if (!epee::string_tools::hex_to_pod<rct::asnlSig>(range_s["asig"], asig))
-//            {
-//                cerr << "Faild to parse asig of an asnlSig from json" << endl;
-//                return false;
-//            }
-//
-//            rct::key64 Ci;
-//
-//            if (!epee::string_tools::hex_to_pod<rct::key64>(range_s["Ci"], Ci))
-//            {
-//                cerr << "Faild to parse Ci of an asnlSig from json" << endl;
-//                return false;
-//            }
-//
-//            range_sigs.emplace_back(asig, Ci);
-//        }
+        for (json& range_s: j["rctsig_prunable"]["rangeSigs"])
+        {
+            rct::asnlSig asig;
+
+            if (!epee::string_tools::hex_to_pod(range_s["asig"], asig))
+            {
+                cerr << "Faild to parse asig of an asnlSig from json" << endl;
+                return false;
+            }
+
+
+            struct {
+                rct::key64 Ci;
+            } key64_contained;
+
+            if (!epee::string_tools::hex_to_pod(range_s["Ci"], key64_contained))
+            {
+                cerr << "Faild to parse Ci of an asnlSig from json" << endl;
+                return false;
+            }
+
+            range_sigs.push_back(rct::rangeSig {});
+
+            rct::rangeSig& last_range_sig = range_sigs.back();
+
+            last_range_sig.asig = asig;
+
+            memcpy(&(last_range_sig.Ci), &(key64_contained.Ci), sizeof(rct::key64));
+        }
+
+        vector<rct::mgSig>& mg_sigs = rctsig_prunable.MGs;
+
+        for (json& a_mgs: j["rctsig_prunable"]["MGs"])
+        {
+            rct::mgSig new_mg_sig;
+
+            vector<rct::keyV>& ss = new_mg_sig.ss;
+
+            for (json& ss_j: a_mgs["ss"])
+            {
+                rct::key a_key1;
+
+                if (!epee::string_tools::hex_to_pod(ss_j[0], a_key1))
+                {
+                    cerr << "Faild to parse ss a_key1 of an MGs from json" << endl;
+                    return false;
+                }
+
+                rct::key a_key2;
+
+                if (!epee::string_tools::hex_to_pod(ss_j[1], a_key2))
+                {
+                    cerr << "Faild to parse ss a_key2 of an MGs from json" << endl;
+                    return false;
+                }
+
+                ss.push_back(vector<rct::key>{a_key1, a_key2});
+            }
+
+            json& cc_j = a_mgs["cc"];
+
+            if (!epee::string_tools::hex_to_pod(cc_j, new_mg_sig.cc))
+            {
+                cerr << "Faild to parse cc an MGs from json" << endl;
+                return false;
+            }
+
+            mg_sigs.push_back(new_mg_sig);
+        }
 
     } // j.find("rctsig_prunable") != j.end()
 
 
-    cout << j.dump(4) << endl;
+    //cout << j.dump(4) << endl;
 
-    cout << "From reconstructed tx: " << obj_to_json_str(tx) << endl;
+    //cout << "From reconstructed tx: " << obj_to_json_str(tx) << endl;
 
     return true;
 }
