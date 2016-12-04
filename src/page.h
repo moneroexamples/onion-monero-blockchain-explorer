@@ -8,8 +8,6 @@
 
 
 #include "mstch/mstch.hpp"
-#include "rapidjson/document.h"
-#include "../ext/member_checker.h"
 
 #include "version.h"
 
@@ -46,7 +44,8 @@
 #define TMPL_MY_RAWOUTPUTKEYS       TMPL_DIR "/rawoutputkeys.html"
 #define TMPL_MY_CHECKRAWOUTPUTKEYS  TMPL_DIR "/checkrawoutputkeys.html"
 
-namespace xmreg {
+namespace xmreg
+{
 
 
 using namespace cryptonote;
@@ -476,7 +475,6 @@ public:
     string
     index2(uint64_t page_no = 0, bool refresh_page = false)
     {
-
         //get current server timestamp
         server_timestamp = std::time(nullptr);
 
@@ -687,11 +685,13 @@ public:
             //cout << _tx_info.tx_json << endl;
 
             // sum xmr in inputs and ouputs in the given tx
-            pair<uint64_t, uint64_t> sum_inputs  = sum_xmr_inputs(_tx_info.tx_json);
-            pair<uint64_t, uint64_t> sum_outputs = sum_xmr_outputs(_tx_info.tx_json);
+            pair<uint64_t, uint64_t> sum_inputs  = xmreg::sum_money_in_inputs(_tx_info.tx_json);
+            pair<uint64_t, uint64_t> sum_outputs = xmreg::sum_money_in_outputs(_tx_info.tx_json);
+
+            sum_money_in_outputs(_tx_info.tx_json);
 
             // get mixin number in each transaction
-            vector<uint64_t> mixin_numbers = get_mixin_no_in_txs(_tx_info.tx_json);
+            vector<uint64_t> mixin_numbers = xmreg::get_mixin_no(_tx_info.tx_json);
 
             uint64_t mixin_no = 0;
 
@@ -4015,9 +4015,41 @@ private:
         }
         else
         {
-            // @TODO make tx_info from json
-            // if dont have tx_blob member, construct tx_info
+            // if dont have tx_blob member, construct tx
             // from json obtained from the rpc call
+
+            for (size_t i = 0; i < mempool_txs.size(); ++i)
+            {
+                // get transaction info of the tx in the mempool
+                tx_info _tx_info = mempool_txs.at(i);
+
+                crypto::hash mem_tx_hash = null_hash;
+
+                if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
+                {
+                    transaction tx;
+
+                    if (!xmreg::make_tx_from_json(_tx_info.tx_json, tx))
+                    {
+                        cerr << "Cant make tx from _tx_info.tx_json" << endl;
+                        continue;
+                    }
+
+                    if (_tx_info.id_hash != pod_to_hex(get_transaction_hash(tx)))
+                    {
+                        cerr << "Hash of reconstructed tx from json does not match "
+                                "what we should get!"
+                             << endl;
+                        continue;
+                    }
+
+                    if (tx_hash == mem_tx_hash)
+                    {
+                        found_txs.push_back(make_pair(_tx_info, tx));
+                        break;
+                    }
+                }
+            }
         }
 
         return found_txs;
@@ -4062,119 +4094,6 @@ private:
         age_pair.second = age_format;
 
         return age_pair;
-    }
-
-    pair<uint64_t, uint64_t>
-    sum_xmr_outputs(const string& json_str)
-    {
-        pair<uint64_t, uint64_t> sum_xmr {0, 0};
-
-        rapidjson::Document json;
-
-        if (json.Parse(json_str.c_str()).HasParseError())
-        {
-            cerr << "Failed to parse JSON" << endl;
-            return sum_xmr;
-        }
-
-        // get information about outputs
-        const rapidjson::Value& vout = json["vout"];
-
-        if (vout.IsArray())
-        {
-
-            for (rapidjson::SizeType i = 0; i < vout.Size(); ++i)
-            {
-                //print(" - {:s}, {:0.8f} xmr\n",
-                //    vout[i]["target"]["key"].GetString(),
-                //    XMR_AMOUNT(vout[i]["amount"].GetUint64()));
-
-                sum_xmr.first += vout[i]["amount"].GetUint64();
-            }
-
-              sum_xmr.second = vout.Size();
-        }
-
-        return sum_xmr;
-    }
-
-    pair<uint64_t, uint64_t>
-    sum_xmr_inputs(const string& json_str)
-    {
-        pair<uint64_t, uint64_t> sum_xmr {0, 0};
-
-        rapidjson::Document json;
-
-        if (json.Parse(json_str.c_str()).HasParseError())
-        {
-            cerr << "Failed to parse JSON" << endl;
-            return sum_xmr;
-        }
-
-        // get information about inputs
-        const rapidjson::Value& vin = json["vin"];
-
-        if (vin.IsArray())
-        {
-            // print("Input key images:\n");
-
-            for (rapidjson::SizeType i = 0; i < vin.Size(); ++i)
-            {
-                if (vin[i].HasMember("key"))
-                {
-                    const rapidjson::Value& key_img = vin[i]["key"];
-
-                    // print(" - {:s}, {:0.8f} xmr\n",
-                    //       key_img["k_image"].GetString(),
-                    //       XMR_AMOUNT(key_img["amount"].GetUint64()));
-
-                    sum_xmr.first += key_img["amount"].GetUint64();
-                }
-            }
-
-            sum_xmr.second = vin.Size();
-        }
-
-        return sum_xmr;
-    }
-
-
-    vector<uint64_t>
-    get_mixin_no_in_txs(const string& json_str)
-    {
-        vector<uint64_t> mixin_no;
-
-        rapidjson::Document json;
-
-        if (json.Parse(json_str.c_str()).HasParseError())
-        {
-            cerr << "Failed to parse JSON" << endl;
-            return mixin_no;
-        }
-
-        // get information about inputs
-        const rapidjson::Value& vin = json["vin"];
-
-        if (vin.IsArray())
-        {
-           // print("Input key images:\n");
-
-            for (rapidjson::SizeType i = 0; i < vin.Size(); ++i)
-            {
-                if (vin[i].HasMember("key"))
-                {
-                    const rapidjson::Value& key_img = vin[i]["key"];
-
-                    // print(" - {:s}, {:0.8f} xmr\n",
-                    //       key_img["k_image"].GetString(),
-                    //       XMR_AMOUNT(key_img["amount"].GetUint64()));
-
-
-                    mixin_no.push_back(key_img["key_offsets"].Size());
-                }
-            }
-        }
-        return mixin_no;
     }
 
 

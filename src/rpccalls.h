@@ -101,6 +101,7 @@ namespace xmreg
                 return false;
             }
 
+
             mempool_txs = res.transactions;
 
             return true;

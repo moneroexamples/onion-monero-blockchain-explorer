@@ -18,6 +18,8 @@
 #include "../ext/infix_iterator.h"
 #include "../ext/date/tz.h"
 #include "../ext/format.h"
+#include "../ext/json.hpp"
+#include "../ext/member_checker.h"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
@@ -46,6 +48,7 @@ namespace pt = boost::posix_time;
 namespace gt = boost::gregorian;
 namespace lt = boost::local_time;
 
+using json = nlohmann::json;
 
 struct outputs_visitor
 {
@@ -125,8 +128,14 @@ get_blockchain_path(const boost::optional<string>& bc_path,
 uint64_t
 sum_money_in_outputs(const transaction& tx);
 
+pair<uint64_t, uint64_t>
+sum_money_in_outputs(const string& json_str);
+
 uint64_t
 sum_money_in_inputs(const transaction& tx);
+
+pair<uint64_t, uint64_t>
+sum_money_in_inputs(const string& json_str);
 
 array<uint64_t, 2>
 sum_money_in_tx(const transaction& tx);
@@ -139,6 +148,9 @@ sum_fees_in_txs(const vector<transaction>& txs);
 
 uint64_t
 get_mixin_no(const transaction& tx);
+
+vector<uint64_t>
+get_mixin_no(const string& json_str);
 
 vector<uint64_t>
 get_mixin_no_in_txs(const vector<transaction>& txs);
@@ -262,6 +274,32 @@ get_real_output_for_key_image(const key_image& ki,
                               const public_key& public_spend_key,
                               uint64_t output_idx,
                               public_key output_pub_key);
+
+// based on http://stackoverflow.com/a/9943098/248823
+template<typename Iterator, typename Func>
+void chunks(Iterator begin,
+            Iterator end,
+            iterator_traits<string::iterator>::difference_type k,
+            Func f)
+{
+    Iterator chunk_begin;
+    Iterator chunk_end;
+    chunk_end = chunk_begin = begin;
+
+    do
+    {
+        if(std::distance(chunk_end, end) < k)
+            chunk_end = end;
+        else
+            std::advance(chunk_end, k);
+        f(chunk_begin,chunk_end);
+        chunk_begin = chunk_end;
+    }
+    while(std::distance(chunk_begin,end) > 0);
+}
+
+bool
+make_tx_from_json(const string& json_str, transaction& tx);
 
 }
 

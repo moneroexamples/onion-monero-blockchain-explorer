@@ -198,10 +198,8 @@ int main(int ac, const char* av[]) {
 
 ##### Monero headers and libraries setup
 
-The Onion Explorer uses Monero C++ libraries and headers. Also some functionality
- in the Explorer for mempool is achieved through [patching](https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04/blob/master/res/tx_blob_to_tx_info.patch)
- the Monero deamon.
- Instructions how to download Monero source files, apply a patch, compile  Monero,
+The Onion Explorer uses Monero C++ libraries and headers. 
+ Instructions how to download source files and compile Monero,
  setup header and library files are presented here:
 
 - https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04 (Ubuntu 16.04)

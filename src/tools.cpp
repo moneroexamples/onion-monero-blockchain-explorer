@@ -306,6 +306,35 @@ sum_money_in_outputs(const transaction& tx)
     return sum_xmr;
 }
 
+pair<uint64_t, uint64_t>
+sum_money_in_outputs(const string& json_str)
+{
+    pair<uint64_t, uint64_t> sum_xmr {0, 0};
+
+    cout << json_str << endl;
+
+
+    json j;
+    try
+    {
+       j = json::parse( json_str);
+    }
+    catch (std::invalid_argument& e)
+    {
+        cerr << "sum_money_in_outputs: " << e.what() << endl;
+        return sum_xmr;
+    }
+
+    for (json& vout: j["vout"])
+    {
+        sum_xmr.first += vout["amount"].get<uint64_t>();
+        ++sum_xmr.second;
+    }
+
+
+    return sum_xmr;
+};
+
 
 
 uint64_t
@@ -333,7 +362,32 @@ sum_money_in_inputs(const transaction& tx)
     return sum_xmr;
 }
 
+pair<uint64_t, uint64_t>
+sum_money_in_inputs(const string& json_str)
+{
+    pair<uint64_t, uint64_t> sum_xmr {0, 0};
 
+    cout << json_str << endl;
+
+    json j;
+    try
+    {
+        j = json::parse( json_str);
+    }
+    catch (std::invalid_argument& e)
+    {
+        cerr << "sum_money_in_outputs: " << e.what() << endl;
+        return sum_xmr;
+    }
+
+    for (json& vin: j["vin"])
+    {
+        sum_xmr.first += vin["key"]["amount"].get<uint64_t>();
+        ++sum_xmr.second;
+    }
+
+    return sum_xmr;
+};
 
 array<uint64_t, 2>
 sum_money_in_tx(const transaction& tx)
@@ -451,6 +505,13 @@ get_mixin_no(const transaction& tx)
             break;
         }
     }
+
+    return mixin_no;
+}
+vector<uint64_t>
+get_mixin_no(const string& json_str)
+{
+    vector<uint64_t> mixin_no;
 
     return mixin_no;
 }
@@ -961,6 +1022,252 @@ get_real_output_for_key_image(const key_image& ki,
 
 
     return false;
+}
+
+
+bool
+make_tx_from_json(const string& json_str, transaction& tx)
+{
+    json j;
+
+    try
+    {
+        j = json::parse(json_str);
+    }
+    catch (std::invalid_argument& e)
+    {
+        cerr << "make_tx_from_json: cant parse json string: " << e.what() << endl;
+        return false;
+    }
+
+    // get version and unlock time from json
+    tx.version     = j["version"].get<size_t>();
+    tx.unlock_time = j["unlock_time"].get<uint64_t>();
+
+    // next get extra data
+    for (json& extra_val: j["extra"])
+        tx.extra.push_back(extra_val.get<uint8_t>());
+
+
+    // now populate output data from json
+    vector<tx_out>& tx_outputs = tx.vout;
+
+    for (json& vo: j["vout"])
+    {
+        uint64_t amount = vo["amount"].get<uint64_t>();
+
+        public_key out_pub_key;
+
+        if (!epee::string_tools::hex_to_pod(vo["target"]["key"], out_pub_key))
+        {
+            cerr << "Faild to parse public_key of an output from json" << endl;
+            return false;
+        }
+
+        txout_target_v target {txout_to_key {out_pub_key}};
+
+        tx_outputs.push_back(tx_out {amount, target});
+    }
+
+    // now populate input data from json
+    vector<txin_v>& tx_inputs = tx.vin;
+
+    for (json& vi: j["vin"])
+    {
+        uint64_t amount = vi["key"]["amount"].get<uint64_t>();
+
+        key_image in_key_image;
+
+        if (!epee::string_tools::hex_to_pod(vi["key"]["k_image"], in_key_image))
+        {
+            cerr << "Faild to parse key_image of an input from json" << endl;
+            return false;
+        }
+
+        vector<uint64_t> key_offsets;
+
+        for (json& ko: vi["key"]["key_offsets"])
+        {
+            key_offsets.push_back(ko.get<uint64_t>());
+        }
+
+        txin_v _txin_v {txin_to_key {amount, key_offsets, in_key_image}};
+
+        tx_inputs.push_back(_txin_v);
+    }
+
+    // add ring signatures field
+
+    if (j.find("signatures") != j.end())
+    {
+        vector<vector<signature>>& signatures = tx.signatures;
+
+        for (json& sigs: j["signatures"])
+        {
+            string concatanted_sig = sigs;
+
+            vector<signature> sig_split;
+
+            auto split_sig = [&](string::iterator &b, string::iterator &e)
+            {
+                signature a_sig;
+
+                if (!epee::string_tools::hex_to_pod(string(b, e), a_sig))
+                {
+                    cerr << "Faild to parse signature from json" << endl;
+                    return false;
+                }
+
+                sig_split.push_back(a_sig);
+
+                return true;
+            };
+
+            chunks(concatanted_sig.begin(), concatanted_sig.end(), 128, split_sig);
+
+            signatures.push_back(sig_split);
+        }
+
+    }
+
+    // now add rct_signatures from json to tx if exist
+
+    if (j.find("rct_signatures") != j.end())
+    {
+        rct::rctSig& rct_signatures = tx.rct_signatures;
+
+        vector<rct::ecdhTuple>& ecdhInfo = rct_signatures.ecdhInfo;
+
+        for (json& ecdhI: j["rct_signatures"]["ecdhInfo"])
+        {
+            rct::ecdhTuple a_tuple;
+
+            cout << "ecdhI[\"amount\"]: " << ecdhI["amount"] << endl;
+
+            if (!epee::string_tools::hex_to_pod(ecdhI["amount"], a_tuple.amount))
+            {
+                cerr << "Faild to parse ecdhInfo of an amount from json" << endl;
+                return false;
+            }
+
+            //cout << epee::string_tools::pod_to_hex(a_tuple.amount) << endl;
+
+            if (!epee::string_tools::hex_to_pod(ecdhI["mask"], a_tuple.mask))
+            {
+                cerr << "Faild to parse ecdhInfo of an mask from json" << endl;
+                return false;
+            }
+
+            ecdhInfo.push_back(a_tuple);
+        }
+
+        vector<rct::ctkey>& outPk = rct_signatures.outPk;
+
+        for (json& pk: j["rct_signatures"]["outPk"])
+        {
+            outPk.push_back(rct::ctkey {rct::zero(), rct::zero()});
+
+            rct::key& mask = outPk.back().mask;
+
+            if (!epee::string_tools::hex_to_pod(pk, mask))
+            {
+                cerr << "Faild to parse rct::key of an outPk from json" << endl;
+                return false;
+            }
+
+            cout << "dest: " << epee::string_tools::pod_to_hex(outPk.back().mask) << endl;
+        }
+
+        rct_signatures.txnFee = j["rct_signatures"]["txnFee"].get<uint64_t>();
+        rct_signatures.type   = j["rct_signatures"]["type"].get<uint8_t>();
+
+    } //  if (j.find("rct_signatures") != j.end())
+
+
+    if (j.find("rctsig_prunable") != j.end())
+    {
+        rct::rctSigPrunable& rctsig_prunable = tx.rct_signatures.p;
+
+        vector<rct::rangeSig>& range_sigs = rctsig_prunable.rangeSigs;
+
+        for (json& range_s: j["rctsig_prunable"]["rangeSigs"])
+        {
+            rct::asnlSig asig;
+
+            if (!epee::string_tools::hex_to_pod(range_s["asig"], asig))
+            {
+                cerr << "Faild to parse asig of an asnlSig from json" << endl;
+                return false;
+            }
+
+
+            struct {
+                rct::key64 Ci;
+            } key64_contained;
+
+            if (!epee::string_tools::hex_to_pod(range_s["Ci"], key64_contained))
+            {
+                cerr << "Faild to parse Ci of an asnlSig from json" << endl;
+                return false;
+            }
+
+            range_sigs.push_back(rct::rangeSig {});
+
+            rct::rangeSig& last_range_sig = range_sigs.back();
+
+            last_range_sig.asig = asig;
+
+            memcpy(&(last_range_sig.Ci), &(key64_contained.Ci), sizeof(rct::key64));
+        }
+
+        vector<rct::mgSig>& mg_sigs = rctsig_prunable.MGs;
+
+        for (json& a_mgs: j["rctsig_prunable"]["MGs"])
+        {
+            rct::mgSig new_mg_sig;
+
+            vector<rct::keyV>& ss = new_mg_sig.ss;
+
+            for (json& ss_j: a_mgs["ss"])
+            {
+                rct::key a_key1;
+
+                if (!epee::string_tools::hex_to_pod(ss_j[0], a_key1))
+                {
+                    cerr << "Faild to parse ss a_key1 of an MGs from json" << endl;
+                    return false;
+                }
+
+                rct::key a_key2;
+
+                if (!epee::string_tools::hex_to_pod(ss_j[1], a_key2))
+                {
+                    cerr << "Faild to parse ss a_key2 of an MGs from json" << endl;
+                    return false;
+                }
+
+                ss.push_back(vector<rct::key>{a_key1, a_key2});
+            }
+
+            json& cc_j = a_mgs["cc"];
+
+            if (!epee::string_tools::hex_to_pod(cc_j, new_mg_sig.cc))
+            {
+                cerr << "Faild to parse cc an MGs from json" << endl;
+                return false;
+            }
+
+            mg_sigs.push_back(new_mg_sig);
+        }
+
+    } // j.find("rctsig_prunable") != j.end()
+
+
+    //cout << j.dump(4) << endl;
+
+    //cout << "From reconstructed tx: " << obj_to_json_str(tx) << endl;
+
+    return true;
 }
 
 }
