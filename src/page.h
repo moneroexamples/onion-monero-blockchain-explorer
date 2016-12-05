@@ -1308,12 +1308,7 @@ public:
     string
     show_checkrawtx(string raw_tx_data, string action)
     {
-        // remove white characters
-        boost::trim(raw_tx_data);
-        boost::erase_all(raw_tx_data, "\r\n");
-        boost::erase_all(raw_tx_data, "\n");
-
-        //cout << raw_tx_data << endl;
+        clean_post_data(raw_tx_data);
 
         string decoded_raw_tx_data = epee::string_encoding::base64_decode(raw_tx_data);
 
@@ -1830,10 +1825,7 @@ public:
     string
     show_pushrawtx(string raw_tx_data, string action)
     {
-        // remove white characters
-        boost::trim(raw_tx_data);
-        boost::erase_all(raw_tx_data, "\r\n");
-        boost::erase_all(raw_tx_data, "\n");
+        clean_post_data(raw_tx_data);
 
         string decoded_raw_tx_data = epee::string_encoding::base64_decode(raw_tx_data);
 
@@ -2046,10 +2038,7 @@ public:
     string
     show_checkrawkeyimgs(string raw_data, string viewkey_str)
     {
-        // remove white characters
-        boost::trim(raw_data);
-        boost::erase_all(raw_data, "\r\n");
-        boost::erase_all(raw_data, "\n");
+        clean_post_data(raw_data);
 
         // remove white characters
         boost::trim(viewkey_str);
@@ -2403,10 +2392,7 @@ public:
     show_checkcheckrawoutput(string raw_data, string viewkey_str)
     {
 
-        // remove white characters
-        boost::trim(raw_data);
-        boost::erase_all(raw_data, "\r\n");
-        boost::erase_all(raw_data, "\n");
+        clean_post_data(raw_data);
 
         // remove white characters
         boost::trim(viewkey_str);
@@ -3917,6 +3903,20 @@ private:
         }
 
         return txd;
+    }
+
+    void
+    clean_post_data(string& raw_tx_data)
+    {
+        // remove white characters
+        boost::trim(raw_tx_data);
+        boost::erase_all(raw_tx_data, "\r\n");
+        boost::erase_all(raw_tx_data, "\n");
+
+        // remove header and footer from base64 data
+        // produced by certutil.exe in windows
+        boost::erase_all(raw_tx_data, "-----BEGIN CERTIFICATE-----");
+        boost::erase_all(raw_tx_data, "-----END CERTIFICATE-----");
     }
 
     bool
