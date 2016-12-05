@@ -2433,7 +2433,7 @@ public:
         if (viewkey_str.empty())
         {
             string error_msg = fmt::format("View key not given. Cant decode "
-                                                   "the key image data without it!");
+                                                   "the outputs data without it!");
 
             context["has_error"] = true;
             context["error_msg"] = error_msg;

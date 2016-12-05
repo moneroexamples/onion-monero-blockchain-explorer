@@ -18,7 +18,7 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
  - [crow](https://github.com/ipkn/crow) - C++ micro web framework
  - [lmdb++](https://github.com/bendiken/lmdbxx) - C++ wrapper for the LMDB
  - [mstch](https://github.com/no1msd/mstch) - C++ {{mustache}} templates
- - [rapidjson](https://github.com/miloyip/rapidjson) - C++ JSON parser/generator
+ - [json](https://github.com/nlohmann/json) - JSON for Modern C++
  - [date](https://github.com/HowardHinnant/date) - C++ date and time library
  - [fmt](https://github.com/fmtlib/fmt) - Small, safe and fast string formatting library
 
@@ -43,7 +43,7 @@ Non tor users, can use its clearnet version (thanks to [Gingeropolous](https://g
  
 ## Onion Monero Blockchain Explorer features
 
-The key features of the Onion Monero Blockchain Explorer are
+The key features of the Onion Monero Blockchain Explorer are:
 
  - available as a hidden service,
  - no javascript, no cookies, no web analytics trackers, no images,
@@ -61,7 +61,9 @@ The key features of the Onion Monero Blockchain Explorer are
  - the only explorer showing detailed information about mixins, such as, mixins'
  age, timescale, mixin of mixins,
  - the only explorer showing number of amount output indices,
- - the only explorer supporting Monero testnet network and RingCT.
+ - the only explorer supporting Monero testnet network and RingCT,
+ - the only explorer providing tx checker and pusher for online pushing of transactions,
+ - the only explorer allowing to inspect encrypted key images file and output files.
 
 ## Prerequisite
 
