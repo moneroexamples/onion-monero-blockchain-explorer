@@ -2439,7 +2439,6 @@ public:
 
         const size_t magiclen = strlen(OUTPUT_EXPORT_FILE_MAGIC);
 
-
         if (!strncmp(decoded_raw_data.c_str(), OUTPUT_EXPORT_FILE_MAGIC, magiclen) == 0)
         {
             string error_msg = fmt::format("This does not seem to be output keys export data.");
@@ -2450,10 +2449,23 @@ public:
             return mstch::render(full_page, context);
         }
 
+
         // decrypt key images data using private view key
         decoded_raw_data = xmreg::decrypt(
                 std::string(decoded_raw_data, magiclen),
                 prv_view_key, true);
+
+
+        if (decoded_raw_data.empty())
+        {
+            string error_msg = fmt::format("Failed to authenticate outputs data. "
+                                           "Maybe wrong viewkey was porvided?");
+
+            context["has_error"] = true;
+            context["error_msg"] = error_msg;
+
+            return mstch::render(full_page, context);
+        }
 
 
         // header is public spend and keys
