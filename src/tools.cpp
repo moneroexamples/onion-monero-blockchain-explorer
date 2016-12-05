@@ -1138,7 +1138,7 @@ make_tx_from_json(const string& json_str, transaction& tx)
         {
             rct::ecdhTuple a_tuple;
 
-            cout << "ecdhI[\"amount\"]: " << ecdhI["amount"] << endl;
+            //cout << "ecdhI[\"amount\"]: " << ecdhI["amount"] << endl;
 
             if (!epee::string_tools::hex_to_pod(ecdhI["amount"], a_tuple.amount))
             {
@@ -1171,7 +1171,7 @@ make_tx_from_json(const string& json_str, transaction& tx)
                 return false;
             }
 
-            cout << "dest: " << epee::string_tools::pod_to_hex(outPk.back().mask) << endl;
+            // cout << "dest: " << epee::string_tools::pod_to_hex(outPk.back().mask) << endl;
         }
 
         rct_signatures.txnFee = j["rct_signatures"]["txnFee"].get<uint64_t>();
