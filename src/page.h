@@ -1297,7 +1297,7 @@ public:
         string rawtx_html = xmreg::read(TMPL_MY_RAWTX);
 
         // add header and footer
-        string full_page =  rawtx_html + xmreg::read(TMPL_FOOTER);
+        string full_page =  rawtx_html + get_footer();
 
         add_css_style(context);
 
@@ -1326,7 +1326,6 @@ public:
         if (strncmp(decoded_raw_tx_data.c_str(), UNSIGNED_TX_PREFIX, magiclen) == 0)
         {
             unsigned_tx_given = true;
-            cout << "UNSIGNED_TX_PREFIX data given" << endl;
         }
 
         // initalize page template context map
@@ -1625,7 +1624,7 @@ public:
                 for (tx_destination_entry& a_dest: ptx.construction_data.splitted_dsts)
                 {
                     //stealth_address_amount.insert({dest.addr, dest.amount});
-                    cout << get_account_address_as_str(testnet, a_dest.addr) << endl;
+                    //cout << get_account_address_as_str(testnet, a_dest.addr) << endl;
                     //address_amounts.push_back(a_dest.amount);
 
                     destination_addresses.push_back(
@@ -1820,7 +1819,7 @@ public:
         string checkrawtx_html = xmreg::read(TMPL_MY_CHECKRAWTX);
 
         // add header and footer
-        string full_page =  checkrawtx_html + xmreg::read(TMPL_FOOTER);
+        string full_page =  checkrawtx_html + get_footer();
 
         add_css_style(context);
 
@@ -1853,7 +1852,7 @@ public:
         string pushrawtx_html = xmreg::read(TMPL_MY_PUSHRAWTX);
 
         // add header and footer
-        string full_page =  pushrawtx_html + xmreg::read(TMPL_FOOTER);
+        string full_page =  pushrawtx_html + get_footer();
 
         add_css_style(context);
 

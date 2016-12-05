@@ -311,10 +311,8 @@ sum_money_in_outputs(const string& json_str)
 {
     pair<uint64_t, uint64_t> sum_xmr {0, 0};
 
-    cout << json_str << endl;
-
-
     json j;
+
     try
     {
        j = json::parse( json_str);
@@ -366,8 +364,6 @@ pair<uint64_t, uint64_t>
 sum_money_in_inputs(const string& json_str)
 {
     pair<uint64_t, uint64_t> sum_xmr {0, 0};
-
-    cout << json_str << endl;
 
     json j;
     try
