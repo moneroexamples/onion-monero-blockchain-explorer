@@ -235,10 +235,6 @@ url_decode(const std::string& in, std::string& out);
 map<std::string, std::string>
 parse_crow_post_data(const string& req_body);
 
-bool
-get_dummy_account_keys(account_keys& dummy_keys, bool testnet = false);
-
-
 // from wallet2::decrypt
 string
 decrypt(const std::string &ciphertext,

@@ -807,43 +807,6 @@ parse_crow_post_data(const string& req_body)
     return body;
 }
 
-bool
-get_dummy_account_keys(account_keys& dummy_keys, bool testnet)
-{
-    secret_key adress_prv_viewkey;
-    secret_key adress_prv_spendkey;
-
-    account_public_address dummy_address;
-
-    if (!get_account_address_from_str(dummy_address,
-                                 testnet,
-                                 "4BAyX63gVQgDqKS1wmqNVHdcCNjq1jooLYCXsKEY9w7VdGh45oZbPLvN7y8oVg2zmnhECkRBXpREWb97KtfAcT6p1UNXm9K"))
-    {
-        return false;
-    }
-
-
-    if (!epee::string_tools::hex_to_pod("f238be69411631f35b76c5a9148b3b7e8327eb41bfd0b396e090aeba40235d01", adress_prv_viewkey))
-    {
-        return false;
-    }
-
-    if (!epee::string_tools::hex_to_pod("5db8e1d2c505f888e54aca15b1a365c8814d7deebc1a246690db3bf71324950d", adress_prv_spendkey))
-    {
-        return false;
-    }
-
-
-    dummy_keys = account_keys {
-            dummy_address,
-            adress_prv_spendkey,
-            adress_prv_viewkey
-    };
-
-    return true;
-}
-
-
 
 // from wallet2::decrypt
 string
