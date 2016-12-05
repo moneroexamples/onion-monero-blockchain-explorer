@@ -2521,6 +2521,8 @@ public:
         uint64_t total_xmr {0};
         uint64_t output_no {0};
 
+        context["are_key_images_known"] = false;
+
         for (const tools::wallet2::transfer_details& td: outputs)
         {
 
@@ -2573,9 +2575,20 @@ public:
             uint64_t blk_timestamp = core_storage
                     ->get_db().get_block_timestamp(td.m_block_height);
 
-            const key_image& output_key_img = td.m_key_image;
+            const key_image* output_key_img;
 
-            bool is_output_spent = core_storage->have_tx_keyimg_as_spent(output_key_img);
+            bool is_output_spent {false};
+
+            if (td.m_key_image_known)
+            {
+                //are_key_images_known
+
+                output_key_img = &td.m_key_image;
+
+                is_output_spent = core_storage->have_tx_keyimg_as_spent(*output_key_img);
+
+                context["are_key_images_known"] = true;
+            }
 
             mstch::map output_info {
                     {"output_no"           , fmt::format("{:03d}", output_no)},

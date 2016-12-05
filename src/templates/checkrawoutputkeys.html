@@ -30,7 +30,7 @@
         <h4>Output keys for address: {{address}}</h4>
         <h4>Viewkey: {{viewkey}}</h4>
         {{#has_total_xmr}}
-            <h4>Total xmr balance: {{total_xmr}}</h4>
+            <h4>Total xmr: {{total_xmr}}</h4>
         {{/has_total_xmr}}
 
         <div class="center">
@@ -42,7 +42,9 @@
                         <td>Public key</td>
                         <td>Timestamp</td>
                         <td>RingCT</td>
-                        <td>Is spent?</td>
+                        {{#are_key_images_known}}
+                            <td>Is spent?</td>
+                        {{/are_key_images_known}}
                         <td>Amount</td>
                     </tr>
                     {{#output_keys}}
@@ -52,13 +54,15 @@
                             <td><a href="/tx/{{tx_hash}}">{{output_pub_key}}</a></td>
                             <td>{{timestamp}}</td>
                             <td>{{is_ringct}}</td>
-                            <td>{{^is_spent}}
-                                    <span style="color: #008009;font-weight: bold">{{is_spent}}</span>
-                                {{/is_spent}}
-                                {{#is_spent}}
-                                    {{is_spent}}
-                                {{/is_spent}}
-                            </td>
+                            {{#are_key_images_known}}
+                                <td>{{^is_spent}}
+                                        <span style="color: #008009;font-weight: bold">{{is_spent}}</span>
+                                    {{/is_spent}}
+                                    {{#is_spent}}
+                                        {{is_spent}}
+                                    {{/is_spent}}
+                                </td>
+                            {{/are_key_images_known}}
                             <td>{{amount}}</td>
 
                         </tr>
