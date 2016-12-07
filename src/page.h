@@ -696,7 +696,7 @@ public:
             uint64_t mixin_no = 0;
 
             if (!mixin_numbers.empty())
-                mixin_numbers.at(0) - 1;
+                mixin_no = mixin_numbers.at(0) - 1;
 
             // set output page template map
             txs.push_back(mstch::map {

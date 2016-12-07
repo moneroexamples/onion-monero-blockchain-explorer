@@ -509,8 +509,24 @@ get_mixin_no(const string& json_str)
 {
     vector<uint64_t> mixin_no;
 
+    json j;
+
+    try
+    {
+        j = json::parse(json_str);
+
+        mixin_no.push_back(j["vin"].at(0)["key"]["key_offsets"].size());
+    }
+    catch (std::invalid_argument& e)
+    {
+        cerr << "get_mixin_no: " << e.what() << endl;
+        return mixin_no;
+    }
+
     return mixin_no;
 }
+
+
 
 vector<uint64_t>
 get_mixin_no_in_txs(const vector<transaction>& txs)
