@@ -1167,7 +1167,7 @@ make_tx_from_json(const string& json_str, transaction& tx)
 
         for (json& range_s: j["rctsig_prunable"]["rangeSigs"])
         {
-            rct::asnlSig asig;
+            rct::boroSig asig;
 
             if (!epee::string_tools::hex_to_pod(range_s["asig"], asig))
             {
