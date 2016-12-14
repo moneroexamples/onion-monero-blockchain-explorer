@@ -122,6 +122,14 @@ namespace xmreg
             return false;
         }
 
+        if (!m_blockchain_storage.have_block(block_id))
+        {
+            cerr << "Block with hash " << block_id
+                 << " not found in the blockchain!"
+                 << endl;
+
+            return false;
+        }
 
         if (!m_blockchain_storage.get_block_by_hash(block_id, blk))
         {
