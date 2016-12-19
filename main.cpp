@@ -1,3 +1,4 @@
+#define CROW_ENABLE_SSL
 
 #include "ext/crow/crow.h"
 
@@ -41,10 +42,46 @@ int main(int ac, const char* av[]) {
     auto bc_path_opt        = opts.get_option<string>("bc-path");
     auto custom_db_path_opt = opts.get_option<string>("custom-db-path");
     auto deamon_url_opt     = opts.get_option<string>("deamon-url");
+    auto ssl_crt_file_opt   = opts.get_option<string>("ssl-crt-file");
+    auto ssl_key_file_opt   = opts.get_option<string>("ssl-key-file");
 
 
     //cast port number in string to uint16
     uint16_t app_port = boost::lexical_cast<uint16_t>(*port_opt);
+
+
+    bool use_ssl {false};
+
+    string ssl_crt_file;
+    string ssl_key_file;
+
+    // check if ssl enabled and files exist
+
+    if (ssl_crt_file_opt and ssl_key_file_opt)
+    {
+        if (!boost::filesystem::exists(boost::filesystem::path(*ssl_crt_file_opt)))
+        {
+            cerr << "ssl_crt_file path: " << *ssl_crt_file_opt
+                 << "does not exist!" << endl;
+
+            return EXIT_FAILURE;
+        }
+
+        if (!boost::filesystem::exists(boost::filesystem::path(*ssl_key_file_opt)))
+        {
+            cerr << "ssl_key_file path: " << *ssl_key_file_opt
+                 << "does not exist!" << endl;
+
+            return EXIT_FAILURE;
+        }
+
+        ssl_crt_file = *ssl_crt_file_opt;
+        ssl_key_file = *ssl_key_file_opt;
+
+        use_ssl = true;
+    }
+
+
 
     // get blockchain path
     path blockchain_path;
@@ -271,7 +308,18 @@ int main(int ac, const char* av[]) {
     });
 
     // run the crow http server
-    app.port(app_port).multithreaded().run();
+
+    if (use_ssl)
+    {
+        cout << "Staring in ssl mode" << endl;
+        app.port(app_port).ssl_file(ssl_crt_file, ssl_key_file).multithreaded().run();
+    }
+    else
+    {
+        cout << "Staring in non-ssl mode" << endl;
+        app.port(app_port).multithreaded().run();
+    }
+
 
     return EXIT_SUCCESS;
 }

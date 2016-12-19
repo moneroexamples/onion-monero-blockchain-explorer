@@ -53,8 +53,8 @@ set_property(TARGET common PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libcomm
 add_library(blocks STATIC IMPORTED)
 set_property(TARGET blocks PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libblocks.a)
 
-add_library(crypto STATIC IMPORTED)
-set_property(TARGET crypto
+add_library(cryptoxmr STATIC IMPORTED)
+set_property(TARGET cryptoxmr
         PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libcrypto.a)
 
 add_library(cryptonote_core STATIC IMPORTED)
@@ -163,7 +163,7 @@ target_link_libraries(${PROJECT_NAME}
         cryptonote_core
         cryptonote_protocol
         blockchain_db
-        crypto
+        cryptoxmr
         blocks
         lmdb
         ringct
@@ -173,4 +173,6 @@ target_link_libraries(${PROJECT_NAME}
         unbound
         unwind
         curl
-        dl)
+        dl
+        crypto
+        ssl)
