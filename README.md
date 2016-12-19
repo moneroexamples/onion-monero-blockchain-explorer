@@ -265,6 +265,28 @@ Example output:
 
 Go to your browser: http://127.0.0.1:8081
 
+## Enable SSL (https)
+
+By default, the explorer does not use ssl. But It has such a functionality. 
+
+As an example, you can generate your own ssl certificates as follows:
+
+```bash
+cd /tmp # example folder
+openssl genrsa -out server.key 1024
+openssl req -new -key server.key -out server.csr
+openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt
+```
+
+Having the `crt` and `key` files, run `xmrblocks` in the following way:
+
+```bash
+./xmrblocks --ssl-crt-file=/tmp/server.crt --ssl-key-file=/tmp/server.key 
+```
+
+Note: Because we generated our own certificate, modern browsers will complain
+about it as they cant verify the signatures against any third party. So probably
+for any practical use need to have properly issued ssl certificates. 
 
 ## Other examples
 
