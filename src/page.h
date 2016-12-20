@@ -1259,10 +1259,201 @@ public:
             ++i;
         }
 
-        //cout << "outputs.size(): " << outputs.size() << endl;
+        // we can also test ouputs used in mixins for key images
+        // this can show possible spending. Only possible, because
+        // without a spend key, we cant know for sure. It might be
+        // that our output was used by someelse for their mixin.
+        // for this we can look in our custom db, for efficiencly
+
+        unique_ptr<xmreg::MyLMDB> mylmdb;
+
+        if (bf::is_directory(lmdb2_path))
+        {
+            mylmdb = make_unique<xmreg::MyLMDB>(lmdb2_path);
+        }
+
+        mstch::array inputs;
+
+        vector<txin_to_key> input_key_imgs = xmreg::get_key_images(tx);
+
+        for (const txin_to_key& in_key: input_key_imgs)
+        {
+
+            if (!mylmdb)
+            {
+                break;
+            }
+
+            // get absolute offsets of mixins
+            std::vector<uint64_t> absolute_offsets
+                    = cryptonote::relative_output_offsets_to_absolute(
+                            in_key.key_offsets);
+
+            // get public keys of outputs used in the mixins that match to the offests
+            std::vector<cryptonote::output_data_t> mixin_outputs;
+
+
+            try
+            {
+                core_storage->get_db().get_output_key(in_key.amount,
+                                                      absolute_offsets,
+                                                      mixin_outputs);
+            }
+            catch (const OUTPUT_DNE& e)
+            {
+                cerr << "get_output_keys: " << e.what() << endl;
+                continue;
+            }
+
+            inputs.push_back(mstch::map{
+                    {"key_image"       , pod_to_hex(in_key.k_image)},
+                    {"key_image_amount", xmreg::xmr_amount_to_str(in_key.amount)},
+                    {"mixins"          , mstch::array{}}
+            });
+
+            mstch::array& mixins = boost::get<mstch::array>(
+                 boost::get<mstch::map>(inputs.back())["mixins"]
+            );
+
+            // to store our mixins found for the given key image
+            vector<map<string, string>> our_mixins_found;
+
+            // for each found output public key find check if its ours or not
+            for (const cryptonote::output_data_t& output_data: mixin_outputs)
+            {
+
+                string out_pub_key_str = pod_to_hex(output_data.pubkey);
+
+                //cout << "out_pub_key_str: " << out_pub_key_str << endl;
+
+                // this will be txs where the outputs come from
+                vector<string> found_tx_hashes;
+
+
+                mylmdb->search(out_pub_key_str,
+                               found_tx_hashes,
+                               "output_public_keys");
+
+
+                mixins.push_back(mstch::map{
+                        {"mixin_pub_key", out_pub_key_str},
+                        {"mixin_outputs", mstch::array{}}
+                });
+
+                mstch::array& mixin_outputs = boost::get<mstch::array>(
+                        boost::get<mstch::map>(mixins.back())["mixin_outputs"]
+                );
+
+                // for each output transaction, check if its ours
+                // as before
+                for (string tx_hash_str: found_tx_hashes)
+                {
+
+                    crypto::hash tx_hash;
+
+                    hex_to_pod(tx_hash_str, tx_hash);
+
+                    transaction mixin_tx;
+
+                    if (!mcore->get_tx(tx_hash, mixin_tx))
+                    {
+                        cerr << "Cant get tx in blockchain: " << tx_hash << endl;
+                        continue;
+                    }
+
+
+                    public_key tx_pub_key
+                            = xmreg::get_tx_pub_key_from_received_outs(mixin_tx);
+
+                                        // public transaction key is combined with our viewkey
+                    // to create, so called, derived key.
+                    key_derivation derivation;
+
+                    if (!generate_key_derivation(tx_pub_key, prv_view_key, derivation))
+                    {
+                        cerr << "Cant get derived key for: "  << "\n"
+                             << "pub_tx_key: " << tx_pub_key << " and "
+                             << "prv_view_key" << prv_view_key << endl;
+
+                        continue;
+                    }
+
+                    //          <public_key  , amount  , out idx>
+                    vector<tuple<txout_to_key, uint64_t, uint64_t>> output_pub_keys;
+
+                    output_pub_keys = xmreg::get_ouputs_tuple(mixin_tx);
+
+                    mixin_outputs.push_back(mstch::map{
+                            {"mix_tx_hash"  , tx_hash_str},
+                            {"found_outputs", mstch::array{}}
+                    });
+
+                    mstch::array& found_outputs = boost::get<mstch::array>(
+                            boost::get<mstch::map>(mixin_outputs.back())["found_outputs"]
+                    );
+
+
+                    // for each output in mixin tx, find the one from key_image
+                    // and check if its ours.
+                    for (const auto& mix_out: output_pub_keys)
+                    {
+
+                        txout_to_key txout_k      = std::get<0>(mix_out);
+                        uint64_t amount           = std::get<1>(mix_out);
+                        uint64_t output_idx_in_tx = std::get<2>(mix_out);
+
+//                        if (mix_out.first.key != output_data.pubkey)
+//                        {
+//                            continue;
+//                        }
+
+                        // get the tx output public key
+                        // that normally would be generated for us,
+                        // if someone had sent us some xmr.
+                        public_key tx_pubkey_generated;
+
+                        derive_public_key(derivation,
+                                          output_idx_in_tx,
+                                          address.m_spend_public_key,
+                                          tx_pubkey_generated);
+
+                        // check if generated public key matches the current output's key
+                        bool mine_output = (txout_k.key == tx_pubkey_generated);
+
+
+                        // save our mixnin's public keys
+                        found_outputs.push_back(mstch::map {
+                                {"my_public_key"   , pod_to_hex(txout_k.key)},
+                                {"tx_hash"         , tx_hash_str},
+                                {"mine_output"     , mine_output},
+                                {"out_idx"         , to_string(output_idx_in_tx)},
+                                {"formed_output_pk", out_pub_key_str},
+                                {"amount"          , xmreg::xmr_amount_to_str(amount)},
+                        });
+
+                        if (mine_output)
+                        {
+
+
+//                            cout << " - " << pod_to_hex(txout_k.key)
+//                                 <<": " << mine_output << " amount: "
+//                                 << xmreg::xmr_amount_to_str(amount)
+//                                 << endl;
+                        }
+
+                    } // for (const pair<txout_to_key, uint64_t>& mix_out: txd.output_pub_keys)
+
+                } //  for (string tx_hash_str: found_tx_hashes)
+
+            } // for (const cryptonote::output_data_t& output_data: mixin_outputs)
+
+        } //  for (const txin_to_key& in_key: input_key_imgs)
+
 
         context["outputs"] = outputs;
         context["sum_xmr"] = xmreg::xmr_amount_to_str(sum_xmr);
+
+        context["inputs"]  = inputs;
 
         // read my_outputs.html
         string my_outputs_html = xmreg::read(TMPL_MY_OUTPUTS);
