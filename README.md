@@ -56,7 +56,7 @@ The key features of the Onion Monero Blockchain Explorer are:
  - the only explorer showing ring signatures,
  - the only explorer showing transaction extra field,
  - the only explorer showing public components of Monero addresses,
- - the only explorer that can show which outputs belong to the given Monero address and viewkey,
+ - the only explorer that can show which outputs and mixins belong to the given Monero address and viewkey,
  - the only explorer that can be used to prove that you send Monero to someone,
  - the only explorer showing detailed information about mixins, such as, mixins'
  age, timescale, mixin of mixins,
