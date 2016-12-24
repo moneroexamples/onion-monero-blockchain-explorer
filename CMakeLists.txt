@@ -65,6 +65,10 @@ add_library(cryptonote_protocol STATIC IMPORTED)
 set_property(TARGET cryptonote_protocol
         PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libcryptonote_protocol.a)
 
+add_library(mnemonics STATIC IMPORTED)
+set_property(TARGET mnemonics
+        PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libmnemonics.a)
+
 add_library(blockchain_db STATIC IMPORTED)
 set_property(TARGET blockchain_db
         PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libblockchain_db.a)
@@ -168,6 +172,7 @@ target_link_libraries(${PROJECT_NAME}
         lmdb
         ringct
         common
+        mnemonics
         ${Boost_LIBRARIES}
         pthread
         unbound
