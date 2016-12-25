@@ -2693,7 +2693,7 @@ public:
             std::string body(decoded_raw_data, header_lenght);
             std::stringstream iss;
             iss << body;
-            boost::archive::binary_iarchive ar(iss);
+            boost::archive::portable_binary_iarchive ar(iss);
 
             ar >> outputs;
 
