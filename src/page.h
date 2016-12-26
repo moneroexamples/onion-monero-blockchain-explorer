@@ -104,6 +104,7 @@ does_header_has(const crow::request& req,
 struct tx_details
 {
     crypto::hash hash;
+    crypto::hash prefix_hash;
     crypto::public_key pk;
     uint64_t xmr_inputs;
     uint64_t xmr_outputs;
@@ -135,6 +136,8 @@ struct tx_details
         // remove "<" and ">" from the hash string
         string tx_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", hash));
 
+        string tx_prefix_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", prefix_hash));
+
         string tx_pk_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", pk));
 
         //cout << "payment_id: " << payment_id << endl;
@@ -158,6 +161,7 @@ struct tx_details
 
         mstch::map txd_map {
             {"hash"              , tx_hash_str},
+            {"prefix_hash"       , tx_prefix_hash_str},
             {"pub_key"           , tx_pk_str},
             {"tx_fee"            , fee_str},
             {"tx_fee_short"      , fee_short_str},
@@ -1146,10 +1150,12 @@ public:
         string pid_str   = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id));
         string pid8_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id8));
 
+
         // initalise page tempate map with basic info about blockchain
         mstch::map context {
                 {"testnet"              , testnet},
                 {"tx_hash"              , tx_hash_str},
+                {"tx_prefix_hash"       , pod_to_hex(txd.prefix_hash)},
                 {"xmr_address"          , xmr_address_str},
                 {"viewkey"              , viewkey_str},
                 {"tx_pub_key"           , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
@@ -3715,6 +3721,7 @@ private:
         mstch::map context {
                 {"testnet"              , testnet},
                 {"tx_hash"              , tx_hash_str},
+                {"tx_prefix_hash"       , pod_to_hex(txd.prefix_hash)},
                 {"tx_pub_key"           , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
                 {"blk_height"           , tx_blk_height_str},
                 {"tx_size"              , fmt::format("{:0.4f}",
@@ -4048,6 +4055,9 @@ private:
 
         // get tx hash
         txd.hash = get_transaction_hash(tx);
+
+        // get tx prefix hash
+        txd.prefix_hash = get_transaction_prefix_hash(tx);
 
         // get tx public key from extra
         // this check if there are two public keys
