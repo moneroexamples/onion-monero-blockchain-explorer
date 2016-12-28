@@ -1530,12 +1530,26 @@ public:
 
         if (unsigned_tx_given)
         {
+
+            bool r {false};
+
+            string s = decoded_raw_tx_data.substr(magiclen);
+
             ::tools::wallet2::unsigned_tx_set exported_txs;
 
-            bool r = serialization::parse_binary(std::string(
-                        decoded_raw_tx_data.c_str() + magiclen,
-                        decoded_raw_tx_data.size() - magiclen),
-                                            exported_txs);
+            try
+            {
+                std::istringstream iss(s);
+                boost::archive::portable_binary_iarchive ar(iss);
+                ar >> exported_txs;
+
+                r = true;
+            }
+            catch (...)
+            {
+                cerr << "Failed to parse unsigned tx data " << endl;
+            }
+
             if (r)
             {
                 mstch::array& txs = boost::get<mstch::array>(context["txs"]);
@@ -1779,12 +1793,25 @@ public:
                 return string( "The data is neither unsigned nor signed tx!");
             }
 
+
+            bool r {false};
+
+            string s = decoded_raw_tx_data.substr(magiclen);
+
             ::tools::wallet2::signed_tx_set signed_txs;
 
-            bool r = serialization::parse_binary(std::string(
-                    decoded_raw_tx_data.c_str() + magiclen,
-                    decoded_raw_tx_data.size() - magiclen),
-                                                signed_txs);
+            try
+            {
+                std::istringstream iss(s);
+                boost::archive::portable_binary_iarchive ar(iss);
+                ar >> signed_txs;
+
+                r = true;
+            }
+            catch (...)
+            {
+                cerr << "Failed to parse signed tx data " << endl;
+            }
 
             if (!r)
             {
@@ -2067,12 +2094,25 @@ public:
             return mstch::render(full_page, context);
         }
 
+        bool r {false};
+
+        string s = decoded_raw_tx_data.substr(magiclen);
+
         ::tools::wallet2::signed_tx_set signed_txs;
 
-        bool r = serialization::parse_binary(std::string(
-                decoded_raw_tx_data.c_str() + magiclen,
-                decoded_raw_tx_data.size() - magiclen),
-                                             signed_txs);
+        try
+        {
+            std::istringstream iss(s);
+            boost::archive::portable_binary_iarchive ar(iss);
+            ar >> signed_txs;
+
+            r = true;
+        }
+        catch (...)
+        {
+            cerr << "Failed to parse signed tx data " << endl;
+        }
+
 
         if (!r)
         {
