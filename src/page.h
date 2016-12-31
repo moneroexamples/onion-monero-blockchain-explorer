@@ -1513,6 +1513,8 @@ public:
 
         const size_t magiclen = strlen(UNSIGNED_TX_PREFIX);
 
+        string data_prefix = xmreg::make_printable(decoded_raw_tx_data.substr(0, magiclen));
+
         bool unsigned_tx_given {false};
 
         if (strncmp(decoded_raw_tx_data.c_str(), UNSIGNED_TX_PREFIX, magiclen) == 0)
@@ -1525,6 +1527,7 @@ public:
                 {"testnet"              , testnet},
                 {"unsigned_tx_given"    , unsigned_tx_given},
                 {"have_raw_tx"          , true},
+                {"data_prefix"          , data_prefix},
                 {"txs"                  , mstch::array{}}
         };
 
@@ -1787,12 +1790,18 @@ public:
 
             const size_t magiclen = strlen(SIGNED_TX_PREFIX);
 
+            string data_prefix = xmreg::make_printable(decoded_raw_tx_data.substr(0, magiclen));
+
             if (strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
             {
-                cout << "The data is neither unsigned nor signed tx!" << endl;
-                return string( "The data is neither unsigned nor signed tx!");
+                string msg = fmt::format("The data is neither unsigned nor signed tx! Its prefix is: {:s}",
+                                         data_prefix);
+
+                cout << msg << endl;
+                return string(msg);
             }
 
+            context["data_prefix"] = data_prefix;
 
             bool r {false};
 
@@ -2055,12 +2064,15 @@ public:
 
         const size_t magiclen = strlen(SIGNED_TX_PREFIX);
 
+        string data_prefix = xmreg::make_printable(decoded_raw_tx_data.substr(0, magiclen));
+
         // initalize page template context map
         mstch::map context {
                 {"testnet"              , testnet},
                 {"have_raw_tx"          , true},
                 {"has_error"            , false},
                 {"error_msg"            , string {}},
+                {"data_prefix"          , data_prefix},
                 {"txs"                  , mstch::array{}}
         };
 
@@ -2074,7 +2086,8 @@ public:
 
         if (strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
         {
-            string error_msg = fmt::format("The data does not appear to be signed raw tx!");
+            string error_msg = fmt::format("The data does not appear to be signed raw tx! Data prefix: {:s}",
+                                           data_prefix);
 
             context["has_error"] = true;
             context["error_msg"] = error_msg;

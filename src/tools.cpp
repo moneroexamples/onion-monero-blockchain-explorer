@@ -1245,5 +1245,43 @@ make_tx_from_json(const string& json_str, transaction& tx)
     return true;
 }
 
+
+string
+make_printable(const string& in_s)
+{
+    string output;
+
+    for (char c: in_s)
+    {
+
+        if (isprint(c))
+        {
+            output += c;
+        }
+        else
+        {
+            switch(c){
+                case '\000': output += "\\000";break;
+                case '\001': output += "\\001";break;
+                case '\002': output += "\\002";break;
+                case '\003': output += "\\003";break;
+                case '\004': output += "\\004";break;
+                case '\005': output += "\\005";break;
+                case '\006': output += "\\006";break;
+                case '\007': output += "\\007";break;
+                // there are more case but for now its ok
+                default:
+                    stringstream ss;
+                    ss << std::hex << (int)c;
+                    output += "0x" + ss.str();
+                    break;
+            }
+        }
+
+    }
+
+    return output;
+}
+
 }
 

@@ -297,6 +297,8 @@ void chunks(Iterator begin,
 bool
 make_tx_from_json(const string& json_str, transaction& tx);
 
+string
+make_printable(const string& in_s);
 }
 
 #endif //XMREG01_TOOLS_H
