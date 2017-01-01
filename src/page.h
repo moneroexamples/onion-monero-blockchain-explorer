@@ -2334,6 +2334,10 @@ public:
 
         const size_t magiclen = strlen(KEY_IMAGE_EXPORT_FILE_MAGIC);
 
+        string data_prefix = xmreg::make_printable(decoded_raw_data.substr(0, magiclen));
+
+        context["data_prefix"] = data_prefix;
+
         if (!strncmp(decoded_raw_data.c_str(), KEY_IMAGE_EXPORT_FILE_MAGIC, magiclen) == 0)
         {
             string error_msg = fmt::format("This does not seem to be key image export data.");
@@ -2688,6 +2692,10 @@ public:
         }
 
         const size_t magiclen = strlen(OUTPUT_EXPORT_FILE_MAGIC);
+
+        string data_prefix = xmreg::make_printable(decoded_raw_data.substr(0, magiclen));
+
+        context["data_prefix"] = data_prefix;
 
         if (!strncmp(decoded_raw_data.c_str(), OUTPUT_EXPORT_FILE_MAGIC, magiclen) == 0)
         {
