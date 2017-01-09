@@ -299,6 +299,10 @@ make_tx_from_json(const string& json_str, transaction& tx);
 
 string
 make_printable(const string& in_s);
+
+string
+get_human_readable_timestamp(uint64_t ts);
+
 }
 
 #endif //XMREG01_TOOLS_H

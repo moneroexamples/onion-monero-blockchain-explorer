@@ -143,28 +143,33 @@ remove_trailing_path_separator(const bf::path& in_path)
     return bf::path(remove_trailing_path_separator(path_str));
 }
 
+//string
+//timestamp_to_str(time_t timestamp, const char* format)
+//{
+//    auto a_time_point = chrono::system_clock::from_time_t(timestamp);
+//
+//    try
+//    {
+//        auto utc          = date::to_utc_time(chrono::system_clock::from_time_t(timestamp));
+//        auto sys_time     = date::to_sys_time(utc);
+//
+//        return date::format(format, date::floor<chrono::seconds>(sys_time));
+//    }
+//    catch (std::runtime_error& e)
+//    {
+//        cerr << "xmreg::timestamp_to_str: " << e.what() << endl;
+//        cerr << "Seems cant convert to UTC timezone using date library. "
+//                "So just use local timezone." <<endl;
+//
+//        return timestamp_to_str_local(timestamp, format);
+//    }
+//}
+
 string
 timestamp_to_str(time_t timestamp, const char* format)
 {
-    auto a_time_point = chrono::system_clock::from_time_t(timestamp);
-
-    try
-    {
-        auto utc          = date::to_utc_time(chrono::system_clock::from_time_t(timestamp));
-        auto sys_time     = date::to_sys_time(utc);
-
-        return date::format(format, date::floor<chrono::seconds>(sys_time));
-    }
-    catch (std::runtime_error& e)
-    {
-        cerr << "xmreg::timestamp_to_str: " << e.what() << endl;
-        cerr << "Seems cant convert to UTC timezone using date libary. "
-                "So just use local timezone." <<endl;
-
-        return timestamp_to_str_local(timestamp, format);
-    }
+    return get_human_readable_timestamp(timestamp);
 }
-
 
 string
 timestamp_to_str_local(time_t timestamp, const char* format)
@@ -1282,6 +1287,27 @@ make_printable(const string& in_s)
 
     return output;
 }
+
+
+
+string
+get_human_readable_timestamp(uint64_t ts)
+{
+    char buffer[64];
+    if (ts < 1234567890)
+        return "<unknown>";
+
+    time_t tt = ts;
+
+    struct tm tm;
+
+    gmtime_r(&tt, &tm);
+
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %I:%M:%S", &tm);
+
+    return std::string(buffer);
+}
+
 
 }
 
