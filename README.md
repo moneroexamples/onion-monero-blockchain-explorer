@@ -23,22 +23,23 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
 
 ## Address
 
-Tor users (main Monero network):
-
- - [http://xmrblocksvckbwvx.onion](http://xmrblocksvckbwvx.onion)
- 
-Tor users (testnet Monero network):
- 
- - [http://xmrtestbbzl275vy.onion](http://xmrtestbbzl275vy.onion)
- 
-i2p users (main Monero network):
-
- - [http://monerotools.i2p](http://monerotools.i2p)
-
-Non tor users, can use its clearnet versions:
+Clearnet versions:
 
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com)
  - [https://explorer.xmr.my/](https://explorer.xmr.my/)
+
+Tor users (main Monero network) - down for now:
+
+ - [http://xmrblocksvckbwvx.onion](http://xmrblocksvckbwvx.onion)
+ 
+Tor users (testnet Monero network) - down for now:
+ 
+ - [http://xmrtestbbzl275vy.onion](http://xmrtestbbzl275vy.onion)
+ 
+i2p users (main Monero network) - down for now:
+
+ - [http://monerotools.i2p](http://monerotools.i2p)
+
 
 Note: clearnet version might be not as up to date as the onion version.
  
