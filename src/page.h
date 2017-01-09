@@ -1513,6 +1513,8 @@ public:
 
         const size_t magiclen = strlen(UNSIGNED_TX_PREFIX);
 
+        string data_prefix = xmreg::make_printable(decoded_raw_tx_data.substr(0, magiclen));
+
         bool unsigned_tx_given {false};
 
         if (strncmp(decoded_raw_tx_data.c_str(), UNSIGNED_TX_PREFIX, magiclen) == 0)
@@ -1525,17 +1527,32 @@ public:
                 {"testnet"              , testnet},
                 {"unsigned_tx_given"    , unsigned_tx_given},
                 {"have_raw_tx"          , true},
+                {"data_prefix"          , data_prefix},
                 {"txs"                  , mstch::array{}}
         };
 
         if (unsigned_tx_given)
         {
+
+            bool r {false};
+
+            string s = decoded_raw_tx_data.substr(magiclen);
+
             ::tools::wallet2::unsigned_tx_set exported_txs;
 
-            bool r = serialization::parse_binary(std::string(
-                        decoded_raw_tx_data.c_str() + magiclen,
-                        decoded_raw_tx_data.size() - magiclen),
-                                            exported_txs);
+            try
+            {
+                std::istringstream iss(s);
+                boost::archive::portable_binary_iarchive ar(iss);
+                ar >> exported_txs;
+
+                r = true;
+            }
+            catch (...)
+            {
+                cerr << "Failed to parse unsigned tx data " << endl;
+            }
+
             if (r)
             {
                 mstch::array& txs = boost::get<mstch::array>(context["txs"]);
@@ -1773,18 +1790,37 @@ public:
 
             const size_t magiclen = strlen(SIGNED_TX_PREFIX);
 
+            string data_prefix = xmreg::make_printable(decoded_raw_tx_data.substr(0, magiclen));
+
             if (strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
             {
-                cout << "The data is neither unsigned nor signed tx!" << endl;
-                return string( "The data is neither unsigned nor signed tx!");
+                string msg = fmt::format("The data is neither unsigned nor signed tx! Its prefix is: {:s}",
+                                         data_prefix);
+
+                cout << msg << endl;
+                return string(msg);
             }
+
+            context["data_prefix"] = data_prefix;
+
+            bool r {false};
+
+            string s = decoded_raw_tx_data.substr(magiclen);
 
             ::tools::wallet2::signed_tx_set signed_txs;
 
-            bool r = serialization::parse_binary(std::string(
-                    decoded_raw_tx_data.c_str() + magiclen,
-                    decoded_raw_tx_data.size() - magiclen),
-                                                signed_txs);
+            try
+            {
+                std::istringstream iss(s);
+                boost::archive::portable_binary_iarchive ar(iss);
+                ar >> signed_txs;
+
+                r = true;
+            }
+            catch (...)
+            {
+                cerr << "Failed to parse signed tx data " << endl;
+            }
 
             if (!r)
             {
@@ -2028,12 +2064,15 @@ public:
 
         const size_t magiclen = strlen(SIGNED_TX_PREFIX);
 
+        string data_prefix = xmreg::make_printable(decoded_raw_tx_data.substr(0, magiclen));
+
         // initalize page template context map
         mstch::map context {
                 {"testnet"              , testnet},
                 {"have_raw_tx"          , true},
                 {"has_error"            , false},
                 {"error_msg"            , string {}},
+                {"data_prefix"          , data_prefix},
                 {"txs"                  , mstch::array{}}
         };
 
@@ -2047,7 +2086,8 @@ public:
 
         if (strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
         {
-            string error_msg = fmt::format("The data does not appear to be signed raw tx!");
+            string error_msg = fmt::format("The data does not appear to be signed raw tx! Data prefix: {:s}",
+                                           data_prefix);
 
             context["has_error"] = true;
             context["error_msg"] = error_msg;
@@ -2067,12 +2107,25 @@ public:
             return mstch::render(full_page, context);
         }
 
+        bool r {false};
+
+        string s = decoded_raw_tx_data.substr(magiclen);
+
         ::tools::wallet2::signed_tx_set signed_txs;
 
-        bool r = serialization::parse_binary(std::string(
-                decoded_raw_tx_data.c_str() + magiclen,
-                decoded_raw_tx_data.size() - magiclen),
-                                             signed_txs);
+        try
+        {
+            std::istringstream iss(s);
+            boost::archive::portable_binary_iarchive ar(iss);
+            ar >> signed_txs;
+
+            r = true;
+        }
+        catch (...)
+        {
+            cerr << "Failed to parse signed tx data " << endl;
+        }
+
 
         if (!r)
         {
@@ -2280,6 +2333,10 @@ public:
         }
 
         const size_t magiclen = strlen(KEY_IMAGE_EXPORT_FILE_MAGIC);
+
+        string data_prefix = xmreg::make_printable(decoded_raw_data.substr(0, magiclen));
+
+        context["data_prefix"] = data_prefix;
 
         if (!strncmp(decoded_raw_data.c_str(), KEY_IMAGE_EXPORT_FILE_MAGIC, magiclen) == 0)
         {
@@ -2635,6 +2692,10 @@ public:
         }
 
         const size_t magiclen = strlen(OUTPUT_EXPORT_FILE_MAGIC);
+
+        string data_prefix = xmreg::make_printable(decoded_raw_data.substr(0, magiclen));
+
+        context["data_prefix"] = data_prefix;
 
         if (!strncmp(decoded_raw_data.c_str(), OUTPUT_EXPORT_FILE_MAGIC, magiclen) == 0)
         {
