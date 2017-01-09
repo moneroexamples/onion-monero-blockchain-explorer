@@ -26,6 +26,7 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
 Clearnet versions:
 
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com)
+ - [http://blox.supportxmr.com/](http://blox.supportxmr.com/)
  - [https://explorer.xmr.my/](https://explorer.xmr.my/)
 
 Tor users (main Monero network) - down for now:
