@@ -441,6 +441,8 @@ get_ouputs(const transaction& tx)
     {
         if (txout.target.type() != typeid(txout_to_key))
         {
+            // push empty pair.
+            outputs.push_back(pair<txout_to_key, uint64_t>{});
             continue;
         }
 
@@ -1020,6 +1022,9 @@ make_tx_from_json(const string& json_str, transaction& tx)
         return false;
     }
 
+
+    cout << "\n\n  j.dump()" << j.dump(4) << endl;
+
     // get version and unlock time from json
     tx.version     = j["version"].get<size_t>();
     tx.unlock_time = j["unlock_time"].get<uint64_t>();
@@ -1243,7 +1248,7 @@ make_tx_from_json(const string& json_str, transaction& tx)
     } // j.find("rctsig_prunable") != j.end()
 
 
-    //cout << j.dump(4) << endl;
+    cout << "\nreconstructed: \n" << j.dump(4) << endl;
 
     //cout << "From reconstructed tx: " << obj_to_json_str(tx) << endl;
 

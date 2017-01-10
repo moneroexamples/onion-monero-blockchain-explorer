@@ -1175,13 +1175,15 @@ public:
 
         string server_time_str = xmreg::timestamp_to_str(server_timestamp, "%F");
 
-        uint64_t output_idx {0};
+
 
         // public transaction key is combined with our viewkey
         // to create, so called, derived key.
         key_derivation derivation;
 
         public_key pub_key = tx_prove ? address.m_view_public_key : txd.pk;
+
+        cout << "txd.pk: " << pod_to_hex(txd.pk) << endl;
 
         if (!generate_key_derivation(pub_key, prv_view_key, derivation))
         {
@@ -1200,7 +1202,7 @@ public:
 
         //std::deque<rct::key> mask(tx.vout.size());
 
-        uint64_t i {0};
+        uint64_t output_idx {0};
 
         for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
         {
@@ -1215,6 +1217,9 @@ public:
                               address.m_spend_public_key,
                               tx_pubkey);
 
+            cout << pod_to_hex(outp.first.key) << endl;
+            cout << pod_to_hex(tx_pubkey) << endl;
+
             // check if generated public key matches the current output's key
             bool mine_output = (outp.first.key == tx_pubkey);
 
@@ -1222,15 +1227,15 @@ public:
             if (mine_output && tx.version == 2)
             {
                 // initialize with regular amount
-                uint64_t rct_amount = money_transfered[i];
+                uint64_t rct_amount = money_transfered[output_idx];
 
                 bool r;
 
                 r = decode_ringct(tx.rct_signatures,
                                   pub_key,
                                   prv_view_key,
-                                  i,
-                                  tx.rct_signatures.ecdhInfo[i].mask,
+                                  output_idx,
+                                  tx.rct_signatures.ecdhInfo[output_idx].mask,
                                   rct_amount);
 
                 if (!r)
@@ -1243,7 +1248,7 @@ public:
                 if (!is_coinbase(tx))
                 {
                     outp.second         = rct_amount;
-                    money_transfered[i] = rct_amount;
+                    money_transfered[output_idx] = rct_amount;
                 }
 
             }
@@ -1259,10 +1264,10 @@ public:
                                                        outp.first.key))},
                 {"amount"        , xmreg::xmr_amount_to_str(outp.second)},
                 {"mine_output"   , mine_output},
-                {"output_idx"    , fmt::format("{:02d}", output_idx++)}
+                {"output_idx"    , fmt::format("{:02d}", output_idx)}
             });
 
-            ++i;
+            ++output_idx;
         }
 
         // we can also test ouputs used in mixins for key images
