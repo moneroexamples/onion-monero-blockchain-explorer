@@ -1023,7 +1023,7 @@ make_tx_from_json(const string& json_str, transaction& tx)
     }
 
 
-    cout << "\n\n  j.dump()" << j.dump(4) << endl;
+    //cout << "\n\n  j.dump()" << j.dump(4) << endl;
 
     // get version and unlock time from json
     tx.version     = j["version"].get<size_t>();
@@ -1248,7 +1248,7 @@ make_tx_from_json(const string& json_str, transaction& tx)
     } // j.find("rctsig_prunable") != j.end()
 
 
-    cout << "\nreconstructed: \n" << j.dump(4) << endl;
+    //cout << "\nreconstructed: \n" << j.dump(4) << endl;
 
     //cout << "From reconstructed tx: " << obj_to_json_str(tx) << endl;
 

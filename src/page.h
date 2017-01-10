@@ -1183,7 +1183,7 @@ public:
 
         public_key pub_key = tx_prove ? address.m_view_public_key : txd.pk;
 
-        cout << "txd.pk: " << pod_to_hex(txd.pk) << endl;
+        //cout << "txd.pk: " << pod_to_hex(txd.pk) << endl;
 
         if (!generate_key_derivation(pub_key, prv_view_key, derivation))
         {
@@ -1217,8 +1217,8 @@ public:
                               address.m_spend_public_key,
                               tx_pubkey);
 
-            cout << pod_to_hex(outp.first.key) << endl;
-            cout << pod_to_hex(tx_pubkey) << endl;
+            //cout << pod_to_hex(outp.first.key) << endl;
+            //cout << pod_to_hex(tx_pubkey) << endl;
 
             // check if generated public key matches the current output's key
             bool mine_output = (outp.first.key == tx_pubkey);
@@ -1430,6 +1430,34 @@ public:
 
                         // check if generated public key matches the current output's key
                         bool mine_output = (txout_k.key == tx_pubkey_generated);
+
+
+                        if (mine_output && mixin_tx.version == 2)
+                        {
+                            // initialize with regular amount
+                            uint64_t rct_amount = amount;
+
+                            bool r;
+
+                            r = decode_ringct(mixin_tx.rct_signatures,
+                                              txout_k.key,
+                                              prv_view_key,
+                                              output_idx_in_tx,
+                                              mixin_tx.rct_signatures.ecdhInfo[output_idx].mask,
+                                              rct_amount);
+
+                            if (!r)
+                            {
+                                cerr << "Cant decode ringCT!" << endl;
+                            }
+
+                            // cointbase txs have amounts in plain sight.
+                            // so use amount from ringct, only for non-coinbase txs
+                            if (!is_coinbase(mixin_tx))
+                            {
+                                amount = rct_amount;
+                            }
+                        }
 
 
                         // save our mixnin's public keys
