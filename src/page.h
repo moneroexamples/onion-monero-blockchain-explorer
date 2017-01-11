@@ -583,6 +583,7 @@ public:
                 txd_map.insert({"blk_hash"  , blk_hash_str});
                 txd_map.insert({"time_delta", time_delta_str});
                 txd_map.insert({"age"       , age.first});
+                txd_map.insert({"is_ringct" , (tx.version > 1)});
 
                 // do not show block info for other than
                 // last (i.e., first after reverse below)
@@ -702,6 +703,26 @@ public:
             if (!mixin_numbers.empty())
                 mixin_no = mixin_numbers.at(0) - 1;
 
+            json j_tx;
+            string is_ringct_str {"N/A"};
+
+            try
+            {
+                j_tx = json::parse(_tx_info.tx_json);
+                if (j_tx["version"].get<size_t>() > 1)
+                {
+                    is_ringct_str = "yes";
+                }
+                else
+                {
+                    is_ringct_str = "no";
+                }
+            }
+            catch (std::invalid_argument& e)
+            {
+                cerr << " j_tx = json::parse(_tx_info.tx_json);: " << e.what() << endl;
+            }
+
             // set output page template map
             txs.push_back(mstch::map {
                     {"timestamp"     , xmreg::timestamp_to_str(_tx_info.receive_time)},
@@ -712,6 +733,7 @@ public:
                     {"xmr_outputs"   , xmreg::xmr_amount_to_str(sum_outputs.first, "{:0.2f}")},
                     {"no_inputs"     , sum_inputs.second},
                     {"no_outputs"    , sum_outputs.second},
+                    {"is_ringct"     , is_ringct_str},
                     {"mixin"         , fmt::format("{:d}", mixin_no)},
                     {"txsize"        , fmt::format("{:0.2f}", static_cast<double>(_tx_info.blob_size)/1024.0)}
             });
@@ -3837,6 +3859,7 @@ private:
                 {"with_ring_signatures" , static_cast<bool>(
                                                   with_ring_signatures)},
                 {"tx_json"              , tx_json},
+                {"is_ringct"            , (tx.version > 1)},
                 {"has_error"            , false},
                 {"error_msg"            , string("")},
                 {"have_raw_tx"          , false},
