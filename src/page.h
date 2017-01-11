@@ -4347,6 +4347,8 @@ private:
                 {
                     transaction tx;
 
+                    //cout << "\n\n\n_tx_info.id_hash:" << _tx_info.id_hash << endl;
+
                     if (!xmreg::make_tx_from_json(_tx_info.tx_json, tx))
                     {
                         cerr << "Cant make tx from _tx_info.tx_json" << endl;

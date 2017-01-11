@@ -143,33 +143,33 @@ remove_trailing_path_separator(const bf::path& in_path)
     return bf::path(remove_trailing_path_separator(path_str));
 }
 
-//string
-//timestamp_to_str(time_t timestamp, const char* format)
-//{
-//    auto a_time_point = chrono::system_clock::from_time_t(timestamp);
-//
-//    try
-//    {
-//        auto utc          = date::to_utc_time(chrono::system_clock::from_time_t(timestamp));
-//        auto sys_time     = date::to_sys_time(utc);
-//
-//        return date::format(format, date::floor<chrono::seconds>(sys_time));
-//    }
-//    catch (std::runtime_error& e)
-//    {
-//        cerr << "xmreg::timestamp_to_str: " << e.what() << endl;
-//        cerr << "Seems cant convert to UTC timezone using date library. "
-//                "So just use local timezone." <<endl;
-//
-//        return timestamp_to_str_local(timestamp, format);
-//    }
-//}
-
 string
 timestamp_to_str(time_t timestamp, const char* format)
 {
-    return get_human_readable_timestamp(timestamp);
+    auto a_time_point = chrono::system_clock::from_time_t(timestamp);
+
+    try
+    {
+        auto utc          = date::to_utc_time(chrono::system_clock::from_time_t(timestamp));
+        auto sys_time     = date::to_sys_time(utc);
+
+        return date::format(format, date::floor<chrono::seconds>(sys_time));
+    }
+    catch (std::runtime_error& e)
+    {
+        cerr << "xmreg::timestamp_to_str: " << e.what() << endl;
+        cerr << "Seems cant convert to UTC timezone using date library. "
+                "So just use local timezone." <<endl;
+
+        return timestamp_to_str_local(timestamp, format);
+    }
 }
+
+//string
+//timestamp_to_str(time_t timestamp, const char* format)
+//{
+//    return get_human_readable_timestamp(timestamp);
+//}
 
 string
 timestamp_to_str_local(time_t timestamp, const char* format)
@@ -1023,7 +1023,7 @@ make_tx_from_json(const string& json_str, transaction& tx)
     }
 
 
-    //cout << "\n\n  j.dump()" << j.dump(4) << endl;
+   // cout << "\n\n  j.dump()" << j.dump(4) << endl;
 
     // get version and unlock time from json
     tx.version     = j["version"].get<size_t>();
@@ -1120,6 +1120,24 @@ make_tx_from_json(const string& json_str, transaction& tx)
     if (j.find("rct_signatures") != j.end())
     {
         rct::rctSig& rct_signatures = tx.rct_signatures;
+
+        if (j["rct_signatures"].find("pseudoOuts") != j["rct_signatures"].end())
+        {
+            rct::keyV& pseudoOuts = rct_signatures.pseudoOuts;
+
+            for (json& pOut: j["rct_signatures"]["pseudoOuts"])
+            {
+                rct::key pOut_key;
+
+                if (!epee::string_tools::hex_to_pod(pOut, pOut_key))
+                {
+                    cerr << "Faild to parse pOut_key of pseudoOuts from json" << endl;
+                    return false;
+                }
+
+                pseudoOuts.push_back(pOut_key);
+            }
+        }
 
         vector<rct::ecdhTuple>& ecdhInfo = rct_signatures.ecdhInfo;
 
@@ -1248,7 +1266,7 @@ make_tx_from_json(const string& json_str, transaction& tx)
     } // j.find("rctsig_prunable") != j.end()
 
 
-    //cout << "\nreconstructed: \n" << j.dump(4) << endl;
+
 
     //cout << "From reconstructed tx: " << obj_to_json_str(tx) << endl;
 
