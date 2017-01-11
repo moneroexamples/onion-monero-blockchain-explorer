@@ -4347,10 +4347,7 @@ private:
                 {
                     transaction tx;
 
-                    if (_tx_info.id_hash != "edb1e71c24a6a3c1ce101d68c7525d6422c09d8bfe4a8f74adeb04f118211072")
-                        continue;
-
-                    cout << "\n\n\n_tx_info.id_hash:" << _tx_info.id_hash << endl;
+                    //cout << "\n\n\n_tx_info.id_hash:" << _tx_info.id_hash << endl;
 
                     if (!xmreg::make_tx_from_json(_tx_info.tx_json, tx))
                     {
