@@ -39,7 +39,7 @@
                     <td>fees</td>
                     <td>outputs</td>
                     <td>in/out</td>
-                    <td>ringct?</td>
+                    <td>rct/type</td>
                     <td>mixin</td>
                     <td>size [kB]</td>
                 </tr>
@@ -52,7 +52,7 @@
                     <td>{{sum_outputs_short}}</td>
                     <td>{{no_inputs}}/{{no_outputs}}</td>
                     <td>
-                        {{#is_ringct}}yes{{/is_ringct}}
+                        {{#is_ringct}}yes/{{rct_type}}{{/is_ringct}}
                         {{^is_ringct}}no{{/is_ringct}}
                     </td>
                     <td>{{mixin}}</td>

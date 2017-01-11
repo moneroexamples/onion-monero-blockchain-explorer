@@ -584,6 +584,8 @@ public:
                 txd_map.insert({"time_delta", time_delta_str});
                 txd_map.insert({"age"       , age.first});
                 txd_map.insert({"is_ringct" , (tx.version > 1)});
+                txd_map.insert({"rct_type"  , tx.rct_signatures.type});
+
 
                 // do not show block info for other than
                 // last (i.e., first after reverse below)
@@ -704,18 +706,23 @@ public:
                 mixin_no = mixin_numbers.at(0) - 1;
 
             json j_tx;
-            string is_ringct_str {"N/A"};
+
+            string is_ringct_str  {"N/A"};
+            string rct_type_str   {"N/A"};
 
             try
             {
                 j_tx = json::parse(_tx_info.tx_json);
+
                 if (j_tx["version"].get<size_t>() > 1)
                 {
                     is_ringct_str = "yes";
+                    rct_type_str  = string("/") + to_string(j_tx["rct_signatures"]["type"].get<uint8_t>());
                 }
                 else
                 {
                     is_ringct_str = "no";
+                    rct_type_str  = "";
                 }
             }
             catch (std::invalid_argument& e)
@@ -734,6 +741,7 @@ public:
                     {"no_inputs"     , sum_inputs.second},
                     {"no_outputs"    , sum_outputs.second},
                     {"is_ringct"     , is_ringct_str},
+                    {"rct_type"      , rct_type_str},
                     {"mixin"         , fmt::format("{:d}", mixin_no)},
                     {"txsize"        , fmt::format("{:0.2f}", static_cast<double>(_tx_info.blob_size)/1024.0)}
             });
