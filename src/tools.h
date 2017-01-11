@@ -251,9 +251,9 @@ parse(const std::string& str, string format="%Y-%m-%d %H:%M:%S");
 
 static
 string
-xmr_amount_to_str(const uint64_t& xmr_amount, string format="{:0.12f}")
+xmr_amount_to_str(const uint64_t& xmr_amount, string _format="{:0.12f}")
 {
-    return fmt::format("{:0.12f}", XMR_AMOUNT(xmr_amount));
+    return fmt::format(_format, XMR_AMOUNT(xmr_amount));
 }
 
 bool
