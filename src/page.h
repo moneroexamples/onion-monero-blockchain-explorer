@@ -732,6 +732,7 @@ public:
 
             // set output page template map
             txs.push_back(mstch::map {
+                    {"timestamp_no"  , _tx_info.receive_time},
                     {"timestamp"     , xmreg::timestamp_to_str(_tx_info.receive_time)},
                     {"age"           , age_str},
                     {"hash"          , fmt::format("{:s}", _tx_info.id_hash)},
@@ -746,6 +747,15 @@ public:
                     {"txsize"        , fmt::format("{:0.2f}", static_cast<double>(_tx_info.blob_size)/1024.0)}
             });
         }
+
+        // sort txs in mempool based on their age
+        std::sort(txs.begin(), txs.end(), [](mstch::node& m1, mstch::node& m2)
+        {
+            uint64_t t1 = boost::get<uint64_t>(boost::get<mstch::map>(m1)["timestamp_no"]);
+            uint64_t t2 = boost::get<uint64_t>(boost::get<mstch::map>(m2)["timestamp_no"]);
+
+            return t1 > t2;
+        });
 
         // read index.html
         string mempool_html = xmreg::read(TMPL_MEMPOOL);
