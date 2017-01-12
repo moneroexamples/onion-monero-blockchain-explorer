@@ -68,38 +68,43 @@
 
     <hr>
 
-    <h3>Inputs</h3>
-    <div class="center">
-        {{#inputs}}
-            <h4>Key image: {{key_image}}, amount {{key_image_amount}}</h4>
-            {{#mixins}}
-                <h5>Mixin of pub key: {{mixin_pub_key}}</h5>
-                {{#mixin_outputs}}
-                  <h5>
-                      uses outputs from tx:
-                      <a href="/tx/{{mix_tx_hash}}">{{mix_tx_hash}}</a>
-                  </h5>
-                    {{#found_outputs}}
 
-                        <h6 style="font-family: 'Lucida Console', Monaco, monospace;  font-size: 12px;     font-weight: normal;">
-                            Output public key: {{my_public_key}},
-                            amount: {{amount}},
-                            is ours:
-                            {{#mine_output}}
-                                <span style="color: #008009;font-weight: bold">{{mine_output}}</span>
-                            {{/mine_output}}
-                            {{^mine_output}}
-                                {{mine_output}}
-                            {{/mine_output}}
-                        </h6>
+    {{#show_inputs}}
 
-                    {{/found_outputs}}
-                {{/mixin_outputs}}
+        <h3>Inputs</h3>
+        <div class="center">
+            {{#inputs}}
+                <h4>Key image: {{key_image}}, amount {{key_image_amount}}</h4>
+                {{#mixins}}
+                    <h5>Mixin of pub key: {{mixin_pub_key}}</h5>
+                    {{#mixin_outputs}}
+                      <h5>
+                          uses outputs from tx:
+                          <a href="/tx/{{mix_tx_hash}}">{{mix_tx_hash}}</a>
+                      </h5>
+                        {{#found_outputs}}
 
-            {{/mixins}}
-        {{/inputs}}
+                            <h6 style="font-family: 'Lucida Console', Monaco, monospace;  font-size: 12px;     font-weight: normal;">
+                                Output public key: {{my_public_key}},
+                                amount: {{amount}},
+                                is ours:
+                                {{#mine_output}}
+                                    <span style="color: #008009;font-weight: bold">{{mine_output}}</span>
+                                {{/mine_output}}
+                                {{^mine_output}}
+                                    {{mine_output}}
+                                {{/mine_output}}
+                            </h6>
 
-    </div>
+                        {{/found_outputs}}
+                    {{/mixin_outputs}}
+
+                {{/mixins}}
+            {{/inputs}}
+
+        </div>
+
+    {{/show_inputs}}
 
 
 </div>

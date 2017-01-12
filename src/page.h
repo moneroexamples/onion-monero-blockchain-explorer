@@ -1525,7 +1525,8 @@ public:
         context["outputs"] = outputs;
         context["sum_xmr"] = xmreg::xmr_amount_to_str(sum_xmr);
 
-        context["inputs"]  = inputs;
+        context["inputs"]      = inputs;
+        context["show_inputs"] = false;
 
         // read my_outputs.html
         string my_outputs_html = xmreg::read(TMPL_MY_OUTPUTS);
