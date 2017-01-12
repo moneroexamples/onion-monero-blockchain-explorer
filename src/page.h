@@ -1443,6 +1443,9 @@ public:
                         uint64_t amount           = std::get<1>(mix_out);
                         uint64_t output_idx_in_tx = std::get<2>(mix_out);
 
+                        //@todo fix this for loop
+                        continue;
+
 //                        if (mix_out.first.key != output_data.pubkey)
 //                        {
 //                            continue;
@@ -1478,7 +1481,7 @@ public:
 
                             if (!r)
                             {
-                                cerr << "Cant decode ringCT!" << endl;
+                                cerr << "show_my_outputs: key images: Cant decode ringCT!" << endl;
                             }
 
                             // cointbase txs have amounts in plain sight.

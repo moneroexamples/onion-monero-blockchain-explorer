@@ -754,7 +754,7 @@ decode_ringct(const rct::rctSig& rv,
                 return false;
         }
     }
-    catch (const std::exception &e)
+    catch (...)
     {
         cerr << "Failed to decode input " << i << endl;
         return false;
