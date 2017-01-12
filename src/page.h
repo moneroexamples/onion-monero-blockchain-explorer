@@ -1270,7 +1270,7 @@ public:
 
                 if (!r)
                 {
-                    cerr << "Cant decode ringCT!" << endl;
+                    cerr << "\nshow_my_outputs: Cant decode ringCT! " << endl;
                 }
 
                 // cointbase txs have amounts in plain sight.
