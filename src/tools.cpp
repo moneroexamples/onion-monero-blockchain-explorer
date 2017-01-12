@@ -719,22 +719,22 @@ decode_ringct(const rct::rctSig& rv,
               rct::key & mask,
               uint64_t & amount)
 {
-    crypto::key_derivation derivation;
-
-    bool r = crypto::generate_key_derivation(pub, sec, derivation);
-
-    if (!r)
-    {
-        cerr <<"Failed to generate key derivation to decode rct output " << i << endl;
-        return false;
-    }
-
-    crypto::secret_key scalar1;
-
-    crypto::derivation_to_scalar(derivation, i, scalar1);
-
     try
     {
+        crypto::key_derivation derivation;
+
+        bool r = crypto::generate_key_derivation(pub, sec, derivation);
+
+        if (!r)
+        {
+            cerr <<"Failed to generate key derivation to decode rct output " << i << endl;
+            return false;
+        }
+
+        crypto::secret_key scalar1;
+
+        crypto::derivation_to_scalar(derivation, i, scalar1);
+
         switch (rv.type)
         {
             case rct::RCTTypeSimple:
