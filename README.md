@@ -416,8 +416,9 @@ Instruction how to compile the `lmdbcpp-monero` are provided here:
  - https://github.com/moneroexamples/lmdbcpp-monero.git
 
 The custom database is rather big, 12GB now, and it must be running alongside Monero deamon
- so that it keeps updating itself with new information from new blocks as they are added
-  to the blockchain.
+so that it keeps updating itself with new information from new blocks as they are added
+to the blockchain. Also, by default it is 10 blocks behind the current blockchain height
+to minimize indexing/saving orphaned blocks.
 
 For these reasons, its use is optional. However, without it, some searches wont be possible,
 e.g., searching for key images, output and tx public keys, encrypted payments id.
