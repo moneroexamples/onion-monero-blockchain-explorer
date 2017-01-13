@@ -44,6 +44,11 @@ include_directories(
         ${MONERO_HEADERS_DIR}/contrib/epee/include
         ${MONERO_HEADERS_DIR}/external/db_drivers/liblmdb)
 
+if(APPLE)
+  include_directories(/usr/local/opt/openssl/include)
+  link_directories(/usr/local/opt/openssl/lib)
+endif()
+
 # get individual monero static libraries
 # that are needed in this project
 
@@ -158,7 +163,29 @@ configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates ${CMAKE_CURRENT_BINARY
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates/css ${CMAKE_CURRENT_BINARY_DIR}/templates/css)
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates/partials ${CMAKE_CURRENT_BINARY_DIR}/templates/partials)
 
-
+if (APPLE)
+target_link_libraries(${PROJECT_NAME}
+        myxrm
+        myext
+        mstch
+        wallet
+        cryptonote_core
+        cryptonote_protocol
+        blockchain_db
+        cryptoxmr
+        blocks
+        lmdb
+        ringct
+        common
+        mnemonics
+        ${Boost_LIBRARIES}
+        pthread
+        unbound
+        curl
+        dl
+        crypto
+        ssl)
+else()
 target_link_libraries(${PROJECT_NAME}
         myxrm
         myext
@@ -181,3 +208,4 @@ target_link_libraries(${PROJECT_NAME}
         dl
         crypto
         ssl)
+endif()

@@ -169,8 +169,8 @@ struct tx_details
             {"sum_outputs"       , fmt::format("{:0.6f}", XMR_AMOUNT(xmr_outputs))},
             {"sum_inputs_short"  , fmt::format("{:0.3f}", XMR_AMOUNT(xmr_inputs))},
             {"sum_outputs_short" , fmt::format("{:0.3f}", XMR_AMOUNT(xmr_outputs))},
-            {"no_inputs"         , input_key_imgs.size()},
-            {"no_outputs"        , output_pub_keys.size()},
+            {"no_inputs"         , static_cast<uint64_t>(input_key_imgs.size())},
+            {"no_outputs"        , static_cast<uint64_t>(output_pub_keys.size())},
             {"mixin"             , mixin_str},
             {"blk_height"        , blk_height},
             {"version"           , std::to_string(version)},
@@ -309,7 +309,6 @@ public:
                 {"refresh"         , refresh_page},
                 {"height"          , std::to_string(height)},
                 {"server_timestamp", xmreg::timestamp_to_str(server_timestamp)},
-                {"blocks"          , mstch::array()},
                 {"age_format"      , string("[h:m:d]")},
                 {"page_no"         , std::to_string(page_no)},
                 {"total_page_no"   , std::to_string(height / (no_of_last_blocks))},
@@ -317,6 +316,7 @@ public:
                 {"next_page"       , std::to_string(page_no + 1)},
                 {"prev_page"       , std::to_string((page_no > 0 ? page_no - 1 : 0))}
         };
+        context.emplace("blocks", mstch::array());
 
 
         // get reference to blocks template map to be field below
@@ -501,8 +501,8 @@ public:
                 {"is_page_zero"    , !bool(page_no)},
                 {"next_page"       , std::to_string(page_no + 1)},
                 {"prev_page"       , std::to_string((page_no > 0 ? page_no - 1 : 0))},
-                {"txs"             , mstch::array()} // will keep tx to show
         };
+        context.emplace("txs", mstch::array()); // will keep tx to show
 
         // get reference to txs mstch map to be field below
         mstch::array& txs = boost::get<mstch::array>(context["txs"]);
@@ -655,8 +655,8 @@ public:
         // initalise page tempate map with basic info about mempool
         mstch::map context {
                 {"mempool_size",  std::to_string(mempool_txs.size())},
-                {"mempooltxs" ,   mstch::array()}
         };
+        context.emplace("mempooltxs" , mstch::array());
 
         // get reference to blocks template map to be field below
         mstch::array& txs = boost::get<mstch::array>(context["mempooltxs"]);
@@ -872,9 +872,9 @@ public:
                 {"minor_ver"            , std::to_string(blk.minor_version)},
                 {"blk_size"             , fmt::format("{:0.4f}",
                                                 static_cast<double>(blk_size) / 1024.0)},
-                {"coinbase_txs"         , mstch::array{{txd_coinbase.get_mstch_map()}}},
-                {"blk_txs"              , mstch::array()}
         };
+        context.emplace("coinbase_txs", mstch::array{{txd_coinbase.get_mstch_map()}});
+        context.emplace("blk_txs"     , mstch::array());
 
         // .push_back(txd_coinbase.get_mstch_map()
 
@@ -1029,9 +1029,9 @@ public:
         }
 
         mstch::map context {
-                {"txs"     , mstch::array{}},
                 {"testnet" , this->testnet}
         };
+        context.emplace("txs"     , mstch::array{});
 
         boost::get<mstch::array>(context["txs"]).push_back(tx_context);
 
@@ -1205,7 +1205,7 @@ public:
                 {"tx_fee"               , xmreg::xmr_amount_to_str(txd.fee)},
                 {"blk_timestamp"        , blk_timestamp},
                 {"delta_time"           , age.first},
-                {"outputs_no"           , txd.output_pub_keys.size()},
+                {"outputs_no"           , static_cast<uint64_t>(txd.output_pub_keys.size())},
                 {"has_payment_id"       , txd.payment_id  != null_hash},
                 {"has_payment_id8"      , txd.payment_id8 != null_hash8},
                 {"payment_id"           , pid_str},
@@ -1359,7 +1359,7 @@ public:
             inputs.push_back(mstch::map{
                     {"key_image"       , pod_to_hex(in_key.k_image)},
                     {"key_image_amount", xmreg::xmr_amount_to_str(in_key.amount)},
-                    {"mixins"          , mstch::array{}}
+                    make_pair(string("mixins"), mstch::array{})
             });
 
             mstch::array& mixins = boost::get<mstch::array>(
@@ -1388,7 +1388,7 @@ public:
 
                 mixins.push_back(mstch::map{
                         {"mixin_pub_key", out_pub_key_str},
-                        {"mixin_outputs", mstch::array{}}
+                        make_pair(string("mixin_outputs"), mstch::array{})
                 });
 
                 mstch::array& mixin_outputs = boost::get<mstch::array>(
@@ -1436,7 +1436,7 @@ public:
 
                     mixin_outputs.push_back(mstch::map{
                             {"mix_tx_hash"  , tx_hash_str},
-                            {"found_outputs", mstch::array{}}
+                            make_pair(string("found_outputs"), mstch::array{})
                     });
 
                     mstch::array& found_outputs = boost::get<mstch::array>(
@@ -1532,10 +1532,10 @@ public:
         } //  for (const txin_to_key& in_key: input_key_imgs)
 
 
-        context["outputs"] = outputs;
+        context.emplace("outputs", outputs);
         context["sum_xmr"] = xmreg::xmr_amount_to_str(sum_xmr);
 
-        context["inputs"]      = inputs;
+        context.emplace("inputs", inputs);
         context["show_inputs"] = false;
 
         // read my_outputs.html
@@ -1605,8 +1605,8 @@ public:
                 {"unsigned_tx_given"    , unsigned_tx_given},
                 {"have_raw_tx"          , true},
                 {"data_prefix"          , data_prefix},
-                {"txs"                  , mstch::array{}}
         };
+        context.emplace("txs", mstch::array{});
 
         if (unsigned_tx_given)
         {
@@ -1651,16 +1651,16 @@ public:
 
 
                     mstch::map tx_cd_data {
-                            {"no_of_sources"      , no_of_sources},
+                            {"no_of_sources"      , static_cast<uint64_t>(no_of_sources)},
                             {"use_rct"            , tx_cd.use_rct},
                             {"change_amount"      , xmreg::xmr_amount_to_str(tx_change.amount)},
                             {"has_payment_id"     , (payment_id  != null_hash)},
                             {"has_payment_id8"    , (payment_id8 != null_hash8)},
                             {"payment_id"         , pid_str},
                             {"payment_id8"        , pid8_str},
-                            {"dest_sources"       , mstch::array{}},
-                            {"dest_infos"         , mstch::array{}},
                     };
+                    tx_cd_data.emplace("dest_sources" , mstch::array{});
+                    tx_cd_data.emplace("dest_infos"   , mstch::array{});
 
                     mstch::array& dest_sources = boost::get<mstch::array>(tx_cd_data["dest_sources"]);
                     mstch::array& dest_infos = boost::get<mstch::array>(tx_cd_data["dest_infos"]);
@@ -1687,11 +1687,11 @@ public:
 
                         mstch::map single_dest_source {
                             {"output_amount"              , xmreg::xmr_amount_to_str(tx_source.amount)},
-                            {"real_output"                , tx_source.real_output},
+                            {"real_output"                , static_cast<uint64_t>(tx_source.real_output)},
                             {"real_out_tx_key"            , pod_to_hex(tx_source.real_out_tx_key)},
-                            {"real_output_in_tx_index"    , tx_source.real_output_in_tx_index},
-                            {"outputs"                    , mstch::array{}}
+                            {"real_output_in_tx_index"    , static_cast<uint64_t>(tx_source.real_output_in_tx_index)},
                         };
+                        single_dest_source.emplace("outputs", mstch::array{});
 
                         sum_outputs_amounts += tx_source.amount;
 
@@ -1840,7 +1840,7 @@ public:
                               max_mix_timestamp
                             );
 
-                    tx_cd_data["timescales"]       = mixins_timescales.first;
+                    tx_cd_data.emplace("timescales", mixins_timescales.first);
                     tx_cd_data["min_mix_time"]     = xmreg::timestamp_to_str(min_mix_timestamp);
                     tx_cd_data["max_mix_time"]     = xmreg::timestamp_to_str(max_mix_timestamp);
                     tx_cd_data["timescales_scale"] = fmt::format("{:0.2f}",
@@ -2150,8 +2150,8 @@ public:
                 {"has_error"            , false},
                 {"error_msg"            , string {}},
                 {"data_prefix"          , data_prefix},
-                {"txs"                  , mstch::array{}}
         };
+        context.emplace("txs", mstch::array{});
 
         // read pushrawtx.html
         string pushrawtx_html = xmreg::read(TMPL_MY_PUSHRAWTX);
@@ -3869,9 +3869,9 @@ private:
                 {"blk_timestamp"        , blk_timestamp},
                 {"blk_timestamp_uint"   , blk.timestamp},
                 {"delta_time"           , age.first},
-                {"inputs_no"            , txd.input_key_imgs.size()},
+                {"inputs_no"            , static_cast<uint64_t>(txd.input_key_imgs.size())},
                 {"has_inputs"           , !txd.input_key_imgs.empty()},
-                {"outputs_no"           , txd.output_pub_keys.size()},
+                {"outputs_no"           , static_cast<uint64_t>(txd.output_pub_keys.size())},
                 {"has_payment_id"       , txd.payment_id  != null_hash},
                 {"has_payment_id8"      , txd.payment_id8 != null_hash8},
                 {"confirmations"        , txd.no_confirmations},
@@ -4026,8 +4026,8 @@ private:
                         {"mix_timestamp"  , xmreg::timestamp_to_str(blk.timestamp)},
                         {"mix_age"        , mixin_age.first},
                         {"mix_mixin_no"   , mixin_txd.mixin_no},
-                        {"mix_inputs_no"  , mixin_txd.input_key_imgs.size()},
-                        {"mix_outputs_no" , mixin_txd.output_pub_keys.size()},
+                        {"mix_inputs_no"  , static_cast<uint64_t>(mixin_txd.input_key_imgs.size())},
+                        {"mix_outputs_no" , static_cast<uint64_t>(mixin_txd.output_pub_keys.size())},
                         {"mix_age_format" , mixin_age.second},
                         {"mix_idx"        , fmt::format("{:02d}", count)},
                         {"mix_is_it_real" , false}, // a placeholder for future
@@ -4058,10 +4058,10 @@ private:
 
         context["inputs_xmr_sum"]   = xmreg::xmr_amount_to_str(inputs_xmr_sum);
         context["server_time"]      = server_time_str;
-        context["inputs"]           = inputs;
+        context.emplace("inputs", inputs);
         context["min_mix_time"]     = xmreg::timestamp_to_str(min_mix_timestamp);
         context["max_mix_time"]     = xmreg::timestamp_to_str(max_mix_timestamp);
-        context["timescales"]       = mixins_timescales.first;
+        context.emplace("timescales", mixins_timescales.first);
         context["timescales_scale"] = fmt::format("{:0.2f}",
                                           mixins_timescales.second / 3600.0 / 24.0); // in days
 
@@ -4125,7 +4125,7 @@ private:
 
         context["outputs_xmr_sum"] = xmreg::xmr_amount_to_str(outputs_xmr_sum);
 
-        context["outputs"] = outputs;
+        context.emplace("outputs", outputs);
 
 
         return context;
