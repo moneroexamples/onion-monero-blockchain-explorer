@@ -48,7 +48,6 @@ Note: clearnet version might be not as up to date as the onion version.
 
 The key features of the Onion Monero Blockchain Explorer are:
 
- - available as a hidden service,
  - no javascript, no cookies, no web analytics trackers, no images,
  - open sourced,
  - made fully in C++,
