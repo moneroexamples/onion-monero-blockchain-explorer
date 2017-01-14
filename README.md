@@ -483,6 +483,20 @@ Note: Because we generated our own certificate, modern browsers will complain
 about it as they cant verify the signatures against any third party. So probably
 for any practical use need to have properly issued ssl certificates. 
 
+## Enable transaction pusher
+
+By default, the tx pusher is disabled. The pushing will not work, but tx checking and inspecting will. 
+
+To enable pushing the txs, use flag `--enable-pusher`, e.g.:
+
+```bash
+./xmrblocks --enable-pusher
+```
+ 
+Note: There has been a number of issues with compatibility of tx's binary data between different Monero versions
+and operating systems. Unless you are using latest development version of Monero and the explorer has been compiled
+against the lastest version, pushing txs might not work due to incompatibilities in binary data.
+
 ## Other examples
 
 Other examples can be found on  [github](https://github.com/moneroexamples?tab=repositories).
