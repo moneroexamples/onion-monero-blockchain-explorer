@@ -253,7 +253,14 @@ static
 string
 xmr_amount_to_str(const uint64_t& xmr_amount, string _format="{:0.12f}")
 {
-    return fmt::format(_format, XMR_AMOUNT(xmr_amount));
+    string amount_str = "?";
+
+    if (xmr_amount > 0)
+    {
+        amount_str = fmt::format(_format, XMR_AMOUNT(xmr_amount));
+    }
+
+    return amount_str;
 }
 
 bool
