@@ -3882,6 +3882,7 @@ private:
                                                   with_ring_signatures)},
                 {"tx_json"              , tx_json},
                 {"is_ringct"            , (tx.version > 1)},
+                {"rct_type"             , tx.rct_signatures.type},
                 {"has_error"            , false},
                 {"error_msg"            , string("")},
                 {"have_raw_tx"          , false},
