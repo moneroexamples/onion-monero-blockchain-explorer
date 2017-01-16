@@ -15,11 +15,6 @@ using boost::filesystem::path;
 
 using namespace std;
 
-// needed for log system of momero
-namespace epee {
-    unsigned int g_test_dbg_lock_sleep = 0;
-}
-
 int main(int ac, const char* av[]) {
 
     // get command line options
@@ -45,10 +40,12 @@ int main(int ac, const char* av[]) {
     auto ssl_crt_file_opt   = opts.get_option<string>("ssl-crt-file");
     auto ssl_key_file_opt   = opts.get_option<string>("ssl-key-file");
 
+    // set  monero log output level
+    uint32_t log_level = 0;
+    mlog_configure("", true);
 
     //cast port number in string to uint16
     uint16_t app_port = boost::lexical_cast<uint16_t>(*port_opt);
-
 
     bool use_ssl {false};
 
@@ -93,9 +90,6 @@ int main(int ac, const char* av[]) {
     }
 
     cout << blockchain_path << endl;
-
-     // enable basic monero log output
-    xmreg::enable_monero_log();
 
     // create instance of our MicroCore
     // and make pointer to the Blockchain
