@@ -33,6 +33,8 @@
 #include "ringct/rctOps.h"
 #include "ringct/rctSigs.h"
 
+#include "easylogging++.h"
+
 #include "common/base58.h"
 
 #include "string_coding.h"
