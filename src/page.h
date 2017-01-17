@@ -656,10 +656,13 @@ public:
         mstch::map context {
                 {"mempool_size",  std::to_string(mempool_txs.size())},
         };
+
         context.emplace("mempooltxs" , mstch::array());
 
         // get reference to blocks template map to be field below
         mstch::array& txs = boost::get<mstch::array>(context["mempooltxs"]);
+
+        uint64_t mempool_size_bytes {0};
 
         // for each transaction in the memory pool
         for (size_t i = 0; i < mempool_txs.size(); ++i)
@@ -744,9 +747,15 @@ public:
                     {"is_ringct"     , is_ringct_str},
                     {"rct_type"      , rct_type_str},
                     {"mixin"         , fmt::format("{:d}", mixin_no)},
-                    {"txsize"        , fmt::format("{:0.2f}", static_cast<double>(_tx_info.blob_size)/1024.0)}
+                    {"txsize"        , fmt::format("{:0.2f}",
+                                                   static_cast<double>(_tx_info.blob_size)/1024.0)}
             });
+
+            mempool_size_bytes += _tx_info.blob_size;
         }
+
+        context.insert({"mempool_size_kB",
+                        fmt::format("{:0.2f}", static_cast<double>(mempool_size_bytes)/1024.0)});
 
         // sort txs in mempool based on their age
         std::sort(txs.begin(), txs.end(), [](mstch::node& m1, mstch::node& m2)

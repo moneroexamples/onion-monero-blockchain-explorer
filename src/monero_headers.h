@@ -15,8 +15,6 @@
 #define OUTPUT_EXPORT_FILE_MAGIC "Monero output export\003"
 
 
-#include "net/http_base.h"
-#include "net/http_server_handlers_map2.h"
 #include "net/http_client.h"
 #include "storages/http_abstract_invoke.h"
 
