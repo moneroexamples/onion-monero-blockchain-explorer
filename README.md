@@ -74,7 +74,7 @@ Everything here was done and tested using Monero 0.9.4 on Ubuntu 16.04 x86_64.
 Instruction for Monero 0.10.1 compilation and Monero headers and libraries setup are
 as shown here:
  - [Compile Monero 0.9 on Ubuntu 16.04 x64](https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04)
- - [lmdbcpp-monero](https://github.com/moneroexamples/lmdbcpp-monero.git)
+ - [lmdbcpp-monero](https://github.com/moneroexamples/lmdbcpp-monero.git) (optional)
 
 ## Compile and run the explorer
 
