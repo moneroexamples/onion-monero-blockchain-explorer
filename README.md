@@ -460,6 +460,26 @@ Example output:
 
 Go to your browser: http://127.0.0.1:8081
 
+## The explorer's command line options
+
+```
+./xmrblocks -h
+xmrblocks, start Onion Monero Blockchain Explorer:
+  -h [ --help ] [=arg(=1)] (=0)         produce help message
+  -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
+  --enable-pusher [=arg(=1)] (=0)       enable pushing signed tx
+  -p [ --port ] arg (=8081)             default port
+  -b [ --bc-path ] arg                  path to lmdb blockchain
+  --ssl-crt-file arg                    A path to crt file for ssl (https) 
+                                        functionality
+  --ssl-key-file arg                    A path to key file for ssl (https) 
+                                        functionality
+  -c [ --custom-db-path ] arg           path to the custom lmdb database used 
+                                        for searching things
+  -d [ --deamon-url ] arg (=http:://127.0.0.1:18081)
+                                        monero address string
+```
+
 ## Enable SSL (https)
 
 By default, the explorer does not use ssl. But It has such a functionality. 
