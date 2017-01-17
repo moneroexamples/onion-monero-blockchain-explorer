@@ -83,6 +83,7 @@
                 <label for="tab-1">Decode outputs</label>
                 <div class="content">
                     <h4 style="margin: 0px">Check which outputs belong to given Monero address and viewkey</h4>
+                    <h5 style="margin: 0px">For RingCT transactions, outputs' amounts are also decoded</h5>
                     <form action="/myoutputs" method="get" style="width:100%; margin-top:2px" class="style-1">
                         <input type="hidden" name="tx_hash" value="{{tx_hash}}"><br/>
                         <input type="text" name="xmr_address" size="90" placeholder="Monero address"><br/>
