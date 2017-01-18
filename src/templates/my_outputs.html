@@ -76,8 +76,6 @@
 
     {{#show_inputs}}
 
-    <hr>
-
     <h3>Inputs</h3>
         <div class="center">
             {{#inputs}}
@@ -89,7 +87,9 @@
                             <table class="center">
                               <tr>
                                   <td style="text-align: center;">
-                                      Mixin {{mixin_pub_key}} <br/> might use our outputs from tx: <a href="/tx/{{mix_tx_hash}}">{{mix_tx_hash}}</a>
+                                      Mixin {{mixin_pub_key}} might use our outputs
+                                      <br/>
+                                      from tx of public key: <a href="/tx/{{mix_tx_hash}}">{{mix_tx_pub_key}}</a>
                                   </td>
                               </tr>
                             {{#has_found_outputs}}

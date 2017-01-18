@@ -1395,7 +1395,7 @@ public:
 
                 string out_pub_key_str = pod_to_hex(output_data.pubkey);
 
-                cout << "out_pub_key_str: " << out_pub_key_str << endl;
+                //cout << "out_pub_key_str: " << out_pub_key_str << endl;
 
                 // this will be txs where the outputs come from
                 vector<string> found_tx_hashes;
@@ -1409,7 +1409,7 @@ public:
                 mixins.push_back(mstch::map{
                         {"mixin_pub_key"      , out_pub_key_str},
                         {"mixin_outputs"      , mstch::array{}},
-                        {"has_mixin_outputs", false}
+                        {"has_mixin_outputs"  , false}
                 });
 
                 mstch::array& mixin_outputs = boost::get<mstch::array>(
@@ -1439,9 +1439,10 @@ public:
                         continue;
                     }
 
-
                     public_key mixin_tx_pub_key
                             = xmreg::get_tx_pub_key_from_received_outs(mixin_tx);
+
+                    string mixin_tx_pub_key_str = pod_to_hex(mixin_tx_pub_key);
 
                     // public transaction key is combined with our viewkey
                     // to create, so called, derived key.
@@ -1463,6 +1464,7 @@ public:
 
                     mixin_outputs.push_back(mstch::map{
                             {"mix_tx_hash"      , tx_hash_str},
+                            {"mix_tx_pub_key"   , mixin_tx_pub_key_str},
                             {"found_outputs"    , mstch::array{}},
                             {"has_found_outputs", false}
                     });
@@ -1483,10 +1485,7 @@ public:
                         uint64_t amount           = std::get<1>(mix_out);
                         uint64_t output_idx_in_tx = std::get<2>(mix_out);
 
-                        cout << " - " << pod_to_hex(txout_k.key) << endl;
-
-//                        //@todo fix this for loop
-//                        continue;
+                        //cout << " - " << pod_to_hex(txout_k.key) << endl;
 
 //                        // analyze only those output keys
 //                        // that were used in mixins
@@ -1555,7 +1554,7 @@ public:
 //                                 << endl;
 
                             found_something = true;
-
+                            show_key_images = true;
                         }
 
                     } // for (const pair<txout_to_key, uint64_t>& mix_out: txd.output_pub_keys)
@@ -1568,7 +1567,7 @@ public:
 
             } // for (const cryptonote::output_data_t& output_data: mixin_outputs)
 
-            show_key_images = true;
+
 
         } //  for (const txin_to_key& in_key: input_key_imgs)
 
