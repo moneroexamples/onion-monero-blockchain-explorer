@@ -70,7 +70,7 @@ form {
 
 .tabs {
     position: relative;
-    min-height: 200px; /* This part sucks */
+    min-height: 220px; /* This part sucks */
     clear: both;
     margin: 25px 0;
 }
