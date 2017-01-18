@@ -1454,69 +1454,53 @@ public:
                 bool found_something {false};
 
 
-                // for each mixin output transaction, check if its ours
-                // as before
-                for (string tx_hash_str: found_tx_hashes)
+                public_key mixin_tx_pub_key
+                        = xmreg::get_tx_pub_key_from_received_outs(mixin_tx);
+
+                string mixin_tx_pub_key_str = pod_to_hex(mixin_tx_pub_key);
+
+                // public transaction key is combined with our viewkey
+                // to create, so called, derived key.
+                key_derivation derivation;
+
+                if (!generate_key_derivation(mixin_tx_pub_key, prv_view_key, derivation))
                 {
-                    crypto::hash tx_hash;
+                    cerr << "Cant get derived key for: "  << "\n"
+                         << "pub_tx_key: " << mixin_tx_pub_key << " and "
+                         << "prv_view_key" << prv_view_key << endl;
 
-                    hex_to_pod(tx_hash_str, tx_hash);
+                    continue;
+                }
 
-                    transaction mixin_tx;
+                //          <public_key  , amount  , out idx>
+                vector<tuple<txout_to_key, uint64_t, uint64_t>> output_pub_keys;
 
-                    if (!mcore->get_tx(tx_hash, mixin_tx))
-                    {
-                        cerr << "Cant get tx in blockchain: " << tx_hash << endl;
-                        continue;
-                    }
+                output_pub_keys = xmreg::get_ouputs_tuple(mixin_tx);
 
-                    public_key mixin_tx_pub_key
-                            = xmreg::get_tx_pub_key_from_received_outs(mixin_tx);
+                mixin_outputs.push_back(mstch::map{
+                        {"mix_tx_hash"      , tx_hash_str},
+                        {"mix_tx_pub_key"   , mixin_tx_pub_key_str},
+                        {"found_outputs"    , mstch::array{}},
+                        {"has_found_outputs", false}
+                });
 
-                    string mixin_tx_pub_key_str = pod_to_hex(mixin_tx_pub_key);
+                mstch::array& found_outputs = boost::get<mstch::array>(
+                        boost::get<mstch::map>(mixin_outputs.back())["found_outputs"]
+                );
 
-                    // public transaction key is combined with our viewkey
-                    // to create, so called, derived key.
-                    key_derivation derivation;
+                mstch::node& has_found_outputs
+                        = boost::get<mstch::map>(mixin_outputs.back())["has_found_outputs"];
 
-                    if (!generate_key_derivation(mixin_tx_pub_key, prv_view_key, derivation))
-                    {
-                        cerr << "Cant get derived key for: "  << "\n"
-                             << "pub_tx_key: " << mixin_tx_pub_key << " and "
-                             << "prv_view_key" << prv_view_key << endl;
+                // for each output in mixin tx, find the one from key_image
+                // and check if its ours.
+                for (const auto& mix_out: output_pub_keys)
+                {
 
-                        continue;
-                    }
+                    txout_to_key txout_k      = std::get<0>(mix_out);
+                    uint64_t amount           = std::get<1>(mix_out);
+                    uint64_t output_idx_in_tx = std::get<2>(mix_out);
 
-                    //          <public_key  , amount  , out idx>
-                    vector<tuple<txout_to_key, uint64_t, uint64_t>> output_pub_keys;
-
-                    output_pub_keys = xmreg::get_ouputs_tuple(mixin_tx);
-
-                    mixin_outputs.push_back(mstch::map{
-                            {"mix_tx_hash"      , tx_hash_str},
-                            {"mix_tx_pub_key"   , mixin_tx_pub_key_str},
-                            {"found_outputs"    , mstch::array{}},
-                            {"has_found_outputs", false}
-                    });
-
-                    mstch::array& found_outputs = boost::get<mstch::array>(
-                            boost::get<mstch::map>(mixin_outputs.back())["found_outputs"]
-                    );
-
-                    mstch::node& has_found_outputs
-                            = boost::get<mstch::map>(mixin_outputs.back())["has_found_outputs"];
-
-                    // for each output in mixin tx, find the one from key_image
-                    // and check if its ours.
-                    for (const auto& mix_out: output_pub_keys)
-                    {
-
-                        txout_to_key txout_k      = std::get<0>(mix_out);
-                        uint64_t amount           = std::get<1>(mix_out);
-                        uint64_t output_idx_in_tx = std::get<2>(mix_out);
-
-                        //cout << " - " << pod_to_hex(txout_k.key) << endl;
+                    //cout << " - " << pod_to_hex(txout_k.key) << endl;
 
 //                        // analyze only those output keys
 //                        // that were used in mixins
@@ -1525,74 +1509,74 @@ public:
 //                            continue;
 //                        }
 
-                        // get the tx output public key
-                        // that normally would be generated for us,
-                        // if someone had sent us some xmr.
-                        public_key tx_pubkey_generated;
+                    // get the tx output public key
+                    // that normally would be generated for us,
+                    // if someone had sent us some xmr.
+                    public_key tx_pubkey_generated;
 
-                        derive_public_key(derivation,
+                    derive_public_key(derivation,
+                                      output_idx_in_tx,
+                                      address.m_spend_public_key,
+                                      tx_pubkey_generated);
+
+                    // check if generated public key matches the current output's key
+                    bool mine_output = (txout_k.key == tx_pubkey_generated);
+
+
+                    if (mine_output && mixin_tx.version == 2)
+                    {
+                        // initialize with regular amount
+                        uint64_t rct_amount = amount;
+
+                        bool r;
+
+                        r = decode_ringct(mixin_tx.rct_signatures,
+                                          mixin_tx_pub_key,
+                                          prv_view_key,
                                           output_idx_in_tx,
-                                          address.m_spend_public_key,
-                                          tx_pubkey_generated);
+                                          mixin_tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask,
+                                          rct_amount);
 
-                        // check if generated public key matches the current output's key
-                        bool mine_output = (txout_k.key == tx_pubkey_generated);
-
-
-                        if (mine_output && mixin_tx.version == 2)
+                        if (!r)
                         {
-                            // initialize with regular amount
-                            uint64_t rct_amount = amount;
-
-                            bool r;
-
-                            r = decode_ringct(mixin_tx.rct_signatures,
-                                              mixin_tx_pub_key,
-                                              prv_view_key,
-                                              output_idx_in_tx,
-                                              mixin_tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask,
-                                              rct_amount);
-
-                            if (!r)
-                            {
-                                cerr << "show_my_outputs: key images: Cant decode ringCT!" << endl;
-                            }
-
-                            // cointbase txs have amounts in plain sight.
-                            // so use amount from ringct, only for non-coinbase txs
-                            if (!is_coinbase(mixin_tx))
-                            {
-                                amount = rct_amount;
-                            }
+                            cerr << "show_my_outputs: key images: Cant decode ringCT!" << endl;
                         }
 
-
-                        // save our mixnin's public keys
-                        found_outputs.push_back(mstch::map {
-                                {"my_public_key"   , pod_to_hex(txout_k.key)},
-                                {"tx_hash"         , tx_hash_str},
-                                {"mine_output"     , mine_output},
-                                {"out_idx"         , to_string(output_idx_in_tx)},
-                                {"formed_output_pk", out_pub_key_str},
-                                {"amount"          , xmreg::xmr_amount_to_str(amount)},
-                        });
-
-                        if (mine_output)
+                        // cointbase txs have amounts in plain sight.
+                        // so use amount from ringct, only for non-coinbase txs
+                        if (!is_coinbase(mixin_tx))
                         {
+                            amount = rct_amount;
+                        }
+                    }
+
+
+                    // save our mixnin's public keys
+                    found_outputs.push_back(mstch::map {
+                            {"my_public_key"   , pod_to_hex(txout_k.key)},
+                            {"tx_hash"         , tx_hash_str},
+                            {"mine_output"     , mine_output},
+                            {"out_idx"         , to_string(output_idx_in_tx)},
+                            {"formed_output_pk", out_pub_key_str},
+                            {"amount"          , xmreg::xmr_amount_to_str(amount)},
+                    });
+
+                    if (mine_output)
+                    {
 //                            cout << " - " << pod_to_hex(txout_k.key)
 //                                 <<": " << mine_output << " amount: "
 //                                 << xmreg::xmr_amount_to_str(amount)
 //                                 << endl;
 
-                            found_something = true;
-                            show_key_images = true;
-                        }
+                        found_something = true;
+                        show_key_images = true;
+                    }
 
-                    } // for (const pair<txout_to_key, uint64_t>& mix_out: txd.output_pub_keys)
+                } // for (const pair<txout_to_key, uint64_t>& mix_out: txd.output_pub_keys)
 
-                    has_found_outputs = !found_outputs.empty();
+                has_found_outputs = !found_outputs.empty();
 
-                } //  for (string tx_hash_str: found_tx_hashes)
+
 
                 has_mixin_outputs = found_something;
 
