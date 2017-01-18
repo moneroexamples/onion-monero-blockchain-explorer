@@ -1389,22 +1389,53 @@ public:
             // to store our mixins found for the given key image
             vector<map<string, string>> our_mixins_found;
 
+            // mixin counter
+            size_t count = 0;
+
             // for each found output public key check if its ours or not
-            for (const cryptonote::output_data_t& output_data: mixin_outputs)
+            //for (const cryptonote::output_data_t& output_data: mixin_outputs)
+            for (const uint64_t& abs_offset: absolute_offsets)
             {
+
+                // get basic information about mixn's output
+                cryptonote::output_data_t output_data = mixin_outputs.at(count);
+
+                tx_out_index tx_out_idx;
+
+                try
+                {
+                    // get pair pair<crypto::hash, uint64_t> where first is tx hash
+                    // and second is local index of the output i in that tx
+                    tx_out_idx = core_storage->get_db()
+                            .get_output_tx_and_index(in_key.amount, abs_offset);
+                }
+                catch (const OUTPUT_DNE& e)
+                {
+
+                    string out_msg = fmt::format(
+                            "Output with amount {:d} and index {:d} does not exist!",
+                            in_key.amount, abs_offset
+                    );
+
+                    cerr << out_msg << endl;
+
+                    break;
+                }
 
                 string out_pub_key_str = pod_to_hex(output_data.pubkey);
 
                 //cout << "out_pub_key_str: " << out_pub_key_str << endl;
 
-                // this will be txs where the outputs come from
-                vector<string> found_tx_hashes;
 
+                // get mixin transaction
+                transaction mixin_tx;
 
-                mylmdb->search(out_pub_key_str,
-                               found_tx_hashes,
-                               "output_public_keys");
+                if (!mcore->get_tx(tx_out_idx.first, mixin_tx))
+                {
+                    cerr << "Cant get tx: " << tx_out_idx.first << endl;
 
+                    break;
+                }
 
                 mixins.push_back(mstch::map{
                         {"mixin_pub_key"      , out_pub_key_str},
