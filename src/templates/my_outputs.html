@@ -62,7 +62,15 @@
             {{/outputs}}
         </table>
 
-        <h3>Sum XMR from matched outputs: {{sum_xmr}}</h3>
+        <h3>
+            Sum XMR from matched outputs:
+            {{#found_our_outputs}}
+                {{sum_xmr}}
+            {{/found_our_outputs}}
+            {{^found_our_outputs}}
+                0.000000000000
+            {{/found_our_outputs}}
+        </h3>
 
     </div>
 

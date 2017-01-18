@@ -1550,7 +1550,8 @@ public:
 
 
         context.emplace("outputs", outputs);
-        context["sum_xmr"] = xmreg::xmr_amount_to_str(sum_xmr);
+        context["found_our_outputs"] = (sum_xmr > 0);
+        context["sum_xmr"]           = xmreg::xmr_amount_to_str(sum_xmr);
 
         context.emplace("inputs", inputs);
         context["show_inputs"] = false;
