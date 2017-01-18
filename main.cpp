@@ -190,7 +190,7 @@ int main(int ac, const char* av[]) {
             || post_body.count("viewkey") == 0
             || post_body.count("tx_hash") == 0)
         {
-            return string("xmr_address, viewkey or tx_hash not provided");
+            return string("xmr address, viewkey or tx hash not provided");
         }
 
         string tx_hash     = post_body["tx_hash"];
@@ -205,20 +205,19 @@ int main(int ac, const char* av[]) {
 
             map<std::string, std::string> post_body = xmreg::parse_crow_post_data(req.body);
 
-            if (post_body.count("xmr_address") == 0
+            if (post_body.count("xmraddress") == 0
                 || post_body.count("txprvkey") == 0
-                || post_body.count("tx_hash") == 0)
+                || post_body.count("txhash") == 0)
             {
-                return string("xmr_address, txprvkey or tx_hash not provided");
+                return string("xmr address, tx private key or tx hash not provided");
             }
 
-            string tx_hash     = post_body["tx_hash"];;
+            string tx_hash     = post_body["txhash"];;
             string tx_prv_key  = post_body["txprvkey"];;
-            string xmr_address = post_body["xmr_address"];;
+            string xmr_address = post_body["xmraddress"];;
 
             return xmrblocks.show_prove(tx_hash, xmr_address, tx_prv_key);
     });
-
 
     CROW_ROUTE(app, "/rawtx")
     ([&](const crow::request& req) {
