@@ -1424,7 +1424,7 @@ public:
 
                 string out_pub_key_str = pod_to_hex(output_data.pubkey);
 
-                cout << "out_pub_key_str: " << out_pub_key_str << endl;
+                //cout << "out_pub_key_str: " << out_pub_key_str << endl;
 
 
                 // get mixin transaction
