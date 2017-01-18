@@ -181,26 +181,44 @@ int main(int ac, const char* av[]) {
         return xmrblocks.show_tx(tx_hash, with_ring_signatures);
     });
 
-    CROW_ROUTE(app, "/myoutputs").methods("GET"_method)
+    CROW_ROUTE(app, "/myoutputs").methods("POST"_method)
     ([&](const crow::request& req) {
 
-        string tx_hash     = string(req.url_params.get("tx_hash"));
-        string xmr_address = string(req.url_params.get("xmr_address"));
-        string viewkey     = string(req.url_params.get("viewkey"));
+        map<std::string, std::string> post_body = xmreg::parse_crow_post_data(req.body);
+
+        if (post_body.count("xmr_address") == 0
+            || post_body.count("viewkey") == 0
+            || post_body.count("tx_hash") == 0)
+        {
+            return string("xmr_address, viewkey or tx_hash not provided");
+        }
+
+        string tx_hash     = post_body["tx_hash"];
+        string xmr_address = post_body["xmr_address"];
+        string viewkey     = post_body["viewkey"];
 
         return xmrblocks.show_my_outputs(tx_hash, xmr_address, viewkey);
     });
 
+    CROW_ROUTE(app, "/prove").methods("POST"_method)
+        ([&](const crow::request& req) {
 
-    CROW_ROUTE(app, "/prove").methods("GET"_method)
-    ([&](const crow::request& req) {
+            map<std::string, std::string> post_body = xmreg::parse_crow_post_data(req.body);
 
-        string tx_hash     = string(req.url_params.get("txhash"));
-        string tx_prv_key  = string(req.url_params.get("txprvkey"));
-        string xmr_address = string(req.url_params.get("xmraddress"));
+            if (post_body.count("xmr_address") == 0
+                || post_body.count("txprvkey") == 0
+                || post_body.count("tx_hash") == 0)
+            {
+                return string("xmr_address, txprvkey or tx_hash not provided");
+            }
 
-        return xmrblocks.show_prove(tx_hash, xmr_address, tx_prv_key);
+            string tx_hash     = post_body["tx_hash"];;
+            string tx_prv_key  = post_body["txprvkey"];;
+            string xmr_address = post_body["xmr_address"];;
+
+            return xmrblocks.show_prove(tx_hash, xmr_address, tx_prv_key);
     });
+
 
     CROW_ROUTE(app, "/rawtx")
     ([&](const crow::request& req) {
