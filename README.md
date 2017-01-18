@@ -205,7 +205,7 @@ against the lastest version, pushing txs might not work due to incompatibilities
 
 ## Example screenshot
 
-![Onion Monero Blockchain Explorer](https://raw.githubusercontent.com/moneroexamples/onion-monero-blockchain-explorer/master/screenshot/screenshot.jpg)
+![Onion Monero Blockchain Explorer](https://raw.githubusercontent.com/moneroexamples/onion-monero-blockchain-explorer/master/screenshot/screenshot_01.jpg)
 
 
 ## Other monero examples
