@@ -84,29 +84,43 @@
                 <h4>Key image: {{key_image}}, amount {{key_image_amount}}</h4>
                 {{#mixins}}
                     {{#has_mixin_outputs}}
-                        <h5>Mixin of pub key: {{mixin_pub_key}}</h5>
                         {{#mixin_outputs}}
-                          <h5>
-                              uses outputs from tx:
-                              <a href="/tx/{{mix_tx_hash}}">{{mix_tx_hash}}</a>
-                          </h5>
+                        <div class="center">
+                            <table class="center">
+                              <tr>
+                                  <td style="text-align: center;">
+                                      Mixin {{mixin_pub_key}} <br/> might use our outputs from tx: <a href="/tx/{{mix_tx_hash}}">{{mix_tx_hash}}</a>
+                                  </td>
+                              </tr>
                             {{#has_found_outputs}}
-                                {{#found_outputs}}
-
-                                    <h6 style="font-family: 'Lucida Console', Monaco, monospace;  font-size: 12px;     font-weight: normal;">
-                                        Output public key: {{my_public_key}},
-                                        amount: {{amount}},
-                                        is ours:
-                                        {{#mine_output}}
-                                            <span style="color: #008009;font-weight: bold">{{mine_output}}</span>
-                                        {{/mine_output}}
-                                        {{^mine_output}}
-                                            {{mine_output}}
-                                        {{/mine_output}}
-                                    </h6>
-
-                                {{/found_outputs}}
+                                <tr><td>
+                                    <div class="center">
+                                        <table class="center">
+                                            <tr>
+                                                <td>output public key</td>
+                                                <td>amount</td>
+                                                <td>is ours?</td>
+                                            </tr>
+                                        {{#found_outputs}}
+                                                <tr>
+                                                    <td>{{my_public_key}}</td>
+                                                    <td>{{amount}}</td>
+                                                    <td>
+                                                        {{#mine_output}}
+                                                            <span style="color: #008009;font-weight: bold">{{mine_output}}</span>
+                                                        {{/mine_output}}
+                                                        {{^mine_output}}
+                                                            {{mine_output}}
+                                                        {{/mine_output}}
+                                                    </td>
+                                                </tr>
+                                        {{/found_outputs}}
+                                        </table>
+                                    </div>
+                                </td></tr>
                             {{/has_found_outputs}}
+                           </table>
+                        </div>
                         {{/mixin_outputs}}
                     {{/has_mixin_outputs}}
                 {{/mixins}}
