@@ -86,7 +86,7 @@
                     <h5 style="margin: 0px">
                         For RingCT transactions, outputs' amounts are also decoded
                         <br/>
-                        Note: these calculations are done on the server side
+                        Note: address and viewkey are sent to server, as the calculations are done on the server side
                     </h5>
                     <form action="/myoutputs" method="post" style="width:100%; margin-top:2px" class="style-1">
                         <input type="hidden" name="tx_hash" value="{{tx_hash}}"><br/>
@@ -107,7 +107,7 @@
                         Tx private key can be obtained using <i>get_tx_key</i>
                         command in  <i>monero-wallet-cli</i> command line tool
                         <br/>
-                        Note: these calculations are done on the server side
+                        Note: address and tx private key are sent to server, as the calculations are done on the server side
                     </h5>
                     <form action="/prove" method="post" style="width:100%;margin-top:2px" class="style-1">
                        <input type="hidden" name="tx_hash" value="{{tx_hash}}"><br/>
