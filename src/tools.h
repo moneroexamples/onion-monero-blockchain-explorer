@@ -30,6 +30,8 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <iterator>
+#include <algorithm>
 
 /**
  * Some helper functions used in the example.
@@ -301,6 +303,20 @@ make_printable(const string& in_s);
 
 string
 get_human_readable_timestamp(uint64_t ts);
+
+// Get the median of an unordered set of numbers of arbitrary
+// type without modifying the underlying dataset.
+// taken from http://stackoverflow.com/a/19695285
+template <typename It>
+typename std::iterator_traits<It>::value_type
+calc_median(It it_begin, It it_end)
+{
+    using T = typename std::iterator_traits<It>::value_type;
+    std::vector<T> data(it_begin, it_end);
+    std::nth_element(data.begin(), data.begin() + data.size() / 2, data.end());
+    return data[data.size() / 2];
+}
+
 
 }
 

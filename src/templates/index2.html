@@ -23,11 +23,15 @@
     {{{mempool_info}}}
 
     {{#is_page_zero}}
-      <h2>Transactions in the last 25 blocks</h2>
+      <h2 style="margin-bottom: 0px">Transactions in the last 25 blocks</h2>
     {{/is_page_zero}}
     {{^is_page_zero}}
-      <h2>Transactions in older blocks<!--(height: {{height}})--></h2>
+      <h2 style="margin-bottom: 0px">Transactions in older blocks<!--(height: {{height}})--></h2>
     {{/is_page_zero}}
+
+    <h4 style="font-size: 14px; margin-top: 0px">(Median size of these blocks: {{blk_size_median}} kB)</h4>
+
+
 
     <div class="center">
 
@@ -35,18 +39,20 @@
                 <tr>
                     <td>height</td>
                     <td>age {{age_format}}<!--(Δm)--></td>
+                    <td>size [kB]<!--(Δm)--></td>
                     <td>tx hash</td>
                     <td>fees</td>
                     <td>outputs</td>
                     <td>in/out</td>
                     <td>rct/type</td>
                     <td>mixin</td>
-                    <td>size [kB]</td>
+                    <td>tx size [kB]</td>
                 </tr>
                 {{#txs}}
                 <tr>
                     <td><a href="/block/{{height}}">{{height}}</a></td>
                     <td>{{age}}<!--{{time_delta}}--></td>
+                    <td>{{blk_size}}</td>
                     <td><a href="/tx/{{hash}}">{{hash}}</a></td>
                     <td>{{tx_fee_short}}</td>
                     <td>{{sum_outputs_short}}</td>

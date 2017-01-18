@@ -522,6 +522,8 @@ public:
         // previous blk timestamp, initalised to lowest possible value
         double prev_blk_timestamp {std::numeric_limits<double>::lowest()};
 
+        vector<double> blk_sizes;
+
         // iterate over last no_of_last_blocks of blocks
         for (uint64_t i = start_height; i <= end_height; ++i)
         {
@@ -537,11 +539,17 @@ public:
             // get block's hash
             crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
 
+            // get block size in kB
+            double blk_size = static_cast<double>(core_storage->get_db().get_block_size(i))/1024.0;
+
+            string blk_size_str = fmt::format("{:0.2f}", blk_size);
+
+            blk_sizes.push_back(blk_size);
+
             // remove "<" and ">" from the hash string
             string blk_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", blk_hash));
 
             // get block age
-
             pair<string, string> age = get_age(server_timestamp, blk.timestamp);
 
             context["age_format"] = age.second;
@@ -585,6 +593,7 @@ public:
                 txd_map.insert({"age"       , age.first});
                 txd_map.insert({"is_ringct" , (tx.version > 1)});
                 txd_map.insert({"rct_type"  , tx.rct_signatures.type});
+                txd_map.insert({"blk_size"  , blk_size_str});
 
 
                 // do not show block info for other than
@@ -595,6 +604,7 @@ public:
                     txd_map["height"]     = string("");
                     txd_map["age"]        = string("");
                     txd_map["time_delta"] = string("");
+                    txd_map["blk_size"]   = string("");
                 }
 
                 txs.push_back(txd_map);
@@ -607,17 +617,15 @@ public:
 
         } // for (uint64_t i = start_height; i <= end_height; ++i)
 
+        // calculate median size of the blocks shown
+        double blk_size_median = xmreg::calc_median(blk_sizes.begin(), blk_sizes.end());
+
+        context["blk_size_median"] = fmt::format("{:0.2f}", blk_size_median);
+
         // reverse txs and remove last (i.e., oldest)
         // tx. This is done so that time delats
         // are easier to calcualte in the above for loop
         std::reverse(txs.begin(), txs.end());
-
-        // if we look at the genesis time, we should not remove
-        // the last block, i.e. genesis one.
-        if (!(start_height < 2))
-        {
-          //txs.pop_back();
-        }
 
         // get memory pool rendered template
         string mempool_html = mempool();
