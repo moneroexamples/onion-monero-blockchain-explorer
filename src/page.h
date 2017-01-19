@@ -1335,13 +1335,6 @@ public:
 
         bool show_key_images {false};
 
-        unique_ptr<xmreg::MyLMDB> mylmdb;
-
-        if (bf::is_directory(lmdb2_path))
-        {
-            mylmdb = make_unique<xmreg::MyLMDB>(lmdb2_path);
-        }
-
         mstch::array inputs;
 
         vector<txin_to_key> input_key_imgs = xmreg::get_key_images(tx);
@@ -1350,12 +1343,6 @@ public:
 
         for (const txin_to_key& in_key: input_key_imgs)
         {
-
-            if (!mylmdb)
-            {
-                show_key_images = false;
-                break;
-            }
 
             // get absolute offsets of mixins
             std::vector<uint64_t> absolute_offsets
