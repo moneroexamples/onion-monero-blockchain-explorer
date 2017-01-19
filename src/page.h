@@ -2750,30 +2750,35 @@ public:
                                     // seems we found our output. so now lets decode its amount
                                     // using ringct
 
-                                    bool r;
-
-                                    r = decode_ringct(output_source_tx.rct_signatures,
-                                                      tx_pub_key,
-                                                      prv_view_key,
-                                                      output_idx_in_tx,
-                                                      output_source_tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask,
-                                                      rct_amount);
-
-                                    if (!r)
+                                    if (output_source_tx.version == 2
+                                        && !is_coinbase(output_source_tx))
                                     {
-                                        string error_msg = fmt::format(
-                                                "Cant decode ringCT for "
-                                                "pub_tx_key: {:s} "
-                                                "using prv_view_key: {:s}",
-                                                tx_pub_key, prv_view_key);
+                                        bool r;
 
-                                        context["has_error"] = true;
-                                        context["error_msg"] = error_msg;
+                                        r = decode_ringct(output_source_tx.rct_signatures,
+                                                          tx_pub_key,
+                                                          prv_view_key,
+                                                          output_idx_in_tx,
+                                                          output_source_tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask,
+                                                          rct_amount);
 
-                                        return mstch::render(full_page, context);
-                                    }
+                                        if (!r)
+                                        {
+                                            string error_msg = fmt::format(
+                                                    "Cant decode ringCT for "
+                                                            "pub_tx_key: {:s} "
+                                                            "using prv_view_key: {:s}",
+                                                    tx_pub_key, prv_view_key);
 
-                                    xmr_amount = rct_amount;
+                                            context["has_error"] = true;
+                                            context["error_msg"] = error_msg;
+
+                                            return mstch::render(full_page, context);
+                                        }
+
+                                        xmr_amount = rct_amount;
+
+                                    } // if (output_source_tx.version == 2 && !is_coinbase(output_source_tx))
 
                                     break;
 
