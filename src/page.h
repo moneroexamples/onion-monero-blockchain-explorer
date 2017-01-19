@@ -1580,6 +1580,8 @@ public:
 
                 has_mixin_outputs = found_something;
 
+                has_mixin_outputs = found_something;
+
             } // for (const cryptonote::output_data_t& output_data: mixin_outputs)
 
 
