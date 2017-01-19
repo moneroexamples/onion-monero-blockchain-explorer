@@ -168,30 +168,7 @@ configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates ${CMAKE_CURRENT_BINARY
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates/css ${CMAKE_CURRENT_BINARY_DIR}/templates/css)
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates/partials ${CMAKE_CURRENT_BINARY_DIR}/templates/partials)
 
-if (APPLE)
-target_link_libraries(${PROJECT_NAME}
-        myxrm
-        myext
-        mstch
-        wallet
-        cryptonote_core
-        cryptonote_protocol
-        blockchain_db
-        cryptoxmr
-        blocks
-        lmdb
-        ringct
-        common
-        mnemonics
-        ${Boost_LIBRARIES}
-        pthread
-        unbound
-        curl
-        dl
-        crypto
-        ssl)
-else()
-target_link_libraries(${PROJECT_NAME}
+set(LIBRARIES
         myxrm
         myext
         mstch
@@ -209,9 +186,13 @@ target_link_libraries(${PROJECT_NAME}
         ${Boost_LIBRARIES}
         pthread
         unbound
-        unwind
         curl
         dl
         crypto
         ssl)
+
+if (!APPLE)
+        set(LIBRARIES ${LIBRARIES} unwind)
 endif()
+
+target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
