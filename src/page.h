@@ -1346,6 +1346,8 @@ public:
 
         vector<txin_to_key> input_key_imgs = xmreg::get_key_images(tx);
 
+        uint64_t sum_mixin_xmr {0};
+
         for (const txin_to_key& in_key: input_key_imgs)
         {
 
@@ -1570,6 +1572,8 @@ public:
 
                         found_something = true;
                         show_key_images = true;
+
+                        sum_mixin_xmr += amount;
                     }
 
                 } // for (const pair<txout_to_key, uint64_t>& mix_out: txd.output_pub_keys)
@@ -1594,7 +1598,13 @@ public:
         context["sum_xmr"]           = xmreg::xmr_amount_to_str(sum_xmr);
 
         context.emplace("inputs", inputs);
-        context["show_inputs"] = show_key_images;
+        context["show_inputs"]   = show_key_images;
+        context["sum_mixin_xmr"] = xmreg::xmr_amount_to_str(sum_mixin_xmr);
+
+        //                            (outcoming - incoming)   - fee
+        uint64_t possible_spending   = (sum_mixin_xmr - sum_xmr) - txd.fee;
+        context["possible_spending"] = xmreg::xmr_amount_to_str(possible_spending);
+
 
         // read my_outputs.html
         string my_outputs_html = xmreg::read(TMPL_MY_OUTPUTS);

@@ -63,7 +63,7 @@
         </table>
 
         <h3>
-            Sum XMR from matched outputs:
+            Sum XMR from matched outputs (i.e., incoming XMR):
             {{#found_our_outputs}}
                 {{sum_xmr}}
             {{/found_our_outputs}}
@@ -127,7 +127,14 @@
             {{/inputs}}
 
         </div>
-
+        <h3>
+            Sum XMR from matched mixin's outputs: {{sum_mixin_xmr}}
+            <br/>
+            <span style="font-size: 16px"> Possible spending is: {{possible_spending}}</span>
+                <br/>
+            <span style="font-size: 14px">Note: without private spendkey, it is impossible to know whether this is your real spending.
+                So do not take this number seriously. It is just a guess.</span>
+        </h3>
     {{/show_inputs}}
 
 
