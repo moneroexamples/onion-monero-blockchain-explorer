@@ -1560,7 +1560,8 @@ public:
                             {"mine_output"     , mine_output},
                             {"out_idx"         , to_string(output_idx_in_tx)},
                             {"formed_output_pk", out_pub_key_str},
-                            {"amount"          , xmreg::xmr_amount_to_str(amount)},
+                            {"out_in_match"    , (amount == in_key.amount)},
+                            {"amount"          , xmreg::xmr_amount_to_str(amount)}
                     });
 
                     if (mine_output)
@@ -1573,16 +1574,26 @@ public:
                         found_something = true;
                         show_key_images = true;
 
-                        sum_mixin_xmr += amount;
+
+
+                        // for regular txs, just concentrated on outputs
+                        // which have same amount as the key image.
+                        // for ringct its not possible to know for sure amount
+                        // in key image without spend key, so we just use all
+                        if (mixin_tx.version < 2 && amount == in_key.amount)
+                        {
+                            sum_mixin_xmr += amount;
+                        }
+                        else if (mixin_tx.version == 2) // ringct
+                        {
+                            sum_mixin_xmr += amount;
+                        }
+
                     }
 
                 } // for (const pair<txout_to_key, uint64_t>& mix_out: txd.output_pub_keys)
 
                 has_found_outputs = !found_outputs.empty();
-
-
-
-                has_mixin_outputs = found_something;
 
                 has_mixin_outputs = found_something;
 
@@ -1594,16 +1605,27 @@ public:
 
 
         context.emplace("outputs", outputs);
+
         context["found_our_outputs"] = (sum_xmr > 0);
         context["sum_xmr"]           = xmreg::xmr_amount_to_str(sum_xmr);
 
         context.emplace("inputs", inputs);
+
         context["show_inputs"]   = show_key_images;
+        context["inputs_no"]     = inputs.size();
         context["sum_mixin_xmr"] = xmreg::xmr_amount_to_str(sum_mixin_xmr);
 
-        //                            (outcoming - incoming)   - fee
-        uint64_t possible_spending   = (sum_mixin_xmr - sum_xmr) - txd.fee;
-        context["possible_spending"] = xmreg::xmr_amount_to_str(possible_spending);
+
+
+        uint64_t possible_spending  {0};
+
+        if (sum_mixin_xmr > (sum_xmr + txd.fee))
+        {
+            //                  (outcoming    - incoming) - fee
+            possible_spending = (sum_mixin_xmr - sum_xmr) - txd.fee;
+        }
+        context["possible_spending"] = xmreg::xmr_amount_to_str(
+                possible_spending, "{:0.12f}", false);
 
 
         // read my_outputs.html

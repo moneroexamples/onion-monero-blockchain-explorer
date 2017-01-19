@@ -245,13 +245,22 @@ parse(const std::string& str, string format="%Y-%m-%d %H:%M:%S");
 
 static
 string
-xmr_amount_to_str(const uint64_t& xmr_amount, string _format="{:0.12f}")
+xmr_amount_to_str(const uint64_t& xmr_amount,
+                  string _format="{:0.12f}",
+                  bool zero_to_question_mark=true)
 {
     string amount_str = "?";
 
-    if (xmr_amount > 0)
+    if (!zero_to_question_mark)
     {
         amount_str = fmt::format(_format, XMR_AMOUNT(xmr_amount));
+    }
+    else
+    {
+        if (xmr_amount > 0 && zero_to_question_mark == true)
+        {
+            amount_str = fmt::format(_format, XMR_AMOUNT(xmr_amount));
+        }
     }
 
     return amount_str;
