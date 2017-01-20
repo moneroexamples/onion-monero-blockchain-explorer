@@ -306,7 +306,7 @@ int main(int ac, const char* av[]) {
 
     CROW_ROUTE(app, "/mempool")
     ([&](const crow::request& req) {
-        return xmrblocks.mempool();
+        return xmrblocks.mempool(true);
     });
 
     CROW_ROUTE(app, "/robots.txt")

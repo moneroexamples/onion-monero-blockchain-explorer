@@ -651,7 +651,7 @@ public:
      * Render mempool data
      */
     string
-    mempool()
+    mempool(bool add_header_and_footer = false)
     {
         std::vector<tx_info> mempool_txs;
 
@@ -774,8 +774,21 @@ public:
             return t1 > t2;
         });
 
-        // read index.html
+
+        // read mempool.html
         string mempool_html = xmreg::read(TMPL_MEMPOOL);
+
+        if (add_header_and_footer)
+        {
+            add_css_style(context);
+
+            // add header and footer
+            string full_page = get_full_page(mempool_html);
+
+            // render the page
+            return mstch::render(full_page, context);
+        }
+
 
         // render the page
         return mstch::render(mempool_html, context);
