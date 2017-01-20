@@ -1,10 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
 
-#list(INSERT
- #       CMAKE_MODULE_PATH 0 ${PROJECT_SOURCE_DIR}/cmake)
-set(CMAKE_MODULE_PATH
-        ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-
 set(PROJECT_NAME
         xmrblocks)
 
@@ -191,7 +186,7 @@ set(LIBRARIES
         crypto
         ssl)
 
-if (!APPLE)
+if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         set(LIBRARIES ${LIBRARIES} unwind)
 endif()
 

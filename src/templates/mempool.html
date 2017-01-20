@@ -1,12 +1,14 @@
-<h2>
-   Memory pool (no of txs: {{mempool_size}}, size: {{mempool_size_kB}} kB)
+<h2 style="margin-bottom: 0px">
+   Memory pool
 </h2>
+<h4 style="font-size: 14px; margin-top: 0px">(no of txs: {{mempool_size}}, size: {{mempool_size_kB}} kB)</h4>
 <div class="center">
     
       <table class="center">
             <tr>
                 <td>height</td>
                 <td>age [h:m:s]</td>
+                <td>size [kB]<!--(Δm)--></td>
                 <td>transaction hash</td>
                 <td>fee</td>
                 <td>outputs</td>
@@ -19,6 +21,7 @@
             <tr>
                 <td>N/A</td>
                 <td>{{age}}</td>
+                <td>N/A</td>
                 <td><a href="/tx/{{hash}}">{{hash}}</a></td>
                 <td>{{fee}}</td>
                 <td>{{xmr_outputs}}</td>
@@ -29,6 +32,15 @@
             </tr>
             {{/mempooltxs}}
         </table>
+
+    {{^mempool_fits_on_front_page}}
+      {{#partial_mempool_shown}}
+      <div class="center" style="text-align: center">
+          <a href="/mempool">Only {{no_of_mempool_tx_of_frontpage}} txs shown. Click here to see all off them</a>
+      </div>
+      {{/partial_mempool_shown}}
+
+    {{/mempool_fits_on_front_page}}
 
 
 </div>

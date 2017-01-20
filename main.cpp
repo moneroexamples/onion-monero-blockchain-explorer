@@ -304,6 +304,11 @@ int main(int ac, const char* av[]) {
         return xmrblocks.search(string(req.url_params.get("value")));
     });
 
+    CROW_ROUTE(app, "/mempool")
+    ([&](const crow::request& req) {
+        return xmrblocks.mempool(true);
+    });
+
     CROW_ROUTE(app, "/robots.txt")
     ([&]() {
         string text = "User-agent: *\n"
