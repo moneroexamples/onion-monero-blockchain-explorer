@@ -258,6 +258,9 @@ class page {
     bool enable_pusher;
 
 
+    uint64_t no_of_mempool_tx_of_frontpage;
+
+
 public:
 
     page(MicroCore* _mcore, Blockchain* _core_storage,
@@ -272,6 +275,7 @@ public:
               enable_pusher {_enable_pusher}
     {
         css_styles = xmreg::read(TMPL_CSS_STYLES);
+        no_of_mempool_tx_of_frontpage = 25;
     }
 
 
@@ -774,13 +778,15 @@ public:
             return t1 > t2;
         });
 
-
         // read mempool.html
         string mempool_html = xmreg::read(TMPL_MEMPOOL);
 
         if (add_header_and_footer)
         {
+            // this is when mempool is on its own page, /mempool
             add_css_style(context);
+
+            context["partial_mempool_shown"] = false;
 
             // add header and footer
             string full_page = get_full_page(mempool_html);
@@ -789,6 +795,19 @@ public:
             return mstch::render(full_page, context);
         }
 
+        // this is for partial disply on front page.
+
+        context["mempool_fits_on_front_page"]    = (txs.size() <= no_of_mempool_tx_of_frontpage);
+        context["no_of_mempool_tx_of_frontpage"] = no_of_mempool_tx_of_frontpage;
+
+        if (txs.size() > no_of_mempool_tx_of_frontpage)
+        {
+            // dont show more than the specific number mempool txs on
+            // the front page
+            txs.resize(no_of_mempool_tx_of_frontpage);
+        }
+
+        context["partial_mempool_shown"] = true;
 
         // render the page
         return mstch::render(mempool_html, context);
