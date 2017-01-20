@@ -1415,7 +1415,6 @@ public:
             size_t count = 0;
 
             // for each found output public key check if its ours or not
-            //for (const cryptonote::output_data_t& output_data: mixin_outputs)
             for (const uint64_t& abs_offset: absolute_offsets)
             {
 
@@ -1581,9 +1580,12 @@ public:
                             {"mine_output"     , mine_output},
                             {"out_idx"         , to_string(output_idx_in_tx)},
                             {"formed_output_pk", out_pub_key_str},
-                            {"out_in_match"    , (amount == in_key.amount)},
+                            {"out_in_match"    , (txout_k.key == output_data.pubkey)},
                             {"amount"          , xmreg::xmr_amount_to_str(amount)}
                     });
+
+                    //cout << "txout_k.key == output_data.pubkey" << endl;
+                    //cout << pod_to_hex(txout_k.key) << " == " << pod_to_hex(output_data.pubkey) << endl;
 
                     if (mine_output)
                     {
@@ -1623,6 +1625,8 @@ public:
                 has_found_outputs = !found_outputs.empty();
 
                 has_mixin_outputs = found_something;
+
+                ++count;
 
             } // for (const cryptonote::output_data_t& output_data: mixin_outputs)
 
