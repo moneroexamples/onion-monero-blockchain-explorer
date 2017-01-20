@@ -1595,7 +1595,13 @@ public:
                         found_something = true;
                         show_key_images = true;
 
-
+                        // increase sum_mixin_xmr only when
+                        // public key of an outputs used in ring signature,
+                        // matches a public key in a mixin_tx
+                        if (txout_k.key != output_data.pubkey)
+                        {
+                            continue;
+                        }
 
                         // for regular txs, just concentrated on outputs
                         // which have same amount as the key image.
