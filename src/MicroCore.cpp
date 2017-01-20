@@ -109,33 +109,32 @@ namespace xmreg
     bool
     MicroCore::get_block_by_height(const uint64_t& height, block& blk)
     {
-
-        crypto::hash block_id;
-
         try
         {
-            block_id = m_blockchain_storage.get_block_id_by_height(height);
+            blk = m_blockchain_storage.get_db().get_block_from_height(height);
         }
-        catch (const exception& e)
+        catch (const BLOCK_DNE& e)
         {
-            cerr << e.what() << endl;
-            return false;
-        }
-
-        if (!m_blockchain_storage.have_block(block_id))
-        {
-            cerr << "Block with hash " << block_id
+            cerr << "Block of height " << height
                  << " not found in the blockchain!"
+                 << e.what()
                  << endl;
 
             return false;
         }
-
-        if (!m_blockchain_storage.get_block_by_hash(block_id, blk))
+        catch (const DB_ERROR& e)
         {
-            cerr << "Block with hash " << block_id
-                 << "and height " << height << " not found!"
+            cerr << "Blockchain access error when getting block " << height
+                 << e.what()
                  << endl;
+
+            return false;
+        }
+        catch (...)
+        {
+            cerr << "Something went terribly wrong when getting block " << height
+                 << endl;
+
             return false;
         }
 

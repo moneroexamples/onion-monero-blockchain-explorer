@@ -40,7 +40,7 @@
     <div class="center">
         <table class="center" >
             <tr>
-                <td>Stealth address</td>
+                <td>output public key</td>
                 <td>amount</td>
                 <td>output match?</td>
             </tr>
@@ -63,7 +63,7 @@
         </table>
 
         <h3>
-            Sum XMR from matched outputs:
+            Sum XMR from matched outputs (i.e., incoming XMR):
             {{#found_our_outputs}}
                 {{sum_xmr}}
             {{/found_our_outputs}}
@@ -75,43 +75,78 @@
     </div>
 
     {{#show_inputs}}
+    <br/>
+    <label id="show-decoded-inputs" for="toggle-1">Show decoded inputs</label>
+    <input type="checkbox" id="toggle-1">
 
-    <hr>
-
-    <h3>Inputs</h3>
+    <div id="decoded-inputs">
+    <h3>Inputs ({{inputs_no}})</h3>
         <div class="center">
             {{#inputs}}
                 <h4>Key image: {{key_image}}, amount {{key_image_amount}}</h4>
                 {{#mixins}}
-                    <h5>Mixin of pub key: {{mixin_pub_key}}</h5>
-                    {{#mixin_outputs}}
-                      <h5>
-                          uses outputs from tx:
-                          <a href="/tx/{{mix_tx_hash}}">{{mix_tx_hash}}</a>
-                      </h5>
-                        {{#found_outputs}}
-
-                            <h6 style="font-family: 'Lucida Console', Monaco, monospace;  font-size: 12px;     font-weight: normal;">
-                                Output public key: {{my_public_key}},
-                                amount: {{amount}},
-                                is ours:
-                                {{#mine_output}}
-                                    <span style="color: #008009;font-weight: bold">{{mine_output}}</span>
-                                {{/mine_output}}
-                                {{^mine_output}}
-                                    {{mine_output}}
-                                {{/mine_output}}
-                            </h6>
-
-                        {{/found_outputs}}
-                    {{/mixin_outputs}}
-
+                    {{#has_mixin_outputs}}
+                        {{#mixin_outputs}}
+                        <div class="center">
+                            <table class="center">
+                              <tr>
+                                  <td style="text-align: center;">
+                                      Mixin {{mixin_pub_key}} might use your outputs
+                                      <br/>
+                                      from tx of public key: <a href="/tx/{{mix_tx_hash}}">{{mix_tx_pub_key}}</a>
+                                  </td>
+                              </tr>
+                            {{#has_found_outputs}}
+                                <tr><td>
+                                    <div class="center">
+                                        <table class="center">
+                                            <tr>
+                                                <td>output public key</td>
+                                                <td>amount</td>
+                                                <td>output match?</td>
+                                            </tr>
+                                        {{#found_outputs}}
+                                                <tr>
+                                                    <td>{{my_public_key}}</td>
+                                                    <td>{{amount}}</td>
+                                                    <td>
+                                                        {{#mine_output}}
+                                                            <span style="color: #008009;font-weight: bold">{{mine_output}}</span>{{#out_in_match}}*{{/out_in_match}}
+                                                        {{/mine_output}}
+                                                        {{^mine_output}}
+                                                            {{mine_output}}
+                                                        {{/mine_output}}
+                                                    </td>
+                                                </tr>
+                                        {{/found_outputs}}
+                                        </table>
+                                    </div>
+                                </td></tr>
+                            {{/has_found_outputs}}
+                           </table>
+                        </div>
+                        {{/mixin_outputs}}
+                    {{/has_mixin_outputs}}
                 {{/mixins}}
             {{/inputs}}
 
         </div>
+        <h3>
+            Sum XMR from matched mixin's outputs: {{sum_mixin_xmr}}
+            <br/>
+            <span style="font-size: 16px"> Possible spending is:
+                {{possible_spending}} (tx fee included)
+            </span>
+                <br/>
+            <span style="font-size: 14px">Note: without private spendkey,
+                it is impossible to know whether this is your real spending. <br/>
+                So do not take this number seriously.
+                It is probably totally wrong anyway.</span>
+        </h3>
+    </div>
 
     {{/show_inputs}}
 
 
 </div>
+<br/>
