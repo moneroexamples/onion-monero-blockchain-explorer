@@ -112,3 +112,30 @@ form {
 [type=radio]:checked ~ label ~ .content {
     z-index: 1;
 }
+
+input#toggle-1[type=checkbox] {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+
+}
+label#show-decoded-inputs {
+    /*-webkit-appearance: push-button;*/
+    /*-moz-appearance: button;*/
+    display: inline-block;
+    /*margin: 60px 0 10px 0;*/
+    cursor: pointer;
+    background-color: black;;
+    color: white;
+    width: 100%;
+    text-align: center;
+}
+
+div#decoded-inputs{
+    display: none;
+}
+
+/* Toggled State */
+input#toggle-1[type=checkbox]:checked ~ div#decoded-inputs {
+    display: block;
+}
