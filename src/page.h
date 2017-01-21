@@ -1372,7 +1372,13 @@ public:
 
         vector<txin_to_key> input_key_imgs = xmreg::get_key_images(tx);
 
+        // to hold sum of xmr in matched mixins, those that
+        // perfectly match mixin public key with outputs in mixn_tx.
         uint64_t sum_mixin_xmr {0};
+
+        // this is used for the final check. we assument that number of
+        // parefct matches must be equal to number of inputs in a tx.
+        uint64_t no_of_matched_mixins {0};
 
         for (const txin_to_key& in_key: input_key_imgs)
         {
@@ -1415,7 +1421,6 @@ public:
             size_t count = 0;
 
             // for each found output public key check if its ours or not
-            //for (const cryptonote::output_data_t& output_data: mixin_outputs)
             for (const uint64_t& abs_offset: absolute_offsets)
             {
 
@@ -1581,26 +1586,35 @@ public:
                             {"mine_output"     , mine_output},
                             {"out_idx"         , to_string(output_idx_in_tx)},
                             {"formed_output_pk", out_pub_key_str},
-                            {"out_in_match"    , (amount == in_key.amount)},
+                            {"out_in_match"    , (txout_k.key == output_data.pubkey)},
                             {"amount"          , xmreg::xmr_amount_to_str(amount)}
                     });
 
+                    //cout << "txout_k.key == output_data.pubkey" << endl;
+                    //cout << pod_to_hex(txout_k.key) << " == " << pod_to_hex(output_data.pubkey) << endl;
+
                     if (mine_output)
                     {
-//                            cout << " - " << pod_to_hex(txout_k.key)
-//                                 <<": " << mine_output << " amount: "
-//                                 << xmreg::xmr_amount_to_str(amount)
-//                                 << endl;
 
                         found_something = true;
                         show_key_images = true;
 
+                        // increase sum_mixin_xmr only when
+                        // public key of an outputs used in ring signature,
+                        // matches a public key in a mixin_tx
+                        if (txout_k.key != output_data.pubkey)
+                        {
+                            continue;
+                        }
 
+                        no_of_matched_mixins++;
 
                         // for regular txs, just concentrated on outputs
                         // which have same amount as the key image.
                         // for ringct its not possible to know for sure amount
                         // in key image without spend key, so we just use all
+                        // for regular/old txs there must be also a match
+                        // in amounts, not only in output public keys
                         if (mixin_tx.version < 2 && amount == in_key.amount)
                         {
                             sum_mixin_xmr += amount;
@@ -1618,6 +1632,8 @@ public:
 
                 has_mixin_outputs = found_something;
 
+                ++count;
+
             } // for (const cryptonote::output_data_t& output_data: mixin_outputs)
 
 
@@ -1634,19 +1650,27 @@ public:
 
         context["show_inputs"]   = show_key_images;
         context["inputs_no"]     = static_cast<uint64_t>(inputs.size());
-        context["sum_mixin_xmr"] = xmreg::xmr_amount_to_str(sum_mixin_xmr);
-
+        context["sum_mixin_xmr"] = xmreg::xmr_amount_to_str(
+                sum_mixin_xmr, "{:0.12f}", false);
 
 
         uint64_t possible_spending  {0};
 
-        if (sum_mixin_xmr > (sum_xmr + txd.fee))
+        // show spending only if sum of mixins is more than
+        // what we get + fee, and number of perferctly matched
+        // mixis is equal to number of inputs
+        if (sum_mixin_xmr > (sum_xmr + txd.fee)
+                && no_of_matched_mixins == inputs.size())
         {
             //                  (outcoming    - incoming) - fee
             possible_spending = (sum_mixin_xmr - sum_xmr) - txd.fee;
         }
+
         context["possible_spending"] = xmreg::xmr_amount_to_str(
                 possible_spending, "{:0.12f}", false);
+
+
+        //cout << "no_of_matched_mixins: " << no_of_matched_mixins << endl;
 
 
         // read my_outputs.html
