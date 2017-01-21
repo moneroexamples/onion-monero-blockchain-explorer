@@ -1460,7 +1460,7 @@ public:
 
                 mixins.push_back(mstch::map{
                         {"mixin_pub_key"      , out_pub_key_str},
-                        {"mixin_outputs"      , mstch::array{}},
+                        make_pair<string, mstch::array>("mixin_outputs"      , mstch::array{}),
                         {"has_mixin_outputs"  , false}
                 });
 
@@ -1501,7 +1501,7 @@ public:
                 mixin_outputs.push_back(mstch::map{
                         {"mix_tx_hash"      , tx_hash_str},
                         {"mix_tx_pub_key"   , mixin_tx_pub_key_str},
-                        {"found_outputs"    , mstch::array{}},
+                        make_pair<string, mstch::array>("found_outputs"    , mstch::array{}),
                         {"has_found_outputs", false}
                 });
 
@@ -1643,7 +1643,7 @@ public:
         context.emplace("inputs", inputs);
 
         context["show_inputs"]   = show_key_images;
-        context["inputs_no"]     = inputs.size();
+        context["inputs_no"]     = static_cast<uint64_t>(inputs.size());
         context["sum_mixin_xmr"] = xmreg::xmr_amount_to_str(sum_mixin_xmr);
 
 
@@ -3945,7 +3945,9 @@ private:
 
         if (core_storage->have_tx(tx_hash))
         {
-            tx_blk_height = core_storage->get_db().get_tx_block_height(tx_hash);
+            // currently get_tx_block_height seems to return a block hight
+            // +1. Before it was not like this.
+            tx_blk_height = core_storage->get_db().get_tx_block_height(tx_hash) - 1;
             tx_blk_found = true;
         }
 
