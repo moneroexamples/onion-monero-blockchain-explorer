@@ -3935,7 +3935,9 @@ private:
 
         if (core_storage->have_tx(tx_hash))
         {
-            tx_blk_height = core_storage->get_db().get_tx_block_height(tx_hash);
+            // currently get_tx_block_height seems to return a block hight
+            // +1. Before it was not like this.
+            tx_blk_height = core_storage->get_db().get_tx_block_height(tx_hash) - 1;
             tx_blk_found = true;
         }
 
