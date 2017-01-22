@@ -1464,6 +1464,8 @@ public:
                     break;
                 }
 
+                string mixin_tx_hash_str = pod_to_hex(tx_out_idx.first);
+
                 mixins.push_back(mstch::map{
                         {"mixin_pub_key"      , out_pub_key_str},
                         make_pair<string, mstch::array>("mixin_outputs"      , mstch::array{}),
@@ -1505,7 +1507,7 @@ public:
                 output_pub_keys = xmreg::get_ouputs_tuple(mixin_tx);
 
                 mixin_outputs.push_back(mstch::map{
-                        {"mix_tx_hash"      , tx_hash_str},
+                        {"mix_tx_hash"      , mixin_tx_hash_str},
                         {"mix_tx_pub_key"   , mixin_tx_pub_key_str},
                         make_pair<string, mstch::array>("found_outputs"    , mstch::array{}),
                         {"has_found_outputs", false}
