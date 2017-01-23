@@ -1364,7 +1364,6 @@ public:
         // this can show possible spending. Only possible, because
         // without a spend key, we cant know for sure. It might be
         // that our output was used by someone else for their mixins.
-        // For this we can look in our custom db, for efficiencly
 
         bool show_key_images {false};
 
