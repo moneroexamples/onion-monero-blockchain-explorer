@@ -23,12 +23,8 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
 
 ## Address
 
-Tor users - most up to date:
- 
- - [http://3ccmeg4dunrl7h3i.onion/](http://3ccmeg4dunrl7h3i.onion/)
-
-Clearnet versions - less up to date:
- - [https://xmrchain.net/](https://xmrchain.net/) - https enabled.
+Clearnet versions:
+ - [https://xmrchain.net/](https://xmrchain.net/) - https enabled and most up to date.
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as above.
  - [http://blox.supportxmr.com/](http://blox.supportxmr.com/)
  - [https://explorer.xmr.my/](https://explorer.xmr.my/)
@@ -37,13 +33,14 @@ Clearnet testnet Monero version - - https enabled:
   
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/)
 
+Tor users - down for now:
+ 
+ - [http://3ccmeg4dunrl7h3i.onion/](http://3ccmeg4dunrl7h3i.onion/)
 
 i2p users (main Monero network) - down for now:
 
  - [http://monerotools.i2p](http://monerotools.i2p)
 
-
-Note: clearnet version might be not as up to date as the onion version.
  
 ## Onion Monero Blockchain Explorer features
 
@@ -169,7 +166,7 @@ xmrblocks, start Onion Monero Blockchain Explorer:
 
 ## Enable SSL (https)
 
-By default, the explorer does not use ssl. But It has such a functionality. 
+By default, the explorer does not use ssl. But it has such a functionality. 
 
 As an example, you can generate your own ssl certificates as follows:
 
@@ -202,7 +199,8 @@ To enable pushing the txs, use flag `--enable-pusher`, e.g.:
  
 Note: There has been a number of issues with compatibility of tx's binary data between different Monero versions
 and operating systems. Unless you are using latest development version of Monero and the explorer has been compiled
-against the lastest version, pushing txs might not work due to incompatibilities in binary data.
+against the lastest version, pushing and checking unsigined and signed tx data
+ might not work due to incompatibilities in binary data.
 
 ## Example screenshot
 
