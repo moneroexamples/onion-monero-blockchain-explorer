@@ -8,7 +8,7 @@ Curently available Monero blockchain explorer websites have several limitations 
  - are closed sourced,
  - are not available as hidden services,
  - provide only basic search capabilities,
- - do not support Monero testnet, i.e., they dont work with RingCT transactions
+ - do not support Monero testnet
 
 
 In this example, these limitations are addressed by development of
@@ -29,7 +29,7 @@ Clearnet versions:
  - [http://blox.supportxmr.com/](http://blox.supportxmr.com/)
  - [https://explorer.xmr.my/](https://explorer.xmr.my/)
  
-Clearnet testnet Monero version - - https enabled:
+Clearnet testnet Monero version - https enabled:
   
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/)
 
@@ -61,13 +61,11 @@ The key features of the Onion Monero Blockchain Explorer are:
  - the only explorer showing detailed information about mixins, such as, mixins'
  age, timescale, mixin of mixins,
  - the only explorer showing number of amount output indices,
- - the only explorer supporting Monero testnet network and RingCT,
+ - the only explorer supporting Monero testnet network,
  - the only explorer providing tx checker and pusher for online pushing of transactions,
  - the only explorer allowing to inspect encrypted key images file and output files.
 
 ## Prerequisite
-
-Everything here was done and tested using Monero 0.9.4 on Ubuntu 16.04 x86_64.
 
 Instruction for Monero 0.10.1 compilation and Monero headers and libraries setup are
 as shown here:
