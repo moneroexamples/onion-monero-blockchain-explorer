@@ -2007,12 +2007,51 @@ public:
 
             if (strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
             {
-                string msg = fmt::format("The data is neither unsigned nor signed tx! Its prefix is: {:s}",
-                                         data_prefix);
 
-                cout << msg << endl;
-                return string(msg);
-            }
+                // ok, so its not signed tx data. but maybe it is raw tx data
+                // used in rpc call "/sendrawtransaction". This is for example
+                // used in mymonero and openmonero projects.
+
+                // to check this, first we need to encode data back to base64.
+                // the reason is that txs submited to "/sendrawtransaction"
+                // are not base64, and we earlier always asume it is base64.
+
+                // string reencoded_raw_tx_data = epee::string_encoding::base64_decode(raw_tx_data);
+
+                cout << "raw_tx_data: " << raw_tx_data << endl;
+
+                cryptonote::blobdata tx_data_blob;
+
+                if (!epee::string_tools::parse_hexstr_to_binbuff(raw_tx_data, tx_data_blob))
+                {
+                    string msg = fmt::format("The data is neither unsigned, signed tx or raw tx! "
+                                              "Its prefix is: {:s}",
+                                             data_prefix);
+
+                    cout << msg << endl;
+
+                    return string(msg);
+                }
+
+                crypto::hash tx_hash_from_blob;
+                crypto::hash tx_prefix_hash_from_blob;
+                cryptonote::transaction tx_from_blob;
+
+                if (!cryptonote::parse_and_validate_tx_from_blob(tx_data_blob,
+                                                                 tx_from_blob,
+                                                                 tx_hash_from_blob,
+                                                                 tx_prefix_hash_from_blob))
+                {
+                    string msg = fmt::format("failed to validate transaction");
+
+                    cout << msg << endl;
+
+                    return string(msg);
+                }
+
+                cout << "tx_from_blob.vout.size(): " << tx_from_blob.vout.size() << endl;
+
+            } // if (strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
 
             context["data_prefix"] = data_prefix;
 
