@@ -2018,7 +2018,7 @@ public:
 
                 // string reencoded_raw_tx_data = epee::string_encoding::base64_decode(raw_tx_data);
 
-                cout << "raw_tx_data: " << raw_tx_data << endl;
+                //cout << "raw_tx_data: " << raw_tx_data << endl;
 
                 cryptonote::blobdata tx_data_blob;
 
@@ -2049,7 +2049,7 @@ public:
                     return string(msg);
                 }
 
-                cout << "tx_from_blob.vout.size(): " << tx_from_blob.vout.size() << endl;
+                //cout << "tx_from_blob.vout.size(): " << tx_from_blob.vout.size() << endl;
 
                 // tx has been correctly deserialized. So
                 // we just dispaly it. We dont have any information about real mixins, etc,
