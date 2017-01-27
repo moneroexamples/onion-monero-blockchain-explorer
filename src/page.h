@@ -2051,6 +2051,38 @@ public:
 
                 cout << "tx_from_blob.vout.size(): " << tx_from_blob.vout.size() << endl;
 
+                // tx has been correctly deserialized. So
+                // we just dispaly it. We dont have any information about real mixins, etc,
+                // so there is not much more we can do with tx data.
+
+                mstch::map tx_context = construct_tx_context(tx_from_blob);
+
+                if (boost::get<bool>(tx_context["has_error"]))
+                {
+                    return boost::get<string>(tx_context["error_msg"]);
+                }
+
+                context["data_prefix"] = string("none as this is pure raw tx data");
+
+                context.emplace("txs"     , mstch::array{});
+
+                boost::get<mstch::array>(context["txs"]).push_back(tx_context);
+
+                map<string, string> partials {
+                        {"tx_details", xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html")},
+                };
+
+                // read checkrawtx.html
+                string checkrawtx_html = xmreg::read(TMPL_MY_CHECKRAWTX);
+
+                // add header and footer
+                string full_page =  checkrawtx_html + get_footer();
+
+                add_css_style(context);
+
+                // render the page
+                return mstch::render(full_page, context, partials);
+
             } // if (strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
 
             context["data_prefix"] = data_prefix;
