@@ -1104,6 +1104,7 @@ public:
     show_my_outputs(string tx_hash_str,
                     string xmr_address_str,
                     string viewkey_str, /* or tx_prv_key_str when tx_prove == true */
+                    string raw_tx_data,
                     bool tx_prove = false)
     {
 
@@ -1111,6 +1112,7 @@ public:
         boost::trim(tx_hash_str);
         boost::trim(xmr_address_str);
         boost::trim(viewkey_str);
+        boost::trim(raw_tx_data);
 
         if (tx_hash_str.empty())
         {
@@ -1165,7 +1167,40 @@ public:
         // get transaction
         transaction tx;
 
-        if (!mcore->get_tx(tx_hash, tx))
+        if (!raw_tx_data.empty())
+        {
+            // we want to check outputs of tx submited through tx pusher.
+            // it is raw tx data, it is not in blockchain nor in mempool.
+            // so we need to reconstruct tx object from this string
+
+            cryptonote::blobdata tx_data_blob;
+
+            if (!epee::string_tools::parse_hexstr_to_binbuff(raw_tx_data, tx_data_blob))
+            {
+                string msg = fmt::format("Cant obtain tx_data_blob from raw_tx_data");
+
+                cerr << msg << endl;
+
+                return msg;
+            }
+
+            crypto::hash tx_hash_from_blob;
+            crypto::hash tx_prefix_hash_from_blob;
+
+            if (!cryptonote::parse_and_validate_tx_from_blob(tx_data_blob,
+                                                             tx,
+                                                             tx_hash_from_blob,
+                                                             tx_prefix_hash_from_blob))
+            {
+                string msg = fmt::format("cant parse_and_validate_tx_from_blob");
+
+                cerr << msg << endl;
+
+                return msg;
+            }
+
+        }
+        else if (!mcore->get_tx(tx_hash, tx))
         {
             cerr << "Cant get tx in blockchain: " << tx_hash
                  << ". \n Check mempool now" << endl;
@@ -1691,7 +1726,10 @@ public:
                     string xmr_address_str,
                     string tx_prv_key_str)
     {
-        return show_my_outputs(tx_hash_str, xmr_address_str, tx_prv_key_str, true);
+        string raw_tx_data {""}; // not using it in prove tx. only for outputs
+
+        return show_my_outputs(tx_hash_str, xmr_address_str,
+                               tx_prv_key_str, raw_tx_data, true);
     }
 
     string
@@ -2061,6 +2099,11 @@ public:
                 {
                     return boost::get<string>(tx_context["error_msg"]);
                 }
+
+                // this will be stored in html for for checking outputs
+                // we need this data if we want to use "Decode outputs"
+                // to see which outputs are ours, and decode amounts in ringct txs
+                tx_context["raw_tx_data"] = raw_tx_data;
 
                 context["data_prefix"] = string("none as this is pure raw tx data");
 
