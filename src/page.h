@@ -2119,7 +2119,7 @@ public:
                 string checkrawtx_html = xmreg::read(TMPL_MY_CHECKRAWTX);
 
                 // add header and footer
-                string full_page =  checkrawtx_html + get_footer();
+                string full_page =  get_full_page(checkrawtx_html);
 
                 add_css_style(context);
 
