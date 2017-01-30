@@ -197,7 +197,11 @@ int main(int ac, const char* av[]) {
         string xmr_address = post_body["xmr_address"];
         string viewkey     = post_body["viewkey"];
 
-        return xmrblocks.show_my_outputs(tx_hash, xmr_address, viewkey);
+        // this will be only not empty when checking raw tx data
+        // using tx pusher
+        string raw_tx_data = post_body["raw_tx_data"];
+
+        return xmrblocks.show_my_outputs(tx_hash, xmr_address, viewkey, raw_tx_data);
     });
 
     CROW_ROUTE(app, "/prove").methods("POST"_method)

@@ -1104,6 +1104,7 @@ public:
     show_my_outputs(string tx_hash_str,
                     string xmr_address_str,
                     string viewkey_str, /* or tx_prv_key_str when tx_prove == true */
+                    string raw_tx_data,
                     bool tx_prove = false)
     {
 
@@ -1111,6 +1112,7 @@ public:
         boost::trim(tx_hash_str);
         boost::trim(xmr_address_str);
         boost::trim(viewkey_str);
+        boost::trim(raw_tx_data);
 
         if (tx_hash_str.empty())
         {
@@ -1165,7 +1167,40 @@ public:
         // get transaction
         transaction tx;
 
-        if (!mcore->get_tx(tx_hash, tx))
+        if (!raw_tx_data.empty())
+        {
+            // we want to check outputs of tx submited through tx pusher.
+            // it is raw tx data, it is not in blockchain nor in mempool.
+            // so we need to reconstruct tx object from this string
+
+            cryptonote::blobdata tx_data_blob;
+
+            if (!epee::string_tools::parse_hexstr_to_binbuff(raw_tx_data, tx_data_blob))
+            {
+                string msg = fmt::format("Cant obtain tx_data_blob from raw_tx_data");
+
+                cerr << msg << endl;
+
+                return msg;
+            }
+
+            crypto::hash tx_hash_from_blob;
+            crypto::hash tx_prefix_hash_from_blob;
+
+            if (!cryptonote::parse_and_validate_tx_from_blob(tx_data_blob,
+                                                             tx,
+                                                             tx_hash_from_blob,
+                                                             tx_prefix_hash_from_blob))
+            {
+                string msg = fmt::format("cant parse_and_validate_tx_from_blob");
+
+                cerr << msg << endl;
+
+                return msg;
+            }
+
+        }
+        else if (!mcore->get_tx(tx_hash, tx))
         {
             cerr << "Cant get tx in blockchain: " << tx_hash
                  << ". \n Check mempool now" << endl;
@@ -1691,7 +1726,10 @@ public:
                     string xmr_address_str,
                     string tx_prv_key_str)
     {
-        return show_my_outputs(tx_hash_str, xmr_address_str, tx_prv_key_str, true);
+        string raw_tx_data {""}; // not using it in prove tx. only for outputs
+
+        return show_my_outputs(tx_hash_str, xmr_address_str,
+                               tx_prv_key_str, raw_tx_data, true);
     }
 
     string
@@ -2007,12 +2045,88 @@ public:
 
             if (strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
             {
-                string msg = fmt::format("The data is neither unsigned nor signed tx! Its prefix is: {:s}",
-                                         data_prefix);
 
-                cout << msg << endl;
-                return string(msg);
-            }
+                // ok, so its not signed tx data. but maybe it is raw tx data
+                // used in rpc call "/sendrawtransaction". This is for example
+                // used in mymonero and openmonero projects.
+
+                // to check this, first we need to encode data back to base64.
+                // the reason is that txs submited to "/sendrawtransaction"
+                // are not base64, and we earlier always asume it is base64.
+
+                // string reencoded_raw_tx_data = epee::string_encoding::base64_decode(raw_tx_data);
+
+                //cout << "raw_tx_data: " << raw_tx_data << endl;
+
+                cryptonote::blobdata tx_data_blob;
+
+                if (!epee::string_tools::parse_hexstr_to_binbuff(raw_tx_data, tx_data_blob))
+                {
+                    string msg = fmt::format("The data is neither unsigned, signed tx or raw tx! "
+                                              "Its prefix is: {:s}",
+                                             data_prefix);
+
+                    cout << msg << endl;
+
+                    return string(msg);
+                }
+
+                crypto::hash tx_hash_from_blob;
+                crypto::hash tx_prefix_hash_from_blob;
+                cryptonote::transaction tx_from_blob;
+
+                if (!cryptonote::parse_and_validate_tx_from_blob(tx_data_blob,
+                                                                 tx_from_blob,
+                                                                 tx_hash_from_blob,
+                                                                 tx_prefix_hash_from_blob))
+                {
+                    string msg = fmt::format("failed to validate transaction");
+
+                    cout << msg << endl;
+
+                    return string(msg);
+                }
+
+                //cout << "tx_from_blob.vout.size(): " << tx_from_blob.vout.size() << endl;
+
+                // tx has been correctly deserialized. So
+                // we just dispaly it. We dont have any information about real mixins, etc,
+                // so there is not much more we can do with tx data.
+
+                mstch::map tx_context = construct_tx_context(tx_from_blob);
+
+                if (boost::get<bool>(tx_context["has_error"]))
+                {
+                    return boost::get<string>(tx_context["error_msg"]);
+                }
+
+                // this will be stored in html for for checking outputs
+                // we need this data if we want to use "Decode outputs"
+                // to see which outputs are ours, and decode amounts in ringct txs
+                tx_context["raw_tx_data"] = raw_tx_data;
+
+                context["data_prefix"] = string("none as this is pure raw tx data");
+
+                context.emplace("txs"     , mstch::array{});
+
+                boost::get<mstch::array>(context["txs"]).push_back(tx_context);
+
+                map<string, string> partials {
+                        {"tx_details", xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html")},
+                };
+
+                // read checkrawtx.html
+                string checkrawtx_html = xmreg::read(TMPL_MY_CHECKRAWTX);
+
+                // add header and footer
+                string full_page =  checkrawtx_html + get_footer();
+
+                add_css_style(context);
+
+                // render the page
+                return mstch::render(full_page, context, partials);
+
+            } // if (strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
 
             context["data_prefix"] = data_prefix;
 
