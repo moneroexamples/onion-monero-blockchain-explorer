@@ -36,6 +36,7 @@ set(MONERO_HEADERS_DIR
 include_directories(
         ${MONERO_HEADERS_DIR}/src
         ${MONERO_HEADERS_DIR}/external
+        ${MONERO_HEADERS_DIR}/build
         ${MONERO_HEADERS_DIR}/contrib/epee/include
         ${MONERO_HEADERS_DIR}/external/easylogging++
         ${MONERO_HEADERS_DIR}/external/db_drivers/liblmdb)

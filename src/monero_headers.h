@@ -14,6 +14,7 @@
 #define KEY_IMAGE_EXPORT_FILE_MAGIC "Monero key image export\002"
 #define OUTPUT_EXPORT_FILE_MAGIC "Monero output export\003"
 
+#include "release/version/version.h"
 
 #include "net/http_client.h"
 #include "storages/http_abstract_invoke.h"
