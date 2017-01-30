@@ -2585,7 +2585,7 @@ public:
         string rawkeyimgs_html = xmreg::read(TMPL_MY_RAWKEYIMGS);
 
         // add header and footer
-        string full_page =  rawkeyimgs_html + get_footer();
+        string full_page = get_full_page(rawkeyimgs_html);
 
         add_css_style(context);
 
@@ -2605,7 +2605,7 @@ public:
         string rawoutputkeys_html = xmreg::read(TMPL_MY_RAWOUTPUTKEYS);
 
         // add header and footer
-        string full_page =  rawoutputkeys_html + get_footer();
+        string full_page = get_full_page(rawoutputkeys_html);
 
         add_css_style(context);
 
@@ -2634,8 +2634,8 @@ public:
         // read page template
         string checkrawkeyimgs_html = xmreg::read(TMPL_MY_CHECKRAWKEYIMGS);
 
-        // add footer
-        string full_page =  checkrawkeyimgs_html + get_footer();
+        // add header and footer
+        string full_page = get_full_page(checkrawkeyimgs_html);
 
         add_css_style(context);
 
@@ -2998,8 +2998,8 @@ public:
         // read page template
         string checkoutputkeys_html = xmreg::read(TMPL_MY_CHECKRAWOUTPUTKEYS);
 
-        // add footer
-        string full_page = checkoutputkeys_html + get_footer();
+        // add header and footer
+        string full_page = get_full_page(checkoutputkeys_html);
 
         add_css_style(context);
 
