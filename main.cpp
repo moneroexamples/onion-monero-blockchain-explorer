@@ -177,7 +177,7 @@ int main(int ac, const char* av[]) {
     });
 
     CROW_ROUTE(app, "/tx/<string>/<uint>")
-    ([&](string tx_hash, uint with_ring_signatures) {
+    ([&](string tx_hash, uint16_t with_ring_signatures) {
         return xmrblocks.show_tx(tx_hash, with_ring_signatures);
     });
 
