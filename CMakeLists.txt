@@ -8,7 +8,9 @@ project(${PROJECT_NAME})
 
 set(CMAKE_CXX_FLAGS
         "${CMAKE_CXX_FLAGS} -std=c++14")
-
+if (WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wa,-mbig-obj -O3")
+endif()
 
 # find boost
 find_package(Boost COMPONENTS
@@ -90,6 +92,9 @@ set_property(TARGET ringct
 add_library(wallet STATIC IMPORTED)
 set_property(TARGET wallet
         PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libwallet.a)
+
+add_library(unbound STATIC IMPORTED)
+set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libunbound.a)
 
 # include boost headers
 include_directories(${Boost_INCLUDE_DIRS})
@@ -183,12 +188,22 @@ set(LIBRARIES
         pthread
         unbound
         curl
-        dl
         crypto
         ssl)
 
-if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND NOT WIN32)
         set(LIBRARIES ${LIBRARIES} unwind)
+endif()
+
+if (WIN32)
+    set(LIBRARIES ${LIBRARIES}
+        wsock32
+        ntdll
+        ws2_32
+        Iphlpapi
+    )
+else()
+    set(LIBRARIES ${LIBRARIES} dl)
 endif()
 
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})

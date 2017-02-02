@@ -1019,7 +1019,7 @@ public:
     }
 
     string
-    show_tx(string tx_hash_str, uint with_ring_signatures = 0)
+    show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0)
     {
 
         // parse tx hash string to hash object
@@ -4060,7 +4060,7 @@ private:
     }
 
     mstch::map
-    construct_tx_context(transaction tx, uint with_ring_signatures = 0)
+    construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
     {
 
         tx_details txd = get_tx_details(tx);
