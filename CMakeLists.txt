@@ -93,8 +93,10 @@ add_library(wallet STATIC IMPORTED)
 set_property(TARGET wallet
         PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libwallet.a)
 
-add_library(unbound STATIC IMPORTED)
-set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libunbound.a)
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR WIN32)
+    add_library(unbound STATIC IMPORTED)
+    set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libunbound.a)
+endif()
 
 # include boost headers
 include_directories(${Boost_INCLUDE_DIRS})
