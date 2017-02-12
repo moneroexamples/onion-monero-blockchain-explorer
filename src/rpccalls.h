@@ -45,7 +45,9 @@ namespace xmreg
 
             timeout_time_ms = std::chrono::milliseconds {timeout_time};
 
-            m_http_client.set_server(deamon_url);
+            m_http_client.set_server(
+                    deamon_url,
+                    boost::optional<epee::net_utils::http::login>{});
         }
 
         bool
