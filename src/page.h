@@ -843,6 +843,8 @@ public:
         // get transaction
         transaction tx;
 
+        bool show_more_details_link {true};
+
         if (!mcore->get_tx(tx_hash, tx))
         {
             cerr << "Cant get tx in blockchain: " << tx_hash
@@ -866,6 +868,10 @@ public:
 
                 age = get_age(server_timestamp, tx_recieve_timestamp,
                               FULL_AGE_FORMAT);
+
+                // for mempool tx, we dont show more details, e.g., json tx representation
+                // so no need for the link
+                show_more_details_link = false;
             }
             else
             {
@@ -875,6 +881,8 @@ public:
         }
 
         mstch::map tx_context = construct_tx_context(tx, with_ring_signatures);
+
+        tx_context["show_more_details_link"] = show_more_details_link;
 
         if (boost::get<bool>(tx_context["has_error"]))
         {
