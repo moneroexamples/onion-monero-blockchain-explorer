@@ -24,11 +24,12 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
 ## Address
 
 Clearnet versions:
- - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most up to date.
+ - [https://explorer.xmr.my/](https://explorer.xmr.my/) - https enabled, most up to date.
+ - [https://xmrchain.net/](https://xmrchain.net/) - https enabled.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
- - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the first one.
+ - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
  - [http://blox.supportxmr.com/](http://blox.supportxmr.com/)
- - [https://explorer.xmr.my/](https://explorer.xmr.my/)
+ 
  
 Clearnet testnet Monero version - https enabled:
   
