@@ -88,6 +88,15 @@
                     {{/dest_infos}}
                 </h5>
                 {{>tx_details}}
+                {{#tx_json}}
+                    <br/>
+                    <h3>JSON representation of tx</h3>
+                    <div class="center">
+                        <code style="white-space: pre-wrap; font-size: 10px">
+                            {{tx_json}}
+                        </code>
+                    </div>
+                {{/tx_json}}
             {{/txs}}
 
         {{/unsigned_tx_given}}

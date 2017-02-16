@@ -226,7 +226,9 @@
 
 {{^have_raw_tx}}
     {{^with_ring_signatures}}
-        <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}/1">More details</a></h5>
+        {{#show_more_details_link}}
+            <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}/1">More details</a></h5>
+        {{/show_more_details_link}}
     {{/with_ring_signatures}}
     {{#with_ring_signatures}}
         <h3>JSON representation of tx</h3>

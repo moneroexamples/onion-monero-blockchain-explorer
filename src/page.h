@@ -1796,6 +1796,7 @@ public:
                             mixin_timestamps.push_back(blk.timestamp);
 
                             ++output_i;
+
                         } // for(const tx_source_entry::output_entry& oe: tx_source.outputs)
 
                         dest_sources.push_back(single_dest_source);
@@ -1907,9 +1908,11 @@ public:
                 // this will be stored in html for for checking outputs
                 // we need this data if we want to use "Decode outputs"
                 // to see which outputs are ours, and decode amounts in ringct txs
-                tx_context["raw_tx_data"] = raw_tx_data;
+                tx_context["raw_tx_data"]            = raw_tx_data;
+                tx_context["show_more_details_link"] = false;
 
                 context["data_prefix"] = string("none as this is pure raw tx data");
+                context["tx_json"]     = obj_to_json_str(tx_from_blob);
 
                 context.emplace("txs"     , mstch::array{});
 
@@ -3919,35 +3922,36 @@ private:
 
         // initalise page tempate map with basic info about blockchain
         mstch::map context {
-                {"testnet"              , testnet},
-                {"tx_hash"              , tx_hash_str},
-                {"tx_prefix_hash"       , pod_to_hex(txd.prefix_hash)},
-                {"tx_pub_key"           , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
-                {"blk_height"           , tx_blk_height_str},
-                {"tx_size"              , fmt::format("{:0.4f}",
+                {"testnet"               , testnet},
+                {"tx_hash"               , tx_hash_str},
+                {"tx_prefix_hash"        , pod_to_hex(txd.prefix_hash)},
+                {"tx_pub_key"            , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
+                {"blk_height"            , tx_blk_height_str},
+                {"tx_size"               , fmt::format("{:0.4f}",
                                                       static_cast<double>(txd.size) / 1024.0)},
-                {"tx_fee"               , xmreg::xmr_amount_to_str(txd.fee)},
-                {"tx_version"           , fmt::format("{:d}", txd.version)},
-                {"blk_timestamp"        , blk_timestamp},
-                {"blk_timestamp_uint"   , blk.timestamp},
-                {"delta_time"           , age.first},
-                {"inputs_no"            , static_cast<uint64_t>(txd.input_key_imgs.size())},
-                {"has_inputs"           , !txd.input_key_imgs.empty()},
-                {"outputs_no"           , static_cast<uint64_t>(txd.output_pub_keys.size())},
-                {"has_payment_id"       , txd.payment_id  != null_hash},
-                {"has_payment_id8"      , txd.payment_id8 != null_hash8},
-                {"confirmations"        , txd.no_confirmations},
-                {"payment_id"           , pid_str},
-                {"payment_id8"          , pid8_str},
-                {"extra"                , txd.get_extra_str()},
-                {"with_ring_signatures" , static_cast<bool>(
+                {"tx_fee"                , xmreg::xmr_amount_to_str(txd.fee)},
+                {"tx_version"            , fmt::format("{:d}", txd.version)},
+                {"blk_timestamp"         , blk_timestamp},
+                {"blk_timestamp_uint"    , blk.timestamp},
+                {"delta_time"            , age.first},
+                {"inputs_no"             , static_cast<uint64_t>(txd.input_key_imgs.size())},
+                {"has_inputs"            , !txd.input_key_imgs.empty()},
+                {"outputs_no"            , static_cast<uint64_t>(txd.output_pub_keys.size())},
+                {"has_payment_id"        , txd.payment_id  != null_hash},
+                {"has_payment_id8"       , txd.payment_id8 != null_hash8},
+                {"confirmations"         , txd.no_confirmations},
+                {"payment_id"            , pid_str},
+                {"payment_id8"           , pid8_str},
+                {"extra"                 , txd.get_extra_str()},
+                {"with_ring_signatures"  , static_cast<bool>(
                                                   with_ring_signatures)},
-                {"tx_json"              , tx_json},
-                {"is_ringct"            , (tx.version > 1)},
-                {"rct_type"             , tx.rct_signatures.type},
-                {"has_error"            , false},
-                {"error_msg"            , string("")},
-                {"have_raw_tx"          , false},
+                {"tx_json"               , tx_json},
+                {"is_ringct"             , (tx.version > 1)},
+                {"rct_type"              , tx.rct_signatures.type},
+                {"has_error"             , false},
+                {"error_msg"             , string("")},
+                {"have_raw_tx"           , false},
+                {"show_more_details_link", true}
         };
 
         string server_time_str = xmreg::timestamp_to_str(server_timestamp, "%F");
