@@ -139,6 +139,12 @@ sum_money_in_inputs(const transaction& tx);
 pair<uint64_t, uint64_t>
 sum_money_in_inputs(const string& json_str);
 
+uint64_t
+count_nonrct_inputs(const transaction& tx);
+
+uint64_t
+count_nonrct_inputs(const string& json_str);
+
 array<uint64_t, 2>
 sum_money_in_tx(const transaction& tx);
 

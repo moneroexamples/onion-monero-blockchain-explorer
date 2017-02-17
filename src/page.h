@@ -108,6 +108,7 @@ struct tx_details
     crypto::public_key pk;
     uint64_t xmr_inputs;
     uint64_t xmr_outputs;
+    uint64_t num_nonrct_inputs;
     uint64_t fee;
     uint64_t mixin_no;
     uint64_t size;
@@ -171,6 +172,7 @@ struct tx_details
             {"sum_outputs_short" , xmr_amount_to_str(xmr_outputs, "{:0.3f}")},
             {"no_inputs"         , static_cast<uint64_t>(input_key_imgs.size())},
             {"no_outputs"        , static_cast<uint64_t>(output_pub_keys.size())},
+            {"no_nonrct_inputs"  , num_nonrct_inputs},
             {"mixin"             , mixin_str},
             {"blk_height"        , blk_height},
             {"version"           , std::to_string(version)},
@@ -513,6 +515,7 @@ public:
             // sum xmr in inputs and ouputs in the given tx
             pair<uint64_t, uint64_t> sum_inputs  = xmreg::sum_money_in_inputs(_tx_info.tx_json);
             pair<uint64_t, uint64_t> sum_outputs = xmreg::sum_money_in_outputs(_tx_info.tx_json);
+            uint64_t num_nonrct_inputs = xmreg::count_nonrct_inputs(_tx_info.tx_json);
 
             sum_money_in_outputs(_tx_info.tx_json);
 
@@ -560,6 +563,7 @@ public:
                     {"xmr_outputs"   , xmreg::xmr_amount_to_str(sum_outputs.first, "{:0.3f}")},
                     {"no_inputs"     , sum_inputs.second},
                     {"no_outputs"    , sum_outputs.second},
+                    {"no_nonrct_inputs", num_nonrct_inputs},
                     {"is_ringct"     , is_ringct_str},
                     {"rct_type"      , rct_type_str},
                     {"mixin"         , fmt::format("{:d}", mixin_no)},
@@ -4282,6 +4286,7 @@ private:
         // sum xmr in inputs and ouputs in the given tx
         txd.xmr_inputs  = sum_money_in_inputs(tx);
         txd.xmr_outputs = sum_money_in_outputs(tx);
+        txd.num_nonrct_inputs = count_nonrct_inputs(tx);
 
         // get mixin number
         txd.mixin_no    = get_mixin_no(tx);

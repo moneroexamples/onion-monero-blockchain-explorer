@@ -395,6 +395,58 @@ sum_money_in_inputs(const string& json_str)
     return sum_xmr;
 };
 
+uint64_t
+count_nonrct_inputs(const transaction& tx)
+{
+    uint64_t num {0};
+
+    size_t input_no = tx.vin.size();
+
+    for (size_t i = 0; i < input_no; ++i)
+    {
+
+        if(tx.vin[i].type() != typeid(cryptonote::txin_to_key))
+        {
+            continue;
+        }
+
+        // get tx input key
+        const cryptonote::txin_to_key& tx_in_to_key
+                = boost::get<cryptonote::txin_to_key>(tx.vin[i]);
+
+        if (tx_in_to_key.amount != 0)
+            ++num;
+    }
+
+    return num;
+}
+
+uint64_t
+count_nonrct_inputs(const string& json_str)
+{
+    uint64_t num {0};
+
+    json j;
+    try
+    {
+        j = json::parse( json_str);
+    }
+    catch (std::invalid_argument& e)
+    {
+        cerr << "count_nonrct_inputs: " << e.what() << endl;
+        return num;
+    }
+
+    for (json& vin: j["vin"])
+    {
+        uint64_t amount = vin["key"]["amount"].get<uint64_t>();
+        if (amount != 0)
+            ++num;
+    }
+
+    return num;
+};
+
 array<uint64_t, 2>
 sum_money_in_tx(const transaction& tx)
 {

@@ -44,7 +44,7 @@
                     <td>tx hash</td>
                     <td>fees</td>
                     <td>outputs</td>
-                    <td>in/out</td>
+                    <td>in(nonrct)/out</td>
                     <td>rct/type</td>
                     <td>mixin</td>
                     <td>tx size [kB]</td>
@@ -57,7 +57,7 @@
                     <td><a href="/tx/{{hash}}">{{hash}}</a></td>
                     <td>{{tx_fee_short}}</td>
                     <td>{{sum_outputs_short}}</td>
-                    <td>{{no_inputs}}/{{no_outputs}}</td>
+                    <td>{{no_inputs}}({{no_nonrct_inputs}})/{{no_outputs}}</td>
                     <td>
                         {{#is_ringct}}yes/{{rct_type}}{{/is_ringct}}
                         {{^is_ringct}}no{{/is_ringct}}
