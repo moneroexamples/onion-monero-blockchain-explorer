@@ -28,12 +28,13 @@ Clearnet versions:
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
- - [http://blox.supportxmr.com/](http://blox.supportxmr.com/)
+ - [http://blox.supportxmr.com/](http://blox.supportxmr.com/).
  
  
-Clearnet testnet Monero version - https enabled:
-  
- - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/)
+Clearnet testnet Monero version:
+
+ - [https://testnet.explorer.xmr.my/](https://testnet.explorer.xmr.my/) - https enabled, most up to date. 
+ - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
 
 Tor users - down for now:
  
