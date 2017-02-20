@@ -1270,6 +1270,16 @@ public:
             // mixin counter
             size_t count = 0;
 
+            // there can be more than one our output used for mixin in a single
+            // input. For example, if two outputs are matched (marked by *) in html,
+            // one of them will be our real spending, and second will be used as a fake
+            // one. ideally, to determine which is which, spendkey is required.
+            // obvisouly we dont have it here, so we need to pick one in other way.
+            // for now I will just pick the first one we find, and threat it as the
+            // real spending output. The no_of_output_matches_found variable
+            // is used for this purporse.
+            size_t no_of_output_matches_found {0};
+
             // for each found output public key check if its ours or not
             for (const uint64_t& abs_offset: absolute_offsets)
             {
@@ -1430,6 +1440,13 @@ public:
                         } // if (mine_output && mixin_tx.version == 2)
                     }
 
+                    // makre only
+                    bool output_match = (txout_k.key == output_data.pubkey);
+
+                    // mark only first output_match as the "real" one
+                    // due to luck of better method of gussing which output
+                    // is real if two are found in a single input.
+                    output_match = output_match && no_of_output_matches_found == 0;
 
                     // save our mixnin's public keys
                     found_outputs.push_back(mstch::map {
@@ -1438,7 +1455,7 @@ public:
                             {"mine_output"     , mine_output},
                             {"out_idx"         , to_string(output_idx_in_tx)},
                             {"formed_output_pk", out_pub_key_str},
-                            {"out_in_match"    , (txout_k.key == output_data.pubkey)},
+                            {"out_in_match"    , output_match},
                             {"amount"          , xmreg::xmr_amount_to_str(amount)}
                     });
 
@@ -1459,22 +1476,28 @@ public:
                             continue;
                         }
 
-                        no_of_matched_mixins++;
+                        // sum up only first output matched found in each input
+                        if (no_of_output_matches_found == 0)
+                        {
+                            // for regular txs, just concentrated on outputs
+                            // which have same amount as the key image.
+                            // for ringct its not possible to know for sure amount
+                            // in key image without spend key, so we just use all
+                            // for regular/old txs there must be also a match
+                            // in amounts, not only in output public keys
+                            if (mixin_tx.version < 2 && amount == in_key.amount)
+                            {
+                                sum_mixin_xmr += amount;
+                            }
+                            else if (mixin_tx.version == 2) // ringct
+                            {
+                                sum_mixin_xmr += amount;
+                            }
 
-                        // for regular txs, just concentrated on outputs
-                        // which have same amount as the key image.
-                        // for ringct its not possible to know for sure amount
-                        // in key image without spend key, so we just use all
-                        // for regular/old txs there must be also a match
-                        // in amounts, not only in output public keys
-                        if (mixin_tx.version < 2 && amount == in_key.amount)
-                        {
-                            sum_mixin_xmr += amount;
+                            no_of_matched_mixins++;
                         }
-                        else if (mixin_tx.version == 2) // ringct
-                        {
-                            sum_mixin_xmr += amount;
-                        }
+
+                        no_of_output_matches_found++;
 
                     }
 
