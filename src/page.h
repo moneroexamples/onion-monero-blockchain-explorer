@@ -975,6 +975,20 @@ public:
             return string("Cant parse private key: " + viewkey_str);
         }
 
+
+        // just to see how would having spend keys could worked
+        // this is from testnet wallet: A2VTvE8bC9APsWFn3mQzgW8Xfcy2SP2CRUArD6ZtthNaWDuuvyhtBcZ8WDuYMRt1HhcnNQvpXVUavEiZ9waTbyBhP6RM8TV
+        // view key: 041a241325326f9d86519b714a9b7f78b29111551757eeb6334d39c21f8b7400
+        // example tx: 430b070e213659a864ec82d674fddb5ccf7073cae231b019ba1ebb4bfdc07a15
+//        string spend_key_str("643fedcb8dca1f3b406b84575ecfa94ba01257d56f20d55e8535385503dacc08");
+//
+//        crypto::secret_key prv_spend_key;
+//        if (!xmreg::parse_str_secret_key(spend_key_str, prv_spend_key))
+//        {
+//            cerr << "Cant parse the prv_spend_key : " << spend_key_str << endl;
+//            return string("Cant parse prv_spend_key : " + spend_key_str);
+//        }
+
         // tx age
         pair<string, string> age;
 
@@ -1218,6 +1232,7 @@ public:
 
         bool show_key_images {false};
 
+
         mstch::array inputs;
 
         vector<txin_to_key> input_key_imgs = xmreg::get_key_images(tx);
@@ -1278,6 +1293,11 @@ public:
             // for now I will just pick the first one we find, and threat it as the
             // real spending output. The no_of_output_matches_found variable
             // is used for this purporse.
+            // testnet tx 430b070e213659a864ec82d674fddb5ccf7073cae231b019ba1ebb4bfdc07a15
+            // and testnet wallet details provided earier for spend key,
+            // demonstrate this. this txs has one input that uses two of our ouputs.
+            // without spent key, its imposible to know which one is real spendking
+            // and which one is fake.
             size_t no_of_output_matches_found {0};
 
             // for each found output public key check if its ours or not
@@ -1496,6 +1516,28 @@ public:
 
                             no_of_matched_mixins++;
                         }
+
+
+                          // generate key_image using this output
+                          // just to see how would having spend keys worked
+//                        crypto::key_image key_img;
+//
+//                        if (!xmreg::generate_key_image(derivation,
+//                                                       output_idx_in_tx, /* position in the tx */
+//                                                       prv_spend_key,
+//                                                       address.m_spend_public_key,
+//                                                       key_img)) {
+//                            cerr << "Cant generate key image for output: "
+//                                 << pod_to_hex(output_data.pubkey) << endl;
+//                            break;
+//                        }
+//
+//                        cout    << "output_data.pubkey: " << pod_to_hex(output_data.pubkey)
+//                                << ", key_img: " << pod_to_hex(key_img)
+//                                << ", key_img == input_key: " << (key_img == in_key.k_image)
+//                                << endl;
+
+
 
                         no_of_output_matches_found++;
 
