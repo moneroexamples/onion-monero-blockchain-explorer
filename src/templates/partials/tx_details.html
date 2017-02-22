@@ -137,8 +137,20 @@
   </div>
 
 
-  <h3>{{inputs_no}} inputs(s) for total of {{inputs_xmr_sum}} xmr</h3>
-  <div class="center">
+    {{^inputs_xmr_sum_not_zero}}
+        <h3>{{inputs_no}} inputs(s) for total of {{inputs_xmr_sum}} xmr</h3>
+    {{/inputs_xmr_sum_not_zero}}
+    {{#inputs_xmr_sum_not_zero}}
+        {{^have_any_unknown_amount}}
+            <h3>{{inputs_no}} inputs(s) for total of {{inputs_xmr_sum}} xmr</h3>
+        {{/have_any_unknown_amount}}
+        {{#have_any_unknown_amount}}
+            <h3>{{inputs_no}} inputs(s) for total of at least {{inputs_xmr_sum}} xmr</h3>
+        {{/have_any_unknown_amount}}
+    {{/inputs_xmr_sum_not_zero}}
+
+
+    <div class="center">
        <table class="center">
       {{#inputs}}
         <tr>

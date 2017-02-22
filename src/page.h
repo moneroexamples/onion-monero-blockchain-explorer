@@ -4039,6 +4039,14 @@ private:
 
         uint64_t inputs_xmr_sum {0};
 
+        // ringct inputs can be mixture of known amounts (when old outputs)
+        // are spent, and unknown umounts (makrked in explorer by '?') when
+        // ringct outputs are spent. thus we totalling input amounts
+        // in such case, we need to show sum of known umounts, and
+        // indicate that this is minium sum, as we dont know the unknown
+        // umounts.
+        bool have_any_unknown_amount {false};
+
         vector<vector<uint64_t>> mixin_timestamp_groups;
 
         // make timescale maps for mixins in input
@@ -4088,6 +4096,13 @@ private:
             });
 
             inputs_xmr_sum += in_key.amount;
+
+            if (in_key.amount == 0)
+            {
+                // if any input has amount equal to zero,
+                // it is really an unkown amount
+                have_any_unknown_amount = true;
+            }
 
             vector<uint64_t> mixin_timestamps;
 
@@ -4199,13 +4214,18 @@ private:
                         max_mix_timestamp
                 );
 
+        context["have_any_unknown_amount"] = have_any_unknown_amount;
+        context["inputs_xmr_sum_not_zero"] = (inputs_xmr_sum > 0);
+        context["inputs_xmr_sum"]          = xmreg::xmr_amount_to_str(inputs_xmr_sum);
+        context["server_time"]             = server_time_str;
 
-        context["inputs_xmr_sum"]   = xmreg::xmr_amount_to_str(inputs_xmr_sum);
-        context["server_time"]      = server_time_str;
         context.emplace("inputs", inputs);
+
         context["min_mix_time"]     = xmreg::timestamp_to_str(min_mix_timestamp);
         context["max_mix_time"]     = xmreg::timestamp_to_str(max_mix_timestamp);
+
         context.emplace("timescales", mixins_timescales.first);
+
         context["timescales_scale"] = fmt::format("{:0.2f}",
                                           mixins_timescales.second / 3600.0 / 24.0); // in days
 
