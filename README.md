@@ -28,13 +28,13 @@ Tor users:
  - [http://libwh5lvouddzei4.onion/](http://libwh5lvouddzei4.onion/) - most up to date.
 
 Clearnet versions:
- - [https://explorer.xmr.my/](https://explorer.xmr.my/) - https enabled, most up to date.
+ - [https://explorer.xmr.my/](https://explorer.xmr.my/) - https enabled.
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
  - [http://blox.supportxmr.com/](http://blox.supportxmr.com/).
  
- Clearnet testnet Monero version:
+Clearnet testnet Monero version:
 
  - [https://testnet.explorer.xmr.my/](https://testnet.explorer.xmr.my/) - https enabled, most up to date. 
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
