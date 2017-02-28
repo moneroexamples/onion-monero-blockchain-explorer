@@ -259,6 +259,11 @@ class page {
 
     bool enable_pusher;
 
+    bool enable_key_image_checker;
+    bool enable_output_key_checker;
+
+    bool enable_autorefresh_option;
+
     bool have_custom_lmdb;
 
 
@@ -269,7 +274,10 @@ public:
 
     page(MicroCore* _mcore, Blockchain* _core_storage,
          string _deamon_url, string _lmdb2_path,
-         bool _testnet, bool _enable_pusher)
+         bool _testnet, bool _enable_pusher,
+         bool _enable_key_image_checker,
+         bool _enable_output_key_checker,
+         bool _enable_autorefresh_option)
             : mcore {_mcore},
               core_storage {_core_storage},
               rpc {_deamon_url},
@@ -277,7 +285,10 @@ public:
               lmdb2_path {_lmdb2_path},
               testnet {_testnet},
               enable_pusher {_enable_pusher},
-              have_custom_lmdb {false}
+              have_custom_lmdb {false},
+              enable_key_image_checker {_enable_key_image_checker},
+              enable_output_key_checker {_enable_output_key_checker},
+              enable_autorefresh_option {_enable_autorefresh_option}
     {
         css_styles = xmreg::read(TMPL_CSS_STYLES);
         no_of_mempool_tx_of_frontpage = 25;
@@ -344,6 +355,10 @@ public:
                 {"is_page_zero"    , !bool(page_no)},
                 {"next_page"       , std::to_string(page_no + 1)},
                 {"prev_page"       , std::to_string((page_no > 0 ? page_no - 1 : 0))},
+                {"enable_pusher"            , enable_pusher},
+                {"enable_key_image_checker" , enable_key_image_checker},
+                {"enable_output_key_checker", enable_output_key_checker},
+                {"enable_autorefresh_option", enable_autorefresh_option}
         };
         context.emplace("txs", mstch::array()); // will keep tx to show
 
@@ -2541,6 +2556,7 @@ public:
     string
     show_checkrawkeyimgs(string raw_data, string viewkey_str)
     {
+
         clean_post_data(raw_data);
 
         // remove white characters
@@ -2904,7 +2920,6 @@ public:
     string
     show_checkcheckrawoutput(string raw_data, string viewkey_str)
     {
-
         clean_post_data(raw_data);
 
         // remove white characters

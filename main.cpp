@@ -20,9 +20,12 @@ int main(int ac, const char* av[]) {
     // get command line options
     xmreg::CmdLineOptions opts {ac, av};
 
-    auto help_opt          = opts.get_option<bool>("help");
-    auto testnet_opt       = opts.get_option<bool>("testnet");
-    auto enable_pusher_opt = opts.get_option<bool>("enable-pusher");
+    auto help_opt                      = opts.get_option<bool>("help");
+    auto testnet_opt                   = opts.get_option<bool>("testnet");
+    auto enable_key_image_checker_opt  = opts.get_option<bool>("enable-key-image-checker");
+    auto enable_output_key_checker_opt = opts.get_option<bool>("enable-output-key-checker");
+    auto enable_autorefresh_option_opt = opts.get_option<bool>("enable-autorefresh-option");
+    auto enable_pusher_opt             = opts.get_option<bool>("enable-pusher");
 
     // if help was chosen, display help text and finish
     if (*help_opt)
@@ -30,8 +33,11 @@ int main(int ac, const char* av[]) {
         return EXIT_SUCCESS;
     }
 
-    bool testnet       {*testnet_opt};
-    bool enable_pusher {*enable_pusher_opt};
+    bool testnet                   {*testnet_opt};
+    bool enable_pusher             {*enable_pusher_opt};
+    bool enable_key_image_checker  {*enable_key_image_checker_opt};
+    bool enable_autorefresh_option {*enable_autorefresh_option_opt};
+    bool enable_output_key_checker {*enable_output_key_checker_opt};
 
     auto port_opt           = opts.get_option<string>("port");
     auto bc_path_opt        = opts.get_option<string>("bc-path");
@@ -146,7 +152,10 @@ int main(int ac, const char* av[]) {
                           deamon_url,
                           custom_db_path_str,
                           testnet,
-                          enable_pusher);
+                          enable_pusher,
+                          enable_key_image_checker,
+                          enable_output_key_checker,
+                          enable_autorefresh_option);
 
     // crow instance
     crow::SimpleApp app;
@@ -184,7 +193,8 @@ int main(int ac, const char* av[]) {
     CROW_ROUTE(app, "/myoutputs").methods("POST"_method)
     ([&](const crow::request& req) {
 
-        map<std::string, std::string> post_body = xmreg::parse_crow_post_data(req.body);
+        map<std::string, std::string> post_body
+                = xmreg::parse_crow_post_data(req.body);
 
         if (post_body.count("xmr_address") == 0
             || post_body.count("viewkey") == 0
@@ -201,19 +211,22 @@ int main(int ac, const char* av[]) {
         // using tx pusher
         string raw_tx_data = post_body["raw_tx_data"];
 
-        return xmrblocks.show_my_outputs(tx_hash, xmr_address, viewkey, raw_tx_data);
+        return xmrblocks.show_my_outputs(tx_hash, xmr_address,
+                                         viewkey, raw_tx_data);
     });
 
     CROW_ROUTE(app, "/prove").methods("POST"_method)
         ([&](const crow::request& req) {
 
-            map<std::string, std::string> post_body = xmreg::parse_crow_post_data(req.body);
+            map<std::string, std::string> post_body
+                    = xmreg::parse_crow_post_data(req.body);
 
             if (post_body.count("xmraddress") == 0
                 || post_body.count("txprvkey") == 0
                 || post_body.count("txhash") == 0)
             {
-                return string("xmr address, tx private key or tx hash not provided");
+                return string("xmr address, tx private key or "
+                                      "tx hash not provided");
             }
 
             string tx_hash     = post_body["txhash"];;
@@ -223,84 +236,96 @@ int main(int ac, const char* av[]) {
             return xmrblocks.show_prove(tx_hash, xmr_address, tx_prv_key);
     });
 
-    CROW_ROUTE(app, "/rawtx")
-    ([&](const crow::request& req) {
-        return xmrblocks.show_rawtx();
-    });
+    if (enable_pusher)
+    {
+        CROW_ROUTE(app, "/rawtx")
+        ([&](const crow::request& req) {
+            return xmrblocks.show_rawtx();
+        });
 
-    CROW_ROUTE(app, "/checkandpush").methods("POST"_method)
-    ([&](const crow::request& req) {
+        CROW_ROUTE(app, "/checkandpush").methods("POST"_method)
+        ([&](const crow::request& req) {
 
-        map<std::string, std::string> post_body = xmreg::parse_crow_post_data(req.body);
+            map<std::string, std::string> post_body
+                    = xmreg::parse_crow_post_data(req.body);
 
-        if (post_body.count("rawtxdata") == 0 || post_body.count("action") == 0)
-        {
-            return string("Raw tx data or action not provided");
-        }
+            if (post_body.count("rawtxdata") == 0 || post_body.count("action") == 0)
+            {
+                return string("Raw tx data or action not provided");
+            }
 
-        string raw_tx_data = post_body["rawtxdata"];
-        string action      = post_body["action"];
+            string raw_tx_data = post_body["rawtxdata"];
+            string action      = post_body["action"];
 
-        if (action == "check")
-            return xmrblocks.show_checkrawtx(raw_tx_data, action);
-        else if (action == "push")
-            return xmrblocks.show_pushrawtx(raw_tx_data, action);
+            if (action == "check")
+                return xmrblocks.show_checkrawtx(raw_tx_data, action);
+            else if (action == "push")
+                return xmrblocks.show_pushrawtx(raw_tx_data, action);
 
-    });
+        });
+    }
 
-    CROW_ROUTE(app, "/rawkeyimgs")
-    ([&](const crow::request& req) {
-        return xmrblocks.show_rawkeyimgs();
-    });
+    if (enable_key_image_checker)
+    {
+        CROW_ROUTE(app, "/rawkeyimgs")
+        ([&](const crow::request& req) {
+            return xmrblocks.show_rawkeyimgs();
+        });
 
-    CROW_ROUTE(app, "/checkrawkeyimgs").methods("POST"_method)
-    ([&](const crow::request& req) {
+        CROW_ROUTE(app, "/checkrawkeyimgs").methods("POST"_method)
+        ([&](const crow::request& req) {
 
-        map<std::string, std::string> post_body = xmreg::parse_crow_post_data(req.body);
+            map<std::string, std::string> post_body
+                    = xmreg::parse_crow_post_data(req.body);
 
-        if (post_body.count("rawkeyimgsdata") == 0)
-        {
-            return string("Raw key images data not given");
-        }
+            if (post_body.count("rawkeyimgsdata") == 0)
+            {
+                return string("Raw key images data not given");
+            }
 
-        if (post_body.count("viewkey") == 0)
-        {
-            return string("Viewkey not provided. Cant decrypt key image file without it");
-        }
+            if (post_body.count("viewkey") == 0)
+            {
+                return string("Viewkey not provided. Cant decrypt key image file without it");
+            }
 
-        string raw_data = post_body["rawkeyimgsdata"];
-        string viewkey  = post_body["viewkey"];
+            string raw_data = post_body["rawkeyimgsdata"];
+            string viewkey  = post_body["viewkey"];
 
-        return xmrblocks.show_checkrawkeyimgs(raw_data, viewkey);
-    });
+            return xmrblocks.show_checkrawkeyimgs(raw_data, viewkey);
+        });
+    }
 
 
-    CROW_ROUTE(app, "/rawoutputkeys")
-    ([&](const crow::request& req) {
-        return xmrblocks.show_rawoutputkeys();
-    });
+    if (enable_output_key_checker)
+    {
+        CROW_ROUTE(app, "/rawoutputkeys")
+        ([&](const crow::request& req) {
+            return xmrblocks.show_rawoutputkeys();
+        });
 
-    CROW_ROUTE(app, "/checkrawoutputkeys").methods("POST"_method)
-            ([&](const crow::request& req) {
+        CROW_ROUTE(app, "/checkrawoutputkeys").methods("POST"_method)
+        ([&](const crow::request& req) {
 
-                map<std::string, std::string> post_body = xmreg::parse_crow_post_data(req.body);
+            map<std::string, std::string> post_body
+                    = xmreg::parse_crow_post_data(req.body);
 
-                if (post_body.count("rawoutputkeysdata") == 0)
-                {
-                    return string("Raw output keys data not given");
-                }
+            if (post_body.count("rawoutputkeysdata") == 0)
+            {
+                return string("Raw output keys data not given");
+            }
 
-                if (post_body.count("viewkey") == 0)
-                {
-                    return string("Viewkey not provided. Cant decrypt key image file without it");
-                }
+            if (post_body.count("viewkey") == 0)
+            {
+                return string("Viewkey not provided. Cant decrypt "
+                                      "key image file without it");
+            }
 
-                string raw_data = post_body["rawoutputkeysdata"];
-                string viewkey  = post_body["viewkey"];
+            string raw_data = post_body["rawoutputkeysdata"];
+            string viewkey  = post_body["viewkey"];
 
-                return xmrblocks.show_checkcheckrawoutput(raw_data, viewkey);
-            });
-
+            return xmrblocks.show_checkcheckrawoutput(raw_data, viewkey);
+        });
+    }
 
 
     CROW_ROUTE(app, "/search").methods("GET"_method)
@@ -320,19 +345,24 @@ int main(int ac, const char* av[]) {
         return text;
     });
 
-    CROW_ROUTE(app, "/autorefresh")
-    ([&]() {
-        uint64_t page_no {0};
-        bool refresh_page {true};
-        return xmrblocks.index2(page_no, refresh_page);
-    });
+
+    if (enable_autorefresh_option)
+    {
+        CROW_ROUTE(app, "/autorefresh")
+        ([&]() {
+            uint64_t page_no {0};
+            bool refresh_page {true};
+            return xmrblocks.index2(page_no, refresh_page);
+        });
+    }
 
     // run the crow http server
 
     if (use_ssl)
     {
         cout << "Staring in ssl mode" << endl;
-        app.port(app_port).ssl_file(ssl_crt_file, ssl_key_file).multithreaded().run();
+        app.port(app_port).ssl_file(ssl_crt_file, ssl_key_file)
+                .multithreaded().run();
     }
     else
     {

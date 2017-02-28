@@ -3,19 +3,26 @@
      <h3 style="font-size: 12px; margin-top: 20px">
 
         Server time: {{server_timestamp}}  | <a href="/mempool">Memory pool</a>
-         | <a href="/rawtx">Tx pusher </a>
-         | <a href="/rawkeyimgs">Key images checker</a>
-         | <a href="/rawoutputkeys">Output keys checker</a> |
-
-        {{#refresh}}
-            <a href="/">Autorefresh is ON (10 s)</a>
-        {{/refresh}}
-        {{^refresh}}
-            <a href="/autorefresh">Autorefresh is OFF</a>
-        {{/refresh}}
+         {{#enable_pusher}}
+            | <a href="/rawtx">Tx pusher </a>
+         {{/enable_pusher}}
+         {{#enable_key_image_checker}}
+            | <a href="/rawkeyimgs">Key images checker</a>
+         {{/enable_key_image_checker}}
+         {{#enable_output_key_checker}}
+            | <a href="/rawoutputkeys">Output keys checker</a>
+         {{/enable_output_key_checker}}
+         {{#enable_autorefresh_option}}
+             |
+            {{#refresh}}
+                <a href="/">Autorefresh is ON (10 s)</a>
+            {{/refresh}}
+             {{^refresh}}
+                <a href="/autorefresh">Autorefresh is OFF</a>
+             {{/refresh}}
+         {{/enable_autorefresh_option}}
          {{#testnet}}
-          |
-            This is <span style="color:#ff6b62">testnet</span> blockchian
+          | This is <span style="color:#ff6b62">testnet</span> blockchian
          {{/testnet}}
 
         </h3>

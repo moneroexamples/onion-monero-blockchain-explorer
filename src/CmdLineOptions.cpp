@@ -27,6 +27,12 @@ namespace xmreg
                  "use testnet blockchain")
                 ("enable-pusher", value<bool>()->default_value(false)->implicit_value(true),
                  "enable pushing signed tx")
+                ("enable-key-image-checker", value<bool>()->default_value(false)->implicit_value(true),
+                 "enable key images file checker")
+                ("enable-output-key-checker", value<bool>()->default_value(false)->implicit_value(true),
+                 "enable outputs key file checker")
+                ("enable-autorefresh-option", value<bool>()->default_value(false)->implicit_value(true),
+                 "enable users to have the index page on autorefresh")
                 ("port,p", value<string>()->default_value("8081"),
                  "default port")
                 ("bc-path,b", value<string>(),
