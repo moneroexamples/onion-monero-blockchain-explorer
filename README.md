@@ -67,6 +67,7 @@ The key features of the Onion Monero Blockchain Explorer are:
  - the only explorer supporting Monero testnet network,
  - the only explorer providing tx checker and pusher for online pushing of transactions,
  - the only explorer allowing to inspect encrypted key images file and output files.
+ - the only explorer able to estimate possible spendings based on address and viewkey.
 
 ## Prerequisite
 
