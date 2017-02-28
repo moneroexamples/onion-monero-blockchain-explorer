@@ -23,6 +23,10 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
 
 ## Address
 
+Tor users:
+ 
+ - [http://libwh5lvouddzei4.onion/](http://libwh5lvouddzei4.onion/) - most up to date.
+
 Clearnet versions:
  - [https://explorer.xmr.my/](https://explorer.xmr.my/) - https enabled, most up to date.
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled.
@@ -30,15 +34,11 @@ Clearnet versions:
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
  - [http://blox.supportxmr.com/](http://blox.supportxmr.com/).
  
- 
-Clearnet testnet Monero version:
+ Clearnet testnet Monero version:
 
  - [https://testnet.explorer.xmr.my/](https://testnet.explorer.xmr.my/) - https enabled, most up to date. 
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
 
-Tor users - down for now:
- 
- - [http://3ccmeg4dunrl7h3i.onion/](http://3ccmeg4dunrl7h3i.onion/)
 
 i2p users (main Monero network) - down for now:
 
