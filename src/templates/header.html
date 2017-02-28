@@ -22,7 +22,8 @@
     </div>
 
 
-    {{^testnet}}
+
+    {{#have_custom_lmdb}}
         <div class="center">
             <form action="/search" method="get" style="width:100%; margin-top:15px" class="style-1">
                 <input type="text" name="value" size="120"
@@ -30,13 +31,14 @@
                 <input type="submit" value="Search">
             </form>
         </div>
-    {{/testnet}}
-    {{#testnet}}
+    {{/have_custom_lmdb}}
+    {{^have_custom_lmdb}}
         <div class="center">
             <form action="/search" method="get" style="width:100%; margin-top:15px" class="style-1">
-                <input type="text" name="value" size="90"
-                       placeholder="blk height, blk hash, tx hash, tx payment id">
+                <input type="text" name="value" size="120"
+                       placeholder="blk height, blk hash, tx hash">
                 <input type="submit" value="Search">
             </form>
         </div>
-    {{/testnet}}
+    {{/have_custom_lmdb}}
+

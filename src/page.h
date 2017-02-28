@@ -259,6 +259,8 @@ class page {
 
     bool enable_pusher;
 
+    bool have_custom_lmdb;
+
 
     uint64_t no_of_mempool_tx_of_frontpage;
 
@@ -274,10 +276,40 @@ public:
               server_timestamp {std::time(nullptr)},
               lmdb2_path {_lmdb2_path},
               testnet {_testnet},
-              enable_pusher {_enable_pusher}
+              enable_pusher {_enable_pusher},
+              have_custom_lmdb {false}
     {
         css_styles = xmreg::read(TMPL_CSS_STYLES);
         no_of_mempool_tx_of_frontpage = 25;
+
+        // just moneky patching now, to check
+        // if custom lmdb database exist, so that
+        // we can search for, e.g., key images,
+        // payments ids. try to open this database.
+        // if it fails, we assume it does not exist.
+        // this is ugly check, but will do for now.
+        // it does not even check if this custom lmdb
+        // is up to date.
+        try
+        {
+            unique_ptr<xmreg::MyLMDB> mylmdb;
+
+            if (bf::is_directory(lmdb2_path))
+            {
+                mylmdb = make_unique<xmreg::MyLMDB>(lmdb2_path);
+
+                // if we got to here, it seems that database exist
+                have_custom_lmdb = true;
+            }
+
+        }
+        catch (const std::exception& e)
+        {
+            cerr << "Custom lmdb databse seem not to exist. Its not big deal. "
+                    "Just some searches wont be possible"
+                 << endl;
+        }
+
     }
 
     /**
@@ -302,6 +334,7 @@ public:
         // initalise page tempate map with basic info about blockchain
         mstch::map context {
                 {"testnet"         , testnet},
+                {"have_custom_lmdb", have_custom_lmdb},
                 {"refresh"         , refresh_page},
                 {"height"          , std::to_string(height)},
                 {"server_timestamp", xmreg::timestamp_to_str(server_timestamp)},
@@ -710,6 +743,7 @@ public:
         // initalise page tempate map with basic info about blockchain
         mstch::map context {
                 {"testnet"              , testnet},
+                {"have_custom_lmdb"     , have_custom_lmdb},
                 {"blk_hash"             , blk_hash_str},
                 {"blk_height"           , _blk_height},
                 {"blk_timestamp"        , blk_timestamp},
@@ -894,7 +928,8 @@ public:
         }
 
         mstch::map context {
-                {"testnet" , this->testnet}
+                {"testnet"          , this->testnet},
+                {"have_custom_lmdb" , have_custom_lmdb}
         };
         context.emplace("txs"     , mstch::array{});
 
@@ -1108,6 +1143,7 @@ public:
         // initalise page tempate map with basic info about blockchain
         mstch::map context {
                 {"testnet"              , testnet},
+                {"have_custom_lmdb"     , have_custom_lmdb},
                 {"tx_hash"              , tx_hash_str},
                 {"tx_prefix_hash"       , pod_to_hex(txd.prefix_hash)},
                 {"xmr_address"          , xmr_address_str},
@@ -1619,7 +1655,8 @@ public:
 
         // initalise page tempate map with basic info about blockchain
         mstch::map context {
-                {"testnet"              , testnet}
+                {"testnet"              , testnet},
+                {"have_custom_lmdb"     , have_custom_lmdb}
         };
 
         // read rawtx.html
@@ -1657,6 +1694,7 @@ public:
         // initalize page template context map
         mstch::map context {
                 {"testnet"              , testnet},
+                {"have_custom_lmdb"     , have_custom_lmdb},
                 {"unsigned_tx_given"    , unsigned_tx_given},
                 {"have_raw_tx"          , true},
                 {"data_prefix"          , data_prefix},
@@ -2281,6 +2319,7 @@ public:
         // initalize page template context map
         mstch::map context {
                 {"testnet"              , testnet},
+                {"have_custom_lmdb"     , have_custom_lmdb},
                 {"have_raw_tx"          , true},
                 {"has_error"            , false},
                 {"error_msg"            , string {}},
@@ -2462,7 +2501,8 @@ public:
     {
         // initalize page template context map
         mstch::map context {
-                {"testnet"              , testnet}
+                {"testnet"            , testnet},
+                {"have_custom_lmdb"   , have_custom_lmdb}
         };
 
         // read rawkeyimgs.html
@@ -2482,7 +2522,8 @@ public:
     {
         // initalize page template context map
         mstch::map context {
-                {"testnet"              , testnet}
+                {"testnet"            , testnet},
+                {"have_custom_lmdb"   , have_custom_lmdb}
         };
 
         // read rawoutputkeys.html
@@ -2510,9 +2551,10 @@ public:
 
         // initalize page template context map
         mstch::map context{
-                {"testnet"  ,    testnet},
-                {"has_error",    false},
-                {"error_msg",    string{}},
+                {"testnet"         , testnet},
+                {"have_custom_lmdb", have_custom_lmdb},
+                {"has_error"       , false},
+                {"error_msg"       , string{}},
         };
 
         // read page template
@@ -2873,9 +2915,10 @@ public:
 
         // initalize page template context map
         mstch::map context{
-                {"testnet",   testnet},
-                {"has_error", false},
-                {"error_msg", string{}},
+                {"testnet"         , testnet},
+                {"have_custom_lmdb", have_custom_lmdb},
+                {"has_error"       , false},
+                {"error_msg"       , string{}}
         };
 
 
@@ -3639,6 +3682,7 @@ public:
                 {"public_spendkey"    , REMOVE_HASH_BRAKETS(pub_spendkey_str)},
                 {"is_integrated_addr" , false},
                 {"testnet"            , testnet},
+                {"have_custom_lmdb"   , have_custom_lmdb}
         };
 
         // read address.html
@@ -3672,6 +3716,7 @@ public:
                 {"encrypted_payment_id" , REMOVE_HASH_BRAKETS(enc_payment_id_str)},
                 {"is_integrated_addr"   , true},
                 {"testnet"              , testnet},
+                {"have_custom_lmdb"     , have_custom_lmdb}
         };
 
         // read address.html
@@ -3786,10 +3831,11 @@ public:
 
         // initalise page tempate map with basic info about blockchain
         mstch::map context {
-                {"testnet"        , testnet},
-                {"search_text"    , search_text},
-                {"no_results"     , true},
-                {"to_many_results", false}
+                {"testnet"         , testnet},
+                {"search_text"     , search_text},
+                {"no_results"      , true},
+                {"to_many_results" , false},
+                {"have_custom_lmdb", have_custom_lmdb}
         };
 
         for (const pair<string, vector<string>>& found_txs: all_possible_tx_hashes)
@@ -4000,6 +4046,7 @@ private:
         // initalise page tempate map with basic info about blockchain
         mstch::map context {
                 {"testnet"               , testnet},
+                {"have_custom_lmdb"      , have_custom_lmdb},
                 {"tx_hash"               , tx_hash_str},
                 {"tx_prefix_hash"        , pod_to_hex(txd.prefix_hash)},
                 {"tx_pub_key"            , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
