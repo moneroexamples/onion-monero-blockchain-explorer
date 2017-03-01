@@ -25,7 +25,8 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
 
 Tor users:
  
- - [http://libwh5lvouddzei4.onion/](http://libwh5lvouddzei4.onion/) - most up to date.
+ - [http://libwh5lvouddzei4.onion](http://libwh5lvouddzei4.onion/)
+ - [http://2hbthfb66na6pqgv.onion](http://2hbthfb66na6pqgv.onion)
 
 Clearnet versions:
  - [https://explorer.xmr.my/](https://explorer.xmr.my/) - https enabled.
