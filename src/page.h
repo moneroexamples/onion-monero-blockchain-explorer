@@ -339,8 +339,7 @@ public:
         uint64_t no_of_last_blocks {25 + 1};
 
         // get the current blockchain height. Just to check
-        uint64_t height =
-                xmreg::MyLMDB::get_blockchain_height(mcore->get_blkchain_path()) - 1;
+        uint64_t height = core_storage->get_current_blockchain_height();
 
         // initalise page tempate map with basic info about blockchain
         mstch::map context {
@@ -680,7 +679,7 @@ public:
         //cout << "_blk_height: " << _blk_height << endl;
 
         uint64_t current_blockchain_height
-                = xmreg::MyLMDB::get_blockchain_height(mcore->get_blkchain_path()) - 1;
+                =  core_storage->get_current_blockchain_height();
 
         if (_blk_height > current_blockchain_height)
         {
@@ -4487,8 +4486,7 @@ private:
             txd.blk_height = core_storage->get_db().get_tx_block_height(txd.hash);
 
             // get the current blockchain height. Just to check
-            uint64_t bc_height =
-                    xmreg::MyLMDB::get_blockchain_height(mcore->get_blkchain_path()) - 1;
+            uint64_t bc_height = core_storage->get_current_blockchain_height();
 
             txd.no_confirmations = bc_height - (txd.blk_height - 1);
         }
