@@ -269,6 +269,13 @@ class page {
 
     uint64_t no_of_mempool_tx_of_frontpage;
 
+    // instead of constatnly reading template files
+    // from hard drive for each request, we can read
+    // them only once, when the explorer starts into this map
+    // this will improve performance of the explorer and reduce
+    // read operation in OS
+    map<string, string> template_file;
+
 
 public:
 
@@ -320,6 +327,16 @@ public:
                     "Just some searches wont be possible"
                  << endl;
         }
+
+
+        // read template files for all the pages
+        // into template_file map
+
+        template_file["header"]       = xmreg::read(TMPL_HEADER);
+        template_file["footer"]       = get_footer();
+        template_file["index2"]       = get_full_page(xmreg::read(TMPL_INDEX2));
+        template_file["mempool"]      = xmreg::read(TMPL_MEMPOOL);
+        template_file["mempool_full"] = get_full_page(template_file["mempool"]);
 
     }
 
@@ -490,16 +507,10 @@ public:
         // append mempool_html to the index context map
         context["mempool_info"] = mempool_html;
 
-        // read index.html
-        string index2_html = xmreg::read(TMPL_INDEX2);
-
-        // add header and footer
-        string full_page = get_full_page(index2_html);
-
         add_css_style(context);
 
         // render the page
-        return mstch::render(full_page, context);
+        return mstch::render(template_file["index2"], context);
 
     }
 
@@ -633,8 +644,6 @@ public:
             return t1 > t2;
         });
 
-        // read mempool.html
-        string mempool_html = xmreg::read(TMPL_MEMPOOL);
 
         if (add_header_and_footer)
         {
@@ -643,11 +652,8 @@ public:
 
             context["partial_mempool_shown"] = false;
 
-            // add header and footer
-            string full_page = get_full_page(mempool_html);
-
             // render the page
-            return mstch::render(full_page, context);
+            return mstch::render(template_file["mempool_full"], context);
         }
 
         // this is for partial disply on front page.
@@ -665,7 +671,7 @@ public:
         context["partial_mempool_shown"] = true;
 
         // render the page
-        return mstch::render(mempool_html, context);
+        return mstch::render(template_file["mempool"], context);
     }
 
 
@@ -4688,11 +4694,11 @@ private:
 
 
     string
-    get_full_page(string& middle)
+    get_full_page(const string& middle)
     {
-        return xmreg::read(TMPL_HEADER)
+        return template_file["header"]
                + middle
-               + get_footer();
+               + template_file["footer"];
     }
 
     string
