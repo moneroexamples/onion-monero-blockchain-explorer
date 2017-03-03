@@ -26,15 +26,16 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
 Tor users:
   
  - [http://2hbthfb66na6pqgv.onion](http://2hbthfb66na6pqgv.onion)
- - [http://libwh5lvouddzei4.onion](http://libwh5lvouddzei4.onion/) - down for now.
+ - [http://libwh5lvouddzei4.onion](http://libwh5lvouddzei4.onion/).
 
 Clearnet versions:
  - [https://explorer.xmr.my/](https://explorer.xmr.my/) - https enabled.
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled.
+ - [http://139.162.32.245:8081/](http://139.162.32.245:8081/) - most up to date but no https.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
  - [http://blox.supportxmr.com/](http://blox.supportxmr.com/).
- 
+  
 Clearnet testnet Monero version:
 
  - [https://testnet.explorer.xmr.my/](https://testnet.explorer.xmr.my/) - https enabled, most up to date. 
