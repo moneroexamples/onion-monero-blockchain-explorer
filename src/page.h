@@ -275,13 +275,6 @@ class page {
     // read operation in OS
     map<string, string> template_file;
 
-    // instead of constatnly reading template files
-    // from hard drive for each request, we can read
-    // them only once, when the explorer starts into this map
-    // this will improve performance of the explorer and reduce
-    // read operation in OS
-    map<string, string> template_file;
-
 
 public:
 
