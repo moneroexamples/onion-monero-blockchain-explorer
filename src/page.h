@@ -253,8 +253,6 @@ class page {
 
     string lmdb2_path;
 
-    string css_styles;
-
     bool testnet;
 
     bool enable_pusher;
@@ -300,7 +298,7 @@ public:
               enable_autorefresh_option {_enable_autorefresh_option},
               no_blocks_on_index {_no_blocks_on_index}
     {
-        css_styles = xmreg::read(TMPL_CSS_STYLES);
+
         no_of_mempool_tx_of_frontpage = 25;
 
         // just moneky patching now, to check
@@ -335,11 +333,24 @@ public:
         // read template files for all the pages
         // into template_file map
 
-        template_file["header"]       = xmreg::read(TMPL_HEADER);
-        template_file["footer"]       = get_footer();
-        template_file["index2"]       = get_full_page(xmreg::read(TMPL_INDEX2));
-        template_file["mempool"]      = xmreg::read(TMPL_MEMPOOL);
-        template_file["mempool_full"] = get_full_page(template_file["mempool"]);
+        template_file["css_styles"]      = xmreg::read(TMPL_CSS_STYLES);
+        template_file["header"]          = xmreg::read(TMPL_HEADER);
+        template_file["footer"]          = get_footer();
+        template_file["index2"]          = get_full_page(xmreg::read(TMPL_INDEX2));
+        template_file["mempool"]         = xmreg::read(TMPL_MEMPOOL);
+        template_file["mempool_full"]    = get_full_page(template_file["mempool"]);
+        template_file["block"]           = get_full_page(xmreg::read(TMPL_BLOCK));
+        template_file["tx"]              = get_full_page(xmreg::read(TMPL_TX));
+        template_file["my_outputs"]      = get_full_page(xmreg::read(TMPL_MY_OUTPUTS));
+        template_file["rawtx"]           = get_full_page(xmreg::read(TMPL_MY_RAWTX));
+        template_file["checkrawtx"]      = get_full_page(xmreg::read(TMPL_MY_CHECKRAWTX));
+        template_file["pushrawtx"]       = get_full_page(xmreg::read(TMPL_MY_PUSHRAWTX));
+        template_file["rawkeyimgs"]      = get_full_page(xmreg::read(TMPL_MY_RAWKEYIMGS));
+        template_file["rawoutputkeys"]   = get_full_page(xmreg::read(TMPL_MY_RAWOUTPUTKEYS));
+        template_file["checkrawkeyimgs"] = get_full_page(xmreg::read(TMPL_MY_CHECKRAWKEYIMGS));
+        template_file["checkoutputkeys"] = get_full_page(xmreg::read(TMPL_MY_CHECKRAWOUTPUTKEYS));
+        template_file["address"]         = get_full_page(xmreg::read(TMPL_ADDRESS));
+        template_file["search_results"]  = get_full_page(xmreg::read(TMPL_SEARCH_RESULTS));
 
     }
 
@@ -848,16 +859,10 @@ public:
         context["blk_reward"]
                 = xmreg::xmr_amount_to_str(txd_coinbase.xmr_outputs - sum_fees, "{:0.6f}");
 
-        // read block.html
-        string block_html = xmreg::read(TMPL_BLOCK);
-
         add_css_style(context);
 
-        // add header and footer
-        string full_page = get_full_page(block_html);
-
         // render the page
-        return mstch::render(full_page, context);
+        return mstch::render(template_file["block"], context);
     }
 
 
@@ -1649,20 +1654,10 @@ public:
         context["possible_spending"] = xmreg::xmr_amount_to_str(
                 possible_spending, "{:0.12f}", false);
 
-
-        //cout << "no_of_matched_mixins: " << no_of_matched_mixins << endl;
-
-
-        // read my_outputs.html
-        string my_outputs_html = xmreg::read(TMPL_MY_OUTPUTS);
-
-        // add header and footer
-        string full_page = get_full_page(my_outputs_html);
-
         add_css_style(context);
 
         // render the page
-        return mstch::render(full_page, context);
+        return mstch::render(template_file["my_outputs"], context);
     }
 
     string
@@ -1686,16 +1681,10 @@ public:
                 {"have_custom_lmdb"     , have_custom_lmdb}
         };
 
-        // read rawtx.html
-        string rawtx_html = xmreg::read(TMPL_MY_RAWTX);
-
-        // add header and footer
-        string full_page = get_full_page(rawtx_html);
-
         add_css_style(context);
 
         // render the page
-        return mstch::render(full_page, context);
+        return mstch::render(template_file["rawtx"], context);
     }
 
     string
@@ -2319,17 +2308,10 @@ public:
                 {"tx_details", xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html")},
         };
 
-
-        // read checkrawtx.html
-        string checkrawtx_html = xmreg::read(TMPL_MY_CHECKRAWTX);
-
-        // add header and footer
-        string full_page = get_full_page(checkrawtx_html);
-
         add_css_style(context);
 
         // render the page
-        return mstch::render(full_page, context, partials);
+        return mstch::render(template_file["checkrawtx"], context, partials);
     }
 
     string
@@ -2354,11 +2336,8 @@ public:
         };
         context.emplace("txs", mstch::array{});
 
-        // read pushrawtx.html
-        string pushrawtx_html = xmreg::read(TMPL_MY_PUSHRAWTX);
-
         // add header and footer
-        string full_page = get_full_page(pushrawtx_html);
+        string full_page = template_file["pushrawtx"];
 
         add_css_style(context);
 
@@ -2532,16 +2511,10 @@ public:
                 {"have_custom_lmdb"   , have_custom_lmdb}
         };
 
-        // read rawkeyimgs.html
-        string rawkeyimgs_html = xmreg::read(TMPL_MY_RAWKEYIMGS);
-
-        // add header and footer
-        string full_page = get_full_page(rawkeyimgs_html);
-
         add_css_style(context);
 
         // render the page
-        return mstch::render(full_page, context);
+        return mstch::render(template_file["rawkeyimgs"], context);
     }
 
     string
@@ -2553,16 +2526,10 @@ public:
                 {"have_custom_lmdb"   , have_custom_lmdb}
         };
 
-        // read rawoutputkeys.html
-        string rawoutputkeys_html = xmreg::read(TMPL_MY_RAWOUTPUTKEYS);
-
-        // add header and footer
-        string full_page = get_full_page(rawoutputkeys_html);
-
         add_css_style(context);
 
         // render the page
-        return mstch::render(full_page, context);
+        return mstch::render(template_file["rawoutputkeys"], context);
     }
 
     string
@@ -2585,11 +2552,8 @@ public:
                 {"error_msg"       , string{}},
         };
 
-        // read page template
-        string checkrawkeyimgs_html = xmreg::read(TMPL_MY_CHECKRAWKEYIMGS);
-
         // add header and footer
-        string full_page = get_full_page(checkrawkeyimgs_html);
+        string full_page = template_file["checkrawkeyimgs"];
 
         add_css_style(context);
 
@@ -2948,12 +2912,8 @@ public:
                 {"error_msg"       , string{}}
         };
 
-
-        // read page template
-        string checkoutputkeys_html = xmreg::read(TMPL_MY_CHECKRAWOUTPUTKEYS);
-
         // add header and footer
-        string full_page = get_full_page(checkoutputkeys_html);
+        string full_page = template_file["checkoutputkeys"];
 
         add_css_style(context);
 
@@ -3712,16 +3672,10 @@ public:
                 {"have_custom_lmdb"   , have_custom_lmdb}
         };
 
-        // read address.html
-        string address_html = xmreg::read(TMPL_ADDRESS);
-
-        // add header and footer
-        string full_page = get_full_page(address_html);
-
         add_css_style(context);
 
         // render the page
-        return mstch::render(full_page, context);
+        return mstch::render(template_file["address"], context);
     }
 
     // ;
@@ -3746,16 +3700,10 @@ public:
                 {"have_custom_lmdb"     , have_custom_lmdb}
         };
 
-        // read address.html
-        string address_html = xmreg::read(TMPL_ADDRESS);
-
         add_css_style(context);
 
-        // add header and footer
-        string full_page = get_full_page(address_html);
-
         // render the page
-        return mstch::render(full_page, context);
+        return mstch::render(template_file["address"], context);
     }
 
     map<string, vector<string>>
@@ -3957,11 +3905,8 @@ public:
             }
         }
 
-        // read search_results.html
-        string search_results_html = xmreg::read(TMPL_SEARCH_RESULTS);
-
         // add header and footer
-        string full_page = get_full_page(search_results_html);
+        string full_page = template_file["search_results"];
 
         // read partial for showing details of tx(s) found
         map<string, string> partials {
@@ -4728,7 +4673,7 @@ private:
     add_css_style(mstch::map& context)
     {
         context["css_styles"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
-            return this->css_styles;
+            return template_file["css_styles"];
         }};
     }
 
