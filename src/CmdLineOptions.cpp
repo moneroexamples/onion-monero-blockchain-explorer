@@ -35,6 +35,8 @@ namespace xmreg
                  "enable users to have the index page on autorefresh")
                 ("port,p", value<string>()->default_value("8081"),
                  "default port")
+                ("no-blocks-on-index", value<string>()->default_value("10"),
+                 "number of last blocks to be shown on index page")
                 ("bc-path,b", value<string>(),
                  "path to lmdb blockchain")
                 ("ssl-crt-file", value<string>(),

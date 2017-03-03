@@ -268,6 +268,7 @@ class page {
 
 
     uint64_t no_of_mempool_tx_of_frontpage;
+    uint64_t no_blocks_on_index;
 
 
 public:
@@ -277,7 +278,8 @@ public:
          bool _testnet, bool _enable_pusher,
          bool _enable_key_image_checker,
          bool _enable_output_key_checker,
-         bool _enable_autorefresh_option)
+         bool _enable_autorefresh_option,
+         uint64_t _no_blocks_on_index)
             : mcore {_mcore},
               core_storage {_core_storage},
               rpc {_deamon_url},
@@ -288,7 +290,8 @@ public:
               have_custom_lmdb {false},
               enable_key_image_checker {_enable_key_image_checker},
               enable_output_key_checker {_enable_output_key_checker},
-              enable_autorefresh_option {_enable_autorefresh_option}
+              enable_autorefresh_option {_enable_autorefresh_option},
+              no_blocks_on_index {_no_blocks_on_index}
     {
         css_styles = xmreg::read(TMPL_CSS_STYLES);
         no_of_mempool_tx_of_frontpage = 25;
@@ -336,24 +339,25 @@ public:
         server_timestamp = std::time(nullptr);
 
         // number of last blocks to show
-        uint64_t no_of_last_blocks {25 + 1};
+        uint64_t no_of_last_blocks {no_blocks_on_index + 1};
 
         // get the current blockchain height. Just to check
         uint64_t height = core_storage->get_current_blockchain_height();
 
         // initalise page tempate map with basic info about blockchain
         mstch::map context {
-                {"testnet"         , testnet},
-                {"have_custom_lmdb", have_custom_lmdb},
-                {"refresh"         , refresh_page},
-                {"height"          , std::to_string(height)},
-                {"server_timestamp", xmreg::timestamp_to_str(server_timestamp)},
-                {"age_format"      , string("[h:m:d]")},
-                {"page_no"         , std::to_string(page_no)},
-                {"total_page_no"   , std::to_string(height / (no_of_last_blocks))},
-                {"is_page_zero"    , !bool(page_no)},
-                {"next_page"       , std::to_string(page_no + 1)},
-                {"prev_page"       , std::to_string((page_no > 0 ? page_no - 1 : 0))},
+                {"testnet"          , testnet},
+                {"have_custom_lmdb" , have_custom_lmdb},
+                {"refresh"          , refresh_page},
+                {"height"           , std::to_string(height)},
+                {"server_timestamp" , xmreg::timestamp_to_str(server_timestamp)},
+                {"age_format"       , string("[h:m:d]")},
+                {"page_no"          , std::to_string(page_no)},
+                {"total_page_no"    , std::to_string(height / (no_of_last_blocks))},
+                {"is_page_zero"     , !bool(page_no)},
+                {"no_of_last_blocks", no_of_last_blocks},
+                {"next_page"        , std::to_string(page_no + 1)},
+                {"prev_page"        , std::to_string((page_no > 0 ? page_no - 1 : 0))},
                 {"enable_pusher"            , enable_pusher},
                 {"enable_key_image_checker" , enable_key_image_checker},
                 {"enable_output_key_checker", enable_output_key_checker},

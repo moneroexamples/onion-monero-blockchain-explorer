@@ -39,19 +39,23 @@ int main(int ac, const char* av[]) {
     bool enable_autorefresh_option {*enable_autorefresh_option_opt};
     bool enable_output_key_checker {*enable_output_key_checker_opt};
 
-    auto port_opt           = opts.get_option<string>("port");
-    auto bc_path_opt        = opts.get_option<string>("bc-path");
-    auto custom_db_path_opt = opts.get_option<string>("custom-db-path");
-    auto deamon_url_opt     = opts.get_option<string>("deamon-url");
-    auto ssl_crt_file_opt   = opts.get_option<string>("ssl-crt-file");
-    auto ssl_key_file_opt   = opts.get_option<string>("ssl-key-file");
+    auto port_opt               = opts.get_option<string>("port");
+    auto bc_path_opt            = opts.get_option<string>("bc-path");
+    auto custom_db_path_opt     = opts.get_option<string>("custom-db-path");
+    auto deamon_url_opt         = opts.get_option<string>("deamon-url");
+    auto ssl_crt_file_opt       = opts.get_option<string>("ssl-crt-file");
+    auto ssl_key_file_opt       = opts.get_option<string>("ssl-key-file");
+    auto no_blocks_on_index_opt = opts.get_option<string>("no-blocks-on-index");
 
     // set  monero log output level
     uint32_t log_level = 0;
     mlog_configure("", true);
 
-    //cast port number in string to uint16
+    //cast port number in string to uint
     uint16_t app_port = boost::lexical_cast<uint16_t>(*port_opt);
+
+    // cast no_blocks_on_index_opt to uint
+    uint64_t no_blocks_on_index = boost::lexical_cast<uint64_t>(*no_blocks_on_index_opt);
 
     bool use_ssl {false};
 
@@ -155,7 +159,8 @@ int main(int ac, const char* av[]) {
                           enable_pusher,
                           enable_key_image_checker,
                           enable_output_key_checker,
-                          enable_autorefresh_option);
+                          enable_autorefresh_option,
+                          no_blocks_on_index);
 
     // crow instance
     crow::SimpleApp app;
