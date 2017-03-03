@@ -133,17 +133,26 @@ sum_money_in_outputs(const transaction& tx);
 pair<uint64_t, uint64_t>
 sum_money_in_outputs(const string& json_str);
 
+pair<uint64_t, uint64_t>
+sum_money_in_outputs(const json& _json);
+
 uint64_t
 sum_money_in_inputs(const transaction& tx);
 
 pair<uint64_t, uint64_t>
 sum_money_in_inputs(const string& json_str);
 
+pair<uint64_t, uint64_t>
+sum_money_in_inputs(const json& _json);
+
 uint64_t
 count_nonrct_inputs(const transaction& tx);
 
 uint64_t
 count_nonrct_inputs(const string& json_str);
+
+uint64_t
+count_nonrct_inputs(const json& _json);
 
 array<uint64_t, 2>
 sum_money_in_tx(const transaction& tx);
@@ -159,6 +168,9 @@ get_mixin_no(const transaction& tx);
 
 vector<uint64_t>
 get_mixin_no(const string& json_str);
+
+vector<uint64_t>
+get_mixin_no(const json& _json);
 
 vector<uint64_t>
 get_mixin_no_in_txs(const vector<transaction>& txs);

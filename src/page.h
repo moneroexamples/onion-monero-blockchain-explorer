@@ -557,29 +557,34 @@ public:
                                          delta_time[3], delta_time[4]);
             }
 
-            //cout << _tx_info.tx_json << endl;
-
             // sum xmr in inputs and ouputs in the given tx
-            pair<uint64_t, uint64_t> sum_inputs  = xmreg::sum_money_in_inputs(_tx_info.tx_json);
-            pair<uint64_t, uint64_t> sum_outputs = xmreg::sum_money_in_outputs(_tx_info.tx_json);
-            uint64_t num_nonrct_inputs = xmreg::count_nonrct_inputs(_tx_info.tx_json);
+            pair<uint64_t, uint64_t> sum_inputs;
+            pair<uint64_t, uint64_t> sum_outputs;
+            uint64_t num_nonrct_inputs;
 
             // get mixin number in each transaction
-            vector<uint64_t> mixin_numbers = xmreg::get_mixin_no(_tx_info.tx_json);
+            vector<uint64_t> mixin_numbers;
 
-            uint64_t mixin_no = 0;
-
-            if (!mixin_numbers.empty())
-                mixin_no = mixin_numbers.at(0) - 1;
-
-            json j_tx;
+            uint64_t mixin_no {0};
 
             string is_ringct_str  {"N/A"};
             string rct_type_str   {"N/A"};
 
             try
             {
+                json j_tx;
+
                 j_tx = json::parse(_tx_info.tx_json);
+
+                // sum xmr in inputs and ouputs in the given tx
+                sum_inputs        = xmreg::sum_money_in_inputs(j_tx);
+                sum_outputs       = xmreg::sum_money_in_outputs(j_tx);
+                num_nonrct_inputs = xmreg::count_nonrct_inputs(j_tx);
+                mixin_numbers     = xmreg::get_mixin_no(j_tx);
+
+                if (!mixin_numbers.empty())
+                    mixin_no = mixin_numbers.at(0) - 1;
+
 
                 if (j_tx["version"].get<size_t>() > 1)
                 {

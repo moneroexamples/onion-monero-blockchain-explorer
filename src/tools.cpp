@@ -343,7 +343,19 @@ sum_money_in_outputs(const string& json_str)
     return sum_xmr;
 };
 
+pair<uint64_t, uint64_t>
+sum_money_in_outputs(const json& _json)
+{
+    pair<uint64_t, uint64_t> sum_xmr {0ULL, 0ULL};
 
+    for (const json& vout: _json["vout"])
+    {
+        sum_xmr.first += vout["amount"].get<uint64_t>();
+        ++sum_xmr.second;
+    }
+
+    return sum_xmr;
+};
 
 uint64_t
 sum_money_in_inputs(const transaction& tx)
@@ -395,6 +407,21 @@ sum_money_in_inputs(const string& json_str)
     return sum_xmr;
 };
 
+
+pair<uint64_t, uint64_t>
+sum_money_in_inputs(const json& _json)
+{
+    pair<uint64_t, uint64_t> sum_xmr {0, 0};
+
+    for (const json& vin: _json["vin"])
+    {
+        sum_xmr.first += vin["key"]["amount"].get<uint64_t>();
+        ++sum_xmr.second;
+    }
+
+    return sum_xmr;
+};
+
 uint64_t
 count_nonrct_inputs(const transaction& tx)
 {
@@ -438,6 +465,22 @@ count_nonrct_inputs(const string& json_str)
     }
 
     for (json& vin: j["vin"])
+    {
+        uint64_t amount = vin["key"]["amount"].get<uint64_t>();
+        if (amount != 0)
+            ++num;
+    }
+
+    return num;
+};
+
+
+uint64_t
+count_nonrct_inputs(const json& _json)
+{
+    uint64_t num {0};
+
+    for (const json& vin: _json["vin"])
     {
         uint64_t amount = vin["key"]["amount"].get<uint64_t>();
         if (amount != 0)
@@ -586,6 +629,16 @@ get_mixin_no(const string& json_str)
         cerr << "get_mixin_no: " << e.what() << endl;
         return mixin_no;
     }
+
+    return mixin_no;
+}
+
+vector<uint64_t>
+get_mixin_no(const json& _json)
+{
+    vector<uint64_t> mixin_no;
+
+    mixin_no.push_back(_json["vin"].at(0)["key"]["key_offsets"].size());
 
     return mixin_no;
 }
