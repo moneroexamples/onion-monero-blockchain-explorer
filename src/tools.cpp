@@ -1388,7 +1388,22 @@ get_human_readable_timestamp(uint64_t ts)
     return std::string(buffer);
 }
 
+void
+pause_execution(uint64_t no_seconds, const string& text)
+{
 
+    cout << "\nPausing " << text
+         << " for " << no_seconds << " seconds: "
+         << flush;
+
+    for (size_t i = 0; i < no_seconds; ++i)
+    {
+        cout << "." << flush;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+
+    cout << endl;
+}
 
 }
 
