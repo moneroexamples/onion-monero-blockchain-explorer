@@ -564,8 +564,6 @@ public:
             pair<uint64_t, uint64_t> sum_outputs = xmreg::sum_money_in_outputs(_tx_info.tx_json);
             uint64_t num_nonrct_inputs = xmreg::count_nonrct_inputs(_tx_info.tx_json);
 
-            sum_money_in_outputs(_tx_info.tx_json);
-
             // get mixin number in each transaction
             vector<uint64_t> mixin_numbers = xmreg::get_mixin_no(_tx_info.tx_json);
 
