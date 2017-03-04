@@ -19,6 +19,10 @@
 #include "mylmdb.h"
 #include "../ext/crow/http_request.h"
 
+#include "../ext/vpetrigocaches/cache.hpp"
+#include "../ext/vpetrigocaches/lru_cache_policy.hpp"
+#include "../ext/vpetrigocaches/fifo_cache_policy.hpp"
+
 #include <algorithm>
 #include <limits>
 #include <ctime>
@@ -275,6 +279,27 @@ class page {
     // read operation in OS
     map<string, string> template_file;
 
+    // alias for easy class typing
+    template <typename Key, typename Value>
+    using fifo_cache_t = caches::fixed_sized_cache<Key, Value, caches::FIFOCachePolicy<Key>>;
+
+
+    struct mempool_tx_info
+    {
+        json     j_tx;
+
+        pair<uint64_t, uint64_t> sum_inputs;
+        pair<uint64_t, uint64_t> sum_outputs;
+
+        uint64_t num_nonrct_inputs;
+
+        uint64_t mixin_no;
+
+        string   is_ringct_str;
+        string   rct_type_str;
+    };
+
+    fifo_cache_t<string, mempool_tx_info> mempool_tx_json_cache;
 
 public:
 
@@ -296,7 +321,8 @@ public:
               enable_key_image_checker {_enable_key_image_checker},
               enable_output_key_checker {_enable_output_key_checker},
               enable_autorefresh_option {_enable_autorefresh_option},
-              no_blocks_on_index {_no_blocks_on_index}
+              no_blocks_on_index {_no_blocks_on_index},
+              mempool_tx_json_cache(500)
     {
 
         no_of_mempool_tx_of_frontpage = 25;
@@ -600,28 +626,55 @@ public:
             {
                 json j_tx;
 
-                j_tx = json::parse(_tx_info.tx_json);
-
-                // sum xmr in inputs and ouputs in the given tx
-                sum_inputs        = xmreg::sum_money_in_inputs(j_tx);
-                sum_outputs       = xmreg::sum_money_in_outputs(j_tx);
-                num_nonrct_inputs = xmreg::count_nonrct_inputs(j_tx);
-                mixin_numbers     = xmreg::get_mixin_no(j_tx);
-
-                if (!mixin_numbers.empty())
-                    mixin_no = mixin_numbers.at(0) - 1;
-
-
-                if (j_tx["version"].get<size_t>() > 1)
+                if (mempool_tx_json_cache.Contains(_tx_info.id_hash))
                 {
-                    is_ringct_str = "yes";
-                    rct_type_str  = string("/") + to_string(j_tx["rct_signatures"]["type"].get<uint8_t>());
+                    mempool_tx_info cached_tx_info = mempool_tx_json_cache.Get(_tx_info.id_hash);
+
+                    j_tx              = cached_tx_info.j_tx;
+                    sum_inputs        = cached_tx_info.sum_inputs;
+                    sum_outputs       = cached_tx_info.sum_outputs;
+                    num_nonrct_inputs = cached_tx_info.num_nonrct_inputs;
+                    mixin_no          = cached_tx_info.mixin_no;
+                    is_ringct_str     = cached_tx_info.is_ringct_str;
+                    rct_type_str      = cached_tx_info.rct_type_str;
+
+                    cout << "getting json from cash for: " << _tx_info.id_hash << endl;
                 }
                 else
                 {
-                    is_ringct_str = "no";
-                    rct_type_str  = "";
+                    j_tx = json::parse(_tx_info.tx_json);
+
+                    // sum xmr in inputs and ouputs in the given tx
+                    sum_inputs        = xmreg::sum_money_in_inputs(j_tx);
+                    sum_outputs       = xmreg::sum_money_in_outputs(j_tx);
+                    num_nonrct_inputs = xmreg::count_nonrct_inputs(j_tx);
+                    mixin_numbers     = xmreg::get_mixin_no(j_tx);
+
+                    if (!mixin_numbers.empty())
+                        mixin_no = mixin_numbers.at(0) - 1;
+
+
+                    if (j_tx["version"].get<size_t>() > 1)
+                    {
+                        is_ringct_str = "yes";
+                        rct_type_str  = string("/") + to_string(j_tx["rct_signatures"]["type"].get<uint8_t>());
+                    }
+                    else
+                    {
+                        is_ringct_str = "no";
+                        rct_type_str  = "";
+                    }
+
+                    mempool_tx_json_cache.Put(
+                            _tx_info.id_hash,
+                            mempool_tx_info {
+                                j_tx,  sum_inputs, sum_outputs,
+                                num_nonrct_inputs, mixin_no,
+                                is_ringct_str, rct_type_str
+                            });
                 }
+
+
             }
             catch (std::invalid_argument& e)
             {
@@ -4682,3 +4735,4 @@ private:
 
 
 #endif //CROWXMR_PAGE_H
+
