@@ -284,6 +284,9 @@ class page {
     using fifo_cache_t = caches::fixed_sized_cache<Key, Value, caches::FIFOCachePolicy<Key>>;
 
 
+    // this struct is used to keep info about mempool
+    // txs in FIFO cache. Should speed up processing
+    // mempool txs for each request
     struct mempool_tx_info
     {
         json     j_tx;
@@ -297,9 +300,25 @@ class page {
 
         string   is_ringct_str;
         string   rct_type_str;
+
+        string hash;
+        string fee;
+        string xmr_inputs_str;
+        string xmr_outputs_str;
+        string timestamp;
+
+        string mixin_str;
+        string txsize;
     };
 
+    // cache of txs in mempool, so that we dont
+    // parse their json for each request
     fifo_cache_t<string, mempool_tx_info> mempool_tx_json_cache;
+
+    // cache of txs_map of txs in blocks. this is useful for
+    // index2 page, so that we dont parse txs in each block
+    // for each request.
+    fifo_cache_t<uint64_t, mstch::array> block_tx_json_cache;
 
 public:
 
@@ -322,7 +341,8 @@ public:
               enable_output_key_checker {_enable_output_key_checker},
               enable_autorefresh_option {_enable_autorefresh_option},
               no_blocks_on_index {_no_blocks_on_index},
-              mempool_tx_json_cache(500)
+              mempool_tx_json_cache(500),
+              block_tx_json_cache(100)
     {
 
         no_of_mempool_tx_of_frontpage = 25;
@@ -478,54 +498,94 @@ public:
                   (double(blk.timestamp) - double(prev_blk_timestamp))/60.0);
             }
 
-            // get all transactions in the block found
-            // initialize the first list with transaction for solving
-            // the block i.e. coinbase.
-            list<cryptonote::transaction> blk_txs {blk.miner_tx};
-            list<crypto::hash> missed_txs;
-
-            if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs))
+            if (block_tx_json_cache.Contains(i))
             {
-                cerr << "Cant get transactions in block: " << i << endl;
-                continue;
-            }
+                // get txs info in the ith block from
+                // our cache
 
-            uint64_t tx_i {0};
+                const mstch::array& txs_maps_tmp
+                        = block_tx_json_cache.Get(i);
 
-            for(list<cryptonote::transaction>::reverse_iterator rit = blk_txs.rbegin();
-                rit != blk_txs.rend(); ++rit)
-            {
-                const cryptonote::transaction& tx = *rit;
-
-                tx_details txd = get_tx_details(tx);
-
-                mstch::map txd_map = txd.get_mstch_map();
-
-                //add age to the txd mstch map
-                txd_map.insert({"height"    , i});
-                txd_map.insert({"blk_hash"  , blk_hash_str});
-                txd_map.insert({"time_delta", time_delta_str});
-                txd_map.insert({"age"       , age.first});
-                txd_map.insert({"is_ringct" , (tx.version > 1)});
-                txd_map.insert({"rct_type"  , tx.rct_signatures.type});
-                txd_map.insert({"blk_size"  , blk_size_str});
-
-
-                // do not show block info for other than
-                // last (i.e., first after reverse below)
-                // tx in the block
-                if (tx_i < blk_txs.size() - 1)
+                // copy tx maps from txs_maps_tmp into txs array,
+                // that will go to templates
+                for (const mstch::node& txd_map: txs_maps_tmp)
                 {
-                    txd_map["height"]     = string("");
-                    txd_map["age"]        = string("");
-                    txd_map["time_delta"] = string("");
-                    txd_map["blk_size"]   = string("");
+                    txs.push_back(boost::get<mstch::map>(txd_map));
                 }
 
-                txs.push_back(txd_map);
+                // cout << "block_tx_json_cache from cache" << endl;
 
-                ++tx_i;
             }
+            else
+            {
+                // this is new block. not in cashe.
+                // need to process its txs and add to cache
+
+                // get all transactions in the block found
+                // initialize the first list with transaction for solving
+                // the block i.e. coinbase.
+                list<cryptonote::transaction> blk_txs {blk.miner_tx};
+                list<crypto::hash> missed_txs;
+
+                if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs))
+                {
+                    cerr << "Cant get transactions in block: " << i << endl;
+                    continue;
+                }
+
+                uint64_t tx_i {0};
+
+                mstch::array txs_maps_tmp;
+
+                for(list<cryptonote::transaction>::reverse_iterator rit = blk_txs.rbegin();
+                    rit != blk_txs.rend(); ++rit)
+                {
+                    const cryptonote::transaction& tx = *rit;
+
+                    tx_details txd = get_tx_details(tx);
+
+                    mstch::map txd_map = txd.get_mstch_map();
+
+                    //add age to the txd mstch map
+                    txd_map.insert({"height"    , i});
+                    txd_map.insert({"blk_hash"  , blk_hash_str});
+                    txd_map.insert({"time_delta", time_delta_str});
+                    txd_map.insert({"age"       , age.first});
+                    txd_map.insert({"is_ringct" , (tx.version > 1)});
+                    txd_map.insert({"rct_type"  , tx.rct_signatures.type});
+                    txd_map.insert({"blk_size"  , blk_size_str});
+
+
+                    // do not show block info for other than
+                    // last (i.e., first after reverse below)
+                    // tx in the block
+                    if (tx_i < blk_txs.size() - 1)
+                    {
+                        txd_map["height"]     = string("");
+                        txd_map["age"]        = string("");
+                        txd_map["time_delta"] = string("");
+                        txd_map["blk_size"]   = string("");
+                    }
+
+                    txs_maps_tmp.push_back(txd_map);
+
+                    ++tx_i;
+
+                } // for(list<cryptonote::transaction>::reverse_iterator rit = blk_txs.rbegin();
+
+                // copy tx maps from txs_maps_tmp into txs array,
+                // that will go to templates
+                for (const mstch::node& txd_map: txs_maps_tmp)
+                {
+                    txs.push_back(boost::get<mstch::map>(txd_map));
+                }
+
+                // save in block_tx cache
+                block_tx_json_cache.Put(i, txs_maps_tmp);
+
+            } // else if (block_tx_json_cache.Contains(i))
+
+
 
             // save current's block timestamp as reference for the next one
             prev_blk_timestamp  = static_cast<double>(blk.timestamp);
@@ -622,26 +682,51 @@ public:
             string is_ringct_str  {"N/A"};
             string rct_type_str   {"N/A"};
 
+            string hash_str;
+            string fee_str;
+            string xmr_inputs_str;
+            string xmr_outputs_str;
+            string timestamp_str;
+
+            string mixin_str;
+            string txsize;
+
             try
             {
+                // get the above incormation from json of that tx
+
                 json j_tx;
 
                 if (mempool_tx_json_cache.Contains(_tx_info.id_hash))
                 {
+                    // maybe its already in cashe, so we can save some time
+                    // by using this, rather then making parsing json
+                    // and calculating it from json
+
                     mempool_tx_info cached_tx_info = mempool_tx_json_cache.Get(_tx_info.id_hash);
 
-                    j_tx              = cached_tx_info.j_tx;
+                    //j_tx              = cached_tx_info.j_tx; // dont need it currently
                     sum_inputs        = cached_tx_info.sum_inputs;
                     sum_outputs       = cached_tx_info.sum_outputs;
                     num_nonrct_inputs = cached_tx_info.num_nonrct_inputs;
                     mixin_no          = cached_tx_info.mixin_no;
                     is_ringct_str     = cached_tx_info.is_ringct_str;
                     rct_type_str      = cached_tx_info.rct_type_str;
+                    hash_str          = cached_tx_info.hash;
+                    fee_str           = cached_tx_info.fee;
+                    xmr_inputs_str    = cached_tx_info.xmr_inputs_str;
+                    xmr_outputs_str   = cached_tx_info.xmr_outputs_str;
+                    timestamp_str     = cached_tx_info.timestamp;
+                    mixin_str         = cached_tx_info.mixin_str;
+                    txsize            = cached_tx_info.txsize;
 
-                    cout << "getting json from cash for: " << _tx_info.id_hash << endl;
+                    //cout << "getting json from cash for: " << _tx_info.id_hash << endl;
                 }
                 else
                 {
+                    // its not in cash. Its new tx in mempool, so
+                    // construct this data and save into cash for later use
+
                     j_tx = json::parse(_tx_info.tx_json);
 
                     // sum xmr in inputs and ouputs in the given tx
@@ -665,39 +750,53 @@ public:
                         rct_type_str  = "";
                     }
 
+                    hash_str        = fmt::format("{:s}", _tx_info.id_hash);
+                    fee_str         = xmreg::xmr_amount_to_str(_tx_info.fee, "{:0.3f}");
+                    xmr_inputs_str  = xmreg::xmr_amount_to_str(sum_inputs.first , "{:0.3f}");
+                    xmr_outputs_str = xmreg::xmr_amount_to_str(sum_outputs.first, "{:0.3f}");
+                    timestamp_str   = xmreg::timestamp_to_str(_tx_info.receive_time);
+
+                    mixin_str         = fmt::format("{:d}", mixin_no);
+                    txsize            = fmt::format("{:0.2f}",
+                                                    static_cast<double>(_tx_info.blob_size)/1024.0);
+
+                    // save in mempool cache
                     mempool_tx_json_cache.Put(
                             _tx_info.id_hash,
                             mempool_tx_info {
                                 j_tx,  sum_inputs, sum_outputs,
                                 num_nonrct_inputs, mixin_no,
-                                is_ringct_str, rct_type_str
+                                is_ringct_str, rct_type_str,
+                                hash_str, fee_str,
+                                xmr_inputs_str, xmr_outputs_str,
+                                timestamp_str, mixin_str, txsize
                             });
-                }
+
+                } // else if (mempool_tx_json_cache.Contains(_tx_info.id_hash))
 
 
             }
             catch (std::invalid_argument& e)
             {
-                cerr << " j_tx = json::parse(_tx_info.tx_json);: " << e.what() << endl;
+                cerr << " j_tx = json::parse(_tx_info.tx_json): " << e.what() << endl;
             }
 
             // set output page template map
             txs.push_back(mstch::map {
-                    {"timestamp_no"  , _tx_info.receive_time},
-                    {"timestamp"     , xmreg::timestamp_to_str(_tx_info.receive_time)},
-                    {"age"           , age_str},
-                    {"hash"          , fmt::format("{:s}", _tx_info.id_hash)},
-                    {"fee"           , xmreg::xmr_amount_to_str(_tx_info.fee     , "{:0.3f}")},
-                    {"xmr_inputs"    , xmreg::xmr_amount_to_str(sum_inputs.first , "{:0.3f}")},
-                    {"xmr_outputs"   , xmreg::xmr_amount_to_str(sum_outputs.first, "{:0.3f}")},
-                    {"no_inputs"     , sum_inputs.second},
-                    {"no_outputs"    , sum_outputs.second},
+                    {"timestamp_no"    , _tx_info.receive_time},
+                    {"timestamp"       , timestamp_str},
+                    {"age"             , age_str},
+                    {"hash"            , hash_str},
+                    {"fee"             , fee_str},
+                    {"xmr_inputs"      , xmr_inputs_str},
+                    {"xmr_outputs"     , xmr_outputs_str},
+                    {"no_inputs"       , sum_inputs.second},
+                    {"no_outputs"      , sum_outputs.second},
                     {"no_nonrct_inputs", num_nonrct_inputs},
-                    {"is_ringct"     , is_ringct_str},
-                    {"rct_type"      , rct_type_str},
-                    {"mixin"         , fmt::format("{:d}", mixin_no)},
-                    {"txsize"        , fmt::format("{:0.2f}",
-                                                   static_cast<double>(_tx_info.blob_size)/1024.0)}
+                    {"is_ringct"       , is_ringct_str},
+                    {"rct_type"        , rct_type_str},
+                    {"mixin"           , mixin_str},
+                    {"txsize"          , txsize}
             });
 
             mempool_size_bytes += _tx_info.blob_size;
