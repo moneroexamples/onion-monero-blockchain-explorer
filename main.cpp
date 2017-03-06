@@ -6,9 +6,6 @@
 #include "src/MicroCore.h"
 #include "src/page.h"
 
-
-#include "ext/member_checker.h"
-
 #include <fstream>
 
 using boost::filesystem::path;
