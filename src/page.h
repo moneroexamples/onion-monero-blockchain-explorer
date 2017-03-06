@@ -253,7 +253,8 @@ class page {
     MicroCore* mcore;
     Blockchain* core_storage;
     rpccalls rpc;
-    time_t server_timestamp;
+
+    atomic<time_t> server_timestamp;
 
     string lmdb2_path;
 
@@ -278,6 +279,13 @@ class page {
     // this will improve performance of the explorer and reduce
     // read operation in OS
     map<string, string> template_file;
+
+
+    // alias for easy class typing
+    template <typename Key, typename Value>
+    using lru_cache_t = caches::fixed_sized_cache<Key, Value, caches::LRUCachePolicy<Key>>;
+
+
 
     // alias for easy class typing
     template <typename Key, typename Value>
@@ -320,6 +328,21 @@ class page {
     // for each request.
     fifo_cache_t<uint64_t, mstch::array> block_tx_json_cache;
 
+    // basic info about tx to be stored in cashe.
+    // we need to store block_no and timestamp,
+    // as this time and number of confirmation needs
+    // to be updated between requests. Just cant
+    // get it from cash, as it will be old very soon
+    struct tx_info_cache
+    {
+        uint64_t   block_no;
+        uint64_t   timestamp;
+        mstch::map tx_map;
+    };
+
+    lru_cache_t<crypto::hash, tx_info_cache> tx_context_cache;
+
+
 public:
 
     page(MicroCore* _mcore, Blockchain* _core_storage,
@@ -342,7 +365,8 @@ public:
               enable_autorefresh_option {_enable_autorefresh_option},
               no_blocks_on_index {_no_blocks_on_index},
               mempool_tx_json_cache(500),
-              block_tx_json_cache(100)
+              block_tx_json_cache(100),
+              tx_context_cache(1000)
     {
 
         no_of_mempool_tx_of_frontpage = 25;
@@ -397,6 +421,8 @@ public:
         template_file["checkoutputkeys"] = get_full_page(xmreg::read(TMPL_MY_CHECKRAWOUTPUTKEYS));
         template_file["address"]         = get_full_page(xmreg::read(TMPL_ADDRESS));
         template_file["search_results"]  = get_full_page(xmreg::read(TMPL_SEARCH_RESULTS));
+        template_file["tx_details"]      = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html");
+    
 
     }
 
@@ -1102,7 +1128,138 @@ public:
             }
         }
 
-        mstch::map tx_context = construct_tx_context(tx, with_ring_signatures);
+        mstch::map tx_context;
+
+        if (tx_context_cache.Contains(tx_hash))
+        {
+
+            // we are going to measure time for the construction of the
+            // tx context from cashe. just for fun, to see if cache is any faster.
+            auto start = std::chrono::steady_clock::now();
+
+            const tx_info_cache& tx_info_cashed = tx_context_cache.Get(tx_hash);
+
+            tx_context = tx_info_cashed.tx_map;
+
+            //cout << "get tx from cash: " << tx_hash_str <<endl;
+            //cout << " - tx_blk_height: " << boost::get<uint64_t>(tx_context["tx_blk_height"]) <<endl;
+            //cout << " - blk_timestamp_uint: " << boost::get<uint64_t>(tx_context["blk_timestamp_uint"]) <<endl;
+
+            // now have to update age and confirmation numbers of the tx.
+
+            uint64_t tx_blk_height      = boost::get<uint64_t>(tx_context["tx_blk_height"]);
+            uint64_t blk_timestamp_uint = boost::get<uint64_t>(tx_context["blk_timestamp_uint"]);
+
+            if (tx_blk_height > 0)
+            {
+                // seems to be in blockchain. off course it could have been orphaned
+                // so double check if its for sure in blockchain
+
+                if (core_storage->have_tx(tx_hash))
+                {
+                    // ok, it is still in blockchain
+                    // update its age and number of confirmations
+
+                    pair<string, string> age = get_age(std::time(nullptr), blk_timestamp_uint, FULL_AGE_FORMAT);
+
+                    tx_context["delta_time"] = age.first;
+
+                    uint64_t bc_height = core_storage->get_current_blockchain_height();
+
+                    tx_context["confirmations"] = bc_height - (tx_blk_height - 1);
+
+                    // marke it as from cashe. useful if we want to show
+                    // info about cashed/not cashed in frontend.
+                    tx_context["from_cache"] = true;
+
+                    auto duration = std::chrono::duration_cast<std::chrono::microseconds>
+                            (std::chrono::steady_clock::now() - start);
+
+                    tx_context["construction_time"] = fmt::format(
+                            "{:0.4f}", static_cast<double>(duration.count())/1.0e6);
+
+                    // normally we should update this into in the cache.
+                    // but since we make this check all the time,
+                    // we can skip updating cashed version
+
+                } // if (core_storage->have_tx(tx_hash))
+                else
+                {
+                    // its not in blockchain, but it was there when we cashed it.
+                    // so we update it in cash, as it should be back in mempool
+
+                    tx_context = construct_tx_context(tx, with_ring_signatures);
+
+                    tx_context_cache.Put(tx_hash, tx_info_cache {
+                            boost::get<uint64_t>(tx_context["tx_blk_height"]),
+                            boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
+                            tx_context
+                    });
+
+                }
+            } //  if (tx_blk_height > 0)
+            else
+            {
+                // the tx was cashed when in mempool.
+                // since then, it might have been included in some block.
+                // so we check it.
+
+                if (core_storage->have_tx(tx_hash))
+                {
+                    // checking if in blockchain already
+                    // it was before in mempool, but now maybe already in blockchain
+
+                    tx_context = construct_tx_context(tx, with_ring_signatures);
+
+                    tx_context_cache.Put(tx_hash, tx_info_cache {
+                            boost::get<uint64_t>(tx_context["tx_blk_height"]),
+                            boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
+                            tx_context
+                    });
+
+                } // if (core_storage->have_tx(tx_hash))
+                else
+                {
+                    // still seems to be in mempool only.
+                    // so just get its time duration, as its read only
+                    // from cache
+
+                    tx_context["from_cache"] = true;
+
+                    auto duration = std::chrono::duration_cast<std::chrono::microseconds>
+                            (std::chrono::steady_clock::now() - start);
+
+                    tx_context["construction_time"] = fmt::format(
+                            "{:0.4f}", static_cast<double>(duration.count())/1.0e6);
+
+                }
+
+            }  // else if (tx_blk_height > 0)
+
+        } // if (tx_context_cache.Contains(tx_hash))
+        else
+        {
+
+            // we are going to measure time for the construction of the
+            // tx context. just for fun, to see if cache is any faster.
+            auto start = std::chrono::steady_clock::now();
+
+            tx_context = construct_tx_context(tx, with_ring_signatures);
+
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>
+                    (std::chrono::steady_clock::now() - start);
+
+            tx_context_cache.Put(tx_hash, tx_info_cache {
+                    boost::get<uint64_t>(tx_context["tx_blk_height"]),
+                    boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
+                    tx_context
+            });
+
+            tx_context["construction_time"] = fmt::format(
+                    "{:0.4f}", static_cast<double>(duration.count())/1.0e6);
+
+        } // else if (tx_context_cache.Contains(tx_hash))
+        
 
         tx_context["show_more_details_link"] = show_more_details_link;
 
@@ -1113,26 +1270,20 @@ public:
 
         mstch::map context {
                 {"testnet"          , this->testnet},
-                {"have_custom_lmdb" , have_custom_lmdb}
+                {"have_custom_lmdb" , have_custom_lmdb},
+                {"txs"              , mstch::array{}}
         };
-        context.emplace("txs"     , mstch::array{});
 
         boost::get<mstch::array>(context["txs"]).push_back(tx_context);
 
         map<string, string> partials {
-                {"tx_details", xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html")},
+                {"tx_details", template_file["tx_details"]},
         };
-
-        // read tx.html
-        string tx_html = xmreg::read(TMPL_TX);
 
         add_css_style(context);
 
-        // add header and footer
-        string full_page = get_full_page(tx_html);
-
         // render the page
-        return mstch::render(full_page, context, partials);
+        return mstch::render(template_file["tx"], context, partials);
     }
 
     string
@@ -2202,7 +2353,7 @@ public:
                 boost::get<mstch::array>(context["txs"]).push_back(tx_context);
 
                 map<string, string> partials {
-                        {"tx_details", xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html")},
+                        {"tx_details", template_file["tx_details"]},
                 };
 
                 // read checkrawtx.html
@@ -4116,7 +4267,6 @@ private:
     mstch::map
     construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
     {
-
         tx_details txd = get_tx_details(tx);
 
         crypto::hash tx_hash = txd.hash;
@@ -4172,9 +4322,10 @@ private:
                 {"testnet"               , testnet},
                 {"have_custom_lmdb"      , have_custom_lmdb},
                 {"tx_hash"               , tx_hash_str},
-                {"tx_prefix_hash"        , pod_to_hex(txd.prefix_hash)},
+                {"tx_prefix_hash"        , pod_to_hex(txd.prefix_hash)},                
                 {"tx_pub_key"            , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
                 {"blk_height"            , tx_blk_height_str},
+                {"tx_blk_height"         , tx_blk_height},
                 {"tx_size"               , fmt::format("{:0.4f}",
                                                       static_cast<double>(txd.size) / 1024.0)},
                 {"tx_fee"                , xmreg::xmr_amount_to_str(txd.fee)},
@@ -4199,7 +4350,9 @@ private:
                 {"has_error"             , false},
                 {"error_msg"             , string("")},
                 {"have_raw_tx"           , false},
-                {"show_more_details_link", true}
+                {"show_more_details_link", true},
+                {"from_cache"            , false},
+                {"construction_time"     , string {}},
         };
 
         string server_time_str = xmreg::timestamp_to_str(server_timestamp, "%F");
