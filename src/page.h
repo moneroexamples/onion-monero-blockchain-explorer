@@ -485,6 +485,12 @@ public:
 
         vector<double> blk_sizes;
 
+        // measure time of cache based execution, and non-cached execution
+        double duration_cached     {0.0};
+        double duration_non_cached {0.0};
+        uint64_t cache_hits   {0};
+        uint64_t cache_misses {0};
+
         // iterate over last no_of_last_blocks of blocks
         for (uint64_t i = start_height; i <= end_height; ++i)
         {
@@ -524,10 +530,14 @@ public:
                   (double(blk.timestamp) - double(prev_blk_timestamp))/60.0);
             }
 
+
             if (block_tx_json_cache.Contains(i))
             {
                 // get txs info in the ith block from
                 // our cache
+
+                // start measure time here
+                auto start = std::chrono::steady_clock::now();
 
                 const mstch::array& txs_maps_tmp
                         = block_tx_json_cache.Get(i);
@@ -539,13 +549,22 @@ public:
                     txs.push_back(boost::get<mstch::map>(txd_map));
                 }
 
+                auto duration = std::chrono::duration_cast<std::chrono::microseconds>
+                        (std::chrono::steady_clock::now() - start);
+
                 // cout << "block_tx_json_cache from cache" << endl;
 
+                duration_cached += duration.count();
+
+                ++cache_hits;
             }
             else
             {
                 // this is new block. not in cashe.
                 // need to process its txs and add to cache
+
+                // start measure time here
+                auto start = std::chrono::steady_clock::now();
 
                 // get all transactions in the block found
                 // initialize the first list with transaction for solving
@@ -606,6 +625,15 @@ public:
                     txs.push_back(boost::get<mstch::map>(txd_map));
                 }
 
+                auto duration = std::chrono::duration_cast<std::chrono::microseconds>
+                        (std::chrono::steady_clock::now() - start);
+
+                // cout << "block_tx_json_cache from cache" << endl;
+
+                duration_non_cached += duration.count();
+
+                ++cache_misses;
+
                 // save in block_tx cache
                 block_tx_json_cache.Put(i, txs_maps_tmp);
 
@@ -622,6 +650,22 @@ public:
         double blk_size_median = xmreg::calc_median(blk_sizes.begin(), blk_sizes.end());
 
         context["blk_size_median"] = fmt::format("{:0.2f}", blk_size_median);
+
+
+        // save computational times for disply in the frontend
+
+        context["construction_time_cached"] = fmt::format(
+                "{:0.4f}", duration_cached/1.0e6);
+
+        context["construction_time_non_cached"] = fmt::format(
+                "{:0.4f}", duration_non_cached/1.0e6);
+
+        context["construction_time_total"] = fmt::format(
+                "{:0.4f}", (duration_non_cached+duration_cached)/1.0e6);
+
+        context["cache_hits"]   = cache_hits;
+        context["cache_misses"] = cache_misses;
+
 
         // reverse txs and remove last (i.e., oldest)
         // tx. This is done so that time delats
