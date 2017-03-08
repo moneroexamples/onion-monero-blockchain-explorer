@@ -29,7 +29,7 @@ Tor users:
  - [http://2hbthfb66na6pqgv.onion](http://2hbthfb66na6pqgv.onion)
  
 Clearnet versions:
- - [http://139.162.32.245:8081/](http://139.162.32.245:8081/) - bleeding edge version.
+ - [http://139.162.32.245:8081/](http://139.162.32.245:8081/) - bleeding edge version, no https.
  - [https://explorer.xmr.my/](https://explorer.xmr.my/) - https enabled, up to date, but sometimes down.
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
