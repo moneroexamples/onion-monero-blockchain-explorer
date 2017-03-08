@@ -241,7 +241,8 @@ struct tx_details
     }
 };
 
-class page {
+class page
+{
 
     // check if we have tx_blob member in tx_info structure
     static const bool HAVE_TX_BLOB {
@@ -326,7 +327,7 @@ class page {
     // cache of txs_map of txs in blocks. this is useful for
     // index2 page, so that we dont parse txs in each block
     // for each request.
-    fifo_cache_t<uint64_t, mstch::array> block_tx_json_cache;
+    fifo_cache_t<uint64_t, vector<pair<crypto::hash, mstch::map>>> block_tx_cache;
 
     // basic info about tx to be stored in cashe.
     // we need to store block_no and timestamp,
@@ -365,7 +366,7 @@ public:
               enable_autorefresh_option {_enable_autorefresh_option},
               no_blocks_on_index {_no_blocks_on_index},
               mempool_tx_json_cache(500),
-              block_tx_json_cache(100),
+              block_tx_cache(100),
               tx_context_cache(1000)
     {
 
@@ -531,7 +532,7 @@ public:
             }
 
 
-            if (block_tx_json_cache.Contains(i))
+            if (block_tx_cache.Contains(i))
             {
                 // get txs info in the ith block from
                 // our cache
@@ -539,15 +540,71 @@ public:
                 // start measure time here
                 auto start = std::chrono::steady_clock::now();
 
-                const mstch::array& txs_maps_tmp
-                        = block_tx_json_cache.Get(i);
+                const vector<pair<crypto::hash, mstch::map>>& txd_pairs
+                        = block_tx_cache.Get(i);
 
                 // copy tx maps from txs_maps_tmp into txs array,
                 // that will go to templates
-                for (const mstch::node& txd_map: txs_maps_tmp)
+                for (const pair<crypto::hash, mstch::map>& txd_pair: txd_pairs)
                 {
-                    txs.push_back(boost::get<mstch::map>(txd_map));
-                }
+                    // we need to check if the given transaction is still
+                    // in the same block as when it was cached. it is possible
+                    // the block got orphaned, and this tx is in mempool
+                    // or different block, and what we have in cache
+                    // is thus wrong
+
+                    // but we do this only for first top blocks. no sense
+                    // doing it for all blocks
+
+                    bool is_tx_still_in_block_as_expected {true};
+
+                    if (i + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE > height)
+                    {
+                        const crypto::hash& tx_hash = txd_pair.first;
+
+                        try
+                        {
+                            uint64_t tx_height_in_blockchain =
+                                    core_storage->get_db().get_tx_block_height(tx_hash);
+
+                            // check if height of the given tx that we have in cache,
+                            // denoted by i, is same as what is acctually stored
+                            // in blockchain
+                            if (tx_height_in_blockchain == i)
+                            {
+                                is_tx_still_in_block_as_expected = true;
+                            }
+                        }
+                        catch (const TX_DNE& e)
+                        {
+                            cerr << "Tx from cache" << pod_to_hex(tx_hash)
+                                 << " is no longer in the blockchain "
+                                 << endl;
+
+                            is_tx_still_in_block_as_expected = false;
+                        }
+
+                    } // if (i + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE > height)
+
+
+                    if (!is_tx_still_in_block_as_expected)
+                    {
+                        // if some tx in cache is not in blockchain
+                        // where it should be, we should ditch
+                        // the cache entry for the entire block
+                        // and redo the block usually way
+
+                        //todo finish this
+
+                    }
+
+                    // if we got to here, it means that everything went fine
+                    // and no unexpeced things happended.
+                    const mstch::map& txd_map = boost::get<mstch::map>(txd_pair.second);
+
+                    txs.push_back(txd_map);
+
+                }  // for (const pair<crypto::hash, mstch::map>& txd_pair: txd_pairs)
 
                 auto duration = std::chrono::duration_cast<std::chrono::microseconds>
                         (std::chrono::steady_clock::now() - start);
@@ -580,7 +637,9 @@ public:
 
                 uint64_t tx_i {0};
 
-                mstch::array txs_maps_tmp;
+                // this vector will go into block_tx cache
+                //          tx_hash     , txd_map
+                vector<pair<crypto::hash, mstch::map>> txd_pairs;
 
                 for(list<cryptonote::transaction>::reverse_iterator rit = blk_txs.rbegin();
                     rit != blk_txs.rend(); ++rit)
@@ -612,7 +671,7 @@ public:
                         txd_map["blk_size"]   = string("");
                     }
 
-                    txs_maps_tmp.push_back(txd_map);
+                    txd_pairs.emplace_back(txd.hash, txd_map);
 
                     ++tx_i;
 
@@ -620,9 +679,9 @@ public:
 
                 // copy tx maps from txs_maps_tmp into txs array,
                 // that will go to templates
-                for (const mstch::node& txd_map: txs_maps_tmp)
+                for (const pair<crypto::hash, mstch::map>& txd_pair: txd_pairs)
                 {
-                    txs.push_back(boost::get<mstch::map>(txd_map));
+                    txs.push_back(boost::get<mstch::map>(txd_pair.second));
                 }
 
                 auto duration = std::chrono::duration_cast<std::chrono::microseconds>
@@ -635,7 +694,7 @@ public:
                 ++cache_misses;
 
                 // save in block_tx cache
-                block_tx_json_cache.Put(i, txs_maps_tmp);
+                block_tx_cache.Put(i, txd_pairs);
 
             } // else if (block_tx_json_cache.Contains(i))
 
