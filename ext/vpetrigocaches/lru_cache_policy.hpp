@@ -34,6 +34,7 @@ class LRUCachePolicy : public ICachePolicy<Key>
   {
     // remove the least recently used element
     key_finder.erase(lru_queue.back());
+
     lru_queue.pop_back();
   }
 

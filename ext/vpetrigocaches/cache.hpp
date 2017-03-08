@@ -24,10 +24,14 @@ class fixed_sized_cache
 
   using operation_guard = typename std::lock_guard<std::mutex>;
 
-  fixed_sized_cache(size_t max_size, const Policy& policy = Policy())
-      : max_cache_size{max_size}, cache_policy(policy)
+  fixed_sized_cache(
+          size_t max_size,
+          const Policy& policy = Policy())
+      : max_cache_size{max_size},
+        cache_policy(policy)
   {
-    if (max_cache_size == 0) {
+    if (max_cache_size == 0)
+    {
       max_cache_size = std::numeric_limits<size_t>::max();
     }
   }
@@ -37,16 +41,20 @@ class fixed_sized_cache
     operation_guard{safe_op};
     auto elem_it = FindElem(key);
 
-    if (elem_it == cache_items_map.end()) {
+    if (elem_it == cache_items_map.end())
+    {
       // add new element to the cache
-      if (Size() + 1 > max_cache_size) {
+      if (Size() + 1 > max_cache_size)
+      {
         auto disp_candidate_key = cache_policy.ReplCandidate();
 
         Erase(disp_candidate_key);
       }
 
       Insert(key, value);
-    } else {
+    }
+    else
+    {
       // update previous value
       Update(key, value);
     }

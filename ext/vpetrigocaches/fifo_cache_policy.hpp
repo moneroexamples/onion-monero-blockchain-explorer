@@ -39,6 +39,7 @@ class FIFOCachePolicy : public ICachePolicy<Key>
   }
 
  private:
+
   std::list<Key> fifo_queue;
 };
 } // namespace caches

@@ -23,18 +23,25 @@ class LFUCachePolicy : public ICachePolicy<Key>
   void Insert(const Key& key) override
   {
     constexpr std::size_t INIT_VAL = 1;
+
     // all new value initialized with the frequency 1
-    lfu_storage[key] = frequency_storage.emplace_hint(frequency_storage.cbegin(), INIT_VAL, key);
+    lfu_storage[key] = frequency_storage.emplace_hint(
+            frequency_storage.cbegin(), INIT_VAL, key);
   }
 
   void Touch(const Key& key) override
   {
     // get the previous frequency value of a key
     auto elem_for_update = lfu_storage[key];
-    auto updated_elem = std::make_pair(elem_for_update->first + 1, elem_for_update->second);
+
+    auto updated_elem = std::make_pair(
+            elem_for_update->first + 1, elem_for_update->second);
+
     // update the previous value
     frequency_storage.erase(elem_for_update);
-    lfu_storage[key] = frequency_storage.emplace_hint(frequency_storage.cend(), std::move(updated_elem));
+
+    lfu_storage[key] = frequency_storage.emplace_hint(
+            frequency_storage.cend(), std::move(updated_elem));
   }
 
   void Erase(const Key& key) override
@@ -53,6 +60,7 @@ class LFUCachePolicy : public ICachePolicy<Key>
  private:
 
   std::multimap<std::size_t, Key> frequency_storage;
+
   std::unordered_map<Key, lfu_iterator> lfu_storage;
 };
 } // namespace caches
