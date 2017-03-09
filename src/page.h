@@ -327,7 +327,7 @@ class page
     // cache of txs_map of txs in blocks. this is useful for
     // index2 page, so that we dont parse txs in each block
     // for each request.
-    fifo_cache_t<uint64_t, vector<pair<crypto::hash, mstch::map>>> block_tx_cache;
+    fifo_cache_t<uint64_t, vector<pair<crypto::hash, mstch::node>>> block_tx_cache;
 
     // basic info about tx to be stored in cashe.
     // we need to store block_no and timestamp,
@@ -544,12 +544,12 @@ public:
                 // start measure time here
                 auto start = std::chrono::steady_clock::now();
 
-                const vector<pair<crypto::hash, mstch::map>>& txd_pairs
+                const vector<pair<crypto::hash, mstch::node>>& txd_pairs
                         = block_tx_cache.Get(i);
 
                 // copy tx maps from txs_maps_tmp into txs array,
                 // that will go to templates
-                for (const pair<crypto::hash, mstch::map>& txd_pair: txd_pairs)
+                for (const pair<crypto::hash, mstch::node>& txd_pair: txd_pairs)
                 {
                     // we need to check if the given transaction is still
                     // in the same block as when it was cached. it is possible
@@ -615,7 +615,9 @@ public:
                         // ditch entire cache, as redo it below.
 
                         block_tx_cache.Clear();
-                        continue; // reado the main loop iteration, i.e. current block
+                        txs.clear();
+                        i = start_height;
+                        continue; // reado the main loop
                     }
 
                     // if we got to here, it means that everything went fine
@@ -660,7 +662,7 @@ public:
 
                 // this vector will go into block_tx cache
                 //          tx_hash     , txd_map
-                vector<pair<crypto::hash, mstch::map>> txd_pairs;
+                vector<pair<crypto::hash, mstch::node>> txd_pairs;
 
                 for(list<cryptonote::transaction>::reverse_iterator rit = blk_txs.rbegin();
                     rit != blk_txs.rend(); ++rit)
@@ -700,7 +702,7 @@ public:
 
                 // copy tx maps from txs_maps_tmp into txs array,
                 // that will go to templates
-                for (const pair<crypto::hash, mstch::map>& txd_pair: txd_pairs)
+                for (const pair<crypto::hash, mstch::node>& txd_pair: txd_pairs)
                 {
                     txs.push_back(boost::get<mstch::map>(txd_pair.second));
                 }
