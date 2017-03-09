@@ -492,8 +492,11 @@ public:
         uint64_t cache_hits   {0};
         uint64_t cache_misses {0};
 
+        // loop index
+        uint64_t i = start_height;
+
         // iterate over last no_of_last_blocks of blocks
-        for (uint64_t i = start_height; i <= end_height; ++i)
+        while (i <= end_height)
         {
             // get block at the given height i
             block blk;
@@ -501,6 +504,7 @@ public:
             if (!mcore->get_block_by_height(i, blk))
             {
                 cerr << "Cant get block: " << i << endl;
+                ++i;
                 continue;
             }
 
@@ -562,26 +566,43 @@ public:
                     {
                         const crypto::hash& tx_hash = txd_pair.first;
 
-                        try
+                        if (core_storage->have_tx(tx_hash))
                         {
-                            uint64_t tx_height_in_blockchain =
-                                    core_storage->get_db().get_tx_block_height(tx_hash);
-
-                            // check if height of the given tx that we have in cache,
-                            // denoted by i, is same as what is acctually stored
-                            // in blockchain
-                            if (tx_height_in_blockchain == i)
+                            try
                             {
-                                is_tx_still_in_block_as_expected = true;
+                                uint64_t tx_height_in_blockchain =
+                                        core_storage->get_db().get_tx_block_height(tx_hash);
+
+                                // check if height of the given tx that we have in cache,
+                                // denoted by i, is same as what is acctually stored
+                                // in blockchain
+                                if (tx_height_in_blockchain == i)
+                                {
+                                    is_tx_still_in_block_as_expected = true;
+                                }
+                                else
+                                {
+                                    // if no tx in the given block, just stop
+                                    // any futher search. no need. we are going
+                                    // to ditch the cache, in a monent
+                                    is_tx_still_in_block_as_expected = false;
+                                    break;
+                                }
+                            }
+                            catch (const TX_DNE& e)
+                            {
+                                cerr << "Tx from cache" << pod_to_hex(tx_hash)
+                                     << " is no longer in the blockchain "
+                                     << endl;
+
+                                is_tx_still_in_block_as_expected = false;
+                                break;
                             }
                         }
-                        catch (const TX_DNE& e)
+                        else
                         {
-                            cerr << "Tx from cache" << pod_to_hex(tx_hash)
-                                 << " is no longer in the blockchain "
-                                 << endl;
-
                             is_tx_still_in_block_as_expected = false;
+                            break;
                         }
 
                     } // if (i + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE > height)
@@ -590,12 +611,11 @@ public:
                     if (!is_tx_still_in_block_as_expected)
                     {
                         // if some tx in cache is not in blockchain
-                        // where it should be, we should ditch
-                        // the cache entry for the entire block
-                        // and redo the block usually way
+                        // where it should be, its probably better to
+                        // ditch entire cache, as redo it below.
 
-                        //todo finish this
-
+                        block_tx_cache.Clear();
+                        continue; // reado the main loop iteration, i.e. current block
                     }
 
                     // if we got to here, it means that everything went fine
@@ -632,6 +652,7 @@ public:
                 if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs))
                 {
                     cerr << "Cant get transactions in block: " << i << endl;
+                    ++i;
                     continue;
                 }
 
@@ -699,9 +720,10 @@ public:
             } // else if (block_tx_json_cache.Contains(i))
 
 
-
             // save current's block timestamp as reference for the next one
             prev_blk_timestamp  = static_cast<double>(blk.timestamp);
+
+            ++i; // go to next block number
 
         } // for (uint64_t i = start_height; i <= end_height; ++i)
 

@@ -25,6 +25,10 @@ class ICachePolicy
 
   // return a key of a replacement candidate
   virtual const Key& ReplCandidate() const = 0;
+
+  // clear the cache
+  virtual void Clear() = 0;
+
 };
 
 template <typename Key>
@@ -56,6 +60,13 @@ class NoCachePolicy : public ICachePolicy<Key>
   {
     return *key_storage.crbegin();
   }
+
+  // return a key of a displacement candidate
+  void Clear() override
+  {
+    key_storage.clear();
+  }
+
  private:
 
   std::unordered_set<Key> key_storage;

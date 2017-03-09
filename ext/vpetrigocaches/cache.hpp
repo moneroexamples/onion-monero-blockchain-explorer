@@ -88,7 +88,17 @@ class fixed_sized_cache
     return cache_items_map.size();
   }
 
+  // return a key of a displacement candidate
+  void Clear()
+  {
+    operation_guard{safe_op};
+
+    cache_policy.Clear();
+    cache_items_map.clear();
+  }
+
  protected:
+
   void Insert(const Key& key, const Value& value)
   {
     cache_policy.Insert(key);
@@ -112,12 +122,16 @@ class fixed_sized_cache
     return cache_items_map.find(key);
   }
 
- private:
+
+private:
 
   std::unordered_map<Key, Value> cache_items_map;
+
   mutable Policy cache_policy;
   mutable std::mutex safe_op;
+
   size_t max_cache_size;
+
 };
 }
 

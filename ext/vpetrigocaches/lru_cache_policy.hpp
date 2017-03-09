@@ -43,6 +43,13 @@ class LRUCachePolicy : public ICachePolicy<Key>
   {
     return lru_queue.back();
   }
+
+  // return a key of a displacement candidate
+  void Clear() override
+  {
+      lru_queue.clear();
+      key_finder.clear();
+  }
   
  private:
 

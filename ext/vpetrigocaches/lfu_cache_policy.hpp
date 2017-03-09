@@ -57,6 +57,14 @@ class LFUCachePolicy : public ICachePolicy<Key>
     return frequency_storage.cbegin()->second;
   }
 
+  // return a key of a displacement candidate
+  void Clear() override
+  {
+    frequency_storage.clear();
+    lfu_storage.clear();
+  }
+
+
  private:
 
   std::multimap<std::size_t, Key> frequency_storage;

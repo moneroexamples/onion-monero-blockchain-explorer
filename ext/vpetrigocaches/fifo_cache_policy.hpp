@@ -38,7 +38,13 @@ class FIFOCachePolicy : public ICachePolicy<Key>
     return fifo_queue.back();
   }
 
- private:
+  // return a key of a displacement candidate
+  void Clear() override
+  {
+    fifo_queue.clear();
+  }
+
+private:
 
   std::list<Key> fifo_queue;
 };
