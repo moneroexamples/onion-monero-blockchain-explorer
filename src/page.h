@@ -423,6 +423,8 @@ public:
         template_file["address"]         = get_full_page(xmreg::read(TMPL_ADDRESS));
         template_file["search_results"]  = get_full_page(xmreg::read(TMPL_SEARCH_RESULTS));
         template_file["tx_details"]      = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html");
+        template_file["tx_table_head"]   = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_head.html");
+        template_file["tx_table_row"]    = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html");
     
 
     }
@@ -2484,7 +2486,7 @@ public:
                 };
 
                 // read checkrawtx.html
-                string checkrawtx_html = xmreg::read(TMPL_MY_CHECKRAWTX);
+                string checkrawtx_html = template_file["checkrawtx"];
 
                 // add header and footer
                 string full_page =  get_full_page(checkrawtx_html);
@@ -2735,7 +2737,7 @@ public:
         }
 
         map<string, string> partials {
-                {"tx_details", xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html")},
+                {"tx_details", template_file["tx_details"]},
         };
 
         add_css_style(context);
@@ -4340,8 +4342,8 @@ public:
 
         // read partial for showing details of tx(s) found
         map<string, string> partials {
-            {"tx_table_head", xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html")},
-            {"tx_table_row" , xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html")}
+            {"tx_table_head", template_file["tx_table_head"]},
+            {"tx_table_row" , template_file["tx_table_row"]}
         };
 
         add_css_style(context);
