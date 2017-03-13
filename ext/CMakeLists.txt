@@ -11,7 +11,8 @@ set(SOURCE_HEADERS
         )
 
 set(SOURCE_FILES
-        format.cc
+        fmt/format.cc
+        fmt/ostream.cc
         date/tz.cpp)
 
 # make static library called libmyxrm
