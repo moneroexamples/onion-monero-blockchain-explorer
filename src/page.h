@@ -2485,16 +2485,10 @@ public:
                         {"tx_details", template_file["tx_details"]},
                 };
 
-                // read checkrawtx.html
-                string checkrawtx_html = template_file["checkrawtx"];
-
-                // add header and footer
-                string full_page =  get_full_page(checkrawtx_html);
-
                 add_css_style(context);
 
                 // render the page
-                return mstch::render(full_page, context, partials);
+                return mstch::render(template_file["checkrawtx"], context, partials);
 
             } // if (strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
 
