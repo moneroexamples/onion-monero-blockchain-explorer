@@ -27,6 +27,8 @@ namespace xmreg
                  "use testnet blockchain")
                 ("enable-pusher", value<bool>()->default_value(false)->implicit_value(true),
                  "enable pushing signed tx")
+                ("enable-mixin-details", value<bool>()->default_value(false)->implicit_value(true),
+                 "enable mixin details for key images, e.g., timescale, mixin of mixins, in tx context")
                 ("enable-key-image-checker", value<bool>()->default_value(false)->implicit_value(true),
                  "enable key images file checker")
                 ("enable-output-key-checker", value<bool>()->default_value(false)->implicit_value(true),

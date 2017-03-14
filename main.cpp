@@ -23,6 +23,7 @@ int main(int ac, const char* av[]) {
     auto enable_output_key_checker_opt = opts.get_option<bool>("enable-output-key-checker");
     auto enable_autorefresh_option_opt = opts.get_option<bool>("enable-autorefresh-option");
     auto enable_pusher_opt             = opts.get_option<bool>("enable-pusher");
+    auto enable_mixin_details_opt      = opts.get_option<bool>("enable-mixin-details");
 
     // if help was chosen, display help text and finish
     if (*help_opt)
@@ -35,6 +36,7 @@ int main(int ac, const char* av[]) {
     bool enable_key_image_checker  {*enable_key_image_checker_opt};
     bool enable_autorefresh_option {*enable_autorefresh_option_opt};
     bool enable_output_key_checker {*enable_output_key_checker_opt};
+    bool enable_mixin_details      {*enable_mixin_details_opt};
 
     auto port_opt               = opts.get_option<string>("port");
     auto bc_path_opt            = opts.get_option<string>("bc-path");
@@ -157,6 +159,7 @@ int main(int ac, const char* av[]) {
                           enable_key_image_checker,
                           enable_output_key_checker,
                           enable_autorefresh_option,
+                          enable_mixin_details,
                           no_blocks_on_index);
 
     // crow instance
