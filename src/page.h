@@ -764,7 +764,7 @@ public:
         std::reverse(txs.begin(), txs.end());
 
         // get memory pool rendered template
-        string mempool_html = mempool();
+        string mempool_html = mempool(false, no_of_mempool_tx_of_frontpage);
 
         // append mempool_html to the index context map
         context["mempool_info"] = mempool_html;
@@ -781,7 +781,7 @@ public:
      * Render mempool data
      */
     string
-    mempool(bool add_header_and_footer = false)
+    mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
     {
         std::vector<tx_info> mempool_txs;
 
@@ -802,8 +802,28 @@ public:
 
         uint64_t mempool_size_bytes {0};
 
+        // process only up to no_of_mempool_tx txs of mempool.
+        // this is useful from the front page were we show by default
+        // only 25 mempool txs. this way, we just parse 25 txs, rather
+        // than potentially hundrets just to ditch most of them later.
+
+        if (add_header_and_footer == false)
+        {
+            // this is to show limited number of txs in mempool
+            // for example, in the front page
+            no_of_mempool_tx = mempool_txs.size() > no_of_mempool_tx
+                               ? no_of_mempool_tx
+                               : mempool_txs.size();
+        }
+        else
+        {
+            // if we are adding footers and headers, means we
+            // disply mempool on its own page, thus show all mempoool txs.
+            no_of_mempool_tx = mempool_txs.size();
+        }
+
         // for each transaction in the memory pool
-        for (size_t i = 0; i < mempool_txs.size(); ++i)
+        for (size_t i = 0; i < no_of_mempool_tx; ++i)
         {
             // get transaction info of the tx in the mempool
             tx_info _tx_info = mempool_txs.at(i);
@@ -966,16 +986,6 @@ public:
         context.insert({"mempool_size_kB",
                         fmt::format("{:0.2f}", static_cast<double>(mempool_size_bytes)/1024.0)});
 
-        // sort txs in mempool based on their age
-        std::sort(txs.begin(), txs.end(), [](mstch::node& m1, mstch::node& m2)
-        {
-            uint64_t t1 = boost::get<uint64_t>(boost::get<mstch::map>(m1)["timestamp_no"]);
-            uint64_t t2 = boost::get<uint64_t>(boost::get<mstch::map>(m2)["timestamp_no"]);
-
-            return t1 > t2;
-        });
-
-
         if (add_header_and_footer)
         {
             // this is when mempool is on its own page, /mempool
@@ -989,15 +999,8 @@ public:
 
         // this is for partial disply on front page.
 
-        context["mempool_fits_on_front_page"]    = (txs.size() <= no_of_mempool_tx_of_frontpage);
-        context["no_of_mempool_tx_of_frontpage"] = no_of_mempool_tx_of_frontpage;
-
-        if (txs.size() > no_of_mempool_tx_of_frontpage)
-        {
-            // dont show more than the specific number mempool txs on
-            // the front page
-            txs.resize(no_of_mempool_tx_of_frontpage);
-        }
+        context["mempool_fits_on_front_page"]    = (txs.size() <= no_of_mempool_tx);
+        context["no_of_mempool_tx_of_frontpage"] = no_of_mempool_tx;
 
         context["partial_mempool_shown"] = true;
 
