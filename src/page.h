@@ -999,7 +999,7 @@ public:
 
         // this is for partial disply on front page.
 
-        context["mempool_fits_on_front_page"]    = (txs.size() <= no_of_mempool_tx);
+        context["mempool_fits_on_front_page"]    = (mempool_txs.size() <= no_of_mempool_tx);
         context["no_of_mempool_tx_of_frontpage"] = no_of_mempool_tx;
 
         context["partial_mempool_shown"] = true;
