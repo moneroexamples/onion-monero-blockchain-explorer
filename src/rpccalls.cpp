@@ -98,6 +98,16 @@ rpccalls::get_mempool(vector<tx_info>& mempool_txs)
 
     mempool_txs = res.transactions;
 
+    // mempool txs are not sorted base on their arival time,
+    // so we sort it here.
+
+    std::sort(mempool_txs.begin(), mempool_txs.end(),
+    [](tx_info& t1, tx_info& t2)
+    {
+        return t1.receive_time > t2.receive_time;
+    });
+
+
     return true;
 }
 
