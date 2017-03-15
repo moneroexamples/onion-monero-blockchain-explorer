@@ -24,23 +24,21 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
 ## Address
 
 Tor users:
-  
+ 
+ - [http://libwh5lvouddzei4.onion](http://libwh5lvouddzei4.onion/)
  - [http://2hbthfb66na6pqgv.onion](http://2hbthfb66na6pqgv.onion)
- - [http://libwh5lvouddzei4.onion](http://libwh5lvouddzei4.onion/).
-
+ 
 Clearnet versions:
- - [https://explorer.xmr.my/](https://explorer.xmr.my/) - https enabled.
+ - [http://139.162.32.245:8081/](http://139.162.32.245:8081/) - bleeding edge, no https.
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled.
- - [http://139.162.32.245:8081/](http://139.162.32.245:8081/) - most up to date but no https.
- - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
- - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
- - [http://blox.supportxmr.com/](http://blox.supportxmr.com/).
+ - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled. 
+ - [http://blox.supportxmr.com/](http://blox.supportxmr.com/) - no https.
+ - [https://explorer.xmr.my/](https://explorer.xmr.my/) - https enabled.
   
 Clearnet testnet Monero version:
 
- - [https://testnet.explorer.xmr.my/](https://testnet.explorer.xmr.my/) - https enabled, most up to date. 
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
-
+ - [https://testnet.explorer.xmr.my/](https://testnet.explorer.xmr.my/) - https enabled, most up to date.  
 
 i2p users (main Monero network) - down for now:
 
@@ -120,6 +118,10 @@ git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
 
 # enter the downloaded sourced code folder
 cd onion-monero-blockchain-explorer
+
+# make ~/Downloads forlder if you dont have it
+# time zone library that explorer is using, puts there
+# its database of time zone offsets
 
 # make a build folder and enter it
 mkdir build && cd build
