@@ -674,7 +674,7 @@ public:
                 {
                     const cryptonote::transaction& tx = *rit;
 
-                    tx_details txd = get_tx_details(tx);
+                    tx_details txd = get_tx_details(tx, false, i, height);
 
                     mstch::map txd_map = txd.get_mstch_map();
 
@@ -1089,7 +1089,8 @@ public:
         uint64_t sum_fees = 0;
 
         // get tx details for the coinbase tx, i.e., miners reward
-        tx_details txd_coinbase = get_tx_details(blk.miner_tx, true);
+        tx_details txd_coinbase = get_tx_details(blk.miner_tx, true, 
+            _blk_height, current_blockchain_height);
 
         // initalise page tempate map with basic info about blockchain
         mstch::map context {
@@ -4829,7 +4830,10 @@ private:
 
 
     tx_details
-    get_tx_details(const transaction& tx, bool coinbase = false)
+    get_tx_details(const transaction& tx,
+                   bool coinbase = false,
+                   uint64_t blk_height = 0,
+                   uint64_t bc_height = 0)
     {
         tx_details txd;
 
@@ -4846,18 +4850,18 @@ private:
         txd.pk = xmreg::get_tx_pub_key_from_received_outs(tx);
 
         // sum xmr in inputs and ouputs in the given tx
-        txd.xmr_inputs  = sum_money_in_inputs(tx);
-        txd.xmr_outputs = sum_money_in_outputs(tx);
-        txd.num_nonrct_inputs = count_nonrct_inputs(tx);
+        array<uint64_t, 4> sum_data = summary_of_in_out_rct(
+                tx, txd.output_pub_keys, txd.input_key_imgs);
 
-        // get mixin number
-        txd.mixin_no    = get_mixin_no(tx);
+        txd.xmr_outputs       = sum_data[0];
+        txd.xmr_inputs        = sum_data[1];
+        txd.mixin_no          = sum_data[2];
+        txd.num_nonrct_inputs = sum_data[3];
 
         txd.fee = 0;
 
-        transaction tx_copy = tx;
-
-        txd.json_representation = obj_to_json_str(tx_copy);
+        //transaction tx_copy = tx;
+        //txd.json_representation = obj_to_json_str(tx_copy);
 
 
         if (!coinbase &&  tx.vin.size() > 0)
@@ -4874,15 +4878,8 @@ private:
         get_payment_id(tx, txd.payment_id, txd.payment_id8);
 
 
-        //blobdata tx_blob = t_serializable_object_to_blob(tx);
-
         // get tx size in bytes
         txd.size = get_object_blobsize(tx);
-        //txd.size = tx_blob.size();
-        //txd.size = core_storage->get_db().get_block_size();
-
-        txd.input_key_imgs  = get_key_images(tx);
-        txd.output_pub_keys = get_ouputs(tx);
 
         txd.extra = tx.extra;
 
@@ -4897,14 +4894,25 @@ private:
 
         txd.no_confirmations = 0;
 
-        if (core_storage->have_tx(txd.hash))
+        if (blk_height == 0 && core_storage->have_tx(txd.hash))
         {
+            // if blk_height is zero then search for tx block in
+            // the blockchain. but since often block height is know a priory
+            // this is not needed
+
             txd.blk_height = core_storage->get_db().get_tx_block_height(txd.hash);
 
             // get the current blockchain height. Just to check
             uint64_t bc_height = core_storage->get_current_blockchain_height();
 
             txd.no_confirmations = bc_height - (txd.blk_height - 1);
+        }
+        else
+        {
+            // if we know blk_height, and current blockchan height
+            // just use it to get no_confirmations.
+            
+            txd.no_confirmations = bc_height - (blk_height - 1);
         }
 
         return txd;

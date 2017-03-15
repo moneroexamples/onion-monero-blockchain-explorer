@@ -137,6 +137,13 @@ sum_money_in_outputs(const string& json_str);
 pair<uint64_t, uint64_t>
 sum_money_in_outputs(const json& _json);
 
+
+array<uint64_t, 4>
+summary_of_in_out_rct(
+        const transaction& tx,
+        vector<pair<txout_to_key, uint64_t>>& output_pub_keys,
+        vector<txin_to_key>& input_key_imgs);
+
 uint64_t
 sum_money_in_inputs(const transaction& tx);
 
