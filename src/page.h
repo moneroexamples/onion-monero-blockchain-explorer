@@ -455,39 +455,36 @@ public:
 
         // initalise page tempate map with basic info about blockchain
         mstch::map context {
-                {"testnet"          , testnet},
-                {"have_custom_lmdb" , have_custom_lmdb},
-                {"refresh"          , refresh_page},
-                {"height"           , std::to_string(height)},
-                {"server_timestamp" , xmreg::timestamp_to_str(server_timestamp)},
-                {"age_format"       , string("[h:m:d]")},
-                {"page_no"          , std::to_string(page_no)},
-                {"total_page_no"    , std::to_string(height / (no_of_last_blocks))},
-                {"is_page_zero"     , !bool(page_no)},
-                {"no_of_last_blocks", no_of_last_blocks},
-                {"next_page"        , std::to_string(page_no + 1)},
-                {"prev_page"        , std::to_string((page_no > 0 ? page_no - 1 : 0))},
+                {"testnet"                  , testnet},
+                {"have_custom_lmdb"         , have_custom_lmdb},
+                {"refresh"                  , refresh_page},
+                {"height"                   , height},
+                {"server_timestamp"         , xmreg::timestamp_to_str(server_timestamp)},
+                {"age_format"               , string("[h:m:d]")},
+                {"page_no"                  , page_no},
+                {"total_page_no"            , (height / no_of_last_blocks)},
+                {"is_page_zero"             , !bool(page_no)},
+                {"no_of_last_blocks"        , no_of_last_blocks},
+                {"next_page"                , (page_no + 1)},
+                {"prev_page"                , (page_no > 0 ? page_no - 1 : 0)},
                 {"enable_pusher"            , enable_pusher},
                 {"enable_key_image_checker" , enable_key_image_checker},
                 {"enable_output_key_checker", enable_output_key_checker},
                 {"enable_autorefresh_option", enable_autorefresh_option}
         };
+
         context.emplace("txs", mstch::array()); // will keep tx to show
 
         // get reference to txs mstch map to be field below
         mstch::array& txs = boost::get<mstch::array>(context["txs"]);
 
         // calculate starting and ending block numbers to show
-        uint64_t start_height = height - no_of_last_blocks * (page_no + 1);
-        uint64_t end_height   = height - no_of_last_blocks * (page_no);
+        int64_t start_height = height - no_of_last_blocks * (page_no + 1);
 
-        // check few conditions to make sure we are whithin the avaliable range
-        //@TODO its too messed up. needs to find cleaner way.
-        start_height = start_height > 0      ? start_height : 0;
-        end_height   = end_height   < height ? end_height   : height;
-        start_height = start_height > end_height ? 0 : start_height;
-        end_height   = end_height - start_height > no_of_last_blocks
-                       ? no_of_last_blocks : end_height;
+        // check if start height is not below range
+        start_height = start_height < 0 ? 0 : start_height;
+
+        int64_t end_height = start_height + no_of_last_blocks;
 
         // previous blk timestamp, initalised to lowest possible value
         double prev_blk_timestamp {std::numeric_limits<double>::lowest()};
@@ -735,7 +732,7 @@ public:
 
             ++i; // go to next block number
 
-        } // for (uint64_t i = start_height; i <= end_height; ++i)
+        } // while (i <= end_height)
 
         // calculate median size of the blocks shown
         double blk_size_median = xmreg::calc_median(blk_sizes.begin(), blk_sizes.end());
