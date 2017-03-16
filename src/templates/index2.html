@@ -52,7 +52,6 @@
                     <td>fees</td>
                     <td>outputs</td>
                     <td>in(nonrct)/out</td>
-                    <td>rct/type</td>
                     <td>mixin</td>
                     <td>tx size [kB]</td>
                 </tr>
@@ -65,10 +64,6 @@
                     <td>{{tx_fee_short}}</td>
                     <td>{{sum_outputs_short}}</td>
                     <td>{{no_inputs}}({{no_nonrct_inputs}})/{{no_outputs}}</td>
-                    <td>
-                        {{#is_ringct}}yes/{{rct_type}}{{/is_ringct}}
-                        {{^is_ringct}}no{{/is_ringct}}
-                    </td>
                     <td>{{mixin}}</td>
                     <td>{{tx_size_short}}</td>
                 </tr>
