@@ -100,20 +100,6 @@ using namespace cryptonote;
 using namespace crypto;
 using namespace std;
 
-// define a checker to test if a structure has "tx_blob"
-// member variable. I use modified daemon with few extra
-// bits and pieces here and there. One of them is
-// tx_blob in cryptonote::tx_info structure
-// thus I check if I run my version, or just
-// generic one
-DEFINE_MEMBER_CHECKER(tx_blob)
-
-// define getter to get tx_blob, i.e., get_tx_blob function
-// as string if exists. the getter return empty string if
-// tx_blob does not exist
-DEFINE_MEMBER_GETTER(tx_blob, string)
-
-
 
 /**
  * Check if a given header filed contains value string
@@ -288,11 +274,6 @@ struct tx_details
 
 class page
 {
-
-    // check if we have tx_blob member in tx_info structure
-    static const bool HAVE_TX_BLOB {
-        HAS_MEMBER(cryptonote::tx_info, tx_blob)
-    };
 
     static const bool FULL_AGE_FORMAT {true};
 
@@ -5020,97 +5001,46 @@ private:
           return found_txs;
         }
 
-        // if we have tx blob disply more.
-        // this info can also be obtained from json that is
-        // normally returned by the RCP call (see below in detailed view)
-        if (HAVE_TX_BLOB)
+        // if dont have tx_blob member, construct tx
+        // from json obtained from the rpc call
+
+        for (size_t i = 0; i < mempool_txs.size(); ++i)
         {
-            // get tx_blob if exists
-            //string tx_blob = get_tx_blob(_tx_info);
+            // get transaction info of the tx in the mempool
+            tx_info _tx_info = mempool_txs.at(i);
 
-            for (size_t i = 0; i < mempool_txs.size(); ++i)
+            crypto::hash mem_tx_hash = null_hash;
+
+            if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
             {
-                // get transaction info of the tx in the mempool
-                tx_info _tx_info = mempool_txs.at(i);
-
-                // get tx_blob if exists
-                string tx_blob = get_tx_blob(_tx_info);
-
-                if (tx_blob.empty())
-                {
-                    cerr << "tx_blob is empty. Probably its not a custom deamon." << endl;
-                    continue;
-                }
-
-                // pare tx_blob into tx class
                 transaction tx;
 
-                if (!parse_and_validate_tx_from_blob(
-                        tx_blob, tx))
+                //cout << "\n\n\n_tx_info.id_hash:" << _tx_info.id_hash << endl;
+
+                if (!xmreg::make_tx_from_json(_tx_info.tx_json, tx))
                 {
-                    cerr << "Cant get tx from blob" << endl;
+                    cerr << "Cant make tx from _tx_info.tx_json" << endl;
                     continue;
                 }
 
-
-                // if we dont provide tx_hash, just get all txs in
-                // the mempool
-                if (tx_hash != null_hash)
+                if (_tx_info.id_hash != pod_to_hex(get_transaction_hash(tx)))
                 {
-                    // check if tx hash matches, and if yes, save it for return
-                    if (tx_hash == get_transaction_hash(tx))
-                    {
-                        found_txs.push_back(make_pair(_tx_info, tx));
-                        break;
-                    }
-                }
-                else
-                {
-                   found_txs.push_back(make_pair(_tx_info, tx));
+                    cerr << "Hash of reconstructed tx from json does not match "
+                            "what we should get!"
+                         << endl;
+                    continue;
                 }
 
-            }
-        }
-        else
-        {
-            // if dont have tx_blob member, construct tx
-            // from json obtained from the rpc call
-
-            for (size_t i = 0; i < mempool_txs.size(); ++i)
-            {
-                // get transaction info of the tx in the mempool
-                tx_info _tx_info = mempool_txs.at(i);
-
-                crypto::hash mem_tx_hash = null_hash;
-
-                if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
+                if (tx_hash == mem_tx_hash)
                 {
-                    transaction tx;
-
-                    //cout << "\n\n\n_tx_info.id_hash:" << _tx_info.id_hash << endl;
-
-                    if (!xmreg::make_tx_from_json(_tx_info.tx_json, tx))
-                    {
-                        cerr << "Cant make tx from _tx_info.tx_json" << endl;
-                        continue;
-                    }
-
-                    if (_tx_info.id_hash != pod_to_hex(get_transaction_hash(tx)))
-                    {
-                        cerr << "Hash of reconstructed tx from json does not match "
-                                "what we should get!"
-                             << endl;
-                        continue;
-                    }
-
-                    if (tx_hash == mem_tx_hash)
-                    {
-                        found_txs.push_back(make_pair(_tx_info, tx));
-                        break;
-                    }
+                    found_txs.push_back(make_pair(_tx_info, tx));
+                    break;
                 }
-            }
-        }
+
+            } //  if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
+
+        } // for (size_t i = 0; i < mempool_txs.size(); ++i)
+
 
         return found_txs;
     }

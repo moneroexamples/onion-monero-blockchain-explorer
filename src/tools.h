@@ -20,7 +20,6 @@
 #include "../ext/fmt/ostream.h"
 #include "../ext/fmt/format.h"
 #include "../ext/json.hpp"
-#include "../ext/member_checker.h"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
