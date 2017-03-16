@@ -512,10 +512,10 @@ public:
         uint64_t cache_misses {0};
 
         // loop index
-        uint64_t i = start_height;
+        int64_t i = end_height;
 
         // iterate over last no_of_last_blocks of blocks
-        while (i <= end_height)
+        while (i >= start_height)
         {
             // get block at the given height i
             block blk;
@@ -523,7 +523,7 @@ public:
             if (!mcore->get_block_by_height(i, blk))
             {
                 cerr << "Cant get block: " << i << endl;
-                ++i;
+                --i;
                 continue;
             }
 
@@ -544,15 +544,6 @@ public:
             pair<string, string> age = get_age(server_timestamp, blk.timestamp);
 
             context["age_format"] = age.second;
-
-            // get time difference [m] between previous and current blocks
-            string time_delta_str {};
-
-            if (prev_blk_timestamp > std::numeric_limits<double>::lowest())
-            {
-              time_delta_str = fmt::format("({:06.2f})",
-                  (double(blk.timestamp) - double(prev_blk_timestamp))/60.0);
-            }
 
 
             if (block_tx_cache.Contains(i))
@@ -635,7 +626,7 @@ public:
 
                         block_tx_cache.Clear();
                         txs.clear();
-                        i = start_height;
+                        i = end_height;
                         continue; // reado the main loop
                     }
 
@@ -673,7 +664,7 @@ public:
                 if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs))
                 {
                     cerr << "Cant get transactions in block: " << i << endl;
-                    ++i;
+                    --i;
                     continue;
                 }
 
@@ -683,10 +674,9 @@ public:
                 //          tx_hash     , txd_map
                 vector<pair<crypto::hash, mstch::node>> txd_pairs;
 
-                for(list<cryptonote::transaction>::reverse_iterator rit = blk_txs.rbegin();
-                    rit != blk_txs.rend(); ++rit)
+                for(auto it = blk_txs.begin(); it != blk_txs.end(); ++it)
                 {
-                    const cryptonote::transaction& tx = *rit;
+                    const cryptonote::transaction& tx = *it;
 
                     tx_details txd = get_tx_details(tx, false, i, height);
 
@@ -695,21 +685,17 @@ public:
                     //add age to the txd mstch map
                     txd_map.insert({"height"    , i});
                     txd_map.insert({"blk_hash"  , blk_hash_str});
-                    txd_map.insert({"time_delta", time_delta_str});
                     txd_map.insert({"age"       , age.first});
                     txd_map.insert({"is_ringct" , (tx.version > 1)});
                     txd_map.insert({"rct_type"  , tx.rct_signatures.type});
                     txd_map.insert({"blk_size"  , blk_size_str});
 
 
-                    // do not show block info for other than
-                    // last (i.e., first after reverse below)
-                    // tx in the block
-                    if (tx_i < blk_txs.size() - 1)
+                    // do not show block info for other than first tx in a block
+                    if (tx_i > 0)
                     {
                         txd_map["height"]     = string("");
                         txd_map["age"]        = string("");
-                        txd_map["time_delta"] = string("");
                         txd_map["blk_size"]   = string("");
                     }
 
@@ -729,8 +715,6 @@ public:
                 auto duration = std::chrono::duration_cast<std::chrono::microseconds>
                         (std::chrono::steady_clock::now() - start);
 
-                // cout << "block_tx_json_cache from cache" << endl;
-
                 duration_non_cached += duration.count();
 
                 ++cache_misses;
@@ -740,11 +724,7 @@ public:
 
             } // else if (block_tx_json_cache.Contains(i))
 
-
-            // save current's block timestamp as reference for the next one
-            prev_blk_timestamp  = static_cast<double>(blk.timestamp);
-
-            ++i; // go to next block number
+            --i; // go to next block number
 
         } // while (i <= end_height)
 
@@ -768,12 +748,6 @@ public:
         context["cache_hits"]   = cache_hits;
         context["cache_misses"] = cache_misses;
 
-
-        // reverse txs and remove last (i.e., oldest)
-        // tx. This is done so that time delats
-        // are easier to calcualte in the above for loop
-        std::reverse(txs.begin(), txs.end());
-
         // get memory pool rendered template
         string mempool_html = mempool(false, no_of_mempool_tx_of_frontpage);
 
@@ -784,9 +758,7 @@ public:
 
         // render the page
         return mstch::render(template_file["index2"], context);
-
     }
-
 
     /**
      * Render mempool data
