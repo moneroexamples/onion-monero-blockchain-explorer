@@ -4545,11 +4545,31 @@ private:
         // umounts.
         bool have_any_unknown_amount {false};
 
+        uint64_t max_no_of_inputs_to_show {10};
+
+        // if a tx has more inputs than max_no_of_inputs_to_show,
+        // we only show 10 first.
+        bool show_part_of_inputs = (txd.input_key_imgs.size() > max_no_of_inputs_to_show);
+
+        // but if we show all details, i.e.,
+        // the show all inputs, regardless of their number
+        if (detailed_view)
+        {
+            show_part_of_inputs = false;
+        }
+
         vector<vector<uint64_t>> mixin_timestamp_groups;
+
 
         // make timescale maps for mixins in input
         for (const txin_to_key &in_key: txd.input_key_imgs)
         {
+
+            if (show_part_of_inputs && (input_idx > max_no_of_inputs_to_show))
+            {
+                break;
+            }
+
             // get absolute offsets of mixins
             std::vector<uint64_t> absolute_offsets
                     = cryptonote::relative_output_offsets_to_absolute(
@@ -4714,6 +4734,7 @@ private:
             mixin_timestamp_groups.push_back(mixin_timestamps);
 
             input_idx++;
+
         } // for (const txin_to_key& in_key: txd.input_key_imgs)
 
 
@@ -4743,11 +4764,14 @@ private:
         }
 
 
-        context["have_any_unknown_amount"] = have_any_unknown_amount;
-        context["inputs_xmr_sum_not_zero"] = (inputs_xmr_sum > 0);
-        context["inputs_xmr_sum"]          = xmreg::xmr_amount_to_str(inputs_xmr_sum);
-        context["server_time"]             = server_time_str;
-        context["enable_mixins_details"]   = detailed_view;
+        context["have_any_unknown_amount"]  = have_any_unknown_amount;
+        context["inputs_xmr_sum_not_zero"]  = (inputs_xmr_sum > 0);
+        context["inputs_xmr_sum"]           = xmreg::xmr_amount_to_str(inputs_xmr_sum);
+        context["server_time"]              = server_time_str;
+        context["enable_mixins_details"]    = detailed_view;
+        context["show_part_of_inputs"]      = show_part_of_inputs;
+        context["max_no_of_inputs_to_show"] = max_no_of_inputs_to_show;
+
 
         context.emplace("inputs", inputs);
 
