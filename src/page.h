@@ -833,6 +833,12 @@ public:
             no_of_mempool_tx = mempool_txs.size();
         }
 
+
+        double duration_cached     {0.0};
+        double duration_non_cached {0.0};
+        uint64_t cache_hits   {0};
+        uint64_t cache_misses {0};
+
         // for each transaction in the memory pool
         for (size_t i = 0; i < no_of_mempool_tx; ++i)
         {
@@ -883,6 +889,7 @@ public:
             string mixin_str;
             string txsize;
 
+
             try
             {
                 // get the above incormation from json of that tx
@@ -894,6 +901,9 @@ public:
                     // maybe its already in cashe, so we can save some time
                     // by using this, rather then making parsing json
                     // and calculating it from json
+
+                    // start measure time here
+                    auto start = std::chrono::steady_clock::now();
 
                     mempool_tx_info cached_tx_info = mempool_tx_json_cache.Get(_tx_info.id_hash);
 
@@ -912,12 +922,24 @@ public:
                     mixin_str         = cached_tx_info.mixin_str;
                     txsize            = cached_tx_info.txsize;
 
+                    auto duration = std::chrono::duration_cast<std::chrono::microseconds>
+                            (std::chrono::steady_clock::now() - start);
+
+                    // cout << "block_tx_json_cache from cache" << endl;
+
+                    duration_cached += duration.count();
+
+                    ++cache_hits;
+
                     //cout << "getting json from cash for: " << _tx_info.id_hash << endl;
                 }
                 else
                 {
                     // its not in cash. Its new tx in mempool, so
                     // construct this data and save into cash for later use
+
+                    // start measure time here
+                    auto start = std::chrono::steady_clock::now();
 
                     j_tx = json::parse(_tx_info.tx_json);
 
@@ -951,6 +973,15 @@ public:
                     mixin_str         = fmt::format("{:d}", mixin_no);
                     txsize            = fmt::format("{:0.2f}",
                                                     static_cast<double>(_tx_info.blob_size)/1024.0);
+
+                    auto duration = std::chrono::duration_cast<std::chrono::microseconds>
+                            (std::chrono::steady_clock::now() - start);
+
+                    // cout << "block_tx_json_cache from cache" << endl;
+
+                    duration_non_cached += duration.count();
+
+                    ++cache_misses;
 
                     // save in mempool cache
                     mempool_tx_json_cache.Put(
@@ -995,7 +1026,21 @@ public:
         }
 
         context.insert({"mempool_size_kB",
-                        fmt::format("{:0.2f}", static_cast<double>(mempool_size_bytes)/1024.0)});
+                        fmt::format("{:0.2f}",
+                                    static_cast<double>(mempool_size_bytes)/1024.0)});
+
+
+        context["construction_time_cached"] = fmt::format(
+                "{:0.4f}", duration_cached/1.0e6);
+
+        context["construction_time_non_cached"] = fmt::format(
+                "{:0.4f}", duration_non_cached/1.0e6);
+
+        context["construction_time_total"] = fmt::format(
+                "{:0.4f}", (duration_non_cached+duration_cached)/1.0e6);
+
+        context["cache_hits"]   = cache_hits;
+        context["cache_misses"] = cache_misses;
 
         if (add_header_and_footer)
         {
