@@ -48,6 +48,50 @@
 #define TMPL_MY_RAWOUTPUTKEYS       TMPL_DIR "/rawoutputkeys.html"
 #define TMPL_MY_CHECKRAWOUTPUTKEYS  TMPL_DIR "/checkrawoutputkeys.html"
 
+
+
+
+// basic info about tx to be stored in cashe.
+// we need to store block_no and timestamp,
+// as this time and number of confirmation needs
+// to be updated between requests. Just cant
+// get it from cash, as it will be old very soon
+struct tx_info_cache
+{
+    uint64_t   block_no;
+    uint64_t   timestamp;
+    mstch::map tx_map;
+
+    // custom key for use in cache.
+    // cache uses unordeded map for keys
+    struct key
+    {
+        crypto::hash tx_hash;
+        bool detailed;
+
+        bool operator==(const key &other) const
+        {
+            return (tx_hash == other.tx_hash && detailed == other.detailed);
+        }
+    };
+};
+
+// indect overload of hash for tx_info_cache::key
+namespace std
+{
+    template<>
+    struct hash<tx_info_cache::key>
+    {
+        size_t operator()(const tx_info_cache::key& k) const
+        {
+            size_t const h1 ( std::hash<crypto::hash>{}(k.tx_hash) );
+            size_t const h2 ( std::hash<bool>{}(k.detailed) );
+            return h1 ^ (h2 << 1);
+        };
+    };
+}
+
+
 namespace xmreg
 {
 
@@ -241,6 +285,7 @@ struct tx_details
     }
 };
 
+
 class page
 {
 
@@ -333,19 +378,7 @@ class page
     // for each request.
     fifo_cache_t<uint64_t, vector<pair<crypto::hash, mstch::node>>> block_tx_cache;
 
-    // basic info about tx to be stored in cashe.
-    // we need to store block_no and timestamp,
-    // as this time and number of confirmation needs
-    // to be updated between requests. Just cant
-    // get it from cash, as it will be old very soon
-    struct tx_info_cache
-    {
-        uint64_t   block_no;
-        uint64_t   timestamp;
-        mstch::map tx_map;
-    };
-
-    lru_cache_t<crypto::hash, tx_info_cache> tx_context_cache;
+    lru_cache_t<tx_info_cache::key, tx_info_cache> tx_context_cache;
 
 
 public:
@@ -1255,7 +1288,7 @@ public:
 
                 // for mempool tx, we dont show more details, e.g., json tx representation
                 // so no need for the link
-                show_more_details_link = false;
+               // show_more_details_link = false;
             }
             else
             {
@@ -1266,14 +1299,17 @@ public:
 
         mstch::map tx_context;
 
-        if (tx_context_cache.Contains(tx_hash))
+        if (tx_context_cache.Contains({tx_hash, with_ring_signatures}))
         {
+            // with_ring_signatures == 0 means that cache is not used
+            // when obtaining detailed information about tx is requested.
 
             // we are going to measure time for the construction of the
             // tx context from cashe. just for fun, to see if cache is any faster.
             auto start = std::chrono::steady_clock::now();
 
-            const tx_info_cache& tx_info_cashed = tx_context_cache.Get(tx_hash);
+            const tx_info_cache& tx_info_cashed
+                    = tx_context_cache.Get({tx_hash, with_ring_signatures});
 
             tx_context = tx_info_cashed.tx_map;
 
@@ -1296,7 +1332,10 @@ public:
                     // ok, it is still in blockchain
                     // update its age and number of confirmations
 
-                    pair<string, string> age = get_age(std::time(nullptr), blk_timestamp_uint, FULL_AGE_FORMAT);
+                    pair<string, string> age
+                            = get_age(std::time(nullptr),
+                                      blk_timestamp_uint,
+                                      FULL_AGE_FORMAT);
 
                     tx_context["delta_time"] = age.first;
 
@@ -1326,12 +1365,13 @@ public:
 
                     tx_context = construct_tx_context(tx, with_ring_signatures);
 
-                    tx_context_cache.Put(tx_hash, tx_info_cache {
-                            boost::get<uint64_t>(tx_context["tx_blk_height"]),
-                            boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
-                            tx_context
-                    });
-
+                    tx_context_cache.Put(
+                            {tx_hash, with_ring_signatures},
+                            tx_info_cache {
+                                 boost::get<uint64_t>(tx_context["tx_blk_height"]),
+                                 boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
+                                 tx_context}
+                    );
                 }
             } //  if (tx_blk_height > 0)
             else
@@ -1347,11 +1387,13 @@ public:
 
                     tx_context = construct_tx_context(tx, with_ring_signatures);
 
-                    tx_context_cache.Put(tx_hash, tx_info_cache {
-                            boost::get<uint64_t>(tx_context["tx_blk_height"]),
-                            boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
-                            tx_context
-                    });
+                    tx_context_cache.Put(
+                            {tx_hash, with_ring_signatures},
+                            tx_info_cache {
+                                    boost::get<uint64_t>(tx_context["tx_blk_height"]),
+                                    boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
+                                    tx_context}
+                    );
 
                 } // if (core_storage->have_tx(tx_hash))
                 else
@@ -1385,11 +1427,13 @@ public:
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>
                     (std::chrono::steady_clock::now() - start);
 
-            tx_context_cache.Put(tx_hash, tx_info_cache {
-                    boost::get<uint64_t>(tx_context["tx_blk_height"]),
-                    boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
-                    tx_context
-            });
+            tx_context_cache.Put(
+                    {tx_hash, with_ring_signatures},
+                    tx_info_cache {
+                            boost::get<uint64_t>(tx_context["tx_blk_height"]),
+                            boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
+                            tx_context}
+            );
 
             tx_context["construction_time"] = fmt::format(
                     "{:0.4f}", static_cast<double>(duration.count())/1.0e6);
@@ -4407,6 +4451,8 @@ private:
 
         bool tx_blk_found {false};
 
+        bool detailed_view {enable_mixins_details || static_cast<bool>(with_ring_signatures)};
+
         if (core_storage->have_tx(tx_hash))
         {
             // currently get_tx_block_height seems to return a block hight
@@ -4599,7 +4645,7 @@ private:
                 }
 
 
-                if (enable_mixins_details)
+                if (detailed_view)
                 {
                     // get block of given height, as we want to get its timestamp
                     cryptonote::block blk;
@@ -4674,7 +4720,7 @@ private:
 
 
 
-        if (enable_mixins_details)
+        if (detailed_view)
         {
             uint64_t min_mix_timestamp {0};
             uint64_t max_mix_timestamp {0};
@@ -4703,7 +4749,7 @@ private:
         context["inputs_xmr_sum_not_zero"] = (inputs_xmr_sum > 0);
         context["inputs_xmr_sum"]          = xmreg::xmr_amount_to_str(inputs_xmr_sum);
         context["server_time"]             = server_time_str;
-        context["enable_mixins_details"]     = enable_mixins_details;
+        context["enable_mixins_details"]   = detailed_view;
 
         context.emplace("inputs", inputs);
 
