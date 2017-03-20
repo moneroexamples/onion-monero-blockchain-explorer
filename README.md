@@ -41,6 +41,7 @@ Clearnet versions:
   
 Clearnet testnet Monero version:
 
+ - [http://139.162.32.245:8082/](http://139.162.32.245:8082/) - bleeding edge, no https.
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
  - [https://testnet.explorer.xmr.my/](https://testnet.explorer.xmr.my/) - https enabled, most up to date.  
 
