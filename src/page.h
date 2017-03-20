@@ -783,8 +783,6 @@ public:
         // get reference to blocks template map to be field below
         mstch::array& txs = boost::get<mstch::array>(context["mempooltxs"]);
 
-        uint64_t mempool_size_bytes {0};
-
         // process only up to no_of_mempool_tx txs of mempool.
         // this is useful from the front page were we show by default
         // only 25 mempool txs. this way, we just parse 25 txs, rather
@@ -860,7 +858,6 @@ public:
 
             string mixin_str;
             string txsize;
-
 
             try
             {
@@ -969,7 +966,6 @@ public:
 
                 } // else if (mempool_tx_json_cache.Contains(_tx_info.id_hash))
 
-
             }
             catch (std::invalid_argument& e)
             {
@@ -994,13 +990,20 @@ public:
                     {"txsize"          , txsize}
             });
 
+        }
+
+        // calculate mempool size using all txs in mempool.
+        // not only those shown on the front page
+        uint64_t mempool_size_bytes {0};
+
+        for (const tx_info& _tx_info: mempool_txs)
+        {
             mempool_size_bytes += _tx_info.blob_size;
         }
 
         context.insert({"mempool_size_kB",
                         fmt::format("{:0.2f}",
                                     static_cast<double>(mempool_size_bytes)/1024.0)});
-
 
         context["construction_time_cached"] = fmt::format(
                 "{:0.4f}", duration_cached/1.0e6);
