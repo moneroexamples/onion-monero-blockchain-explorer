@@ -30,7 +30,8 @@ Tor users:
 
 Monero tor node:
 
- - [o6nvntbo3qsn36dm.onion](o6nvntbo3qsn36dm.onion) - `/opt/monero/monero-wallet-cli --daemon-host o6nvntbo3qsn36dm.onion`
+ - 7kome2dwgre4wll6.onion - `/opt/monero/monero-wallet-cli --daemon-host 7kome2dwgre4wll6.onion` 
+ - o6nvntbo3qsn36dm.onion - `/opt/monero/monero-wallet-cli --daemon-host o6nvntbo3qsn36dm.onion`
  
 Clearnet versions:
  - [http://139.162.32.245:8081/](http://139.162.32.245:8081/) - bleeding edge, no https.
