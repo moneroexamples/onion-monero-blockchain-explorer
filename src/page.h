@@ -385,8 +385,8 @@ public:
               enable_autorefresh_option {_enable_autorefresh_option},
               enable_mixins_details {_enable_mixins_details},
               no_blocks_on_index {_no_blocks_on_index},
-              mempool_tx_json_cache(500),
-              block_tx_cache(100),
+              mempool_tx_json_cache(1000),
+              block_tx_cache(200),
               tx_context_cache(1000)
     {
 
