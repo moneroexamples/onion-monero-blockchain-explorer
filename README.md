@@ -44,8 +44,13 @@ Clearnet testnet Monero version:
 
  - [http://139.162.32.245:8082/](http://139.162.32.245:8082/) - bleeding edge, no https.
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
- - [https://testnet.explorer.xmr.my/](https://testnet.explorer.xmr.my/) - https enabled, most up to date.  
+ - [https://testnet.explorer.xmr.my/](https://testnet.explorer.xmr.my/) - https enabled, most up to date.
+   
+Clearnet testnet priority nodes:
 
+ - 23.228.193.90 - /opt/monero/monerod --testnet --add-priority-node 23.228.193.90
+ - 62.210.104.109 - /opt/monero/monerod --testnet --add-priority-node 62.210.104.109  
+   
 i2p users (main Monero network) - down for now:
 
  - [http://monerotools.i2p](http://monerotools.i2p)
