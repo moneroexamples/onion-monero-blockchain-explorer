@@ -45,6 +45,8 @@ int main(int ac, const char* av[]) {
     auto ssl_crt_file_opt       = opts.get_option<string>("ssl-crt-file");
     auto ssl_key_file_opt       = opts.get_option<string>("ssl-key-file");
     auto no_blocks_on_index_opt = opts.get_option<string>("no-blocks-on-index");
+    auto testnet_url            = opts.get_option<string>("testnet-url");
+    auto mainnet_url            = opts.get_option<string>("mainnet-url");
 
     // set  monero log output level
     uint32_t log_level = 0;
@@ -160,7 +162,9 @@ int main(int ac, const char* av[]) {
                           enable_output_key_checker,
                           enable_autorefresh_option,
                           enable_mixin_details,
-                          no_blocks_on_index);
+                          no_blocks_on_index,
+                          *testnet_url,
+                          *mainnet_url);
 
     // crow instance
     crow::SimpleApp app;

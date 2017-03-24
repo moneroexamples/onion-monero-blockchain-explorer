@@ -37,6 +37,10 @@ namespace xmreg
                  "enable users to have the index page on autorefresh")
                 ("port,p", value<string>()->default_value("8081"),
                  "default port")
+                ("testnet-url", value<string>()->default_value(""),
+                 "you can specifiy testnet url, if you run it on mainet. link will show on front page to testnet explorer")
+                ("mainnet-url", value<string>()->default_value(""),
+                 "you can specifiy mainnet url, if you run it on testnet. link will show on front page to mainnet explorer")
                 ("no-blocks-on-index", value<string>()->default_value("10"),
                  "number of last blocks to be shown on index page")
                 ("bc-path,b", value<string>(),

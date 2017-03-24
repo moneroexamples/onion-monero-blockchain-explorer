@@ -152,9 +152,14 @@ Go to your browser: http://127.0.0.1:8081
 
 ```
 ./xmrblocks -h
+xmrblocks, start Onion Monero Blockchain Explorer:
   -h [ --help ] [=arg(=1)] (=0)         produce help message
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
   --enable-pusher [=arg(=1)] (=0)       enable pushing signed tx
+  --enable-mixin-details [=arg(=1)] (=0)
+                                        enable mixin details for key images, 
+                                        e.g., timescale, mixin of mixins, in tx
+                                        context
   --enable-key-image-checker [=arg(=1)] (=0)
                                         enable key images file checker
   --enable-output-key-checker [=arg(=1)] (=0)
@@ -163,6 +168,14 @@ Go to your browser: http://127.0.0.1:8081
                                         enable users to have the index page on 
                                         autorefresh
   -p [ --port ] arg (=8081)             default port
+  --testnet-url arg                     you can specifiy testnet url, if you 
+                                        run it on mainet. link will show on 
+                                        front page to testnet explorer
+  --mainnet-url arg                     you can specifiy mainnet url, if you 
+                                        run it on testnet. link will show on 
+                                        front page to mainnet explorer
+  --no-blocks-on-index arg (=10)        number of last blocks to be shown on 
+                                        index page
   -b [ --bc-path ] arg                  path to lmdb blockchain
   --ssl-crt-file arg                    A path to crt file for ssl (https) 
                                         functionality

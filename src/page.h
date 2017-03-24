@@ -304,6 +304,9 @@ class page
     uint64_t no_of_mempool_tx_of_frontpage;
     uint64_t no_blocks_on_index;
 
+    string testnet_url;
+    string mainnet_url;
+
     // instead of constatnly reading template files
     // from hard drive for each request, we can read
     // them only once, when the explorer starts into this map
@@ -371,7 +374,9 @@ public:
          bool _enable_output_key_checker,
          bool _enable_autorefresh_option,
          bool _enable_mixins_details,
-         uint64_t _no_blocks_on_index)
+         uint64_t _no_blocks_on_index,
+         string _testnet_url,
+         string _mainnet_url)
             : mcore {_mcore},
               core_storage {_core_storage},
               rpc {_deamon_url},
@@ -385,6 +390,8 @@ public:
               enable_autorefresh_option {_enable_autorefresh_option},
               enable_mixins_details {_enable_mixins_details},
               no_blocks_on_index {_no_blocks_on_index},
+              testnet_url {_testnet_url},
+              mainnet_url {_mainnet_url},
               mempool_tx_json_cache(1000),
               block_tx_cache(200),
               tx_context_cache(1000)
@@ -470,6 +477,8 @@ public:
         // initalise page tempate map with basic info about blockchain
         mstch::map context {
                 {"testnet"                  , testnet},
+                {"testnet_url"              , testnet_url},
+                {"mainnet_url"              , mainnet_url},
                 {"have_custom_lmdb"         , have_custom_lmdb},
                 {"refresh"                  , refresh_page},
                 {"height"                   , height},
