@@ -64,9 +64,6 @@ The key features of the Onion Monero Blockchain Explorer are:
  - open sourced,
  - made fully in C++,
  - the only explorer showing encrypted payments ID,
- - the only explorer with the ability to search by encrypted payments ID, tx public
- and private keys, stealth addresses, input key images, block timestamps 
- (UTC time, e.g., 2016-11-23 14:03:05)
  - the only explorer showing ring signatures,
  - the only explorer showing transaction extra field,
  - the only explorer showing public components of Monero addresses,
@@ -85,7 +82,6 @@ The key features of the Onion Monero Blockchain Explorer are:
 Instruction for Monero 0.10.1 compilation and Monero headers and libraries setup are
 as shown here:
  - [Compile Monero on Ubuntu 16.04 x64](https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04)
- - [lmdbcpp-monero](https://github.com/moneroexamples/lmdbcpp-monero.git) (optional)
 
 ## Compile and run the explorer
 
@@ -98,26 +94,6 @@ The Onion Explorer uses Monero C++ libraries and headers.
 - https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04 (Ubuntu 16.04)
 - https://github.com/moneroexamples/compile-monero-09-on-arch-linux (Arch Linux)
 
-
-##### Custom lmdb database (optional)
-
-Most unique search abilities of the Onion Explorer are achieved through using
-a [custom lmdb database](https://github.com/moneroexamples/lmdbcpp-monero.git) constructed based on the Monero blockchain.
-The reason for the custom database is that Monero's own lmdb database has limited
-search abilities. For example, its not possible to search for a tx having a
- given key image, except by performing an exhaustive search on the blockchain which is very time consuming.
-
-Instruction how to compile the `lmdbcpp-monero` are provided here:
-
- - https://github.com/moneroexamples/lmdbcpp-monero.git
-
-The custom database is rather big, 12GB now, and it must be running alongside Monero deamon
-so that it keeps updating itself with new information from new blocks as they are added
-to the blockchain. Also, by default it is 10 blocks behind the current blockchain height
-to minimize indexing/saving orphaned blocks.
-
-For these reasons, its use is optional. However, without it, some searches wont be possible,
-e.g., searching for key images, output and tx public keys, encrypted payments id.
 
 ##### Compile and run the explorer
 Once the Monero is compiled and setup, the explorer can be downloaded and compiled
