@@ -25,7 +25,7 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
 Tor users:
  
  - [http://libwh5lvouddzei4.onion](http://libwh5lvouddzei4.onion/)
- - [http://2hbthfb66na6pqgv.onion](http://2hbthfb66na6pqgv.onion)
+ - [http://dvwae436pd7nt4bc.onion/](http://dvwae436pd7nt4bc.onion/)
 
 Monero tor node:
 
