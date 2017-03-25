@@ -7,7 +7,6 @@ Currently available Monero blockchain explorer websites have several limitations
  - track users activates through google analytics,
  - are closed sourced,
  - are not available as hidden services,
- - provide only basic search capabilities,
  - do not support Monero testnet
 
 
