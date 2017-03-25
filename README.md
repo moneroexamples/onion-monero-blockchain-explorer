@@ -1,6 +1,6 @@
 # Onion Monero Blockchain Explorer
 
-Curently available Monero blockchain explorer websites have several limitations which are of special importance to privacy-oriented users:
+Currently available Monero blockchain explorer websites have several limitations which are of special importance to privacy-oriented users:
 
  - they use JavaScript,
  - have images which might be used for [cookieless tracking](http://lucb1e.com/rp/cookielesscookies/),
