@@ -930,18 +930,6 @@ public:
                     if (!mixin_numbers.empty())
                         mixin_no = mixin_numbers.at(0) - 1;
 
-
-                    if (j_tx["version"].get<size_t>() > 1)
-                    {
-                        is_ringct_str = "yes";
-                        rct_type_str  = string("/") + to_string(j_tx["rct_signatures"]["type"].get<uint8_t>());
-                    }
-                    else
-                    {
-                        is_ringct_str = "no";
-                        rct_type_str  = "";
-                    }
-
                     hash_str        = fmt::format("{:s}", _tx_info.id_hash);
                     fee_str         = xmreg::xmr_amount_to_str(_tx_info.fee, "{:0.3f}");
                     xmr_inputs_str  = xmreg::xmr_amount_to_str(sum_inputs.first , "{:0.3f}");
@@ -4453,7 +4441,7 @@ private:
     {
         tx_details txd = get_tx_details(tx);
 
-        crypto::hash tx_hash = txd.hash;
+        const crypto::hash& tx_hash = txd.hash;
 
         string tx_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", tx_hash));
 
@@ -4617,11 +4605,11 @@ private:
             }
 
             inputs.push_back(mstch::map {
-                    {"in_key_img", REMOVE_HASH_BRAKETS(fmt::format("{:s}", in_key.k_image))},
-                    {"amount",        xmreg::xmr_amount_to_str(in_key.amount)},
-                    {"input_idx",     fmt::format("{:02d}", input_idx)},
-                    {"mixins",        mstch::array{}},
-                    {"ring_sigs",     txd.get_ring_sig_for_input(input_idx)},
+                    {"in_key_img"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", in_key.k_image))},
+                    {"amount"       , xmreg::xmr_amount_to_str(in_key.amount)},
+                    {"input_idx"    , fmt::format("{:02d}", input_idx)},
+                    {"mixins"       , mstch::array{}},
+                    {"ring_sigs"    , txd.get_ring_sig_for_input(input_idx)},
                     {"already_spent", false} // placeholder for later
             });
 
@@ -4637,14 +4625,14 @@ private:
             vector<uint64_t> mixin_timestamps;
 
             // get reference to mixins array created above
-            mstch::array &mixins = boost::get<mstch::array>(
+            mstch::array& mixins = boost::get<mstch::array>(
                     boost::get<mstch::map>(inputs.back())["mixins"]);
 
             // mixin counter
             size_t count = 0;
 
             // for each found output public key find its block to get timestamp
-            for (const uint64_t &i: absolute_offsets)
+            for (const uint64_t& i: absolute_offsets)
             {
                 // get basic information about mixn's output
                 cryptonote::output_data_t output_data = outputs.at(count);
