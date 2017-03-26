@@ -507,7 +507,7 @@ public:
         // check if start height is not below range
         start_height = start_height < 0 ? 0 : start_height;
 
-        int64_t end_height = start_height + no_of_last_blocks;
+        int64_t end_height = start_height + no_of_last_blocks - 1;
 
         // previous blk timestamp, initalised to lowest possible value
         double prev_blk_timestamp {std::numeric_limits<double>::lowest()};
