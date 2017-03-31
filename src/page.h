@@ -331,17 +331,17 @@ class page
     // mempool txs for each request
     struct mempool_tx_info
     {
-        json     j_tx;
-
-        pair<uint64_t, uint64_t> sum_inputs;
-        pair<uint64_t, uint64_t> sum_outputs;
+        uint64_t sum_inputs;
+        uint64_t sum_outputs;
+        uint64_t no_inputs;
+        uint64_t no_outputs;
 
         uint64_t num_nonrct_inputs;
 
         uint64_t mixin_no;
 
-        string   is_ringct_str;
-        string   rct_type_str;
+        string is_ringct_str;
+        string rct_type_str;
 
         string hash;
         string fee;
@@ -349,7 +349,6 @@ class page
         string xmr_outputs_str;
         string timestamp;
 
-        string mixin_str;
         string txsize;
     };
 
@@ -547,7 +546,7 @@ public:
             blk_sizes.push_back(blk_size);
 
             // remove "<" and ">" from the hash string
-            string blk_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", blk_hash));
+            string blk_hash_str = pod_to_hex(blk_hash);
 
             // get block age
             pair<string, string> age = get_age(server_timestamp, blk.timestamp);
@@ -784,7 +783,7 @@ public:
 
         // initalise page tempate map with basic info about mempool
         mstch::map context {
-                {"mempool_size",  std::to_string(mempool_txs.size())},
+                {"mempool_size",  mempool_txs.size()},
         };
 
         context.emplace("mempooltxs" , mstch::array());
@@ -847,13 +846,11 @@ public:
             }
 
             // sum xmr in inputs and ouputs in the given tx
-            pair<uint64_t, uint64_t> sum_inputs;
-            pair<uint64_t, uint64_t> sum_outputs;
-            uint64_t num_nonrct_inputs;
-
-            // get mixin number in each transaction
-            vector<uint64_t> mixin_numbers;
-
+            uint64_t sum_inputs {0};
+            uint64_t sum_outputs {0};
+            uint64_t no_inputs {0};
+            uint64_t no_outputs {0};
+            uint64_t num_nonrct_inputs {0};
             uint64_t mixin_no {0};
 
             string is_ringct_str  {"N/A"};
@@ -865,7 +862,6 @@ public:
             string xmr_outputs_str;
             string timestamp_str;
 
-            string mixin_str;
             string txsize;
 
             try
@@ -885,9 +881,10 @@ public:
 
                     mempool_tx_info cached_tx_info = mempool_tx_json_cache.Get(_tx_info.id_hash);
 
-                    //j_tx              = cached_tx_info.j_tx; // dont need it currently
                     sum_inputs        = cached_tx_info.sum_inputs;
                     sum_outputs       = cached_tx_info.sum_outputs;
+                    no_inputs         = cached_tx_info.no_inputs;
+                    no_outputs        = cached_tx_info.no_outputs;
                     num_nonrct_inputs = cached_tx_info.num_nonrct_inputs;
                     mixin_no          = cached_tx_info.mixin_no;
                     is_ringct_str     = cached_tx_info.is_ringct_str;
@@ -897,7 +894,6 @@ public:
                     xmr_inputs_str    = cached_tx_info.xmr_inputs_str;
                     xmr_outputs_str   = cached_tx_info.xmr_outputs_str;
                     timestamp_str     = cached_tx_info.timestamp;
-                    mixin_str         = cached_tx_info.mixin_str;
                     txsize            = cached_tx_info.txsize;
 
                     auto duration = std::chrono::duration_cast<std::chrono::microseconds>
@@ -922,23 +918,23 @@ public:
                     j_tx = json::parse(_tx_info.tx_json);
 
                     // sum xmr in inputs and ouputs in the given tx
-                    sum_inputs        = xmreg::sum_money_in_inputs(j_tx);
-                    sum_outputs       = xmreg::sum_money_in_outputs(j_tx);
-                    num_nonrct_inputs = xmreg::count_nonrct_inputs(j_tx);
-                    mixin_numbers     = xmreg::get_mixin_no(j_tx);
+                    array<uint64_t, 6> sum_data = summary_of_in_out_rct(j_tx);
 
-                    if (!mixin_numbers.empty())
-                        mixin_no = mixin_numbers.at(0) - 1;
+                    sum_outputs       = sum_data[0];
+                    sum_inputs        = sum_data[1];
+                    no_outputs        = sum_data[2];
+                    no_inputs         = sum_data[3];
+                    mixin_no          = sum_data[4];
+                    num_nonrct_inputs = sum_data[5];
 
-                    hash_str        = fmt::format("{:s}", _tx_info.id_hash);
+                    hash_str        = _tx_info.id_hash;
                     fee_str         = xmreg::xmr_amount_to_str(_tx_info.fee, "{:0.3f}");
-                    xmr_inputs_str  = xmreg::xmr_amount_to_str(sum_inputs.first , "{:0.3f}");
-                    xmr_outputs_str = xmreg::xmr_amount_to_str(sum_outputs.first, "{:0.3f}");
+                    xmr_inputs_str  = xmreg::xmr_amount_to_str(sum_inputs , "{:0.3f}");
+                    xmr_outputs_str = xmreg::xmr_amount_to_str(sum_outputs, "{:0.3f}");
                     timestamp_str   = xmreg::timestamp_to_str(_tx_info.receive_time);
 
-                    mixin_str         = fmt::format("{:d}", mixin_no);
-                    txsize            = fmt::format("{:0.2f}",
-                                                    static_cast<double>(_tx_info.blob_size)/1024.0);
+                    txsize          = fmt::format("{:0.2f}",
+                                             static_cast<double>(_tx_info.blob_size)/1024.0);
 
                     auto duration = std::chrono::duration_cast<std::chrono::microseconds>
                             (std::chrono::steady_clock::now() - start);
@@ -953,12 +949,13 @@ public:
                     mempool_tx_json_cache.Put(
                             _tx_info.id_hash,
                             mempool_tx_info {
-                                j_tx,  sum_inputs, sum_outputs,
+                                sum_inputs, sum_outputs,
+                                no_inputs, no_outputs,
                                 num_nonrct_inputs, mixin_no,
                                 is_ringct_str, rct_type_str,
                                 hash_str, fee_str,
                                 xmr_inputs_str, xmr_outputs_str,
-                                timestamp_str, mixin_str, txsize
+                                timestamp_str, txsize
                             });
 
                 } // else if (mempool_tx_json_cache.Contains(_tx_info.id_hash))
@@ -978,12 +975,12 @@ public:
                     {"fee"             , fee_str},
                     {"xmr_inputs"      , xmr_inputs_str},
                     {"xmr_outputs"     , xmr_outputs_str},
-                    {"no_inputs"       , sum_inputs.second},
-                    {"no_outputs"      , sum_outputs.second},
+                    {"no_inputs"       , no_inputs},
+                    {"no_outputs"      , no_outputs},
                     {"no_nonrct_inputs", num_nonrct_inputs},
                     {"is_ringct"       , is_ringct_str},
                     {"rct_type"        , rct_type_str},
-                    {"mixin"           , mixin_str},
+                    {"mixin"           , mixin_no},
                     {"txsize"          , txsize}
             });
 
@@ -4497,7 +4494,7 @@ private:
                 {"have_custom_lmdb"      , have_custom_lmdb},
                 {"tx_hash"               , tx_hash_str},
                 {"tx_prefix_hash"        , pod_to_hex(txd.prefix_hash)},                
-                {"tx_pub_key"            , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
+                {"tx_pub_key"            , pod_to_hex(txd.pk)},
                 {"blk_height"            , tx_blk_height_str},
                 {"tx_blk_height"         , tx_blk_height},
                 {"tx_size"               , fmt::format("{:0.4f}",
@@ -4605,7 +4602,7 @@ private:
             }
 
             inputs.push_back(mstch::map {
-                    {"in_key_img"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", in_key.k_image))},
+                    {"in_key_img"   , pod_to_hex(in_key.k_image)},
                     {"amount"       , xmreg::xmr_amount_to_str(in_key.amount)},
                     {"input_idx"    , fmt::format("{:02d}", input_idx)},
                     {"mixins"       , mstch::array{}},
@@ -4697,10 +4694,8 @@ private:
 
                     mixins.push_back(mstch::map {
                             {"mix_blk",        fmt::format("{:08d}", output_data.height)},
-                            {"mix_pub_key",     REMOVE_HASH_BRAKETS(fmt::format("{:s}",
-                                                                            output_data.pubkey))},
-                            {"mix_tx_hash",      REMOVE_HASH_BRAKETS(fmt::format("{:s}",
-                                                                            tx_out_idx.first))},
+                            {"mix_pub_key",    pod_to_hex(output_data.pubkey)},
+                            {"mix_tx_hash",    pod_to_hex(tx_out_idx.first)},
                             {"mix_out_indx",   fmt::format("{:d}", tx_out_idx.second)},
                             {"mix_timestamp",  xmreg::timestamp_to_str(blk.timestamp)},
                             {"mix_age",        mixin_age.first},
@@ -4718,9 +4713,8 @@ private:
                 else
                 {
                     mixins.push_back(mstch::map {
-                            {"mix_blk",         fmt::format("{:08d}", output_data.height)},
-                            {"mix_pub_key",     REMOVE_HASH_BRAKETS(fmt::format("{:s}",
-                                                                                output_data.pubkey))},
+                            {"mix_blk",        fmt::format("{:08d}", output_data.height)},
+                            {"mix_pub_key",    pod_to_hex(output_data.pubkey)},
                             {"mix_idx",        fmt::format("{:02d}", count)},
                             {"mix_is_it_real", false}, // a placeholder for future
                     });
@@ -4825,7 +4819,7 @@ private:
             outputs_xmr_sum += outp.second;
 
             outputs.push_back(mstch::map {
-                    {"out_pub_key"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", outp.first.key))},
+                    {"out_pub_key"   , pod_to_hex(outp.first.key)},
                     {"amount"        , xmreg::xmr_amount_to_str(outp.second)},
                     {"amount_idx"    , out_amount_index_str},
                     {"num_outputs"   , fmt::format("{:d}", num_outputs_amount)},

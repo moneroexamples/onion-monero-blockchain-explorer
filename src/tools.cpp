@@ -424,6 +424,42 @@ summary_of_in_out_rct(
 };
 
 
+// this version for mempool txs from json
+array<uint64_t, 6>
+summary_of_in_out_rct(const json& _json)
+{
+    uint64_t xmr_outputs       {0};
+    uint64_t xmr_inputs        {0};
+    uint64_t no_outputs        {0};
+    uint64_t no_inputs         {0};
+    uint64_t mixin_no          {0};
+    uint64_t num_nonrct_inputs {0};
+
+    for (const json& vout: _json["vout"])
+    {
+        xmr_outputs += vout["amount"].get<uint64_t>();
+    }
+
+    no_outputs = _json["vout"].size();
+
+    for (const json& vin: _json["vin"])
+    {
+        uint64_t amount = vin["key"]["amount"].get<uint64_t>();
+
+        xmr_inputs += amount;
+
+        if (amount != 0)
+            ++num_nonrct_inputs;
+    }
+
+    no_inputs  = _json["vin"].size();
+
+    mixin_no = _json["vin"].at(0)["key"]["key_offsets"].size() - 1;
+
+    return {xmr_outputs, xmr_inputs, no_outputs, no_inputs, mixin_no, num_nonrct_inputs};
+};
+
+
 uint64_t
 sum_money_in_inputs(const transaction& tx)
 {

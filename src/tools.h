@@ -143,6 +143,10 @@ summary_of_in_out_rct(
         vector<pair<txout_to_key, uint64_t>>& output_pub_keys,
         vector<txin_to_key>& input_key_imgs);
 
+// this version for mempool txs from json
+array<uint64_t, 6>
+summary_of_in_out_rct(const json& _json);
+
 uint64_t
 sum_money_in_inputs(const transaction& tx);
 
