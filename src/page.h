@@ -166,38 +166,28 @@ struct tx_details
     vector<pair<txout_to_key, uint64_t>> output_pub_keys;
 
     mstch::map
-    get_mstch_map()
+    get_mstch_map() const
     {
-        // remove "<" and ">" from the hash string
-        string tx_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", hash));
-
-        string tx_prefix_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", prefix_hash));
-
-        string tx_pk_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", pk));
-
-        //cout << "payment_id: " << payment_id << endl;
-
-        string pid_str   = REMOVE_HASH_BRAKETS(fmt::format("{:s}", payment_id));
-        string pid8_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", payment_id8));
 
         string mixin_str {"N/A"};
         string fee_str {"N/A"};
         string fee_short_str {"N/A"};
 
+        const double& xmr_amount = XMR_AMOUNT(fee);
+
         if (!input_key_imgs.empty())
         {
             mixin_str     = std::to_string(mixin_no - 1);
-            fee_str       = fmt::format("{:0.6f}", XMR_AMOUNT(fee));
-            fee_short_str = fmt::format("{:0.3f}", XMR_AMOUNT(fee));
+            fee_str       = fmt::format("{:0.6f}", xmr_amount);
+            fee_short_str = fmt::format("{:0.3f}", xmr_amount);
         }
 
-
-        //cout << "extra: " << extra_str << endl;
+        const double& tx_size =  static_cast<double>(size)/1024.0;
 
         mstch::map txd_map {
-            {"hash"              , tx_hash_str},
-            {"prefix_hash"       , tx_prefix_hash_str},
-            {"pub_key"           , tx_pk_str},
+            {"hash"              , pod_to_hex(hash)},
+            {"prefix_hash"       , pod_to_hex(prefix_hash)},
+            {"pub_key"           , pod_to_hex(pk)},
             {"tx_fee"            , fee_str},
             {"tx_fee_short"      , fee_short_str},
             {"sum_inputs"        , xmr_amount_to_str(xmr_inputs , "{:0.6f}")},
@@ -209,18 +199,16 @@ struct tx_details
             {"no_nonrct_inputs"  , num_nonrct_inputs},
             {"mixin"             , mixin_str},
             {"blk_height"        , blk_height},
-            {"version"           , std::to_string(version)},
+            {"version"           , version},
             {"has_payment_id"    , payment_id  != null_hash},
             {"has_payment_id8"   , payment_id8 != null_hash8},
-            {"payment_id"        , pid_str},
+            {"payment_id"        , pod_to_hex(payment_id)},
             {"confirmations"     , no_confirmations},
             {"extra"             , get_extra_str()},
-            {"payment_id8"       , pid8_str},
-            {"unlock_time"       , std::to_string(unlock_time)},
-            {"tx_size"           , fmt::format("{:0.4f}",
-                                               static_cast<double>(size)/1024.0)},
-            {"tx_size_short"     , fmt::format("{:0.2f}",
-                                               static_cast<double>(size)/1024.0)}
+            {"payment_id8"       , pod_to_hex(payment_id8)},
+            {"unlock_time"       , unlock_time},
+            {"tx_size"           , fmt::format("{:0.4f}", tx_size)},
+            {"tx_size_short"     , fmt::format("{:0.2f}", tx_size)}
         };
 
 
@@ -229,13 +217,10 @@ struct tx_details
 
 
     string
-    get_extra_str()
+    get_extra_str() const
     {
-
-        string extra_str = epee::string_tools::buff_to_hex_nodelimer(
-                    string{reinterpret_cast<const char*>(extra.data()), extra.size()});
-
-        return extra_str;
+        return epee::string_tools::buff_to_hex_nodelimer(
+                string{reinterpret_cast<const char*>(extra.data()), extra.size()});
     }
 
 
@@ -339,9 +324,6 @@ class page
         uint64_t num_nonrct_inputs;
 
         uint64_t mixin_no;
-
-        string is_ringct_str;
-        string rct_type_str;
 
         string hash;
         string fee;
@@ -686,7 +668,7 @@ public:
                 {
                     const cryptonote::transaction& tx = *it;
 
-                    tx_details txd = get_tx_details(tx, false, i, height);
+                    const tx_details& txd = get_tx_details(tx, false, i, height);
 
                     mstch::map txd_map = txd.get_mstch_map();
 
@@ -853,9 +835,6 @@ public:
             uint64_t num_nonrct_inputs {0};
             uint64_t mixin_no {0};
 
-            string is_ringct_str  {"N/A"};
-            string rct_type_str   {"N/A"};
-
             string hash_str;
             string fee_str;
             string xmr_inputs_str;
@@ -879,7 +858,7 @@ public:
                     // start measure time here
                     auto start = std::chrono::steady_clock::now();
 
-                    mempool_tx_info cached_tx_info = mempool_tx_json_cache.Get(_tx_info.id_hash);
+                    const mempool_tx_info& cached_tx_info = mempool_tx_json_cache.Get(_tx_info.id_hash);
 
                     sum_inputs        = cached_tx_info.sum_inputs;
                     sum_outputs       = cached_tx_info.sum_outputs;
@@ -887,8 +866,6 @@ public:
                     no_outputs        = cached_tx_info.no_outputs;
                     num_nonrct_inputs = cached_tx_info.num_nonrct_inputs;
                     mixin_no          = cached_tx_info.mixin_no;
-                    is_ringct_str     = cached_tx_info.is_ringct_str;
-                    rct_type_str      = cached_tx_info.rct_type_str;
                     hash_str          = cached_tx_info.hash;
                     fee_str           = cached_tx_info.fee;
                     xmr_inputs_str    = cached_tx_info.xmr_inputs_str;
@@ -918,7 +895,7 @@ public:
                     j_tx = json::parse(_tx_info.tx_json);
 
                     // sum xmr in inputs and ouputs in the given tx
-                    array<uint64_t, 6> sum_data = summary_of_in_out_rct(j_tx);
+                    const array<uint64_t, 6>& sum_data = summary_of_in_out_rct(j_tx);
 
                     sum_outputs       = sum_data[0];
                     sum_inputs        = sum_data[1];
@@ -952,7 +929,6 @@ public:
                                 sum_inputs, sum_outputs,
                                 no_inputs, no_outputs,
                                 num_nonrct_inputs, mixin_no,
-                                is_ringct_str, rct_type_str,
                                 hash_str, fee_str,
                                 xmr_inputs_str, xmr_outputs_str,
                                 timestamp_str, txsize
@@ -978,8 +954,6 @@ public:
                     {"no_inputs"       , no_inputs},
                     {"no_outputs"      , no_outputs},
                     {"no_nonrct_inputs", num_nonrct_inputs},
-                    {"is_ringct"       , is_ringct_str},
-                    {"rct_type"        , rct_type_str},
                     {"mixin"           , mixin_no},
                     {"txsize"          , txsize}
             });
@@ -4482,8 +4456,8 @@ private:
         }
 
         // payments id. both normal and encrypted (payment_id8)
-        string pid_str   = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id));
-        string pid8_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id8));
+        string pid_str   = pod_to_hex(txd.payment_id);
+        string pid8_str  = pod_to_hex(txd.payment_id8);
 
 
         string tx_json = obj_to_json_str(tx);
@@ -4606,9 +4580,16 @@ private:
                     {"amount"       , xmreg::xmr_amount_to_str(in_key.amount)},
                     {"input_idx"    , fmt::format("{:02d}", input_idx)},
                     {"mixins"       , mstch::array{}},
-                    {"ring_sigs"    , txd.get_ring_sig_for_input(input_idx)},
+                    {"ring_sigs"    , mstch::array{}},
                     {"already_spent", false} // placeholder for later
             });
+
+            if (detailed_view)
+            {
+                boost::get<mstch::map>(inputs.back())["ring_sigs"]
+                        = txd.get_ring_sig_for_input(input_idx);
+            }
+
 
             inputs_xmr_sum += in_key.amount;
 
@@ -4912,7 +4893,7 @@ private:
         txd.pk = xmreg::get_tx_pub_key_from_received_outs(tx);
 
         // sum xmr in inputs and ouputs in the given tx
-        array<uint64_t, 4> sum_data = summary_of_in_out_rct(
+        const array<uint64_t, 4>& sum_data = summary_of_in_out_rct(
                 tx, txd.output_pub_keys, txd.input_key_imgs);
 
         txd.xmr_outputs       = sum_data[0];
