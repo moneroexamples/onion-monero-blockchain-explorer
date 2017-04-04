@@ -129,8 +129,6 @@ struct tx_details
     crypto::hash  payment_id  = null_hash; // normal
     crypto::hash8 payment_id8 = null_hash8; // encrypted
 
-    string json_representation;
-
     std::vector<std::vector<crypto::signature>> signatures;
 
     // key images of inputs
@@ -3483,18 +3481,21 @@ public:
 
         string result_html {default_txt};
 
-        // check first if we look for output with given global index
-        // such search start with "goi_", e.g., "goi_543"
-        bool search_for_global_output_idx = (search_text.substr(0, 4) == "goi_");
+        uint64_t search_str_length = search_text.length();
 
-        // check if we look for output with amout index and amount
-        // such search start with "aoi_", e.g., "aoi_444-23.00"
-        bool search_for_amount_output_idx = (search_text.substr(0, 4) == "aoi_");
+        // first let try searching for tx
+        result_html = show_tx(search_text);
+
+        // nasty check if output is "Cant get" as a sign of
+        // a not found tx. Later need to think of something better.
+        if (result_html.find("Cant get") == string::npos)
+        {
+            return result_html;
+        }
+
 
         // first check if searching for block of given height
-        if (search_text.size() < 12 &&
-                            (search_for_global_output_idx == false
-                             ||search_for_amount_output_idx == false))
+        if (search_text.size() < 12)
         {
             uint64_t blk_height;
 
@@ -3508,7 +3509,7 @@ public:
                 // a not found tx. Later need to think of something better.
                 if (result_html.find("Cant get") == string::npos)
                 {
-                     return result_html;
+                    return result_html;
                 }
             }
             catch(boost::bad_lexical_cast &e)
@@ -3518,10 +3519,21 @@ public:
             }
         }
 
+        // if tx search not successful, check if we are looking
+        // for a block with given hash
+        result_html = show_block(search_text);
+
+        if (result_html.find("Cant get") == string::npos)
+        {
+            return result_html;
+        }
+
+        result_html = default_txt;
+
 
         // check if monero address is given based on its length
         // if yes, then we can only show its public components
-        if (search_text.length() == 95)
+        if (search_str_length == 95)
         {
             // parse string representing given monero address
             cryptonote::account_public_address address;
@@ -3543,7 +3555,7 @@ public:
 
         // check if integrated monero address is given based on its length
         // if yes, then show its public components search tx based on encrypted id
-        if (search_text.length() == 106)
+        if (search_str_length == 106)
         {
 
             cryptonote::account_public_address address;
@@ -3567,37 +3579,6 @@ public:
 
             return show_integrated_address_details(address, encrypted_payment_id, testnet);
         }
-
-        // second let try searching for tx
-        result_html = show_tx(search_text);
-
-        // nasty check if output is "Cant get" as a sign of
-        // a not found tx. Later need to think of something better.
-        if (result_html.find("Cant get") == string::npos)
-        {
-             return result_html;
-        }
-
-        // if tx search not successful, check if we are looking
-        // for a block with given hash
-        result_html = show_block(search_text);
-
-        if (result_html.find("Cant get") == string::npos)
-        {
-             return result_html;
-        }
-
-        result_html = default_txt;
-
-        // get mempool transaction so that what we search,
-        // might be there. Note: show_tx above already searches it
-        // but only looks for tx hash. Now want to check
-        // for key_images, public_keys, payments_id, etc.
-        vector<transaction> mempool_txs = get_mempool_txs();
-
-        // key is string indicating where search_text was found.
-        map<string, vector<string>> tx_search_results
-                            = search_txs(mempool_txs, search_text);
 
         // all_possible_tx_hashes was field using custom lmdb database
         // it was dropped, so all_possible_tx_hashes will be alwasy empty
@@ -3919,7 +3900,7 @@ private:
 
         const crypto::hash& tx_hash = txd.hash;
 
-        string tx_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", tx_hash));
+        string tx_hash_str = pod_to_hex(tx_hash);
 
         uint64_t tx_blk_height {0};
 
@@ -3971,7 +3952,7 @@ private:
         mstch::map context {
                 {"testnet"               , testnet},
                 {"tx_hash"               , tx_hash_str},
-                {"tx_prefix_hash"        , pod_to_hex(txd.prefix_hash)},                
+                {"tx_prefix_hash"        , string{}},
                 {"tx_pub_key"            , pod_to_hex(txd.pk)},
                 {"blk_height"            , tx_blk_height_str},
                 {"tx_blk_height"         , tx_blk_height},
@@ -4195,7 +4176,7 @@ private:
                     // get mixin timestamp from its orginal block
                     mixin_timestamps.push_back(blk.timestamp);
                 }
-                else
+                else //  if (detailed_view)
                 {
                     mixins.push_back(mstch::map {
                             {"mix_blk",        fmt::format("{:08d}", output_data.height)},
@@ -4239,6 +4220,8 @@ private:
 
             context["timescales_scale"] = fmt::format("{:0.2f}",
                                                       mixins_timescales.second / 3600.0 / 24.0); // in days
+
+            context["tx_prefix_hash"] = pod_to_hex(get_transaction_prefix_hash(tx));
 
         }
 
@@ -4387,9 +4370,6 @@ private:
         // get tx hash
         txd.hash = get_transaction_hash(tx);
 
-        // get tx prefix hash
-        txd.prefix_hash = get_transaction_prefix_hash(tx);
-
         // get tx public key from extra
         // this check if there are two public keys
         // due to previous bug with sining txs:
@@ -4407,10 +4387,6 @@ private:
 
         txd.fee = 0;
 
-        //transaction tx_copy = tx;
-        //txd.json_representation = obj_to_json_str(tx_copy);
-
-
         if (!coinbase &&  tx.vin.size() > 0)
         {
             // check if not miner tx
@@ -4423,7 +4399,6 @@ private:
         }
 
         get_payment_id(tx, txd.payment_id, txd.payment_id8);
-
 
         // get tx size in bytes
         txd.size = get_object_blobsize(tx);
