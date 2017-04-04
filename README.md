@@ -7,31 +7,26 @@ Currently available Monero blockchain explorer websites have several limitations
  - track users activates through google analytics,
  - are closed sourced,
  - are not available as hidden services,
+ - provide only basic search capabilities,
  - do not support Monero testnet
 
-
 In this example, these limitations are addressed by development of
-an Onion Monero Blockchain Explorer. The example not only shows how to use Monero C++ libraries, but also demonstrates how to use:
+an Onion Monero Blockchain Explorer. The example not only shows how to use Monero C++ libraries,
+ but also demonstrates how to use:
 
  - [crow](https://github.com/ipkn/crow) - C++ micro web framework
- - [lmdb++](https://github.com/bendiken/lmdbxx) - C++ wrapper for the LMDB
  - [mstch](https://github.com/no1msd/mstch) - C++ {{mustache}} templates
  - [json](https://github.com/nlohmann/json) - JSON for Modern C++
  - [date](https://github.com/HowardHinnant/date) - C++ date and time library
  - [fmt](https://github.com/fmtlib/fmt) - Small, safe and fast string formatting library
 
-## Address
+## Addresses
 
 Tor users:
  
  - [http://libwh5lvouddzei4.onion](http://libwh5lvouddzei4.onion/)
- - [http://dvwae436pd7nt4bc.onion/](http://dvwae436pd7nt4bc.onion/)
+ - [http://2hbthfb66na6pqgv.onion](http://2hbthfb66na6pqgv.onion)
 
-Monero tor node:
-
- - 7kome2dwgre4wll6.onion - `/opt/monero/monero-wallet-cli --daemon-host 7kome2dwgre4wll6.onion` 
- - o6nvntbo3qsn36dm.onion - `/opt/monero/monero-wallet-cli --daemon-host o6nvntbo3qsn36dm.onion`
- 
 Clearnet versions:
  - [http://139.162.32.245:8081/](http://139.162.32.245:8081/) - bleeding edge, no https.
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled.
@@ -44,17 +39,23 @@ Clearnet testnet Monero version:
  - [http://139.162.32.245:8082/](http://139.162.32.245:8082/) - bleeding edge, no https.
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
  - [https://testnet.explorer.xmr.my/](https://testnet.explorer.xmr.my/) - https enabled, most up to date.
-   
-Clearnet testnet priority nodes:
 
- - 23.228.193.90 - /opt/monero/monerod --testnet --add-priority-node 23.228.193.90
- - 62.210.104.109 - /opt/monero/monerod --testnet --add-priority-node 62.210.104.109  
    
 i2p users (main Monero network) - down for now:
 
  - [http://monerotools.i2p](http://monerotools.i2p)
 
- 
+   
+Clearnet testnet priority nodes:
+
+ - 23.228.193.90 - /opt/monero/monerod --testnet --add-priority-node 23.228.193.90
+ - 62.210.104.109 - /opt/monero/monerod --testnet --add-priority-node 62.210.104.109  
+
+Monero tor nodes:
+
+ - 7kome2dwgre4wll6.onion - `/opt/monero/monero-wallet-cli --daemon-host 7kome2dwgre4wll6.onion` 
+ - o6nvntbo3qsn36dm.onion - `/opt/monero/monero-wallet-cli --daemon-host o6nvntbo3qsn36dm.onion`
+  
 ## Onion Monero Blockchain Explorer features
 
 The key features of the Onion Monero Blockchain Explorer are:
@@ -78,9 +79,10 @@ The key features of the Onion Monero Blockchain Explorer are:
 
 ## Prerequisite
 
-Instruction for Monero 0.10.1 compilation and Monero headers and libraries setup are
+Instruction for Monero 0.10.3 compilation and Monero headers and libraries setup are
 as shown here:
  - [Compile Monero on Ubuntu 16.04 x64](https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04)
+ - [lmdbcpp-monero](https://github.com/moneroexamples/lmdbcpp-monero.git) (optional)
 
 ## Compile and run the explorer
 
@@ -93,8 +95,7 @@ The Onion Explorer uses Monero C++ libraries and headers.
 - https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04 (Ubuntu 16.04)
 - https://github.com/moneroexamples/compile-monero-09-on-arch-linux (Arch Linux)
 
-
-##### Compile and run the explorer
+##### Compile and run 
 Once the Monero is compiled and setup, the explorer can be downloaded and compiled
 as follows:
 
@@ -156,8 +157,6 @@ Go to your browser: http://127.0.0.1:8081
                                         functionality
   --ssl-key-file arg                    A path to key file for ssl (https) 
                                         functionality
-  -c [ --custom-db-path ] arg           path to the custom lmdb database used 
-                                        for searching things
   -d [ --deamon-url ] arg (=http:://127.0.0.1:18081)
                                         monero address string
 ```
@@ -205,7 +204,7 @@ against the lastest version, pushing and checking unsigined and signed tx data
 ![Onion Monero Blockchain Explorer](https://raw.githubusercontent.com/moneroexamples/onion-monero-blockchain-explorer/master/screenshot/screenshot_01.jpg)
 
 
-## Other monero examples
+## Other Monero examples
 
 Other examples can be found on  [github](https://github.com/moneroexamples?tab=repositories).
 Please know that some of the examples/repositories are not
