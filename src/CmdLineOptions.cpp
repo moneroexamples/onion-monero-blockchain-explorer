@@ -49,8 +49,6 @@ namespace xmreg
                  "A path to crt file for ssl (https) functionality")
                 ("ssl-key-file", value<string>(),
                  "A path to key file for ssl (https) functionality")
-                ("custom-db-path,c", value<string>(),
-                 "path to the custom lmdb database used for searching things")
                 ("deamon-url,d", value<string>()->default_value("http:://127.0.0.1:18081"),
                  "monero address string");
 

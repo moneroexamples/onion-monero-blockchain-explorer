@@ -16,7 +16,7 @@
 #include "MicroCore.h"
 #include "tools.h"
 #include "rpccalls.h"
-#include "mylmdb.h"
+
 #include "../ext/crow/http_request.h"
 
 #include "../ext/vpetrigocaches/cache.hpp"
@@ -100,34 +100,8 @@ using namespace cryptonote;
 using namespace crypto;
 using namespace std;
 
-
-/**
- * Check if a given header filed contains value string
- *
- * @param req
- * @param field
- * @param value
- * @return string
- */
-string
-does_header_has(const crow::request& req,
-                const string& field = "Accept",
-                const string& value = "q=.2, */*; q=.2")
-{
-    string accept = req.get_header_value(field);
-
-    if (!accept.empty())
-    {
-        if (accept.find(value) != std::string::npos)
-        {
-            return accept;
-        }
-    }
-
-    return string {};
-}
-
-
+using epee::string_tools::pod_to_hex;
+using epee::string_tools::hex_to_pod;
 
 /**
  * @brief The tx_details struct
@@ -157,7 +131,7 @@ struct tx_details
 
     string json_representation;
 
-    std::vector<std::vector<crypto::signature> > signatures;
+    std::vector<std::vector<crypto::signature>> signatures;
 
     // key images of inputs
     vector<txin_to_key> input_key_imgs;
@@ -268,7 +242,6 @@ class page
 
     atomic<time_t> server_timestamp;
 
-    string lmdb2_path;
 
     bool testnet;
 
@@ -279,11 +252,7 @@ class page
     bool enable_mixins_details;
 
 
-
-
     bool enable_autorefresh_option;
-
-    bool have_custom_lmdb;
 
 
     uint64_t no_of_mempool_tx_of_frontpage;
@@ -348,9 +317,11 @@ class page
 
 public:
 
-    page(MicroCore* _mcore, Blockchain* _core_storage,
-         string _deamon_url, string _lmdb2_path,
-         bool _testnet, bool _enable_pusher,
+    page(MicroCore* _mcore,
+         Blockchain* _core_storage,
+         string _deamon_url,
+         bool _testnet,
+         bool _enable_pusher,
          bool _enable_key_image_checker,
          bool _enable_output_key_checker,
          bool _enable_autorefresh_option,
@@ -362,10 +333,8 @@ public:
               core_storage {_core_storage},
               rpc {_deamon_url},
               server_timestamp {std::time(nullptr)},
-              lmdb2_path {_lmdb2_path},
               testnet {_testnet},
               enable_pusher {_enable_pusher},
-              have_custom_lmdb {false},
               enable_key_image_checker {_enable_key_image_checker},
               enable_output_key_checker {_enable_output_key_checker},
               enable_autorefresh_option {_enable_autorefresh_option},
@@ -379,35 +348,6 @@ public:
     {
 
         no_of_mempool_tx_of_frontpage = 25;
-
-        // just moneky patching now, to check
-        // if custom lmdb database exist, so that
-        // we can search for, e.g., key images,
-        // payments ids. try to open this database.
-        // if it fails, we assume it does not exist.
-        // this is ugly check, but will do for now.
-        // it does not even check if this custom lmdb
-        // is up to date.
-        try
-        {
-            unique_ptr<xmreg::MyLMDB> mylmdb;
-
-            if (bf::is_directory(lmdb2_path))
-            {
-                mylmdb = make_unique<xmreg::MyLMDB>(lmdb2_path);
-
-                // if we got to here, it seems that database exist
-                have_custom_lmdb = true;
-            }
-
-        }
-        catch (const std::exception& e)
-        {
-            cerr << "Custom lmdb databse seem not to exist. Its not big deal. "
-                    "Just some searches wont be possible"
-                 << endl;
-        }
-
 
         // read template files for all the pages
         // into template_file map
@@ -433,8 +373,6 @@ public:
         template_file["tx_details"]      = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html");
         template_file["tx_table_head"]   = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_head.html");
         template_file["tx_table_row"]    = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html");
-    
-
     }
 
     /**
@@ -460,7 +398,6 @@ public:
                 {"testnet"                  , testnet},
                 {"testnet_url"              , testnet_url},
                 {"mainnet_url"              , mainnet_url},
-                {"have_custom_lmdb"         , have_custom_lmdb},
                 {"refresh"                  , refresh_page},
                 {"height"                   , height},
                 {"server_timestamp"         , xmreg::timestamp_to_str(server_timestamp)},
@@ -1097,7 +1034,6 @@ public:
         // initalise page tempate map with basic info about blockchain
         mstch::map context {
                 {"testnet"              , testnet},
-                {"have_custom_lmdb"     , have_custom_lmdb},
                 {"blk_hash"             , blk_hash_str},
                 {"blk_height"           , _blk_height},
                 {"blk_timestamp"        , blk_timestamp},
@@ -1419,7 +1355,6 @@ public:
 
         mstch::map context {
                 {"testnet"          , this->testnet},
-                {"have_custom_lmdb" , have_custom_lmdb},
                 {"txs"              , mstch::array{}}
         };
 
@@ -1627,7 +1562,6 @@ public:
         // initalise page tempate map with basic info about blockchain
         mstch::map context {
                 {"testnet"              , testnet},
-                {"have_custom_lmdb"     , have_custom_lmdb},
                 {"tx_hash"              , tx_hash_str},
                 {"tx_prefix_hash"       , pod_to_hex(txd.prefix_hash)},
                 {"xmr_address"          , xmr_address_str},
@@ -2129,8 +2063,7 @@ public:
 
         // initalise page tempate map with basic info about blockchain
         mstch::map context {
-                {"testnet"              , testnet},
-                {"have_custom_lmdb"     , have_custom_lmdb}
+                {"testnet"              , testnet}
         };
 
         add_css_style(context);
@@ -2162,7 +2095,6 @@ public:
         // initalize page template context map
         mstch::map context {
                 {"testnet"              , testnet},
-                {"have_custom_lmdb"     , have_custom_lmdb},
                 {"unsigned_tx_given"    , unsigned_tx_given},
                 {"have_raw_tx"          , true},
                 {"data_prefix"          , data_prefix},
@@ -2774,7 +2706,6 @@ public:
         // initalize page template context map
         mstch::map context {
                 {"testnet"              , testnet},
-                {"have_custom_lmdb"     , have_custom_lmdb},
                 {"have_raw_tx"          , true},
                 {"has_error"            , false},
                 {"error_msg"            , string {}},
@@ -2954,7 +2885,6 @@ public:
         // initalize page template context map
         mstch::map context {
                 {"testnet"            , testnet},
-                {"have_custom_lmdb"   , have_custom_lmdb}
         };
 
         add_css_style(context);
@@ -2968,8 +2898,7 @@ public:
     {
         // initalize page template context map
         mstch::map context {
-                {"testnet"            , testnet},
-                {"have_custom_lmdb"   , have_custom_lmdb}
+                {"testnet"            , testnet}
         };
 
         add_css_style(context);
@@ -2993,7 +2922,6 @@ public:
         // initalize page template context map
         mstch::map context{
                 {"testnet"         , testnet},
-                {"have_custom_lmdb", have_custom_lmdb},
                 {"has_error"       , false},
                 {"error_msg"       , string{}},
         };
@@ -3084,17 +3012,6 @@ public:
         context.insert({"total_xmr"      , string{}});
         context.insert({"key_imgs"       , mstch::array{}});
 
-        unique_ptr<xmreg::MyLMDB> mylmdb;
-
-        if (bf::is_directory(lmdb2_path))
-        {
-            mylmdb = make_unique<xmreg::MyLMDB>(lmdb2_path);
-        }
-        else
-        {
-            cout << "Custom lmdb database seem does not exist at: " << lmdb2_path << endl;
-        }
-
 
         size_t no_key_images = (decoded_raw_data.size() - header_lenght) / record_lenght;
 
@@ -3116,13 +3033,9 @@ public:
                     = *reinterpret_cast<const crypto::signature*>(record_ptr + key_img_size);
 
 
+            // found_tx_hashes was filed using custom lmdb which was droped.
+            // so this will be empty always for now.
             vector<string> found_tx_hashes;
-
-            if (mylmdb)
-            {
-                mylmdb->search(epee::string_tools::pod_to_hex(key_image),
-                               found_tx_hashes, "key_images");
-            }
 
             mstch::map key_img_info {
                     {"key_no"              , fmt::format("{:03d}", n)},
@@ -3353,7 +3266,6 @@ public:
         // initalize page template context map
         mstch::map context{
                 {"testnet"         , testnet},
-                {"have_custom_lmdb", have_custom_lmdb},
                 {"has_error"       , false},
                 {"error_msg"       , string{}}
         };
@@ -3435,16 +3347,6 @@ public:
 
         mstch::array& output_keys_ctx = boost::get<mstch::array>(context["output_keys"]);
 
-        unique_ptr<xmreg::MyLMDB> mylmdb;
-
-        if (bf::is_directory(lmdb2_path))
-        {
-            mylmdb = make_unique<xmreg::MyLMDB>(lmdb2_path);
-        }
-        else
-        {
-            cout << "Custom lmdb database seem does not exist at: " << lmdb2_path << endl;
-        }
 
         std::vector<tools::wallet2::transfer_details> outputs;
 
@@ -3697,404 +3599,10 @@ public:
         map<string, vector<string>> tx_search_results
                             = search_txs(mempool_txs, search_text);
 
-        // now search my own custom lmdb database
-        // with key_images, public_keys, payments_id etc.
-
+        // all_possible_tx_hashes was field using custom lmdb database
+        // it was dropped, so all_possible_tx_hashes will be alwasy empty
+        // for now
         vector<pair<string, vector<string>>> all_possible_tx_hashes;
-
-        try
-        {
-            unique_ptr<xmreg::MyLMDB> mylmdb;
-
-            if (!bf::is_directory(lmdb2_path))
-            {
-                cout << "Custom lmdb database seem does not exist at: " << lmdb2_path << endl;
-
-                result_html = show_search_results(search_text, all_possible_tx_hashes);
-
-                return result_html;
-            }
-
-            cout << "Custom lmdb database seem to exist at: " << lmdb2_path << endl;
-            cout << "So lets try to search there for what we are after." << endl;
-
-            mylmdb = make_unique<xmreg::MyLMDB>(lmdb2_path);
-
-            // check if date given in format: 2015-04-15 12:02:33
-            // this is 19 characters
-            if (search_text.length() == 19)
-            {
-                uint64_t estimated_blk_height {0};
-
-                // first parse the string to date::sys_seconds and then to timestamp
-                // since epoch
-                uint64_t blk_timestamp_utc = parse(search_text).time_since_epoch().count();
-
-                if (blk_timestamp_utc)
-                {
-                    // seems we have a correct date!
-                    // so try to estimate block height from it.
-                    //
-                    // to find block we can use our lmdb outputs_info table
-                    // its indexes are timestamps.
-
-                    vector<xmreg::output_info> out_infos;
-
-                    if (mylmdb->get_output_info(blk_timestamp_utc, out_infos))
-                    {
-                        // since many outputs can be in a single block
-                        // just get the first one to obtained its block
-
-                        uint64_t found_blk_height = core_storage->get_db()
-                                .get_tx_block_height(out_infos.at(0).tx_hash);
-
-                        return show_block(found_blk_height);
-                    }
-                }
-            }
-            else if (search_text.length() == 16)
-            {
-                // check if date given in format: 2015-04-15 12:02
-                // this is 16 characters, i.e., only minut given
-                // so search all blocks made within that minute
-
-                // first parse the string to date::sys_seconds and then to timestamp
-                // since epoch
-                uint64_t blk_timestamp_utc_start
-                        = parse(search_text, "%Y-%m-%d %H:%M")
-                                .time_since_epoch().count();
-
-                if (blk_timestamp_utc_start)
-                {
-                    // seems we have a correct date!
-
-                    // add 60 seconds, i.e. 1 min
-                    uint64_t blk_timestamp_utc_end
-                            = blk_timestamp_utc_start + 59;
-
-                    all_possible_tx_hashes.push_back(
-                            make_pair("tx_in_the_minute", vector<string>{}));
-
-                    vector<string>& txs_found_ref
-                            = all_possible_tx_hashes.back().second;
-
-                    get_txs_from_timestamp_range(
-                            blk_timestamp_utc_start,
-                            blk_timestamp_utc_end,
-                            mylmdb,
-                            txs_found_ref);
-                }
-            }
-            else if (search_text.length() == 13)
-            {
-                // check if date given in format: 2015-04-15 12
-                // this is 13 characters, i.e., only hour given
-                // so search all blocks made within that hour
-
-                // first parse the string to date::sys_seconds and then to timestamp
-                // since epoch
-                uint64_t blk_timestamp_utc_start
-                        = parse(search_text, "%Y-%m-%d %H")
-                                .time_since_epoch().count();
-
-                if (blk_timestamp_utc_start)
-                {
-                    // seems we have a correct date!
-
-                    // add 60 seconds, i.e. 1 hour
-                    uint64_t blk_timestamp_utc_end
-                            = blk_timestamp_utc_start + 3599;
-
-                    all_possible_tx_hashes.push_back(
-                            make_pair("tx_in_the_hour", vector<string>{}));
-
-                    vector<string>& txs_found_ref
-                            = all_possible_tx_hashes.back().second;
-
-                    get_txs_from_timestamp_range(
-                            blk_timestamp_utc_start,
-                            blk_timestamp_utc_end,
-                            mylmdb,
-                            txs_found_ref);
-                }
-            }
-            else if (search_text.length() == 10)
-            {
-                // check if date given in format: 2015-04-15
-                // this is 10 characters, i.e., only day given
-                // so search all blocks made within that day
-
-                // first parse the string to date::sys_seconds and then to timestamp
-                // since epoch
-                uint64_t blk_timestamp_utc_start
-                        = parse(search_text, "%Y-%m-%d")
-                                .time_since_epoch().count();
-
-                if (blk_timestamp_utc_start)
-                {
-                    // seems we have a correct date!
-
-                    // add 60 seconds, i.e. 1 day
-                    uint64_t blk_timestamp_utc_end
-                            = blk_timestamp_utc_start + 86399;
-
-                    all_possible_tx_hashes.push_back(
-                            make_pair("tx_in_the_day", vector<string>{}));
-
-                    vector<string>& txs_found_ref
-                            = all_possible_tx_hashes.back().second;
-
-                    get_txs_from_timestamp_range(
-                            blk_timestamp_utc_start,
-                            blk_timestamp_utc_end,
-                            mylmdb,
-                            txs_found_ref);
-                }
-            }
-
-            mylmdb->search(search_text,
-                           tx_search_results["key_images"],
-                           "key_images");
-
-            //cout << "size: " << tx_search_results["key_images"].size() << endl;
-
-            all_possible_tx_hashes.push_back(
-                    make_pair("key_images",
-                              tx_search_results["key_images"]));
-
-
-            // search the custum lmdb for tx_public_keys and append the result
-            // to those from the mempool search if found
-
-            mylmdb->search(search_text,
-                           tx_search_results["tx_public_keys"],
-                           "tx_public_keys");
-
-            if (!tx_search_results["tx_public_keys"].empty())
-            {
-                all_possible_tx_hashes.push_back(
-                        make_pair("tx_public_keys",
-                                  tx_search_results["tx_public_keys"]));
-            }
-            else
-            {
-                // if private tx key is added, use it to obtained tx_public_key
-                // and than search for corresponding tx
-
-                public_key tx_pub_key = null_pkey;
-                secret_key tx_prv_key;
-
-                if (hex_to_pod(search_text, tx_prv_key))
-                {
-                    secret_key recovery_key = tx_prv_key;
-
-                    const unsigned char * tx_prv_key_ptr = reinterpret_cast<const unsigned char *>(&tx_prv_key);
-                    unsigned char * tx_pub_key_ptr = reinterpret_cast<unsigned char *>(&tx_pub_key);
-
-                    //memcpy(&tx_pub_key.data, reinterpret_cast<char*>(tx_pub_key_ptr), sizeof(tx_pub_key.data));
-
-                    ge_p3 point;
-                    ge_scalarmult_base(&point, tx_prv_key_ptr);
-                    ge_p3_tobytes(tx_pub_key_ptr, &point);
-
-                    string tx_pub_key_str = pod_to_hex(tx_pub_key);
-
-                    mylmdb->search(tx_pub_key_str,
-                                   tx_search_results["tx_public_keys"],
-                                   "tx_public_keys");
-
-                    all_possible_tx_hashes.push_back(
-                            make_pair("tx_public_keys",
-                                      tx_search_results["tx_public_keys"]));
-                }
-            }
-
-
-            // search the custum lmdb for payments_id and append the result
-            // to those from the mempool search if found
-
-            mylmdb->search(search_text,
-                           tx_search_results["payments_id"],
-                           "payments_id");
-
-            all_possible_tx_hashes.push_back(
-                    make_pair("payments_id",
-                              tx_search_results["payments_id"]));
-
-            // search the custum lmdb for encrypted_payments_id and append the result
-            // to those from the mempool search if found
-
-            mylmdb->search(search_text,
-                           tx_search_results["encrypted_payments_id"],
-                           "encrypted_payments_id");
-
-            all_possible_tx_hashes.push_back(
-                    make_pair("encrypted_payments_id",
-                              tx_search_results["encrypted_payments_id"]));
-
-            // search the custum lmdb for output_public_keys and append the result
-            // to those from the mempool search if found
-
-            mylmdb->search(search_text,
-                           tx_search_results["output_public_keys"],
-                           "output_public_keys");
-
-            all_possible_tx_hashes.push_back(
-                    make_pair("output_public_keys",
-                              tx_search_results["output_public_keys"]));
-
-
-            // seach for output using output global index
-
-            if (search_for_global_output_idx)
-            {
-                try
-                {
-                    uint64_t global_idx = boost::lexical_cast<uint64_t>(
-                            search_text.substr(4));
-
-
-                    output_data_t output_data;
-
-                    try
-                    {
-                        // get info about output of a given global index
-                        output_data = core_storage->get_db()
-                                .get_output_key(global_idx);
-                    }
-                    catch (const OUTPUT_DNE& e)
-                    {
-                        string out_msg = fmt::format(
-                                "Output with index {:d} does not exist!",
-                                global_idx
-                        );
-
-                        cerr << out_msg << endl;
-
-                        return out_msg;
-                    }
-
-                    //cout << "tx_out.first: " << tx_out.first << endl;
-                    //cout << "tx_out.second: " << tx_out.second << endl;
-
-                    string output_pub_key = pod_to_hex(output_data.pubkey);
-
-                    //cout << "output_pub_key: " << output_pub_key << endl;
-
-                    vector<string> found_outputs;
-
-                    mylmdb->search(output_pub_key,
-                                   found_outputs,
-                                   "output_public_keys");
-
-                    //cout << "found_outputs.size(): " << found_outputs.size() << endl;
-
-                    all_possible_tx_hashes.push_back(
-                            make_pair("output_public_keys_based_on_global_idx",
-                                      found_outputs));
-
-                }
-                catch(boost::bad_lexical_cast &e)
-                {
-                    cerr << "Cant cast global_idx string: "
-                         << search_text.substr(4) << endl;
-                }
-            } //  if (search_for_global_output_idx)
-
-            // seach for output using output amount index and amount
-
-            if (search_for_amount_output_idx)
-            {
-                try
-                {
-
-                    string str_to_split = search_text.substr(4);
-
-                    vector<string> string_parts;
-
-                    boost::split(string_parts, str_to_split,
-                                 boost::is_any_of("-"));
-
-                    if (string_parts.size() != 2)
-                    {
-                        throw;
-                    }
-
-                    uint64_t amount_idx = boost::lexical_cast<uint64_t>(
-                            string_parts[0]);
-
-                    uint64_t amount = static_cast<uint64_t>
-                    (boost::lexical_cast<double>(
-                                    string_parts[1]) * 1e12);
-
-
-                    //cout << "amount_idx: " << amount_idx << endl;
-                    //cout << "amount: "     << amount << endl;
-
-                    output_data_t output_data;
-
-                    try
-                    {
-                        // get info about output of a given global index
-                        output_data = core_storage->get_db()
-                                .get_output_key(
-                                        amount, amount_idx);
-                    }
-                    catch (const OUTPUT_DNE& e)
-                    {
-                        string out_msg = fmt::format(
-                                "Output with amount {:d} and index {:d} does not exist!",
-                                amount, amount_idx
-                        );
-
-                        cerr << out_msg << endl;
-
-                        return out_msg;
-                    }
-
-                    string output_pub_key = pod_to_hex(output_data.pubkey);
-
-                    //cout << "output_pub_key: " << output_pub_key << endl;
-
-                    vector<string> found_outputs;
-
-                    mylmdb->search(output_pub_key,
-                                   found_outputs,
-                                   "output_public_keys");
-
-                    //cout << "found_outputs.size(): " << found_outputs.size() << endl;
-
-                    all_possible_tx_hashes.push_back(
-                            make_pair("output_public_keys_based_on_amount_idx",
-                                      found_outputs));
-
-                }
-                catch(boost::bad_lexical_cast& e)
-                {
-                    cerr << "Cant parse amout index and amout string: "
-                         << search_text.substr(4) << endl;
-                }
-                catch(const OUTPUT_DNE& e)
-                {
-                    cerr << "Output not found in the blockchain: "
-                         << search_text.substr(4) << endl;
-
-                    return(string("Output not found in the blockchain: ")
-                           + search_text.substr(4));
-                }
-            } // if (search_for_amount_output_idx)
-        }
-        catch (const lmdb::runtime_error& e)
-        {
-            cerr << "Error opening/accessing custom lmdb database: "
-                 << e.what() << endl;
-        }
-        catch (std::exception& e)
-        {
-            cerr << "Error opening/accessing custom lmdb database: "
-                 << e.what() << endl;
-        }
-
 
         result_html = show_search_results(search_text, all_possible_tx_hashes);
 
@@ -4114,8 +3622,7 @@ public:
                 {"public_viewkey"     , REMOVE_HASH_BRAKETS(pub_viewkey_str)},
                 {"public_spendkey"    , REMOVE_HASH_BRAKETS(pub_spendkey_str)},
                 {"is_integrated_addr" , false},
-                {"testnet"            , testnet},
-                {"have_custom_lmdb"   , have_custom_lmdb}
+                {"testnet"            , testnet}
         };
 
         add_css_style(context);
@@ -4142,8 +3649,7 @@ public:
                 {"public_spendkey"      , REMOVE_HASH_BRAKETS(pub_spendkey_str)},
                 {"encrypted_payment_id" , REMOVE_HASH_BRAKETS(enc_payment_id_str)},
                 {"is_integrated_addr"   , true},
-                {"testnet"              , testnet},
-                {"have_custom_lmdb"     , have_custom_lmdb}
+                {"testnet"              , testnet}
         };
 
         add_css_style(context);
@@ -4255,8 +3761,7 @@ public:
                 {"testnet"         , testnet},
                 {"search_text"     , search_text},
                 {"no_results"      , true},
-                {"to_many_results" , false},
-                {"have_custom_lmdb", have_custom_lmdb}
+                {"to_many_results" , false}
         };
 
         for (const pair<string, vector<string>>& found_txs: all_possible_tx_hashes)
@@ -4465,7 +3970,6 @@ private:
         // initalise page tempate map with basic info about blockchain
         mstch::map context {
                 {"testnet"               , testnet},
-                {"have_custom_lmdb"      , have_custom_lmdb},
                 {"tx_hash"               , tx_hash_str},
                 {"tx_prefix_hash"        , pod_to_hex(txd.prefix_hash)},                
                 {"tx_pub_key"            , pod_to_hex(txd.pk)},
@@ -4975,32 +4479,6 @@ private:
         boost::erase_all(raw_tx_data, "-----END CERTIFICATE-----");
     }
 
-    bool
-    get_txs_from_timestamp_range(
-            uint64_t timestamp_start,
-            uint64_t timestamp_end,
-            const unique_ptr<xmreg::MyLMDB>& mylmdb,
-            vector<string>& out_txs)
-    {
-
-        vector<crypto::hash> txs_found;
-
-        if (mylmdb->get_txs_from_timestamp_range(
-                timestamp_start,
-                timestamp_end,
-                txs_found))
-        {
-
-            for (auto tf: txs_found)
-            {
-                out_txs.push_back(pod_to_hex(tf));
-            }
-
-            return true;
-        }
-
-        return false;
-    }
 
     vector<pair<tx_info, transaction>>
     search_mempool(crypto::hash tx_hash = null_hash)

@@ -40,7 +40,6 @@ int main(int ac, const char* av[]) {
 
     auto port_opt               = opts.get_option<string>("port");
     auto bc_path_opt            = opts.get_option<string>("bc-path");
-    auto custom_db_path_opt     = opts.get_option<string>("custom-db-path");
     auto deamon_url_opt         = opts.get_option<string>("deamon-url");
     auto ssl_crt_file_opt       = opts.get_option<string>("ssl-crt-file");
     auto ssl_key_file_opt       = opts.get_option<string>("ssl-key-file");
@@ -115,36 +114,6 @@ int main(int ac, const char* av[]) {
         return EXIT_FAILURE;
     }
 
-    // check if we have path to lmdb2 (i.e., custom db)
-    // and if it exists
-
-    string custom_db_path_str;
-
-    if (custom_db_path_opt)
-    {
-        if (boost::filesystem::exists(boost::filesystem::path(*custom_db_path_opt)))
-        {
-            custom_db_path_str = *custom_db_path_opt;
-        }
-        else
-        {
-            cerr << "Custom db path: " << *custom_db_path_opt
-                 << "does not exist" << endl;
-
-            return EXIT_FAILURE;
-        }
-    }
-    else
-    {
-        // if not given assume it is located in ~./bitmonero/lmdb2 folder
-        // or ~./bitmonero/testnet/lmdb2 for testnet network
-        custom_db_path_str = blockchain_path.parent_path().string()
-                             + string("/lmdb2");
-    }
-
-    custom_db_path_str = xmreg::remove_trailing_path_separator(custom_db_path_str);
-
-
     string deamon_url {*deamon_url_opt};
 
     if (testnet && deamon_url == "http:://127.0.0.1:18081")
@@ -155,7 +124,6 @@ int main(int ac, const char* av[]) {
     xmreg::page xmrblocks(&mcore,
                           core_storage,
                           deamon_url,
-                          custom_db_path_str,
                           testnet,
                           enable_pusher,
                           enable_key_image_checker,
