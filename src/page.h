@@ -556,7 +556,13 @@ public:
 
                     // if we got to here, it means that everything went fine
                     // and no unexpeced things happended.
-                    const mstch::map& txd_map = boost::get<mstch::map>(txd_pair.second);
+                    mstch::map txd_map = boost::get<mstch::map>(txd_pair.second);
+
+                    // now we need to update age of txs from cashe
+                    if (!boost::get<string>(txd_map["age"]).empty())
+                    {
+                        txd_map["age"] = age.first;
+                    }
 
                     txs.push_back(txd_map);
 
