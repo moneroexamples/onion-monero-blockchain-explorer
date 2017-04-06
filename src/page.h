@@ -135,16 +135,16 @@ struct tx_details
     get_mstch_map()
     {
         // remove "<" and ">" from the hash string
-        string tx_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", hash));
+        string tx_hash_str = pod_to_hex(hash);
 
-        string tx_prefix_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", prefix_hash));
+        string tx_prefix_hash_str = pod_to_hex(prefix_hash);
 
-        string tx_pk_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", pk));
+        string tx_pk_str = pod_to_hex(pk);
 
         //cout << "payment_id: " << payment_id << endl;
 
-        string pid_str   = REMOVE_HASH_BRAKETS(fmt::format("{:s}", payment_id));
-        string pid8_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", payment_id8));
+        string pid_str   = pod_to_hex(payment_id);
+        string pid8_str  = pod_to_hex(payment_id8);
 
         string mixin_str {"N/A"};
         string fee_str {"N/A"};
@@ -369,6 +369,8 @@ public:
         //get current server timestamp
         server_timestamp = std::time(nullptr);
 
+        uint64_t local_copy_server_timestamp = server_timestamp;
+
         // number of last blocks to show
         uint64_t no_of_last_blocks {no_blocks_on_index + 1};
 
@@ -381,7 +383,7 @@ public:
                 {"have_custom_lmdb" , have_custom_lmdb},
                 {"refresh"          , refresh_page},
                 {"height"           , std::to_string(height)},
-                {"server_timestamp" , xmreg::timestamp_to_str(server_timestamp)},
+                {"server_timestamp" , xmreg::timestamp_to_str(local_copy_server_timestamp)},
                 {"age_format"       , string("[h:m:d]")},
                 {"page_no"          , std::to_string(page_no)},
                 {"total_page_no"    , std::to_string(height / (no_of_last_blocks))},
@@ -442,7 +444,7 @@ public:
             string blk_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", blk_hash));
 
             // get block age
-            pair<string, string> age = get_age(server_timestamp, blk.timestamp);
+            pair<string, string> age = get_age(local_copy_server_timestamp, blk.timestamp);
 
             context["age_format"] = age.second;
 
@@ -558,6 +560,8 @@ public:
 
         uint64_t mempool_size_bytes {0};
 
+        uint64_t local_copy_server_timestamp = server_timestamp;
+
         // for each transaction in the memory pool
         for (size_t i = 0; i < mempool_txs.size(); ++i)
         {
@@ -566,7 +570,7 @@ public:
 
             // calculate difference between tx in mempool and server timestamps
             array<size_t, 5> delta_time = timestamp_difference(
-                                          server_timestamp,
+                                          local_copy_server_timestamp,
                                           _tx_info.receive_time);
 
             // use only hours, so if we have days, add
@@ -645,7 +649,7 @@ public:
                     {"no_nonrct_inputs", num_nonrct_inputs},
                     {"is_ringct"     , is_ringct_str},
                     {"rct_type"      , rct_type_str},
-                    {"mixin"         , fmt::format("{:d}", mixin_no)},
+                    {"mixin"         , mixin_no},
                     {"txsize"        , fmt::format("{:0.2f}",
                                                    static_cast<double>(_tx_info.blob_size)/1024.0)}
             });
@@ -2047,7 +2051,7 @@ public:
                 boost::get<mstch::array>(context["txs"]).push_back(tx_context);
 
                 map<string, string> partials {
-                        {"tx_details", xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html")},
+                        {"tx_details", template_file["tx_details"]},
                 };
 
                 add_css_style(context);
@@ -3960,7 +3964,7 @@ private:
 
         crypto::hash tx_hash = txd.hash;
 
-        string tx_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", tx_hash));
+        string tx_hash_str = pod_to_hex(tx_hash);
 
         uint64_t tx_blk_height {0};
 
@@ -4000,8 +4004,8 @@ private:
         }
 
         // payments id. both normal and encrypted (payment_id8)
-        string pid_str   = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id));
-        string pid8_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id8));
+        string pid_str   = pod_to_hex(txd.payment_id);
+        string pid8_str  = pod_to_hex(txd.payment_id8);
 
 
         string tx_json = obj_to_json_str(tx);
@@ -4012,7 +4016,7 @@ private:
                 {"have_custom_lmdb"      , have_custom_lmdb},
                 {"tx_hash"               , tx_hash_str},
                 {"tx_prefix_hash"        , pod_to_hex(txd.prefix_hash)},
-                {"tx_pub_key"            , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
+                {"tx_pub_key"            , pod_to_hex(txd.pk)},
                 {"blk_height"            , tx_blk_height_str},
                 {"tx_size"               , fmt::format("{:0.4f}",
                                                       static_cast<double>(txd.size) / 1024.0)},
@@ -4030,8 +4034,7 @@ private:
                 {"payment_id"            , pid_str},
                 {"payment_id8"           , pid8_str},
                 {"extra"                 , txd.get_extra_str()},
-                {"with_ring_signatures"  , static_cast<bool>(
-                                                  with_ring_signatures)},
+                {"with_ring_signatures"  , static_cast<bool>(with_ring_signatures)},
                 {"tx_json"               , tx_json},
                 {"is_ringct"             , (tx.version > 1)},
                 {"rct_type"              , tx.rct_signatures.type},
@@ -4097,7 +4100,7 @@ private:
             }
 
             inputs.push_back(mstch::map {
-                    {"in_key_img"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", in_key.k_image))},
+                    {"in_key_img"   , pod_to_hex(in_key.k_image)},
                     {"amount"       , xmreg::xmr_amount_to_str(in_key.amount)},
                     {"input_idx"    , fmt::format("{:02d}", input_idx)},
                     {"mixins"       , mstch::array{}},
@@ -4187,11 +4190,9 @@ private:
 
                 mixins.push_back(mstch::map {
                         {"mix_blk"        , fmt::format("{:08d}", output_data.height)},
-                        {"mix_pub_key"    , REMOVE_HASH_BRAKETS(fmt::format("{:s}",
-                                                                            output_data.pubkey))},
-                        {"mix_tx_hash"    , REMOVE_HASH_BRAKETS(fmt::format("{:s}",
-                                                                            tx_out_idx.first))},
-                        {"mix_out_indx"   , fmt::format("{:d}", tx_out_idx.second)},
+                        {"mix_pub_key"    , pod_to_hex(output_data.pubkey)},
+                        {"mix_tx_hash"    , pod_to_hex(tx_out_idx.first)},
+                        {"mix_out_indx"   , tx_out_idx.second},
                         {"mix_timestamp"  , xmreg::timestamp_to_str(blk.timestamp)},
                         {"mix_age"        , mixin_age.first},
                         {"mix_mixin_no"   , mixin_txd.mixin_no},
@@ -4289,10 +4290,10 @@ private:
             outputs_xmr_sum += outp.second;
 
             outputs.push_back(mstch::map {
-                    {"out_pub_key"   , REMOVE_HASH_BRAKETS(fmt::format("{:s}", outp.first.key))},
+                    {"out_pub_key"   , pod_to_hex(outp.first.key)},
                     {"amount"        , xmreg::xmr_amount_to_str(outp.second)},
                     {"amount_idx"    , out_amount_index_str},
-                    {"num_outputs"   , fmt::format("{:d}", num_outputs_amount)},
+                    {"num_outputs"   , num_outputs_amount},
                     {"output_idx"    , fmt::format("{:02d}", output_idx++)}
             });
         }
@@ -4390,7 +4391,7 @@ private:
 
         transaction tx_copy = tx;
 
-        txd.json_representation = obj_to_json_str(tx_copy);
+        // txd.json_representation = obj_to_json_str(tx_copy);
 
 
         if (!coinbase &&  tx.vin.size() > 0)
