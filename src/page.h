@@ -739,6 +739,8 @@ public:
         uint64_t cache_hits   {0};
         uint64_t cache_misses {0};
 
+        uint64_t local_copy_server_timestamp = server_timestamp;
+
         // for each transaction in the memory pool
         for (size_t i = 0; i < no_of_mempool_tx; ++i)
         {
@@ -747,7 +749,7 @@ public:
 
             // calculate difference between tx in mempool and server timestamps
             array<size_t, 5> delta_time = timestamp_difference(
-                                          server_timestamp,
+                                          local_copy_server_timestamp,
                                           _tx_info.receive_time);
 
             // use only hours, so if we have days, add
