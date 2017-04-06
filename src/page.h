@@ -385,6 +385,8 @@ public:
         //get current server timestamp
         server_timestamp = std::time(nullptr);
 
+        uint64_t local_copy_server_timestamp = server_timestamp;
+
         // number of last blocks to show
         uint64_t no_of_last_blocks {no_blocks_on_index + 1};
 
@@ -398,7 +400,7 @@ public:
                 {"mainnet_url"              , mainnet_url},
                 {"refresh"                  , refresh_page},
                 {"height"                   , height},
-                {"server_timestamp"         , xmreg::timestamp_to_str(server_timestamp)},
+                {"server_timestamp"         , xmreg::timestamp_to_str(local_copy_server_timestamp)},
                 {"age_format"               , string("[h:m:d]")},
                 {"page_no"                  , page_no},
                 {"total_page_no"            , (height / no_of_last_blocks)},
@@ -424,9 +426,6 @@ public:
         start_height = start_height < 0 ? 0 : start_height;
 
         int64_t end_height = start_height + no_of_last_blocks - 1;
-
-        // previous blk timestamp, initalised to lowest possible value
-        double prev_blk_timestamp {std::numeric_limits<double>::lowest()};
 
         vector<double> blk_sizes;
 
@@ -466,7 +465,7 @@ public:
             string blk_hash_str = pod_to_hex(blk_hash);
 
             // get block age
-            pair<string, string> age = get_age(server_timestamp, blk.timestamp);
+            pair<string, string> age = get_age(local_copy_server_timestamp, blk.timestamp);
 
             context["age_format"] = age.second;
 
