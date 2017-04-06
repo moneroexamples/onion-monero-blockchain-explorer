@@ -24,8 +24,7 @@ an Onion Monero Blockchain Explorer. The example not only shows how to use Moner
 
 Tor users:
  
- - [http://libwh5lvouddzei4.onion](http://libwh5lvouddzei4.onion/)
- - [http://2hbthfb66na6pqgv.onion](http://2hbthfb66na6pqgv.onion)
+ - [http://dvwae436pd7nt4bc.onion](http://dvwae436pd7nt4bc.onion)
 
 Clearnet versions:
  - [http://139.162.32.245:8081/](http://139.162.32.245:8081/) - bleeding edge, no https.
@@ -38,8 +37,6 @@ Clearnet testnet Monero version:
 
  - [http://139.162.32.245:8082/](http://139.162.32.245:8082/) - bleeding edge, no https.
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
- - [https://testnet.explorer.xmr.my/](https://testnet.explorer.xmr.my/) - https enabled, most up to date.
-
    
 i2p users (main Monero network) - down for now:
 
