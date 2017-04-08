@@ -276,12 +276,16 @@
         {{/show_more_details_link}}
     {{/with_ring_signatures}}
     {{#with_ring_signatures}}
-        <h3>JSON representation of tx</h3>
-        <div class="center">
-            <code style="white-space: pre-wrap; font-size: 10px">
-                {{tx_json}}
-            </code>
+        <label id="show-decoded-inputs" for="toggle-1">Show JSON representation of tx</label>
+        <input type="checkbox" id="toggle-1">
+        <div id="decoded-inputs">
+            <div class="center">
+                <code style="white-space: pre-wrap; font-size: 10px">
+                    {{tx_json}}
+                </code>
+            </div>
         </div>
+        <br/><br/>
         <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}">Less details</a></h5>
     {{/with_ring_signatures}}
 {{/have_raw_tx}}
