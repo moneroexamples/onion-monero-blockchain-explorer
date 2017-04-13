@@ -33,6 +33,14 @@ namespace xmreg
                  "enable key images file checker")
                 ("enable-output-key-checker", value<bool>()->default_value(false)->implicit_value(true),
                  "enable outputs key file checker")
+                ("enable-mempool-cache", value<bool>()->default_value(true),
+                 "enable caching txs in the mempool")
+                ("enable-tx-cache", value<bool>()->default_value(false)->implicit_value(true),
+                 "enable caching of tx details")
+                ("show-cache-times", value<bool>()->default_value(false)->implicit_value(true),
+                 "show times of getting data from cache vs no cache")
+                ("enable-block-cache", value<bool>()->default_value(false)->implicit_value(true),
+                 "enable caching of block details")
                 ("enable-autorefresh-option", value<bool>()->default_value(false)->implicit_value(true),
                  "enable users to have the index page on autorefresh")
                 ("port,p", value<string>()->default_value("8081"),

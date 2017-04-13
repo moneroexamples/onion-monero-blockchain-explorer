@@ -18,12 +18,6 @@ int main(int ac, const char* av[]) {
     xmreg::CmdLineOptions opts {ac, av};
 
     auto help_opt                      = opts.get_option<bool>("help");
-    auto testnet_opt                   = opts.get_option<bool>("testnet");
-    auto enable_key_image_checker_opt  = opts.get_option<bool>("enable-key-image-checker");
-    auto enable_output_key_checker_opt = opts.get_option<bool>("enable-output-key-checker");
-    auto enable_autorefresh_option_opt = opts.get_option<bool>("enable-autorefresh-option");
-    auto enable_pusher_opt             = opts.get_option<bool>("enable-pusher");
-    auto enable_mixin_details_opt      = opts.get_option<bool>("enable-mixin-details");
 
     // if help was chosen, display help text and finish
     if (*help_opt)
@@ -31,21 +25,36 @@ int main(int ac, const char* av[]) {
         return EXIT_SUCCESS;
     }
 
-    bool testnet                   {*testnet_opt};
-    bool enable_pusher             {*enable_pusher_opt};
-    bool enable_key_image_checker  {*enable_key_image_checker_opt};
-    bool enable_autorefresh_option {*enable_autorefresh_option_opt};
-    bool enable_output_key_checker {*enable_output_key_checker_opt};
-    bool enable_mixin_details      {*enable_mixin_details_opt};
+    auto port_opt                      = opts.get_option<string>("port");
+    auto bc_path_opt                   = opts.get_option<string>("bc-path");
+    auto deamon_url_opt                = opts.get_option<string>("deamon-url");
+    auto ssl_crt_file_opt              = opts.get_option<string>("ssl-crt-file");
+    auto ssl_key_file_opt              = opts.get_option<string>("ssl-key-file");
+    auto no_blocks_on_index_opt        = opts.get_option<string>("no-blocks-on-index");
+    auto testnet_url                   = opts.get_option<string>("testnet-url");
+    auto mainnet_url                   = opts.get_option<string>("mainnet-url");
+    auto testnet_opt                   = opts.get_option<bool>("testnet");
+    auto enable_key_image_checker_opt  = opts.get_option<bool>("enable-key-image-checker");
+    auto enable_output_key_checker_opt = opts.get_option<bool>("enable-output-key-checker");
+    auto enable_autorefresh_option_opt = opts.get_option<bool>("enable-autorefresh-option");
+    auto enable_pusher_opt             = opts.get_option<bool>("enable-pusher");
+    auto enable_mixin_details_opt      = opts.get_option<bool>("enable-mixin-details");
+    auto enable_mempool_cache_opt      = opts.get_option<bool>("enable-mempool-cache");
+    auto enable_tx_cache_opt           = opts.get_option<bool>("enable-tx-cache");
+    auto enable_block_cache_opt        = opts.get_option<bool>("enable-block-cache");
+    auto show_cache_times_opt          = opts.get_option<bool>("show-cache-times");
 
-    auto port_opt               = opts.get_option<string>("port");
-    auto bc_path_opt            = opts.get_option<string>("bc-path");
-    auto deamon_url_opt         = opts.get_option<string>("deamon-url");
-    auto ssl_crt_file_opt       = opts.get_option<string>("ssl-crt-file");
-    auto ssl_key_file_opt       = opts.get_option<string>("ssl-key-file");
-    auto no_blocks_on_index_opt = opts.get_option<string>("no-blocks-on-index");
-    auto testnet_url            = opts.get_option<string>("testnet-url");
-    auto mainnet_url            = opts.get_option<string>("mainnet-url");
+    bool testnet                      {*testnet_opt};
+    bool enable_pusher                {*enable_pusher_opt};
+    bool enable_key_image_checker     {*enable_key_image_checker_opt};
+    bool enable_autorefresh_option    {*enable_autorefresh_option_opt};
+    bool enable_output_key_checker    {*enable_output_key_checker_opt};
+    bool enable_mixin_details         {*enable_mixin_details_opt};
+    bool enable_mempool_cache         {*enable_mempool_cache_opt};
+    bool enable_tx_cache              {*enable_tx_cache_opt};
+    bool enable_block_cache           {*enable_block_cache_opt};
+    bool show_cache_times             {*show_cache_times_opt};
+
 
     // set  monero log output level
     uint32_t log_level = 0;
@@ -130,6 +139,10 @@ int main(int ac, const char* av[]) {
                           enable_output_key_checker,
                           enable_autorefresh_option,
                           enable_mixin_details,
+                          enable_mempool_cache,
+                          enable_tx_cache,
+                          enable_block_cache,
+                          show_cache_times,
                           no_blocks_on_index,
                           *testnet_url,
                           *mainnet_url);

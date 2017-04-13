@@ -102,6 +102,10 @@ add_library(wallet STATIC IMPORTED)
 set_property(TARGET wallet
         PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libwallet.a)
 
+add_library(easylogging STATIC IMPORTED)
+set_property(TARGET easylogging
+        PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libeasylogging.a)
+
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR WIN32)
     add_library(unbound STATIC IMPORTED)
     set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libunbound.a)
@@ -197,6 +201,7 @@ set(LIBRARIES
         common
         mnemonics
         epee
+        easylogging
         ${Boost_LIBRARIES}
         pthread
         unbound

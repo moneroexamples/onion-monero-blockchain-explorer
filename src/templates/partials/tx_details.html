@@ -291,16 +291,17 @@
 {{/have_raw_tx}}
 
 
-<div class="center">
-    {{#construction_time}}
-        <h6 style="margin-top: 1px;color:#949490">
-            Tx details construction time: {{construction_time}} s
-            {{#from_cache}}
-                <br/>Tx read from the explorer's internal tx_cache
-            {{/from_cache}}
-        </h6>
-    {{/construction_time}}
-</div>
-
+{{#show_cache_times}}
+    <div class="center">
+        {{#construction_time}}
+            <h6 style="margin-top: 1px;color:#949490">
+                Tx details construction time: {{construction_time}} s
+                {{#from_cache}}
+                    <br/>Tx read from the tx cache
+                {{/from_cache}}
+            </h6>
+        {{/construction_time}}
+    </div>
+{{/show_cache_times}}
 
 </div>

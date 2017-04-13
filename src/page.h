@@ -248,6 +248,10 @@ class page
     bool enable_key_image_checker;
     bool enable_output_key_checker;
     bool enable_mixins_details;
+    bool enable_mempool_cache;
+    bool enable_tx_cache;
+    bool enable_block_cache;
+    bool show_cache_times;
 
 
     bool enable_autorefresh_option;
@@ -324,6 +328,10 @@ public:
          bool _enable_output_key_checker,
          bool _enable_autorefresh_option,
          bool _enable_mixins_details,
+         bool _enable_mempool_cache,
+         bool _enable_tx_cache,
+         bool _enable_block_cache,
+         bool _show_cache_times,
          uint64_t _no_blocks_on_index,
          string _testnet_url,
          string _mainnet_url)
@@ -337,6 +345,10 @@ public:
               enable_output_key_checker {_enable_output_key_checker},
               enable_autorefresh_option {_enable_autorefresh_option},
               enable_mixins_details {_enable_mixins_details},
+              enable_mempool_cache {_enable_mempool_cache},
+              enable_tx_cache {_enable_tx_cache},
+              enable_block_cache {_enable_block_cache},
+              show_cache_times {_show_cache_times},
               no_blocks_on_index {_no_blocks_on_index},
               testnet_url {_testnet_url},
               mainnet_url {_mainnet_url},
@@ -411,7 +423,8 @@ public:
                 {"enable_pusher"            , enable_pusher},
                 {"enable_key_image_checker" , enable_key_image_checker},
                 {"enable_output_key_checker", enable_output_key_checker},
-                {"enable_autorefresh_option", enable_autorefresh_option}
+                {"enable_autorefresh_option", enable_autorefresh_option},
+                {"show_cache_times"         , show_cache_times}
         };
 
         context.emplace("txs", mstch::array()); // will keep tx to show
@@ -470,7 +483,7 @@ public:
             context["age_format"] = age.second;
 
 
-            if (block_tx_cache.Contains(i))
+            if (enable_block_cache && block_tx_cache.Contains(i))
             {
                 // get txs info in the ith block from
                 // our cache
@@ -649,8 +662,11 @@ public:
 
                 ++cache_misses;
 
-                // save in block_tx cache
-                block_tx_cache.Put(i, txd_pairs);
+                if (enable_block_cache)
+                {
+                    // save in block_tx cache
+                    block_tx_cache.Put(i, txd_pairs);
+                }
 
             } // else if (block_tx_json_cache.Contains(i))
 
@@ -705,7 +721,8 @@ public:
 
         // initalise page tempate map with basic info about mempool
         mstch::map context {
-                {"mempool_size",  mempool_txs.size()},
+                {"mempool_size"          , mempool_txs.size()},
+                {"show_cache_times"      , show_cache_times}
         };
 
         context.emplace("mempooltxs" , mstch::array());
@@ -791,7 +808,7 @@ public:
 
                 json j_tx;
 
-                if (mempool_tx_json_cache.Contains(_tx_info.id_hash))
+                if (enable_mempool_cache && mempool_tx_json_cache.Contains(_tx_info.id_hash))
                 {
                     // maybe its already in cashe, so we can save some time
                     // by using this, rather then making parsing json
@@ -864,18 +881,20 @@ public:
 
                     ++cache_misses;
 
-                    // save in mempool cache
-                    mempool_tx_json_cache.Put(
-                            _tx_info.id_hash,
-                            mempool_tx_info {
-                                sum_inputs, sum_outputs,
-                                no_inputs, no_outputs,
-                                num_nonrct_inputs, mixin_no,
-                                hash_str, fee_str,
-                                xmr_inputs_str, xmr_outputs_str,
-                                timestamp_str, txsize
-                            });
-
+                    if (enable_mempool_cache)
+                    {
+                        // save in mempool cache
+                        mempool_tx_json_cache.Put(
+                                _tx_info.id_hash,
+                                mempool_tx_info {
+                                        sum_inputs, sum_outputs,
+                                        no_inputs, no_outputs,
+                                        num_nonrct_inputs, mixin_no,
+                                        hash_str, fee_str,
+                                        xmr_inputs_str, xmr_outputs_str,
+                                        timestamp_str, txsize
+                                });
+                    }
                 } // else if (mempool_tx_json_cache.Contains(_tx_info.id_hash))
 
             }
@@ -1209,7 +1228,7 @@ public:
 
         mstch::map tx_context;
 
-        if (tx_context_cache.Contains({tx_hash, with_ring_signatures}))
+        if (enable_tx_cache && tx_context_cache.Contains({tx_hash, with_ring_signatures}))
         {
             // with_ring_signatures == 0 means that cache is not used
             // when obtaining detailed information about tx is requested.
@@ -1302,8 +1321,8 @@ public:
                             tx_info_cache {
                                     boost::get<uint64_t>(tx_context["tx_blk_height"]),
                                     boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
-                                    tx_context}
-                    );
+                                    tx_context});
+
 
                 } // if (core_storage->have_tx(tx_hash))
                 else
@@ -1337,13 +1356,15 @@ public:
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>
                     (std::chrono::steady_clock::now() - start);
 
-            tx_context_cache.Put(
-                    {tx_hash, with_ring_signatures},
-                    tx_info_cache {
-                            boost::get<uint64_t>(tx_context["tx_blk_height"]),
-                            boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
-                            tx_context}
-            );
+            if (enable_tx_cache)
+            {
+                tx_context_cache.Put(
+                        {tx_hash, with_ring_signatures},
+                        tx_info_cache {
+                                boost::get<uint64_t>(tx_context["tx_blk_height"]),
+                                boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
+                                tx_context});
+            }
 
             tx_context["construction_time"] = fmt::format(
                     "{:0.4f}", static_cast<double>(duration.count())/1.0e6);
@@ -1360,6 +1381,7 @@ public:
 
         mstch::map context {
                 {"testnet"          , this->testnet},
+                {"show_cache_times" , show_cache_times},
                 {"txs"              , mstch::array{}}
         };
 
