@@ -1013,11 +1013,11 @@ public:
         bool have_prev_hash = (prev_hash == null_hash ? false : true);
 
         // remove "<" and ">" from the hash string
-        string prev_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", prev_hash));
-        string next_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", next_hash));
+        string prev_hash_str = pod_to_hex(prev_hash);
+        string next_hash_str = pod_to_hex(next_hash);
 
         // remove "<" and ">" from the hash string
-        string blk_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", blk_hash));
+        string blk_hash_str  = pod_to_hex(blk_hash);
 
         // get block timestamp in user friendly format
         string blk_timestamp = xmreg::timestamp_to_str(blk.timestamp);
@@ -1099,7 +1099,7 @@ public:
             const crypto::hash& tx_hash = blk.tx_hashes.at(i);
 
             // remove "<" and ">" from the hash string
-            string tx_hash_str = REMOVE_HASH_BRAKETS(fmt::format("{:s}", tx_hash));
+            string tx_hash_str = pod_to_hex(tx_hash);
 
 
             // get transaction
@@ -1582,8 +1582,8 @@ public:
         }
 
         // payments id. both normal and encrypted (payment_id8)
-        string pid_str   = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id));
-        string pid8_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.payment_id8));
+        string pid_str   = pod_to_hex(txd.payment_id);
+        string pid8_str  = pod_to_hex(txd.payment_id8);
 
 
         // initalise page tempate map with basic info about blockchain
@@ -1593,7 +1593,7 @@ public:
                 {"tx_prefix_hash"       , pod_to_hex(txd.prefix_hash)},
                 {"xmr_address"          , xmr_address_str},
                 {"viewkey"              , viewkey_str},
-                {"tx_pub_key"           , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.pk))},
+                {"tx_pub_key"           , pod_to_hex(txd.pk)},
                 {"blk_height"           , tx_blk_height_str},
                 {"tx_size"              , fmt::format("{:0.4f}",
                                                       static_cast<double>(txd.size) / 1024.0)},
@@ -1695,9 +1695,7 @@ public:
             }
 
             outputs.push_back(mstch::map {
-                {"out_pub_key"   , REMOVE_HASH_BRAKETS(
-                                           fmt::format("{:s}",
-                                                       outp.first.key))},
+                {"out_pub_key"   , pod_to_hex(outp.first.key)},
                 {"amount"        , xmreg::xmr_amount_to_str(outp.second)},
                 {"mine_output"   , mine_output},
                 {"output_idx"    , fmt::format("{:02d}", output_idx)}
@@ -1954,7 +1952,7 @@ public:
                             {"my_public_key"   , pod_to_hex(txout_k.key)},
                             {"tx_hash"         , tx_hash_str},
                             {"mine_output"     , mine_output},
-                            {"out_idx"         , to_string(output_idx_in_tx)},
+                            {"out_idx"         , output_idx_in_tx},
                             {"formed_output_pk", out_pub_key_str},
                             {"out_in_match"    , output_match},
                             {"amount"          , xmreg::xmr_amount_to_str(amount)}
@@ -3988,7 +3986,7 @@ private:
                 {"tx_size"               , fmt::format("{:0.4f}",
                                                       static_cast<double>(txd.size) / 1024.0)},
                 {"tx_fee"                , xmreg::xmr_amount_to_str(txd.fee)},
-                {"tx_version"            , fmt::format("{:d}", txd.version)},
+                {"tx_version"            , txd.version},
                 {"blk_timestamp"         , blk_timestamp},
                 {"blk_timestamp_uint"    , blk.timestamp},
                 {"delta_time"            , age.first},
@@ -4191,7 +4189,7 @@ private:
                             {"mix_blk",        fmt::format("{:08d}", output_data.height)},
                             {"mix_pub_key",    pod_to_hex(output_data.pubkey)},
                             {"mix_tx_hash",    pod_to_hex(tx_out_idx.first)},
-                            {"mix_out_indx",   fmt::format("{:d}", tx_out_idx.second)},
+                            {"mix_out_indx",   tx_out_idx.second},
                             {"mix_timestamp",  xmreg::timestamp_to_str(blk.timestamp)},
                             {"mix_age",        mixin_age.first},
                             {"mix_mixin_no",   mixin_txd.mixin_no},
@@ -4319,7 +4317,7 @@ private:
                     {"out_pub_key"   , pod_to_hex(outp.first.key)},
                     {"amount"        , xmreg::xmr_amount_to_str(outp.second)},
                     {"amount_idx"    , out_amount_index_str},
-                    {"num_outputs"   , fmt::format("{:d}", num_outputs_amount)},
+                    {"num_outputs"   , num_outputs_amount},
                     {"output_idx"    , fmt::format("{:02d}", output_idx++)}
             });
         }
@@ -4404,6 +4402,7 @@ private:
         // due to previous bug with sining txs:
         // https://github.com/monero-project/monero/pull/1358/commits/7abfc5474c0f86e16c405f154570310468b635c2
         txd.pk = xmreg::get_tx_pub_key_from_received_outs(tx);
+
 
         // sum xmr in inputs and ouputs in the given tx
         const array<uint64_t, 4>& sum_data = summary_of_in_out_rct(
@@ -4513,15 +4512,13 @@ private:
             {
                 transaction tx;
 
-                //cout << "\n\n\n_tx_info.id_hash:" << _tx_info.id_hash << endl;
-
                 if (!xmreg::make_tx_from_json(_tx_info.tx_json, tx))
                 {
                     cerr << "Cant make tx from _tx_info.tx_json" << endl;
                     continue;
                 }
 
-                if (_tx_info.id_hash != pod_to_hex(get_transaction_hash(tx)))
+                if (mem_tx_hash != get_transaction_hash(tx))
                 {
                     cerr << "Hash of reconstructed tx from json does not match "
                             "what we should get!"
