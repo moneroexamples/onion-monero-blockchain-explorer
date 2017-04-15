@@ -14,7 +14,7 @@
 
 
 
-    <table class="center">
+    <table class="center pure-table">
         <tr>
             <td>Timestamp [UCT] (epoch):</td><td>{{blk_timestamp}} ({{blk_timestamp_epoch}})</td>
             <td>Age {{age_format}}:</td><td>{{blk_age}}</td>
@@ -33,7 +33,7 @@
     </table>
 
     <h3>Miner reward transaction</h3>
-    <table class="center">
+    <table class="center pure-table">
         <tr>
             <td>hash</td>
             <td>outputs</td>
@@ -55,7 +55,7 @@
 
     <h3>Transactions ({{no_txs}})</h3>
     {{#have_txs}}
-        <table class="center" style="width:80%">
+        <table class="center pure-table" style="width:80%">
             <tr>
                 <td>hash</td>
                 <td>outputs</td>
@@ -71,7 +71,7 @@
                     <td>{{sum_outputs}}</td>
                     <td>{{tx_fee}}</td>
                     <td>{{mixin}}</td>
-                    <td>{{no_inputs}}/{{no_outputs}}</td>                    
+                    <td>{{no_inputs}}/{{no_outputs}}</td>
                     <td>{{tx_size}}</td>
                     <td>{{version}}</td>
                 </tr>
