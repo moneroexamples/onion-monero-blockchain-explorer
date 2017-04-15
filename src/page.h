@@ -30,8 +30,6 @@
 #define TMPL_DIR                    "./templates"
 #define TMPL_PARIALS_DIR            TMPL_DIR "/partials"
 #define TMPL_CSS_STYLES             TMPL_DIR "/css/style.css"
-#define TMPL_CSS_FRAMEWORK_STYLES   TMPL_DIR "/css/pure-min.css"
-
 #define TMPL_INDEX                  TMPL_DIR "/index.html"
 #define TMPL_INDEX2                 TMPL_DIR "/index2.html"
 #define TMPL_MEMPOOL                TMPL_DIR "/mempool.html"
@@ -1054,7 +1052,7 @@ public:
         uint64_t sum_fees = 0;
 
         // get tx details for the coinbase tx, i.e., miners reward
-        tx_details txd_coinbase = get_tx_details(blk.miner_tx, true,
+        tx_details txd_coinbase = get_tx_details(blk.miner_tx, true, 
             _blk_height, current_blockchain_height);
 
         // initalise page tempate map with basic info about blockchain
@@ -1372,7 +1370,7 @@ public:
                     "{:0.4f}", static_cast<double>(duration.count())/1.0e6);
 
         } // else if (tx_context_cache.Contains(tx_hash))
-
+        
 
         tx_context["show_more_details_link"] = show_more_details_link;
 
@@ -4463,7 +4461,7 @@ private:
         {
             // if we know blk_height, and current blockchan height
             // just use it to get no_confirmations.
-
+            
             txd.no_confirmations = bc_height - (blk_height - 1);
         }
 
