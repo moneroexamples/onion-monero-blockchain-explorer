@@ -8,6 +8,7 @@
     {{/refresh}}
     <title>Onion Monero Blockchain Explorer</title>
     <!--<link rel="stylesheet" type="text/css" href="/css/style.css">-->
+    <!-- INSERT PURE-MIN CSS HERE -->
     <style type="text/css">
         {{#css_styles}}{{/css_styles}}
     </style>
@@ -23,10 +24,10 @@
 
 
     <div class="center">
-        <form action="/search" method="get" style="width:100%; margin-top:15px" class="style-1">
+        <form action="/search" method="get" style="width:100%; margin-top:15px" class="pure-form">
             <input type="text" name="value" size="120"
                    placeholder="block height, block hash, transaction hash">
-            <input type="submit" value="Search">
+            <input type="submit" class="pure-button pure-button-primary" value="Search">
         </form>
     </div>
 
