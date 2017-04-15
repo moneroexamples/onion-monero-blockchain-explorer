@@ -30,6 +30,7 @@
 #define TMPL_DIR                    "./templates"
 #define TMPL_PARIALS_DIR            TMPL_DIR "/partials"
 #define TMPL_CSS_STYLES             TMPL_DIR "/css/style.css"
+#define TMPL_CSS_PURE               TMPL_DIR "/css/pure-min.css"
 #define TMPL_INDEX                  TMPL_DIR "/index.html"
 #define TMPL_INDEX2                 TMPL_DIR "/index2.html"
 #define TMPL_MEMPOOL                TMPL_DIR "/mempool.html"
@@ -363,6 +364,7 @@ public:
         // into template_file map
 
         template_file["css_styles"]      = xmreg::read(TMPL_CSS_STYLES);
+        template_file["css_pure"]        = xmreg::read(TMPL_CSS_PURE);
         template_file["header"]          = xmreg::read(TMPL_HEADER);
         template_file["footer"]          = get_footer();
         template_file["index2"]          = get_full_page(xmreg::read(TMPL_INDEX2));
@@ -4611,6 +4613,10 @@ private:
     {
         context["css_styles"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
             return template_file["css_styles"];
+        }};
+
+        context["css_pure"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
+            return template_file["css_pure"];
         }};
     }
 
