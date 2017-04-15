@@ -53,10 +53,11 @@
 
     </table>
 
+    <hr/>
 
   <h3>{{outputs_no}} output(s) for total of {{outputs_xmr_sum}} xmr</h3>
   <div class="center">
-      <table class="center">
+      <table class="center pure-table">
           <tr>
               <td>stealth address</td>
               <td>amount</td>
@@ -92,7 +93,7 @@
                         <input type="text" name="viewkey" size="90" placeholder="Private viewkey" style="margin-top:5px"><br/>
                         <input type="hidden" name="raw_tx_data" value="{{raw_tx_data}}">
                         <!--above raw_tx_data field only used when checking raw tx data through tx pusher-->
-                        <input type="submit" value="Decode outputs" style="margin-top:5px" >
+                        <input type="submit" value="Decode outputs" class="pure-button pure-button-primary" style="margin-top:5px" >
                     </form>
                 </div>
             </div>
@@ -113,7 +114,7 @@
                        <input type="hidden" name="txhash" value="{{tx_hash}}"><br/>
                        <input type="text" name="txprvkey" size="90" placeholder="Tx private key"><br/>
                        <input type="text" name="xmraddress" size="90" placeholder="Recipient's Monero Address" style="margin-top:5px"><br/>
-                       <input type="submit" value="Prove sending" style="margin-top:5px">
+                       <input type="submit" value="Prove sending" class="pure-button pure-button-primary" style="margin-top:5px">
                     </form>
                 </div>
             </div>
