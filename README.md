@@ -74,38 +74,44 @@ The key features of the Onion Monero Blockchain Explorer are:
  - the only explorer allowing to inspect encrypted key images file and output files.
  - the only explorer able to estimate possible spendings based on address and viewkey.
 
-## Prerequisite
+## Compilation on Ubuntu 16.04
 
-Instruction for Monero 0.10.3 compilation and Monero headers and libraries setup are
-as shown here:
- - [Compile Monero on Ubuntu 16.04 x64](https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04)
- - [lmdbcpp-monero](https://github.com/moneroexamples/lmdbcpp-monero.git) (optional)
+##### Compile latest Monero
 
-## Compile and run the explorer
+Download and compile Monero recent monero realease into your home folder:
 
-##### Monero headers and libraries setup
+```bash
+# first install monero dependecines
+sudo apt update
 
-The Onion Explorer uses Monero C++ libraries and headers. 
- Instructions how to download source files and compile Monero,
- setup header and library files are presented here:
+sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libcurl4-openssl-dev libgtest-dev
 
-- https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04 (Ubuntu 16.04)
-- https://github.com/moneroexamples/compile-monero-09-on-arch-linux (Arch Linux)
+# go to home folder 
+cd ~
 
-##### Compile and run 
+git clone https://github.com/monero-project/monero
+
+cd monero/
+
+# checkout last monero version
+git checkout -b v0.10.3.1
+
+make
+```
+
+##### Compile and run the explorer
 Once the Monero is compiled and setup, the explorer can be downloaded and compiled
 as follows:
 
 ```bash
+# go to home folder if still in ~/monero
+cd ~
+
 # download the source code
 git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
 
 # enter the downloaded sourced code folder
 cd onion-monero-blockchain-explorer
-
-# make ~/Downloads forlder if you dont have it
-# time zone library that explorer is using, puts there
-# its database of time zone offsets
 
 # make a build folder and enter it
 mkdir build && cd build
@@ -117,7 +123,10 @@ cmake ..
 make
 ```
 
-When compilation finishes executable `xmrblocks` should be created.
+When compilation finishes executable `xmrblocks` should be created. Before running
+please make sure that  `~/Downloads` folder exists and is writable. 
+Time zone library that explorer is using, puts there 
+its database of time zone offsets
 
 To run it:
 ```
@@ -138,6 +147,7 @@ Go to your browser: http://127.0.0.1:8081
 
 ```
 ./xmrblocks -h
+xmrblocks, start Onion Monero Blockchain Explorer:
   -h [ --help ] [=arg(=1)] (=0)         produce help message
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
   --enable-pusher [=arg(=1)] (=0)       enable pushing signed tx
@@ -149,11 +159,15 @@ Go to your browser: http://127.0.0.1:8081
                                         enable users to have the index page on 
                                         autorefresh
   -p [ --port ] arg (=8081)             default port
+  --no-blocks-on-index arg (=10)        number of last blocks to be shown on 
+                                        index page
   -b [ --bc-path ] arg                  path to lmdb blockchain
   --ssl-crt-file arg                    A path to crt file for ssl (https) 
                                         functionality
   --ssl-key-file arg                    A path to key file for ssl (https) 
                                         functionality
+  -c [ --custom-db-path ] arg           path to the custom lmdb database used 
+                                        for searching things
   -d [ --deamon-url ] arg (=http:://127.0.0.1:18081)
                                         monero address string
 ```
