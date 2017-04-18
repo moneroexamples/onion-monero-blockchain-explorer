@@ -78,7 +78,7 @@ The key features of the Onion Monero Blockchain Explorer are:
 
 ##### Compile latest Monero
 
-Download and compile Monero recent monero realease into your home folder:
+Download and compile recent Monero release into your home folder:
 
 ```bash
 # first install monero dependecines
@@ -133,6 +133,9 @@ To run it:
 ./xmrblocks
 ```
 
+By default it will look for blockchain in its default location i.e., `~/.bitmonero/lmdb`.
+You can use `--bc-path` option if its in different location. 
+
 Example output:
 
 ```bash
@@ -166,8 +169,6 @@ xmrblocks, start Onion Monero Blockchain Explorer:
                                         functionality
   --ssl-key-file arg                    A path to key file for ssl (https) 
                                         functionality
-  -c [ --custom-db-path ] arg           path to the custom lmdb database used 
-                                        for searching things
   -d [ --deamon-url ] arg (=http:://127.0.0.1:18081)
                                         monero address string
 ```
