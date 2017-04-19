@@ -3958,6 +3958,7 @@ public:
         }
 
         j_response = json {
+            {"error"        , ""},
             {"timestamp"    , tx_timestamp},
             {"timestamp_utc", blk_timestamp_utc},
             {"block_height" , block_height},
