@@ -3880,6 +3880,25 @@ public:
     }
 
 
+    string
+    json_show_tx(string tx_hash_str)
+    {
+        json response;
+
+        // parse tx hash string to hash object
+        crypto::hash tx_hash;
+
+        if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+        {
+            string msg = fmt::format("Cant parse tx hash: %s", tx_hash_str);
+            cerr << msg << endl;
+            return (json {{"error", msg}}).dump();
+        }
+
+        return {};
+    }
+
+
 private:
 
 

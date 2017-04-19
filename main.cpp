@@ -335,6 +335,11 @@ int main(int ac, const char* av[]) {
         return text;
     });
 
+    CROW_ROUTE(app, "api/v1/tx/<string>")
+    ([&](const crow::request& req, string tx_hash) {
+        return crow::response(xmrblocks.json_show_tx(tx_hash));
+    });
+
 
     if (enable_autorefresh_option)
     {
