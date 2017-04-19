@@ -3915,6 +3915,7 @@ public:
 
         uint64_t block_height {0};
         uint64_t is_coinbase_tx = is_coinbase(tx);
+        uint64_t no_confirmations {0};
 
         if (found_in_mempool == false)
         {
@@ -3960,13 +3961,18 @@ public:
             });
         }
 
+        if (found_in_mempool == false)
+        {
+            no_confirmations = txd.no_confirmations;
+        }
+
         j_response = json {
             {"error"        , ""},
             {"timestamp"    , tx_timestamp},
             {"timestamp_utc", blk_timestamp_utc},
             {"block_height" , block_height},
             {"coinbase"     , is_coinbase_tx},
-            {"confirmations", txd.no_confirmations},
+            {"confirmations", no_confirmations},
             {"version"      , tx.version},
             {"fee"          , txd.fee},
             {"size"         , txd.size},
