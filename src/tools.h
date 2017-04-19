@@ -16,7 +16,6 @@
 #include "monero_headers.h"
 
 #include "../ext/infix_iterator.h"
-#include "../ext/date/tz.h"
 #include "../ext/fmt/ostream.h"
 #include "../ext/fmt/format.h"
 #include "../ext/json.hpp"
@@ -103,10 +102,10 @@ bf::path
 remove_trailing_path_separator(const bf::path& in_path);
 
 string
-timestamp_to_str(time_t timestamp, const char* format = "%F %T");
+timestamp_to_str_local(time_t timestamp, const char* format = "%F %T");
 
 string
-timestamp_to_str_local(time_t timestamp, const char* format = "%F %T");
+timestamp_to_str_gm(time_t timestamp, const char* format = "%F %T");
 
 ostream&
 operator<< (ostream& os, const account_public_address& addr);
@@ -268,9 +267,6 @@ decrypt(const std::string &ciphertext,
 // crypto::public_key wallet2::get_tx_pub_key_from_received_outs(const tools::wallet2::transfer_details &td) const
 public_key
 get_tx_pub_key_from_received_outs(const transaction &tx);
-
-date::sys_seconds
-parse(const std::string& str, string format="%Y-%m-%d %H:%M:%S");
 
 static
 string

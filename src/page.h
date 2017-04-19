@@ -412,7 +412,7 @@ public:
                 {"mainnet_url"              , mainnet_url},
                 {"refresh"                  , refresh_page},
                 {"height"                   , height},
-                {"server_timestamp"         , xmreg::timestamp_to_str(local_copy_server_timestamp)},
+                {"server_timestamp"         , xmreg::timestamp_to_str_gm(local_copy_server_timestamp)},
                 {"age_format"               , string("[h:m:d]")},
                 {"page_no"                  , page_no},
                 {"total_page_no"            , (height / no_of_last_blocks)},
@@ -867,7 +867,7 @@ public:
                     fee_str         = xmreg::xmr_amount_to_str(_tx_info.fee, "{:0.3f}");
                     xmr_inputs_str  = xmreg::xmr_amount_to_str(sum_inputs , "{:0.3f}");
                     xmr_outputs_str = xmreg::xmr_amount_to_str(sum_outputs, "{:0.3f}");
-                    timestamp_str   = xmreg::timestamp_to_str(_tx_info.receive_time);
+                    timestamp_str   = xmreg::timestamp_to_str_gm(_tx_info.receive_time);
 
                     txsize          = fmt::format("{:0.2f}",
                                              static_cast<double>(_tx_info.blob_size)/1024.0);
@@ -1020,7 +1020,7 @@ public:
         string blk_hash_str  = pod_to_hex(blk_hash);
 
         // get block timestamp in user friendly format
-        string blk_timestamp = xmreg::timestamp_to_str(blk.timestamp);
+        string blk_timestamp = xmreg::timestamp_to_str_gm(blk.timestamp);
 
         // get age of the block relative to the server time
         pair<string, string> age = get_age(server_timestamp, blk.timestamp);
@@ -1210,7 +1210,7 @@ public:
                 uint64_t tx_recieve_timestamp
                         = found_txs.at(0).first.receive_time;
 
-                blk_timestamp = xmreg::timestamp_to_str(tx_recieve_timestamp);
+                blk_timestamp = xmreg::timestamp_to_str_gm(tx_recieve_timestamp);
 
                 age = get_age(server_timestamp, tx_recieve_timestamp,
                               FULL_AGE_FORMAT);
@@ -1530,7 +1530,7 @@ public:
                 uint64_t tx_recieve_timestamp
                         = found_txs.at(0).first.receive_time;
 
-                blk_timestamp = xmreg::timestamp_to_str(tx_recieve_timestamp);
+                blk_timestamp = xmreg::timestamp_to_str_gm(tx_recieve_timestamp);
 
                 age = get_age(server_timestamp,
                               tx_recieve_timestamp,
@@ -1576,7 +1576,7 @@ public:
             // calculate difference between tx and server timestamps
             age = get_age(server_timestamp, blk.timestamp, FULL_AGE_FORMAT);
 
-            blk_timestamp = xmreg::timestamp_to_str(blk.timestamp);
+            blk_timestamp = xmreg::timestamp_to_str_gm(blk.timestamp);
 
             tx_blk_height_str = std::to_string(tx_blk_height);
         }
@@ -1608,7 +1608,7 @@ public:
                 {"tx_prove"             , tx_prove}
         };
 
-        string server_time_str = xmreg::timestamp_to_str(server_timestamp, "%F");
+        string server_time_str = xmreg::timestamp_to_str_gm(server_timestamp, "%F");
 
 
 
@@ -2360,8 +2360,8 @@ public:
                             );
 
                     tx_cd_data.emplace("timescales", mixins_timescales.first);
-                    tx_cd_data["min_mix_time"]     = xmreg::timestamp_to_str(min_mix_timestamp);
-                    tx_cd_data["max_mix_time"]     = xmreg::timestamp_to_str(max_mix_timestamp);
+                    tx_cd_data["min_mix_time"]     = xmreg::timestamp_to_str_gm(min_mix_timestamp);
+                    tx_cd_data["max_mix_time"]     = xmreg::timestamp_to_str_gm(max_mix_timestamp);
                     tx_cd_data["timescales_scale"] = fmt::format("{:0.2f}",
                                                               mixins_timescales.second
                                                               / 3600.0 / 24.0); // in days
@@ -3257,7 +3257,7 @@ public:
 
                     } // for (it = tx_key_imgs.begin(); it != tx_key_imgs.end(); ++it)
 
-                    key_img_info["timestamp"] = xmreg::timestamp_to_str(blk_timestamp);
+                    key_img_info["timestamp"] = xmreg::timestamp_to_str_gm(blk_timestamp);
 
                 } // if (mcore->get_tx(tx_hash_str, tx))
 
@@ -3473,7 +3473,7 @@ public:
                     {"output_pub_key"      , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txout_key.key))},
                     {"amount"              , xmreg::xmr_amount_to_str(xmr_amount)},
                     {"tx_hash"             , REMOVE_HASH_BRAKETS(fmt::format("{:s}", td.m_txid))},
-                    {"timestamp"           , xmreg::timestamp_to_str(blk_timestamp)},
+                    {"timestamp"           , xmreg::timestamp_to_str_gm(blk_timestamp)},
                     {"is_spent"            , is_output_spent},
                     {"is_ringct"           , td.m_rct}
             };
@@ -3845,7 +3845,7 @@ public:
 
 
                     // add the timestamp to tx mstch map
-                    txd_map.insert({"timestamp", xmreg::timestamp_to_str(blk_timestamp)});
+                    txd_map.insert({"timestamp", xmreg::timestamp_to_str_gm(blk_timestamp)});
 
                     boost::get<mstch::array>((res.first)->second).push_back(txd_map);
 
@@ -3963,7 +3963,7 @@ private:
             // calculate difference between tx and server timestamps
             age = get_age(server_timestamp, blk.timestamp, FULL_AGE_FORMAT);
 
-            blk_timestamp = xmreg::timestamp_to_str(blk.timestamp);
+            blk_timestamp = xmreg::timestamp_to_str_gm(blk.timestamp);
 
             tx_blk_height_str = std::to_string(tx_blk_height);
         }
@@ -4012,7 +4012,7 @@ private:
                 {"construction_time"     , string {}},
         };
 
-        string server_time_str = xmreg::timestamp_to_str(server_timestamp, "%F");
+        string server_time_str = xmreg::timestamp_to_str_gm(server_timestamp, "%F");
 
         mstch::array inputs = mstch::array{};
 
@@ -4190,7 +4190,7 @@ private:
                             {"mix_pub_key",    pod_to_hex(output_data.pubkey)},
                             {"mix_tx_hash",    pod_to_hex(tx_out_idx.first)},
                             {"mix_out_indx",   tx_out_idx.second},
-                            {"mix_timestamp",  xmreg::timestamp_to_str(blk.timestamp)},
+                            {"mix_timestamp",  xmreg::timestamp_to_str_gm(blk.timestamp)},
                             {"mix_age",        mixin_age.first},
                             {"mix_mixin_no",   mixin_txd.mixin_no},
                             {"mix_inputs_no",  static_cast<uint64_t>(mixin_txd.input_key_imgs.size())},
@@ -4239,8 +4239,8 @@ private:
                     );
 
 
-            context["min_mix_time"]     = xmreg::timestamp_to_str(min_mix_timestamp);
-            context["max_mix_time"]     = xmreg::timestamp_to_str(max_mix_timestamp);
+            context["min_mix_time"]     = xmreg::timestamp_to_str_gm(min_mix_timestamp);
+            context["max_mix_time"]     = xmreg::timestamp_to_str_gm(max_mix_timestamp);
 
             context.emplace("timescales", mixins_timescales.first);
 

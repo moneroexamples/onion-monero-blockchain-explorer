@@ -148,28 +148,6 @@ remove_trailing_path_separator(const bf::path& in_path)
     return bf::path(remove_trailing_path_separator(path_str));
 }
 
-string
-timestamp_to_str(time_t timestamp, const char* format)
-{
-    auto a_time_point = chrono::system_clock::from_time_t(timestamp);
-
-    try
-    {
-        auto utc          = date::to_utc_time(chrono::system_clock::from_time_t(timestamp));
-        auto sys_time     = date::to_sys_time(utc);
-
-        return date::format(format, date::floor<chrono::seconds>(sys_time));
-    }
-    catch (std::runtime_error& e)
-    {
-        cerr << "xmreg::timestamp_to_str: " << e.what() << endl;
-        cerr << "Seems cant convert to UTC timezone using date library. "
-                "So just use local timezone." <<endl;
-
-        return timestamp_to_str_local(timestamp, format);
-    }
-}
-
 //string
 //timestamp_to_str(time_t timestamp, const char* format)
 //{
@@ -194,6 +172,24 @@ timestamp_to_str_local(time_t timestamp, const char* format)
     return string(str_buff, len);
 }
 
+string
+timestamp_to_str_gm(time_t timestamp, const char* format)
+{
+    const time_t* t = &timestamp;
+
+    const int TIME_LENGTH = 60;
+
+    char str_buff[TIME_LENGTH];
+
+    std::tm tmp;
+    gmtime_r(t, &tmp);
+
+    size_t len;
+
+    len = std::strftime(str_buff, TIME_LENGTH, format, &tmp);
+
+    return string(str_buff, len);
+}
 
 ostream&
 operator<< (ostream& os, const account_public_address& addr)
@@ -1136,21 +1132,6 @@ get_tx_pub_key_from_received_outs(const transaction &tx)
     }
 
     return null_pkey;
-}
-
-date::sys_seconds
-parse(const std::string& str, string format)
-{
-    std::istringstream in(str);
-    date::sys_seconds tp;
-    in >> date::parse(format, tp);
-    if (in.fail())
-    {
-        in.clear();
-        in.str(str);
-        in >> date::parse(format, tp);
-    }
-    return tp;
 }
 
 /**
