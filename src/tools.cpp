@@ -154,23 +154,6 @@ remove_trailing_path_separator(const bf::path& in_path)
 //    return get_human_readable_timestamp(timestamp);
 //}
 
-string
-timestamp_to_str_local(time_t timestamp, const char* format)
-{
-
-    const int TIME_LENGTH = 60;
-
-    char str_buff[TIME_LENGTH];
-
-    tm *tm_ptr;
-    tm_ptr = localtime(&timestamp);
-
-    size_t len;
-
-    len = std::strftime(str_buff, TIME_LENGTH, format, tm_ptr);
-
-    return string(str_buff, len);
-}
 
 string
 timestamp_to_str_gm(time_t timestamp, const char* format)

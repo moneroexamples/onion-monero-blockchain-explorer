@@ -102,9 +102,6 @@ bf::path
 remove_trailing_path_separator(const bf::path& in_path);
 
 string
-timestamp_to_str_local(time_t timestamp, const char* format = "%F %T");
-
-string
 timestamp_to_str_gm(time_t timestamp, const char* format = "%F %T");
 
 ostream&
