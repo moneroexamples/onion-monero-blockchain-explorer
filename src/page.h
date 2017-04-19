@@ -3880,19 +3880,28 @@ public:
     }
 
 
+    /*
+     * Lets use this json api convention for success and errors
+     * https://labs.omniti.com/labs/jsend
+     */
     string
     json_show_tx(string tx_hash_str)
     {
-        json j_response;
+        json j_response {
+            {"status", "fail"},
+            {"data"  , json {}}
+        };
+
+        json& j_data = j_response["data"];
 
         // parse tx hash string to hash object
         crypto::hash tx_hash;
 
         if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
         {
-            string msg = fmt::format("Cant parse tx hash: %s", tx_hash_str);
-            cerr << msg << endl;
-            return (json {{"error", msg}}).dump();
+            j_data["title"] = fmt::format("Cant parse tx hash: {:s}", tx_hash_str);
+            cerr << j_data["title"] << endl;
+            return j_response.dump();
         }
 
         // get transaction
@@ -3907,10 +3916,9 @@ public:
 
         if (!find_tx(tx_hash, tx, found_in_mempool, tx_timestamp))
         {
-            // tx is nowhere to be found :-(
-            string msg = fmt::format("Cant find tx hash: %s", tx_hash_str);
-            cerr << msg << endl;
-            return (json {{"error", msg}}).dump();;
+            j_data["title"] = fmt::format("Cant find tx hash: {:s}", tx_hash_str);
+            cerr << j_data["title"] << endl;
+            return j_response.dump();
         }
 
         uint64_t block_height {0};
@@ -3919,19 +3927,33 @@ public:
 
         if (found_in_mempool == false)
         {
-            block_height = core_storage->get_db().get_tx_block_height(tx_hash);
 
-            // get block cointaining this tx
             block blk;
 
-            if (!mcore->get_block_by_height(block_height, blk))
+            try
             {
-                string msg = fmt::format("Cant get block: %d", block_height);
-                cerr << msg << endl;
-                return (json {{"error", msg}}).dump();
-            }
+                // get block cointaining this tx
+                block_height = core_storage->get_db().get_tx_block_height(tx_hash);
 
-            tx_timestamp = blk.timestamp;
+                if (!mcore->get_block_by_height(block_height, blk))
+                {
+                    j_data["title"] = fmt::format("Cant get block: {:d}", block_height);
+                    cerr << j_data["title"] << endl;
+                    return j_response.dump();
+                }
+
+                tx_timestamp = blk.timestamp;
+            }
+            catch (const exception& e)
+            {
+                j_response = json {{"status", "error"}};
+                j_response["message"]
+                        = fmt::format("Tx %s does not exist in blockchain, "
+                                      "but was there before: {:s}",
+                                      tx_hash_str);
+                cerr << j_response["message"] << endl;
+                return j_response.dump();
+            }
         }
 
         string blk_timestamp_utc = xmreg::timestamp_to_str_gm(tx_timestamp);
@@ -3966,8 +3988,7 @@ public:
             no_confirmations = txd.no_confirmations;
         }
 
-        j_response = json {
-            {"error"        , ""},
+        j_data = json {
             {"timestamp"    , tx_timestamp},
             {"timestamp_utc", blk_timestamp_utc},
             {"block_height" , block_height},
@@ -3975,11 +3996,13 @@ public:
             {"confirmations", no_confirmations},
             {"version"      , tx.version},
             {"fee"          , txd.fee},
-            {"size"         , txd.size},
+            {"size"         , static_cast<uint64_t>(txd.size*1e12)},
             {"rct_type"     , tx.rct_signatures.type},
             {"outputs"      , outputs},
             {"inputs"       , inputs},
         };
+
+        j_response["status"] = "success";
 
         return j_response.dump();
     }
@@ -4594,14 +4617,14 @@ private:
             // get the current blockchain height. Just to check
             uint64_t bc_height = core_storage->get_current_blockchain_height();
 
-            txd.no_confirmations = bc_height - (txd.blk_height - 1);
+            txd.no_confirmations = bc_height - (txd.blk_height);
         }
         else
         {
             // if we know blk_height, and current blockchan height
             // just use it to get no_confirmations.
             
-            txd.no_confirmations = bc_height - (blk_height - 1);
+            txd.no_confirmations = bc_height - (blk_height);
         }
 
         return txd;
