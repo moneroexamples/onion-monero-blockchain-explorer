@@ -3883,7 +3883,7 @@ public:
     string
     json_show_tx(string tx_hash_str)
     {
-        json response;
+        json j_response;
 
         // parse tx hash string to hash object
         crypto::hash tx_hash;
@@ -3895,11 +3895,121 @@ public:
             return (json {{"error", msg}}).dump();
         }
 
-        return {};
+        // get transaction
+        transaction tx;
+
+        // flag to indicate if tx is in mempool
+        bool found_in_mempool {false};
+
+        // for tx in blocks we get block timestamp
+        // for tx in mempool we get recievive time
+        uint64_t tx_timestamp {0};
+
+        if (!find_tx(tx_hash, tx, found_in_mempool, tx_timestamp))
+        {
+            // tx is nowhere to be found :-(
+            string msg = fmt::format("Cant find tx hash: %s", tx_hash_str);
+            cerr << msg << endl;
+            return (json {{"error", msg}}).dump();;
+        }
+
+        uint64_t block_height {0};
+        uint64_t is_coinbase_tx = is_coinbase(tx);
+
+        if (found_in_mempool == false)
+        {
+            block_height = core_storage->get_db().get_tx_block_height(tx_hash);
+
+            // get block cointaining this tx
+            block blk;
+
+            if (!mcore->get_block_by_height(block_height, blk))
+            {
+                string msg = fmt::format("Cant get block: %d", block_height);
+                cerr << msg << endl;
+                return (json {{"error", msg}}).dump();
+            }
+
+            tx_timestamp = blk.timestamp;
+        }
+
+        string blk_timestamp_utc = xmreg::timestamp_to_str_gm(tx_timestamp);
+
+        tx_details txd = get_tx_details(tx, is_coinbase_tx, block_height);
+
+        json outputs;
+
+        for (const auto& output: txd.output_pub_keys)
+        {
+            outputs.push_back(json {
+                {"stealh_address", pod_to_hex(output.first.key)},
+                {"amount"        , output.second}
+            });
+        }
+
+        json inputs;
+
+        for (const auto& input: txd.input_key_imgs)
+        {
+            inputs.push_back(json {
+                    {"key_image"  , pod_to_hex(input.k_image)},
+                    {"amount"     , input.amount}
+            });
+        }
+
+        j_response = json {
+            {"timestamp"    , tx_timestamp},
+            {"timestamp_utc", blk_timestamp_utc},
+            {"block_height" , block_height},
+            {"coinbase"     , is_coinbase_tx},
+            {"confirmations", txd.no_confirmations},
+            {"version"      , tx.version},
+            {"fee"          , txd.fee},
+            {"size"         , txd.size},
+            {"rct_type"     , tx.rct_signatures.type},
+            {"outputs"      , outputs},
+            {"inputs"       , inputs},
+        };
+
+        return j_response.dump();
     }
 
 
 private:
+
+    bool
+    find_tx(const crypto::hash& tx_hash,
+            transaction& tx,
+            bool& found_in_mempool,
+            uint64_t& tx_timestamp)
+    {
+
+        found_in_mempool = false;
+
+        if (!mcore->get_tx(tx_hash, tx))
+        {
+            cerr << "Cant get tx in blockchain: " << tx_hash
+                 << ". \n Check mempool now" << endl;
+
+            vector<pair<tx_info, transaction>> found_txs
+                    = search_mempool(tx_hash);
+
+            if (!found_txs.empty())
+            {
+                // there should be only one tx found
+                tx = found_txs.at(0).second;
+                found_in_mempool = true;
+                tx_timestamp = found_txs.at(0).first.receive_time;
+            }
+            else
+            {
+                // tx is nowhere to be found :-(
+                return false;
+            }
+        }
+
+        return true;
+    }
 
 
     void
