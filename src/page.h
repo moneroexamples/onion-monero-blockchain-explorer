@@ -3935,7 +3935,10 @@ public:
 
         string blk_timestamp_utc = xmreg::timestamp_to_str_gm(tx_timestamp);
 
-        tx_details txd = get_tx_details(tx, is_coinbase_tx, block_height);
+        // get the current blockchain height. Just to check
+        uint64_t bc_height = core_storage->get_current_blockchain_height();
+
+        tx_details txd = get_tx_details(tx, is_coinbase_tx, block_height, bc_height);
 
         json outputs;
 
