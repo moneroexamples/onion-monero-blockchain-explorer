@@ -3989,20 +3989,18 @@ public:
         // what tx_hash was requested
         string tx_hash_str_again = pod_to_hex(get_transaction_hash(tx));
 
-        j_data = json {
-            {"tx_hash"      , tx_hash_str_again},
-            {"timestamp"    , tx_timestamp},
-            {"timestamp_utc", blk_timestamp_utc},
-            {"block_height" , block_height},
-            {"coinbase"     , is_coinbase_tx},
-            {"confirmations", no_confirmations},
-            {"version"      , tx.version},
-            {"fee"          , txd.fee},
-            {"size"         , static_cast<uint64_t>(txd.size*1e12)},
-            {"rct_type"     , tx.rct_signatures.type},
-            {"outputs"      , outputs},
-            {"inputs"       , inputs},
-        };
+        // get basic tx info
+        j_data = get_tx_json(tx, txd);
+
+        // append additional info from block, as we don't
+        // return block data in this function
+        j_data["timestamp"]      = tx_timestamp;
+        j_data["timestamp_utc"]  = blk_timestamp_utc;
+        j_data["block_height"]   = block_height;
+        j_data["confirmations"]  = no_confirmations;
+        j_data["outputs"]        = outputs;
+        j_data["inputs"]         = inputs;
+        j_data["current_height"] = bc_height;
 
         j_response["status"] = "success";
 
@@ -4092,13 +4090,15 @@ public:
 
         }
         j_data = json {
-            {"hash"         , pod_to_hex(blk_hash)},
-            {"block_reward" , txd_coinbase.xmr_inputs},
-            {"timestamp"    , blk.timestamp},
-            {"timestamp_utc", xmreg::timestamp_to_str_gm(blk.timestamp)},
-            {"block_height" , block_height},
-            {"size"         , blk_size},
-            {"txs"          , j_txs}
+            {"block_height"  , block_height},
+            {"hash"          , pod_to_hex(blk_hash)},
+            {"block_reward"  , txd_coinbase.xmr_inputs},
+            {"timestamp"     , blk.timestamp},
+            {"timestamp_utc" , xmreg::timestamp_to_str_gm(blk.timestamp)},
+            {"block_height"  , block_height},
+            {"size"          , blk_size},
+            {"txs"           , j_txs},
+            {"current_height", current_blockchain_height}
         };
 
         j_response["status"] = "success";
@@ -4217,14 +4217,14 @@ public:
             --i;
         }
 
-        j_data["page"]   = page;
-        j_data["limit"]  = limit;
+        j_data["page"]           = page;
+        j_data["limit"]          = limit;
+        j_data["current_height"] = height;
 
         j_response["status"] = "success";
 
         return j_response.dump();
     }
-
 
 private:
 
@@ -4232,14 +4232,18 @@ private:
     get_tx_json(const transaction& tx, const tx_details& txd)
     {
         json j_tx {
-                {"tx_hash"   , pod_to_hex(txd.hash)},
-                {"tx_fee"    , txd.fee},
-                {"mixin"     , txd.mixin_no},
-                {"tx_size"   , static_cast<uint64_t>(txd.size*1e12)},
-                {"outputs"   , txd.xmr_outputs},
-                {"tx_version", txd.version},
-                {"rct_type"  , tx.rct_signatures.type},
-                {"coinbase"  , is_coinbase(tx)},
+                {"tx_hash"     , pod_to_hex(txd.hash)},
+                {"tx_fee"      , txd.fee},
+                {"mixin"       , txd.mixin_no},
+                {"tx_size"     , txd.size},
+                {"xmr_outputs" , txd.xmr_outputs},
+                {"xmr_inputs"  , txd.xmr_inputs},
+                {"tx_version"  , txd.version},
+                {"rct_type"    , tx.rct_signatures.type},
+                {"coinbase"    , is_coinbase(tx)},
+                {"extra"       , txd.get_extra_str()},
+                {"payment_id"  , (txd.payment_id  != null_hash  ? pod_to_hex(txd.payment_id)  : "")},
+                {"payment_id8" , (txd.payment_id8 != null_hash8 ? pod_to_hex(txd.payment_id8) : "")},
         };
 
         return j_tx;
