@@ -1111,7 +1111,9 @@ public:
                 continue;
             }
 
-            tx_details txd = get_tx_details(tx);
+            tx_details txd = get_tx_details(tx, false,
+                                            _blk_height,
+                                            current_blockchain_height);
 
             // add fee to the rest
             sum_fees += txd.fee;
@@ -4007,6 +4009,104 @@ public:
         return j_response.dump();
     }
 
+    /*
+     * Lets use this json api convention for success and error
+     * https://labs.omniti.com/labs/jsend
+     */
+    string
+    json_blk(uint64_t block_height)
+    {
+        json j_response {
+                {"status", "fail"},
+                {"data"  , json {}}
+        };
+
+        json& j_data = j_response["data"];
+
+        uint64_t current_blockchain_height
+                =  core_storage->get_current_blockchain_height();
+
+        if (block_height > current_blockchain_height)
+        {
+            j_data["title"] = fmt::format(
+                    "Requested block is higher than blockchain:"
+                    " {:d}, {:d}", block_height,current_blockchain_height);
+            return j_response.dump();
+        }
+
+        block blk;
+
+        if (!mcore->get_block_by_height(block_height, blk))
+        {
+            j_data["title"] = fmt::format("Cant get block: {:d}", block_height);
+            return j_response.dump();
+        }
+
+        crypto::hash blk_hash = core_storage->get_block_id_by_height(block_height);
+
+        // get block size in bytes
+        uint64_t blk_size = core_storage->get_db().get_block_size(block_height);
+
+        // miner reward tx
+        transaction coinbase_tx = blk.miner_tx;
+
+        // transcation in the block
+        vector<crypto::hash> tx_hashes = blk.tx_hashes;
+
+        // sum of all transactions in the block
+        uint64_t sum_fees = 0;
+
+        // get tx details for the coinbase tx, i.e., miners reward
+        tx_details txd_coinbase = get_tx_details(blk.miner_tx, true,
+                                                 block_height,
+                                                 current_blockchain_height);
+
+        json j_txs;
+
+        j_txs.push_back(get_tx_json(coinbase_tx, txd_coinbase));
+
+        // for each transaction in the block
+        for (size_t i = 0; i < blk.tx_hashes.size(); ++i)
+        {
+            const crypto::hash &tx_hash = blk.tx_hashes.at(i);
+
+            // get transaction
+            transaction tx;
+
+            if (!mcore->get_tx(tx_hash, tx))
+            {
+                j_response["status"]  = "error";
+                j_response["message"]
+                        = fmt::format("Cant get transactions in block: {:d}", block_height);
+                return j_response.dump();
+            }
+
+            tx_details txd = get_tx_details(tx, false,
+                                            block_height,
+                                            current_blockchain_height);
+
+            j_txs.push_back(get_tx_json(tx, txd));
+
+            // add fee to the rest
+            sum_fees += txd.fee;
+
+        }
+        j_data = json {
+            {"hash"         , pod_to_hex(blk_hash)},
+            {"block_reward" , txd_coinbase.xmr_inputs},
+            {"timestamp"    , blk.timestamp},
+            {"timestamp_utc", xmreg::timestamp_to_str_gm(blk.timestamp)},
+            {"block_height" , block_height},
+            {"size"         , blk_size},
+            {"txs"          , j_txs}
+        };
+
+        j_response["status"] = "success";
+
+        return j_response.dump();
+    }
+
+
 
     /*
      * Lets use this json api convention for success and error
@@ -4085,7 +4185,7 @@ public:
             j_blocks.push_back(json {
                 {"height"       , i},
                 {"age"          , age.first},
-                {"size"         , static_cast<uint64_t>(blk_size*1e12)},
+                {"size"         , blk_size},
                 {"timestamp"    , blk.timestamp},
                 {"timestamp_utc", xmreg::timestamp_to_str_gm(blk.timestamp)},
                 {"txs"          , json::array()}
@@ -4111,16 +4211,7 @@ public:
 
                 const tx_details& txd = get_tx_details(tx, false, i, height);
 
-                j_txs.push_back(json {
-                    {"tx_hash"   , pod_to_hex(txd.hash)},
-                    {"tx_fee"    , txd.fee},
-                    {"mixin"     , txd.mixin_no},
-                    {"tx_size"   , static_cast<uint64_t>(txd.size*1e12)},
-                    {"outputs"   , txd.xmr_outputs},
-                    {"tx_version", txd.version},
-                    {"rct_type"  , tx.rct_signatures.type},
-                    {"coinbase"  , is_coinbase(tx)},
-                });
+                j_txs.push_back(get_tx_json(tx, txd));
             }
 
             --i;
@@ -4136,6 +4227,23 @@ public:
 
 
 private:
+
+    json
+    get_tx_json(const transaction& tx, const tx_details& txd)
+    {
+        json j_tx {
+                {"tx_hash"   , pod_to_hex(txd.hash)},
+                {"tx_fee"    , txd.fee},
+                {"mixin"     , txd.mixin_no},
+                {"tx_size"   , static_cast<uint64_t>(txd.size*1e12)},
+                {"outputs"   , txd.xmr_outputs},
+                {"tx_version", txd.version},
+                {"rct_type"  , tx.rct_signatures.type},
+                {"coinbase"  , is_coinbase(tx)},
+        };
+
+        return j_tx;
+    }
 
     bool
     find_tx(const crypto::hash& tx_hash,
