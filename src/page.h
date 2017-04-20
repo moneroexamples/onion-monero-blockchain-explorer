@@ -381,7 +381,7 @@ public:
         template_file["address"]         = get_full_page(xmreg::read(TMPL_ADDRESS));
         template_file["search_results"]  = get_full_page(xmreg::read(TMPL_SEARCH_RESULTS));
         template_file["tx_details"]      = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html");
-        template_file["tx_table_head"]   = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_head.html");
+        template_file["tx_table_header"]   = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html");
         template_file["tx_table_row"]    = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html");
     }
 
@@ -3869,7 +3869,7 @@ public:
 
         // read partial for showing details of tx(s) found
         map<string, string> partials {
-            {"tx_table_head", template_file["tx_table_head"]},
+            {"tx_table_head", template_file["tx_table_header"]},
             {"tx_table_row" , template_file["tx_table_row"]}
         };
 
@@ -3881,11 +3881,11 @@ public:
 
 
     /*
-     * Lets use this json api convention for success and errors
+     * Lets use this json api convention for success and error
      * https://labs.omniti.com/labs/jsend
      */
     string
-    json_show_tx(string tx_hash_str)
+    json_tx(string tx_hash_str)
     {
         json j_response {
             {"status", "fail"},
@@ -3900,7 +3900,6 @@ public:
         if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
         {
             j_data["title"] = fmt::format("Cant parse tx hash: {:s}", tx_hash_str);
-            cerr << j_data["title"] << endl;
             return j_response.dump();
         }
 
@@ -3917,7 +3916,6 @@ public:
         if (!find_tx(tx_hash, tx, found_in_mempool, tx_timestamp))
         {
             j_data["title"] = fmt::format("Cant find tx hash: {:s}", tx_hash_str);
-            cerr << j_data["title"] << endl;
             return j_response.dump();
         }
 
@@ -3938,7 +3936,6 @@ public:
                 if (!mcore->get_block_by_height(block_height, blk))
                 {
                     j_data["title"] = fmt::format("Cant get block: {:d}", block_height);
-                    cerr << j_data["title"] << endl;
                     return j_response.dump();
                 }
 
@@ -3946,12 +3943,9 @@ public:
             }
             catch (const exception& e)
             {
-                j_response = json {{"status", "error"}};
-                j_response["message"]
-                        = fmt::format("Tx %s does not exist in blockchain, "
-                                      "but was there before: {:s}",
-                                      tx_hash_str);
-                cerr << j_response["message"] << endl;
+                j_response["status"]  = "error";
+                j_response["message"] = fmt::format("Tx does not exist in blockchain, "
+                                      "but was there before: {:s}", tx_hash_str);
                 return j_response.dump();
             }
         }
@@ -3968,8 +3962,8 @@ public:
         for (const auto& output: txd.output_pub_keys)
         {
             outputs.push_back(json {
-                {"stealh_address", pod_to_hex(output.first.key)},
-                {"amount"        , output.second}
+                {"public_key", pod_to_hex(output.first.key)},
+                {"amount"    , output.second}
             });
         }
 
@@ -3988,7 +3982,13 @@ public:
             no_confirmations = txd.no_confirmations;
         }
 
+        // get tx from tx fetched. can be use to double check
+        // if what we return in the json response agrees with
+        // what tx_hash was requested
+        string tx_hash_str_again = pod_to_hex(get_transaction_hash(tx));
+
         j_data = json {
+            {"tx_hash"      , tx_hash_str_again},
             {"timestamp"    , tx_timestamp},
             {"timestamp_utc", blk_timestamp_utc},
             {"block_height" , block_height},
@@ -4001,6 +4001,133 @@ public:
             {"outputs"      , outputs},
             {"inputs"       , inputs},
         };
+
+        j_response["status"] = "success";
+
+        return j_response.dump();
+    }
+
+
+    /*
+     * Lets use this json api convention for success and error
+     * https://labs.omniti.com/labs/jsend
+     */
+    string
+    json_txs(string _page, string _limit)
+    {
+        json j_response {
+            {"status", "fail"},
+            {"data",   json {}}
+        };
+
+        json& j_data = j_response["data"];
+
+        // parse page and limit into numbers
+
+        uint64_t page {0};
+        uint64_t limit {0};
+
+        try
+        {
+            page  = boost::lexical_cast<uint64_t>(_page);
+            limit = boost::lexical_cast<uint64_t>(_limit);
+        }
+        catch (const boost::bad_lexical_cast& e)
+        {
+            j_data["title"] = fmt::format(
+                    "Cant parse page and/or limit numbers: {:s}, {:s}", _page, _limit);
+            return j_response.dump();
+        }
+
+        // enforce maximum number of blocks per page to 100
+        limit = limit > 100 ? 100 : limit;
+
+        //get current server timestamp
+        server_timestamp = std::time(nullptr);
+
+        uint64_t local_copy_server_timestamp = server_timestamp;
+
+        uint64_t height = core_storage->get_current_blockchain_height();
+
+        // calculate starting and ending block numbers to show
+        int64_t start_height = height - limit * (page + 1);
+
+        // check if start height is not below range
+        start_height = start_height < 0 ? 0 : start_height;
+
+        int64_t end_height = start_height + limit - 1;
+
+        // loop index
+        int64_t i = end_height;
+
+        j_data["blocks"] = json::array();
+        json& j_blocks = j_data["blocks"];
+
+        // iterate over last no_of_last_blocks of blocks
+        while (i >= start_height)
+        {
+            // get block at the given height i
+            block blk;
+
+            if (!mcore->get_block_by_height(i, blk))
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = fmt::format("Cant get block: {:d}", i);
+                return j_response.dump();
+            }
+
+            // get block size in bytes
+            double blk_size = core_storage->get_db().get_block_size(i);
+
+            // get block age
+            pair<string, string> age = get_age(local_copy_server_timestamp, blk.timestamp);
+
+            j_blocks.push_back(json {
+                {"height"       , i},
+                {"age"          , age.first},
+                {"size"         , static_cast<uint64_t>(blk_size*1e12)},
+                {"timestamp"    , blk.timestamp},
+                {"timestamp_utc", xmreg::timestamp_to_str_gm(blk.timestamp)},
+                {"txs"          , json::array()}
+            });
+
+            json& j_txs = j_blocks.back()["txs"];
+
+            list<cryptonote::transaction> blk_txs {blk.miner_tx};
+            list<crypto::hash> missed_txs;
+
+            if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs))
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = fmt::format("Cant get transactions in block: {:d}", i);
+                return j_response.dump();
+            }
+
+            (void) missed_txs;
+
+            for(auto it = blk_txs.begin(); it != blk_txs.end(); ++it)
+            {
+                const cryptonote::transaction &tx = *it;
+
+                const tx_details& txd = get_tx_details(tx, false, i, height);
+
+                j_txs.push_back(json {
+                    {"tx_hash"   , pod_to_hex(txd.hash)},
+                    {"tx_fee"    , txd.fee},
+                    {"mixin"     , txd.mixin_no},
+                    {"tx_size"   , static_cast<uint64_t>(txd.size*1e12)},
+                    {"outputs"   , txd.xmr_outputs},
+                    {"tx_version", txd.version},
+                    {"rct_type"  , tx.rct_signatures.type},
+                    {"coinbase"  , is_coinbase(tx)},
+                });
+            }
+
+            --i;
+        }
+
+        j_data["page"]   = page;
+        j_data["limit"]  = limit;
 
         j_response["status"] = "success";
 

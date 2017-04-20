@@ -210,20 +210,102 @@ Note: Because we generated our own certificate, modern browsers will complain
 about it as they cant verify the signatures against any third party. So probably
 for any practical use need to have properly issued ssl certificates. 
 
-## Enable transaction pusher
+## JSON API
 
-By default, the tx pusher is disabled. The pushing will not work, but tx checking and inspecting will. 
+The explorer has JSON api. For the API, it uses conventions defined by [JSend](https://labs.omniti.com/labs/jsend).
 
-To enable pushing the txs, use flag `--enable-pusher`, e.g.:
+
+#### api/tx/<tx_hash>
 
 ```bash
-./xmrblocks --enable-pusher
+curl  -w "\n" -X GET http://127.0.0.1:8081/api/tx/6093260dbe79fd6277694d14789dc8718f1bd54457df8bab338c2efa3bb0f03d
 ```
- 
-Note: There has been a number of issues with compatibility of tx's binary data between different Monero versions
-and operating systems. Unless you are using latest development version of Monero and the explorer has been compiled
-against the lastest version, pushing and checking unsigined and signed tx data
- might not work due to incompatibilities in binary data.
+
+```json
+{
+  "data": {
+    "block_height": 1268252,
+    "coinbase": 0,
+    "confirmations": 1,
+    "fee": 12517785574,
+    "inputs": [
+      {
+        "amount": 0,
+        "key_image": "67838fd0ffd79f13e735830d3ec60412aed59e53e1f997feb6f73d088b949611"
+      }
+    ],
+    "outputs": [
+      {
+        "amount": 0,
+        "public_key": "525779873776e4a42f517fd79b72e7c31c3ba03e730fc32287f6414fb702c1d7"
+      },
+      {
+        "amount": 0,
+        "public_key": "e25f00fceb77af841d780b68647618812695b4ca6ebe338faba6e077f758ac30"
+      }
+    ],
+    "rct_type": 1,
+    "size": 13323000000000000,
+    "timestamp": 1489753456,
+    "timestamp_utc": "2017-03-17 12:24:16",
+    "tx_hash": "6093260dbe79fd6277694d14789dc8718f1bd54457df8bab338c2efa3bb0f03d",
+    "version": 2
+  },
+  "status": "success"
+}
+```
+
+#### api/txs
+
+Transactions in last 25 blocks
+
+
+```bash
+curl  -w "\n" -X GET http://127.0.0.1:8081/api/txs
+```
+
+Parial results shown:
+
+```json
+{
+  "data": {
+    "blocks": [
+      {
+        "age": "33:16:49:53",
+        "height": 1268252,
+        "size": 105390000000000000,
+        "timestamp": 1489753456,
+        "timestamp_utc": "2017-03-17 12:24:16",
+        "txs": [
+          {
+            "coinbase": true,
+            "mixin": 0,
+            "outputs": 8491554678365,
+            "rct_type": 0,
+            "tx_fee": 0,
+            "tx_hash": "7c4286f64544568265bb5418df84ae69afaa3567749210e46f8340c247f4803f",
+            "tx_size": 151000000000000,
+            "tx_version": 2
+          },
+          {
+            "coinbase": false,
+            "mixin": 5,
+            "outputs": 0,
+            "rct_type": 2,
+            "tx_fee": 17882516700,
+            "tx_hash": "2bfbccb918ee5f050808dd040ce03943b7315b81788e9cdee59cf86b557ba48c",
+            "tx_size": 19586000000000000,
+            "tx_version": 2
+          }
+        ]
+      }
+    ],
+    "limit": 25,
+    "page": 0
+  },
+  "status": "success"
+}
+```
 
 ## Example screenshot
 

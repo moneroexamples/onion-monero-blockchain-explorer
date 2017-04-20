@@ -7,6 +7,7 @@
 #include "src/page.h"
 
 #include <fstream>
+#include <regex>
 
 using boost::filesystem::path;
 
@@ -337,7 +338,21 @@ int main(int ac, const char* av[]) {
 
     CROW_ROUTE(app, "/api/tx/<string>")
     ([&](const crow::request& req, string tx_hash) {
-        crow::response r {xmrblocks.json_show_tx(tx_hash)};
+        crow::response r {xmrblocks.json_tx(tx_hash)};
+        r.set_header("Content-Type", "application/json");
+        return r;
+    });
+
+    CROW_ROUTE(app, "/api/txs").methods("GET"_method)
+    ([&](const crow::request& req) {
+
+        string page  = regex_search(req.raw_url, regex {"page=\\d+"}) ?
+                       req.url_params.get("page") : "0";
+
+        string limit = regex_search(req.raw_url, regex {"limit=\\d+"}) ?
+                       req.url_params.get("limit") : "25";
+
+        crow::response r {xmrblocks.json_txs(page, limit)};
         r.set_header("Content-Type", "application/json");
         return r;
     });
