@@ -3742,25 +3742,6 @@ public:
 
     }
 
-    vector<transaction>
-    get_mempool_txs()
-    {
-        // get mempool data using rpc call
-        vector<pair<tx_info, transaction>> mempool_data = search_mempool();
-
-        // output only transactions
-        vector<transaction> mempool_txs;
-
-        mempool_txs.reserve(mempool_data.size());
-
-        for (const auto& a_pair: mempool_data)
-        {
-            mempool_txs.push_back(a_pair.second);
-        }
-
-        return mempool_txs;
-    }
-
     string
     show_search_results(const string& search_text,
         const vector<pair<string, vector<string>>>& all_possible_tx_hashes)
@@ -4933,6 +4914,9 @@ private:
     vector<pair<tx_info, transaction>>
     search_mempool(crypto::hash tx_hash = null_hash)
     {
+        // if tx_hash == null_hash then this method
+        // will just return the vector containing all
+        // txs in mempool
 
         vector<pair<tx_info, transaction>> found_txs;
 
@@ -4973,10 +4957,12 @@ private:
                     continue;
                 }
 
-                if (tx_hash == mem_tx_hash)
+                if (tx_hash == mem_tx_hash || tx_hash == null_hash)
                 {
                     found_txs.push_back(make_pair(_tx_info, tx));
-                    break;
+
+                    if (tx_hash != null_hash)
+                        break;
                 }
 
             } //  if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
