@@ -218,7 +218,7 @@ The explorer has JSON api. For the API, it uses conventions defined by [JSend](h
 #### api/transaction/<tx_hash>
 
 ```bash
-curl  -w "\n" -X GET http://139.162.32.245:81/api/transaction/6093260dbe79fd6277694d14789dc8718f1bd54457df8bab338c2efa3bb0f03d
+curl  -w "\n" -X GET http://139.162.32.245:8081/api/transaction/6093260dbe79fd6277694d14789dc8718f1bd54457df8bab338c2efa3bb0f03d
 ```
 
 ```json
@@ -261,7 +261,7 @@ Transactions in last 25 blocks
 
 
 ```bash
-curl  -w "\n" -X GET http://139.162.32.245:81/api/transactions
+curl  -w "\n" -X GET http://139.162.32.245:8081/api/transactions
 ```
 
 Partial results shown:
@@ -312,7 +312,7 @@ Partial results shown:
 
 
 ```bash
-curl  -w "\n" -X GET http://139.162.32.245:81/api/block/1293257
+curl  -w "\n" -X GET http://139.162.32.245:8081/api/block/1293257
 ```
 
 Partial results shown:
@@ -353,7 +353,7 @@ Partial results shown:
 
 
 ```bash
-curl  -w "\n" -X GET http://139.162.32.245:81/api/mempool
+curl  -w "\n" -X GET http://139.162.32.245:8081/api/mempool
 ```
 
 Partial results shown:
