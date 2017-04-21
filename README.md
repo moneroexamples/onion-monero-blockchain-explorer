@@ -215,10 +215,10 @@ for any practical use need to have properly issued ssl certificates.
 The explorer has JSON api. For the API, it uses conventions defined by [JSend](https://labs.omniti.com/labs/jsend).
 
 
-#### api/tx/<tx_hash>
+#### api/transaction/<tx_hash>
 
 ```bash
-curl  -w "\n" -X GET http://127.0.0.1:8081/api/tx/6093260dbe79fd6277694d14789dc8718f1bd54457df8bab338c2efa3bb0f03d
+curl  -w "\n" -X GET http://139.162.32.245:81/api/transaction/6093260dbe79fd6277694d14789dc8718f1bd54457df8bab338c2efa3bb0f03d
 ```
 
 ```json
@@ -255,16 +255,16 @@ curl  -w "\n" -X GET http://127.0.0.1:8081/api/tx/6093260dbe79fd6277694d14789dc8
 }
 ```
 
-#### api/txs
+#### api/transactions
 
 Transactions in last 25 blocks
 
 
 ```bash
-curl  -w "\n" -X GET http://127.0.0.1:8081/api/txs
+curl  -w "\n" -X GET http://139.162.32.245:81/api/transactions
 ```
 
-Parial results shown:
+Partial results shown:
 
 ```json
 {
@@ -303,6 +303,81 @@ Parial results shown:
     "limit": 25,
     "page": 0
   },
+  "status": "success"
+}
+```
+
+
+#### api/block/<block_number>
+
+
+```bash
+curl  -w "\n" -X GET http://139.162.32.245:81/api/block/1293257
+```
+
+Partial results shown:
+
+```json
+{
+  "data": {
+    "block_height": 1293257,
+    "block_reward": 0,
+    "current_height": 1293264,
+    "hash": "9ef6bb8f9b8bd253fc6390e5c2cdc45c8ee99fad16447437108bf301fe6bd6e1",
+    "size": 141244,
+    "timestamp": 1492761974,
+    "timestamp_utc": "2017-04-21 08:06:14",
+    "txs": [
+      {
+        "coinbase": true,
+        "extra": "018ae9560eb85d5ebd22d3beaed55c21d469eab430c5e3cac61b3fe2f5ad156770020800000001a9030800",
+        "mixin": 0,
+        "payment_id": "",
+        "payment_id8": "",
+        "rct_type": 0,
+        "tx_fee": 0,
+        "tx_hash": "3ff71b65bec34c9261e01a856e6a03594cf0472acf6b77db3f17ebd18eaa30bf",
+        "tx_size": 95,
+        "tx_version": 2,
+        "xmr_inputs": 0,
+        "xmr_outputs": 8025365394426
+      }
+    ]
+  },
+  "status": "success"
+}
+```
+
+
+#### api/mempool
+
+
+```bash
+curl  -w "\n" -X GET http://139.162.32.245:81/api/mempool
+```
+
+Partial results shown:
+
+```json
+{
+  "data": [
+    {
+      "coinbase": false,
+      "extra": "02210001c32d313b74a859b904079c69dbc04ea6e37eddcf4aeb34e9400cc12831da5401b34082a9ff7476fe29a19fa6a1735a9c59db226b9ddcf715928aa71625b13062",
+      "mixin": 7,
+      "payment_id": "01c32d313b74a859b904079c69dbc04ea6e37eddcf4aeb34e9400cc12831da54",
+      "payment_id8": "",
+      "rct_type": 1,
+      "timestamp": 1492763220,
+      "timestamp_utc": "2017-04-21 08:27:00",
+      "tx_fee": 4083040000,
+      "tx_hash": "6751e0029558fdc4ab4528896529e32b2864c6ad43c5d8838c8ebe156ada0514",
+      "tx_size": 13224,
+      "tx_version": 2,
+      "xmr_inputs": 0,
+      "xmr_outputs": 0
+    }
+  ],
   "status": "success"
 }
 ```
