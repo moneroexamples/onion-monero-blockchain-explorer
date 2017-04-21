@@ -3887,7 +3887,7 @@ public:
      * https://labs.omniti.com/labs/jsend
      */
     json
-    json_tx(string tx_hash_str)
+    json_transaction(string tx_hash_str)
     {
         json j_response {
             {"status", "fail"},
@@ -4012,7 +4012,7 @@ public:
      * https://labs.omniti.com/labs/jsend
      */
     json
-    json_blk(uint64_t block_height)
+    json_block(uint64_t block_height)
     {
         json j_response {
                 {"status", "fail"},
@@ -4087,8 +4087,8 @@ public:
 
             // add fee to the rest
             sum_fees += txd.fee;
-
         }
+
         j_data = json {
             {"block_height"  , block_height},
             {"hash"          , pod_to_hex(blk_hash)},
@@ -4113,7 +4113,7 @@ public:
      * https://labs.omniti.com/labs/jsend
      */
     json
-    json_txs(string _page, string _limit)
+    json_transactions(string _page, string _limit)
     {
         json j_response {
             {"status", "fail"},
@@ -4226,6 +4226,51 @@ public:
         return j_response;
     }
 
+
+
+    /*
+     * Lets use this json api convention for success and error
+     * https://labs.omniti.com/labs/jsend
+     */
+    json
+    json_mempool()
+    {
+        json j_response {
+                {"status", "fail"},
+                {"data",   json {}}
+        };
+
+        json& j_data = j_response["data"];
+
+        //get current server timestamp
+        server_timestamp = std::time(nullptr);
+
+        uint64_t local_copy_server_timestamp = server_timestamp;
+
+        uint64_t height = core_storage->get_current_blockchain_height();
+
+        vector<pair<tx_info, transaction>> mempool_data = search_mempool();
+
+        // for each transaction in the memory pool
+        for (const auto& a_pair: mempool_data)
+        {
+            const tx_details& txd = get_tx_details(a_pair.second, false, 1, height); // 1 is dummy here
+
+            // get basic tx info
+            json j_tx = get_tx_json(a_pair.second, txd);
+
+            // we add some extra data, for mempool txs, such as recieve timestamp
+            j_tx["timestamp"]     = a_pair.first.receive_time;
+            j_tx["timestamp_utc"] = xmreg::timestamp_to_str_gm(a_pair.first.receive_time);
+
+            j_data.push_back(j_tx);
+        }
+
+        j_response["status"] = "success";
+
+        return j_response;
+    }
+
 private:
 
     json
@@ -4241,6 +4286,7 @@ private:
                 {"tx_version"  , txd.version},
                 {"rct_type"    , tx.rct_signatures.type},
                 {"coinbase"    , is_coinbase(tx)},
+                {"mixin"       , txd.mixin_no},
                 {"extra"       , txd.get_extra_str()},
                 {"payment_id"  , (txd.payment_id  != null_hash  ? pod_to_hex(txd.payment_id)  : "")},
                 {"payment_id8" , (txd.payment_id8 != null_hash8 ? pod_to_hex(txd.payment_id8) : "")},

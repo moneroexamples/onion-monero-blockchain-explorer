@@ -336,26 +336,26 @@ int main(int ac, const char* av[]) {
         return text;
     });
 
-    CROW_ROUTE(app, "/api/tx/<string>")
+    CROW_ROUTE(app, "/api/transaction/<string>")
     ([&](const crow::request& req, string tx_hash) {
 
-        crow::response r {xmrblocks.json_tx(tx_hash).dump()};
+        crow::response r {xmrblocks.json_transaction(tx_hash).dump()};
         r.set_header("Content-Type", "application/json");
 
         return r;
     });
 
-    CROW_ROUTE(app, "/api/blk/<uint>")
+    CROW_ROUTE(app, "/api/block/<uint>")
     ([&](const crow::request& req, size_t block_no) {
 
-        crow::response r {xmrblocks.json_blk(block_no).dump()};
+        crow::response r {xmrblocks.json_block(block_no).dump()};
         r.set_header("Content-Type", "application/json");
 
         return r;
     });
 
 
-    CROW_ROUTE(app, "/api/txs").methods("GET"_method)
+    CROW_ROUTE(app, "/api/transactions").methods("GET"_method)
     ([&](const crow::request& req) {
 
         string page  = regex_search(req.raw_url, regex {"page=\\d+"}) ?
@@ -364,7 +364,16 @@ int main(int ac, const char* av[]) {
         string limit = regex_search(req.raw_url, regex {"limit=\\d+"}) ?
                        req.url_params.get("limit") : "25";
 
-        crow::response r {xmrblocks.json_txs(page, limit).dump()};
+        crow::response r {xmrblocks.json_transactions(page, limit).dump()};
+        r.set_header("Content-Type", "application/json");
+
+        return r;
+    });
+
+    CROW_ROUTE(app, "/api/mempool")
+    ([&](const crow::request& req) {
+
+        crow::response r {xmrblocks.json_mempool().dump()};
         r.set_header("Content-Type", "application/json");
 
         return r;
