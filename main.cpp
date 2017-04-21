@@ -345,10 +345,10 @@ int main(int ac, const char* av[]) {
         return r;
     });
 
-    CROW_ROUTE(app, "/api/block/<uint>")
-    ([&](const crow::request& req, size_t block_no) {
+    CROW_ROUTE(app, "/api/block/<string>")
+    ([&](const crow::request& req, string block_no_or_hash) {
 
-        crow::response r {xmrblocks.json_block(block_no).dump()};
+        crow::response r {xmrblocks.json_block(block_no_or_hash).dump()};
         r.set_header("Content-Type", "application/json");
 
         return r;
@@ -374,6 +374,15 @@ int main(int ac, const char* av[]) {
     ([&](const crow::request& req) {
 
         crow::response r {xmrblocks.json_mempool().dump()};
+        r.set_header("Content-Type", "application/json");
+
+        return r;
+    });
+
+    CROW_ROUTE(app, "/api/search/<string>")
+    ([&](const crow::request& req, string search_value) {
+
+        crow::response r {xmrblocks.json_search(search_value).dump()};
         r.set_header("Content-Type", "application/json");
 
         return r;

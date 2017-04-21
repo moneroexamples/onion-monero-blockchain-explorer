@@ -382,6 +382,47 @@ Partial results shown:
 }
 ```
 
+#### api/search/<block_number|tx_hash|block_hash>
+
+```bash
+curl  -w "\n" -X GET http://139.162.32.245:8081/search/1293669
+```
+
+Partial results shown:
+
+```json
+{
+  "data": {
+    "block_height": 1293669,
+    "current_height": 1293670,
+    "hash": "5d55b8fabf85b0b4c959d66ad509eb92ddfe5c2b0e84e1760abcb090195c1913",
+    "size": 118026,
+    "timestamp": 1492815321,
+    "timestamp_utc": "2017-04-21 22:55:21",
+    "title": "block",
+    "txs": [
+      {
+        "coinbase": true,
+        "extra": "01cb7fda09033a5fa06dc601b9295ef3790397cf3c645e958e34cf7ab699d2f5230208000000027f030200",
+        "mixin": 0,
+        "payment_id": "",
+        "payment_id8": "",
+        "rct_type": 0,
+        "tx_fee": 0,
+        "tx_hash": "479ba432f5c88736b438dd4446a11a13046a752d469f7828151f5c5b86be4e9a",
+        "tx_size": 95,
+        "tx_version": 2,
+        "xmr_inputs": 0,
+        "xmr_outputs": 7992697599717
+      }
+    ]
+  },
+  "status": "success"
+}
+```
+
+
+
 ## Example screenshot
 
 ![Onion Monero Blockchain Explorer](https://raw.githubusercontent.com/moneroexamples/onion-monero-blockchain-explorer/master/screenshot/screenshot_01.jpg)

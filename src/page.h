@@ -3993,7 +3993,7 @@ public:
      * https://labs.omniti.com/labs/jsend
      */
     json
-    json_block(uint64_t block_height)
+    json_block(string block_no_or_hash)
     {
         json j_response {
                 {"status", "fail"},
@@ -4005,23 +4005,66 @@ public:
         uint64_t current_blockchain_height
                 =  core_storage->get_current_blockchain_height();
 
-        if (block_height > current_blockchain_height)
-        {
-            j_data["title"] = fmt::format(
-                    "Requested block is higher than blockchain:"
-                    " {:d}, {:d}", block_height,current_blockchain_height);
-            return j_response;
-        }
+        uint64_t block_height {0};
+
+        crypto::hash blk_hash;
 
         block blk;
 
-        if (!mcore->get_block_by_height(block_height, blk))
+        if (block_no_or_hash.length() <= 8)
         {
-            j_data["title"] = fmt::format("Cant get block: {:d}", block_height);
+            // we have something that seems to be a block number
+            try
+            {
+                block_height  = boost::lexical_cast<uint64_t>(block_no_or_hash);
+            }
+            catch (const boost::bad_lexical_cast& e)
+            {
+                j_data["title"] = fmt::format(
+                        "Cant parse block number: {:s}", block_no_or_hash);
+                return j_response;
+            }
+
+            if (block_height > current_blockchain_height)
+            {
+                j_data["title"] = fmt::format(
+                        "Requested block is higher than blockchain:"
+                                " {:d}, {:d}", block_height,current_blockchain_height);
+                return j_response;
+            }
+
+            if (!mcore->get_block_by_height(block_height, blk))
+            {
+                j_data["title"] = fmt::format("Cant get block: {:d}", block_height);
+                return j_response;
+            }
+
+            blk_hash = core_storage->get_block_id_by_height(block_height);
+
+        }
+        else if (block_no_or_hash.length() == 64)
+        {
+            // this seems to be block hash
+            if (!xmreg::parse_str_secret_key(block_no_or_hash, blk_hash))
+            {
+                j_data["title"] = fmt::format("Cant parse blk hash: {:s}", block_no_or_hash);
+                return j_response;
+            }
+
+            if (!core_storage->get_block_by_hash(blk_hash, blk))
+            {
+                j_data["title"] = fmt::format("Cant get block: {:s}", blk_hash);
+                return j_response;
+            }
+
+            block_height = core_storage->get_db().get_block_height(blk_hash);
+        }
+        else
+        {
+            j_data["title"] = fmt::format("Cant find blk using search string: {:s}", block_no_or_hash);
             return j_response;
         }
 
-        crypto::hash blk_hash = core_storage->get_block_id_by_height(block_height);
 
         // get block size in bytes
         uint64_t blk_size = core_storage->get_db().get_block_size(block_height);
@@ -4073,7 +4116,6 @@ public:
         j_data = json {
             {"block_height"  , block_height},
             {"hash"          , pod_to_hex(blk_hash)},
-            {"block_reward"  , txd_coinbase.xmr_inputs},
             {"timestamp"     , blk.timestamp},
             {"timestamp_utc" , xmreg::timestamp_to_str_gm(blk.timestamp)},
             {"block_height"  , block_height},
@@ -4160,11 +4202,14 @@ public:
             // get block size in bytes
             double blk_size = core_storage->get_db().get_block_size(i);
 
+            crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
+
             // get block age
             pair<string, string> age = get_age(local_copy_server_timestamp, blk.timestamp);
 
             j_blocks.push_back(json {
                 {"height"       , i},
+                {"hash"         , pod_to_hex(blk_hash)},
                 {"age"          , age.first},
                 {"size"         , blk_size},
                 {"timestamp"    , blk.timestamp},
@@ -4208,7 +4253,6 @@ public:
     }
 
 
-
     /*
      * Lets use this json api convention for success and error
      * https://labs.omniti.com/labs/jsend
@@ -4248,6 +4292,76 @@ public:
         }
 
         j_response["status"] = "success";
+
+        return j_response;
+    }
+
+
+    /*
+     * Lets use this json api convention for success and error
+     * https://labs.omniti.com/labs/jsend
+     */
+    json
+    json_search(const string& search_text)
+    {
+        json j_response {
+                {"status", "fail"},
+                {"data",   json {}}
+        };
+
+        json& j_data = j_response["data"];
+
+        //get current server timestamp
+        server_timestamp = std::time(nullptr);
+
+        uint64_t local_copy_server_timestamp = server_timestamp;
+
+        uint64_t height = core_storage->get_current_blockchain_height();
+
+        uint64_t search_str_length = search_text.length();
+
+        // first let check if the search_text matches any tx or block hash
+        if (search_str_length == 64)
+        {
+            // first check for tx
+            json j_tx = json_transaction(search_text);
+
+            if (j_tx["status"] == "success")
+            {
+                j_response["data"]   = j_tx["data"];
+                j_response["data"]["title"]  = "transaction";
+                j_response["status"] = "success";
+                return j_response;
+            }
+
+            // now check for block
+
+            json j_block = json_block(search_text);
+
+            if (j_block["status"] == "success")
+            {
+                j_response["data"]  = j_block["data"];
+                j_response["data"]["title"]  = "block";
+                j_response["status"] = "success";
+                return j_response;
+            }
+        }
+
+        // now lets see if this is a block number
+        if (search_str_length <= 8)
+        {
+            json j_block = json_block(search_text);
+
+            if (j_block["status"] == "success")
+            {
+                j_response["data"]   = j_block["data"];
+                j_response["data"]["title"]  = "block";
+                j_response["status"] = "success";
+                return j_response;
+            }
+        }
+
+        j_data["title"] = "Nothing was found that matches search string: " + search_text;
 
         return j_response;
     }
