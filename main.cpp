@@ -339,7 +339,7 @@ int main(int ac, const char* av[]) {
     CROW_ROUTE(app, "/api/tx/<string>")
     ([&](const crow::request& req, string tx_hash) {
 
-        crow::response r {xmrblocks.json_tx(tx_hash)};
+        crow::response r {xmrblocks.json_tx(tx_hash).dump()};
         r.set_header("Content-Type", "application/json");
 
         return r;
@@ -348,7 +348,7 @@ int main(int ac, const char* av[]) {
     CROW_ROUTE(app, "/api/blk/<uint>")
     ([&](const crow::request& req, size_t block_no) {
 
-        crow::response r {xmrblocks.json_blk(block_no)};
+        crow::response r {xmrblocks.json_blk(block_no).dump()};
         r.set_header("Content-Type", "application/json");
 
         return r;
@@ -364,7 +364,7 @@ int main(int ac, const char* av[]) {
         string limit = regex_search(req.raw_url, regex {"limit=\\d+"}) ?
                        req.url_params.get("limit") : "25";
 
-        crow::response r {xmrblocks.json_txs(page, limit)};
+        crow::response r {xmrblocks.json_txs(page, limit).dump()};
         r.set_header("Content-Type", "application/json");
 
         return r;

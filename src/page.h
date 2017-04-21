@@ -3886,7 +3886,7 @@ public:
      * Lets use this json api convention for success and error
      * https://labs.omniti.com/labs/jsend
      */
-    string
+    json
     json_tx(string tx_hash_str)
     {
         json j_response {
@@ -3902,7 +3902,7 @@ public:
         if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
         {
             j_data["title"] = fmt::format("Cant parse tx hash: {:s}", tx_hash_str);
-            return j_response.dump();
+            return j_response;
         }
 
         // get transaction
@@ -3918,7 +3918,7 @@ public:
         if (!find_tx(tx_hash, tx, found_in_mempool, tx_timestamp))
         {
             j_data["title"] = fmt::format("Cant find tx hash: {:s}", tx_hash_str);
-            return j_response.dump();
+            return j_response;
         }
 
         uint64_t block_height {0};
@@ -3938,7 +3938,7 @@ public:
                 if (!mcore->get_block_by_height(block_height, blk))
                 {
                     j_data["title"] = fmt::format("Cant get block: {:d}", block_height);
-                    return j_response.dump();
+                    return j_response;
                 }
 
                 tx_timestamp = blk.timestamp;
@@ -3948,7 +3948,7 @@ public:
                 j_response["status"]  = "error";
                 j_response["message"] = fmt::format("Tx does not exist in blockchain, "
                                       "but was there before: {:s}", tx_hash_str);
-                return j_response.dump();
+                return j_response;
             }
         }
 
@@ -4004,14 +4004,14 @@ public:
 
         j_response["status"] = "success";
 
-        return j_response.dump();
+        return j_response;
     }
 
     /*
      * Lets use this json api convention for success and error
      * https://labs.omniti.com/labs/jsend
      */
-    string
+    json
     json_blk(uint64_t block_height)
     {
         json j_response {
@@ -4029,7 +4029,7 @@ public:
             j_data["title"] = fmt::format(
                     "Requested block is higher than blockchain:"
                     " {:d}, {:d}", block_height,current_blockchain_height);
-            return j_response.dump();
+            return j_response;
         }
 
         block blk;
@@ -4037,7 +4037,7 @@ public:
         if (!mcore->get_block_by_height(block_height, blk))
         {
             j_data["title"] = fmt::format("Cant get block: {:d}", block_height);
-            return j_response.dump();
+            return j_response;
         }
 
         crypto::hash blk_hash = core_storage->get_block_id_by_height(block_height);
@@ -4076,7 +4076,7 @@ public:
                 j_response["status"]  = "error";
                 j_response["message"]
                         = fmt::format("Cant get transactions in block: {:d}", block_height);
-                return j_response.dump();
+                return j_response;
             }
 
             tx_details txd = get_tx_details(tx, false,
@@ -4103,7 +4103,7 @@ public:
 
         j_response["status"] = "success";
 
-        return j_response.dump();
+        return j_response;
     }
 
 
@@ -4112,7 +4112,7 @@ public:
      * Lets use this json api convention for success and error
      * https://labs.omniti.com/labs/jsend
      */
-    string
+    json
     json_txs(string _page, string _limit)
     {
         json j_response {
@@ -4136,7 +4136,7 @@ public:
         {
             j_data["title"] = fmt::format(
                     "Cant parse page and/or limit numbers: {:s}, {:s}", _page, _limit);
-            return j_response.dump();
+            return j_response;
         }
 
         // enforce maximum number of blocks per page to 100
@@ -4173,7 +4173,7 @@ public:
             {
                 j_response["status"]  = "error";
                 j_response["message"] = fmt::format("Cant get block: {:d}", i);
-                return j_response.dump();
+                return j_response;
             }
 
             // get block size in bytes
@@ -4200,7 +4200,7 @@ public:
             {
                 j_response["status"]  = "error";
                 j_response["message"] = fmt::format("Cant get transactions in block: {:d}", i);
-                return j_response.dump();
+                return j_response;
             }
 
             (void) missed_txs;
@@ -4223,7 +4223,7 @@ public:
 
         j_response["status"] = "success";
 
-        return j_response.dump();
+        return j_response;
     }
 
 private:
