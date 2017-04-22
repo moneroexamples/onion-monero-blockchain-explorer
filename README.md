@@ -464,34 +464,34 @@ curl  -w "\n" -X GET http://139.162.32.245:8081/api/outputs?txhash=17049bc5f2d9f
 Proving transfer:
 
 We use recipient's address (i.e. not our address from which we sent xmr to recipient).
-and for viewkey, we use `fc73749620badd845ff1a5aaaccae501b22ab5d024e721c8dd2cf44306d5080a` which
-is `tx_private_key` (although the GET variable is still called `viewkey`) that we obtained by sending this txs. 
+For the viewkey, we use `tx_private_key` (although the GET variable is still called `viewkey`) that we obtained by sending this txs. 
 
 ```bash
-curl  -w "\n" -X GET http://139.162.32.245:8081/api/outputs?txhash=a61d1b6a239357284c49fcb75730dec6be69abdb89028e50dd4a03b4a25fa6fe&address=43A7NUmo5HbhJoSKbw9bRWW4u2b8dNfhKheTR5zxoRwQ7bULK5TgUQeAvPS5EVNLAJYZRQYqXCmhdf26zG2Has35SpiF1FP&viewkey=fc73749620badd845ff1a5aaaccae501b22ab5d024e721c8dd2cf44306d5080a&txprove=1
+# this is for testnet transaction 
+curl  -w "\n" -X GET http://139.162.32.245:8082/api/outputs?txhash=94782a8c0aa8d8768afa0c040ef0544b63eb5148ca971a024ac402cad313d3b3&address=9wUf8UcPUtb2huK7RphBw5PFCyKosKxqtGxbcKBDnzTCPrdNfJjLjtuht87zhTgsffCB21qmjxjj18Pw7cBnRctcKHrUB7N&viewkey=e94b5bfc599d2f741d6f07e3ab2a83f915e96fb374dfb2cd3dbe730e34ecb40b&txprove=1
 ```
 
 ```json
 {
   "data": {
-    "address": "287e4f75723d62f0fab06a58893535adc8082f7834c462f30158cecc3e8af3276cc88f08944d5f3b4f811ae011436fbcadc668b566883ce34d06395f450288e4",
+    "address": "71bef5945b70bc0a31dbbe6cd0bd5884fe694bbfd18fff5f68f709438554fb88a51b1291e378e2f46a0155108782c242cc1be78af229242c36d4f4d1c4f72da2",
     "outputs": [
       {
-        "amount": 2000000000,
+        "amount": 1000000000000,
         "match": true,
         "output_idx": 0,
-        "output_pubkey": "2be5596a0ad6e49b30f2b597b27f15dc88e15cf3379ee00f13d85fa24f0beea9"
+        "output_pubkey": "c1bf4dd020b5f0ab70bd672d2f9e800ea7b8ab108b080825c1d6cfc0b7f7ee00"
       },
       {
         "amount": 0,
         "match": false,
         "output_idx": 1,
-        "output_pubkey": "ff30a46e53011051fc12fc55388ae1a340efada34364846068f05ab0f3e2a952"
+        "output_pubkey": "8c61fae6ada2a103565dfdd307c7145b2479ddb1dab1eaadfa6c34db65d189d5"
       }
     ],
-    "tx_hash": "a61d1b6a239357284c49fcb75730dec6be69abdb89028e50dd4a03b4a25fa6fe",
+    "tx_hash": "94782a8c0aa8d8768afa0c040ef0544b63eb5148ca971a024ac402cad313d3b3",
     "tx_prove": true,
-    "viewkey": "fc73749620badd845ff1a5aaaccae501b22ab5d024e721c8dd2cf44306d5080a"
+    "viewkey": "e94b5bfc599d2f741d6f07e3ab2a83f915e96fb374dfb2cd3dbe730e34ecb40b"
   },
   "status": "success"
 }
