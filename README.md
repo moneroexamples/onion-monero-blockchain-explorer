@@ -1,52 +1,46 @@
 # Onion Monero Blockchain Explorer
 
-Curently available Monero blockchain explorer websites have several limitations which are of special importance to privacy-oriented users:
+Currently available Monero blockchain explorer websites have several limitations which are of special importance to privacy-oriented users:
 
  - they use JavaScript,
  - have images which might be used for [cookieless tracking](http://lucb1e.com/rp/cookielesscookies/),
  - track users activates through google analytics,
  - are closed sourced,
  - are not available as hidden services,
- - provide only basic search capabilities,
  - do not support Monero testnet
 
-
 In this example, these limitations are addressed by development of
-an Onion Monero Blockchain Explorer. The example not only shows how to use Monero C++ libraries, but also demonstrates how to use:
+an Onion Monero Blockchain Explorer. The example not only shows how to use 
+Monero C++ libraries, but also demonstrates how to use:
 
- - [crow](https://github.com/ipkn/crow) - C++ micro web framework
- - [lmdb++](https://github.com/bendiken/lmdbxx) - C++ wrapper for the LMDB
+ - [crow](https://github.com/ipkn/crow) - C++ micro web framework 
  - [mstch](https://github.com/no1msd/mstch) - C++ {{mustache}} templates
  - [json](https://github.com/nlohmann/json) - JSON for Modern C++
- - [date](https://github.com/HowardHinnant/date) - C++ date and time library
  - [fmt](https://github.com/fmtlib/fmt) - Small, safe and fast string formatting library
 
-## Address
+## Addresses
 
 Tor users:
  
- - [http://libwh5lvouddzei4.onion](http://libwh5lvouddzei4.onion/)
- - [http://2hbthfb66na6pqgv.onion](http://2hbthfb66na6pqgv.onion)
- 
+ - [http://dvwae436pd7nt4bc.onion](http://dvwae436pd7nt4bc.onion)
+  
 Clearnet versions:
+
  - [http://139.162.32.245:8081/](http://139.162.32.245:8081/) - bleeding edge version, no https.
  - [https://explorer.xmr.my/](https://explorer.xmr.my/) - https enabled, up to date, but sometimes down.
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
- - [http://blox.supportxmr.com/](http://blox.supportxmr.com/) - little outdated, no https, but always online.
   
 Clearnet testnet Monero version:
 
- - [https://testnet.explorer.xmr.my/](https://testnet.explorer.xmr.my/) - https enabled, most up to date. 
+ - [http://139.162.32.245:8082/](http://139.162.32.245:8082/) - bleeding edge version, no https. 
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
-
 
 i2p users (main Monero network) - down for now:
 
  - [http://monerotools.i2p](http://monerotools.i2p)
 
- 
 ## Onion Monero Blockchain Explorer features
 
 The key features of the Onion Monero Blockchain Explorer are:
@@ -55,9 +49,6 @@ The key features of the Onion Monero Blockchain Explorer are:
  - open sourced,
  - made fully in C++,
  - the only explorer showing encrypted payments ID,
- - the only explorer with the ability to search by encrypted payments ID, tx public
- and private keys, stealth addresses, input key images, block timestamps 
- (UTC time, e.g., 2016-11-23 14:03:05)
  - the only explorer showing ring signatures,
  - the only explorer showing transaction extra field,
  - the only explorer showing public components of Monero addresses,
@@ -68,53 +59,42 @@ The key features of the Onion Monero Blockchain Explorer are:
  - the only explorer showing number of amount output indices,
  - the only explorer supporting Monero testnet network,
  - the only explorer providing tx checker and pusher for online pushing of transactions,
- - the only explorer allowing to inspect encrypted key images file and output files.
  - the only explorer able to estimate possible spendings based on address and viewkey.
 
-## Prerequisite
 
-Instruction for Monero 0.10.1 compilation and Monero headers and libraries setup are
-as shown here:
- - [Compile Monero on Ubuntu 16.04 x64](https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04)
- - [lmdbcpp-monero](https://github.com/moneroexamples/lmdbcpp-monero.git) (optional)
+## Compilation on Ubuntu 16.04
 
-## Compile and run the explorer
+##### Compile latest Monero
 
-##### Monero headers and libraries setup
+Download and compile recent Monero release into your home folder:
 
-The Onion Explorer uses Monero C++ libraries and headers. 
- Instructions how to download source files and compile Monero,
- setup header and library files are presented here:
+```bash
+# first install monero dependecines
+sudo apt update
 
-- https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04 (Ubuntu 16.04)
-- https://github.com/moneroexamples/compile-monero-09-on-arch-linux (Arch Linux)
+sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libcurl4-openssl-dev libgtest-dev
 
+# go to home folder 
+cd ~
 
-##### Custom lmdb database (optional)
+git clone https://github.com/monero-project/monero
 
-Most unique search abilities of the Onion Explorer are achieved through using
-a [custom lmdb database](https://github.com/moneroexamples/lmdbcpp-monero.git) constructed based on the Monero blockchain.
-The reason for the custom database is that Monero's own lmdb database has limited
-search abilities. For example, its not possible to search for a tx having a
- given key image, except by performing an exhaustive search on the blockchain which is very time consuming.
+cd monero/
 
-Instruction how to compile the `lmdbcpp-monero` are provided here:
+# checkout last monero version
+git checkout -b v0.10.3.1
 
- - https://github.com/moneroexamples/lmdbcpp-monero.git
-
-The custom database is rather big, 12GB now, and it must be running alongside Monero deamon
-so that it keeps updating itself with new information from new blocks as they are added
-to the blockchain. Also, by default it is 10 blocks behind the current blockchain height
-to minimize indexing/saving orphaned blocks.
-
-For these reasons, its use is optional. However, without it, some searches wont be possible,
-e.g., searching for key images, output and tx public keys, encrypted payments id.
+make
+```
 
 ##### Compile and run the explorer
 Once the Monero is compiled and setup, the explorer can be downloaded and compiled
 as follows:
 
 ```bash
+# go to home folder if still in ~/monero
+cd ~
+
 # download the source code
 git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
 
@@ -131,12 +111,18 @@ cmake ..
 make
 ```
 
-When compilation finishes executable `xmrblocks` should be created.
+When compilation finishes executable `xmrblocks` should be created. Before running
+please make sure that  `~/Downloads` folder exists and is writable. 
+Time zone library that explorer is using, puts there 
+its database of time zone offsets
 
 To run it:
 ```
 ./xmrblocks
 ```
+
+By default it will look for blockchain in its default location i.e., `~/.bitmonero/lmdb`.
+You can use `--bc-path` option if its in different location. 
 
 Example output:
 
@@ -146,6 +132,7 @@ Example output:
 (2016-05-28 02:04:49) [INFO    ] Crow/0.1 server is running, local port 8081
 ```
 
+Go to your browser: http://127.0.0.1:8081
 Go to your browser: http://127.0.0.1:8081
 
 ## The explorer's command line options
@@ -314,7 +301,7 @@ Partial results shown:
 curl  -w "\n" -X GET "http://139.162.32.245:8081/api/transactions?page=2&limit=10"
 ```
 
-Result analogical to the one bavoe
+Result analogical to the one above.
 
 #### api/block/<block_number|block_hash>
 
