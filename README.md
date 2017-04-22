@@ -307,8 +307,16 @@ Partial results shown:
 }
 ```
 
+#### api/transactions?page=<page_no>&limit=<tx_per_page>
 
-#### api/block/<block_number>
+
+```bash
+curl  -w "\n" -X GET "http://139.162.32.245:8081/api/transactions?page=2&limit=10"
+```
+
+Result analogical to the one bavoe
+
+#### api/block/<block_number|block_hash>
 
 
 ```bash
