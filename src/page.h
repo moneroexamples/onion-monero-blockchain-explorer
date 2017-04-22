@@ -4366,6 +4366,201 @@ public:
         return j_response;
     }
 
+    json
+    json_outputs(string tx_hash_str,
+                 string address_str,
+                 string viewkey_str,
+                 bool tx_prove = false)
+    {
+        boost::trim(tx_hash_str);
+        boost::trim(address_str);
+        boost::trim(viewkey_str);
+
+        json j_response {
+                {"status", "fail"},
+                {"data",   json {}}
+        };
+
+        json& j_data = j_response["data"];
+
+
+        if (tx_hash_str.empty())
+        {
+            j_response["status"]  = "error";
+            j_response["message"] = "Tx hash not provided";
+            return j_response;
+        }
+
+        if (address_str.empty())
+        {
+            j_response["status"]  = "error";
+            j_response["message"] = "Monero address not provided";
+            return j_response;
+        }
+
+        if (viewkey_str.empty())
+        {
+            if (!tx_prove)
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Viewkey not provided";
+                return j_response;
+            }
+            else
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Tx private key not provided";
+                return j_response;
+            }
+        }
+
+
+        // parse tx hash string to hash object
+        crypto::hash tx_hash;
+
+        if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+        {
+            j_response["status"]  = "error";
+            j_response["message"] = "Cant parse tx hash: " + tx_hash_str;
+            return j_response;
+        }
+
+        // parse string representing given monero address
+        cryptonote::account_public_address address;
+
+        if (!xmreg::parse_str_address(address_str,  address, testnet))
+        {
+            j_response["status"]  = "error";
+            j_response["message"] = "Cant parse monero address: " + address_str;
+            return j_response;
+
+        }
+
+        // parse string representing given private key
+        crypto::secret_key prv_view_key;
+
+        if (!xmreg::parse_str_secret_key(viewkey_str, prv_view_key))
+        {
+            j_response["status"]  = "error";
+            j_response["message"] = "Cant parse view key or tx private key: "
+                                    + viewkey_str;
+            return j_response;
+        }
+
+        // get transaction
+        transaction tx;
+
+        // flag to indicate if tx is in mempool
+        bool found_in_mempool {false};
+
+        // for tx in blocks we get block timestamp
+        // for tx in mempool we get recievive time
+        uint64_t tx_timestamp {0};
+
+        if (!find_tx(tx_hash, tx, found_in_mempool, tx_timestamp))
+        {
+            j_data["title"] = fmt::format("Cant find tx hash: {:s}", tx_hash_str);
+            return j_response;
+        }
+
+        (void) tx_timestamp;
+        (void) found_in_mempool;
+
+        tx_details txd = get_tx_details(tx);
+
+        // public transaction key is combined with our viewkey
+        // to create, so called, derived key.
+        key_derivation derivation;
+
+        public_key pub_key = tx_prove ? address.m_view_public_key : txd.pk;
+
+        //cout << "txd.pk: " << pod_to_hex(txd.pk) << endl;
+
+        if (!generate_key_derivation(pub_key, prv_view_key, derivation))
+        {
+            j_response["status"]  = "error";
+            j_response["message"] = "Cant calculate key_derivation";
+            return j_response;
+        }
+
+        uint64_t output_idx {0};
+
+        std::vector<uint64_t> money_transfered(tx.vout.size(), 0);
+
+        j_data["outputs"] = json::array();
+        json& j_outptus   = j_data["outputs"];
+
+        for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
+        {
+
+            // get the tx output public key
+            // that normally would be generated for us,
+            // if someone had sent us some xmr.
+            public_key tx_pubkey;
+
+            derive_public_key(derivation,
+                              output_idx,
+                              address.m_spend_public_key,
+                              tx_pubkey);
+
+            // check if generated public key matches the current output's key
+            bool mine_output = (outp.first.key == tx_pubkey);
+
+            // if mine output has RingCT, i.e., tx version is 2
+            if (mine_output && tx.version == 2)
+            {
+                // cointbase txs have amounts in plain sight.
+                // so use amount from ringct, only for non-coinbase txs
+                if (!is_coinbase(tx))
+                {
+
+                    // initialize with regular amount
+                    uint64_t rct_amount = money_transfered[output_idx];
+
+                    bool r;
+
+                    r = decode_ringct(tx.rct_signatures,
+                                      pub_key,
+                                      prv_view_key,
+                                      output_idx,
+                                      tx.rct_signatures.ecdhInfo[output_idx].mask,
+                                      rct_amount);
+
+                    if (!r)
+                    {
+                        cerr << "\nshow_my_outputs: Cant decode ringCT! " << endl;
+                    }
+
+                    outp.second         = rct_amount;
+                    money_transfered[output_idx] = rct_amount;
+
+                } // if (!is_coinbase(tx))
+
+            }  // if (mine_output && tx.version == 2)
+
+            j_outptus.push_back(json {
+                {"output_pubkey", pod_to_hex(outp.first.key)},
+                {"amount"       , outp.second},
+                {"match"        , mine_output},
+                {"output_idx"   , output_idx},
+            });
+
+            ++output_idx;
+
+        } // for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
+
+        // return parsed values. can be use to double
+        // check if submited data in the request
+        // matches to what was used to produce response.
+        j_data["tx_hash"]  = pod_to_hex(txd.hash);
+        j_data["address"]  = pod_to_hex(address);
+        j_data["viewkey"]  = pod_to_hex(prv_view_key);
+        j_data["tx_prove"] = tx_prove;
+
+        j_response["status"] = "success";
+
+        return j_response;
+    }
 private:
 
     json

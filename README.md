@@ -421,7 +421,81 @@ Partial results shown:
 }
 ```
 
+#### api/outputs?txhash=<tx_hash>&address=<address>&viewkey=<viewkey>&txprove=<0|1>
 
+For `txprove=0` we check which outputs belong to given address and corresponding viewkey.
+For `txprove=1` we use to prove to the recipient that we sent them founds.
+For this, we use recipient's address and our tx private key as a viewkey value,
+ i.e., `viewkey=<tx_private_key>` 
+
+Checking outputs:
+
+```bash
+# we use here official Monero project's donation address as an example
+curl  -w "\n" -X GET http://139.162.32.245:8081/api/outputs?txhash=17049bc5f2d9fbca1ce8dae443bbbbed2fc02f1ee003ffdd0571996905faa831&address=44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGv7SqSsaBYBb98uNbr2VBBEt7f2wfn3RVGQBEP3A&viewkey=f359631075708155cc3d92a32b75a7d02a5dcf27756707b47a2b31b21c389501&txprove=0
+```
+
+```json
+{
+  "data": {
+    "address": "42f18fc61586554095b0799b5c4b6f00cdeb26a93b20540d366932c6001617b75db35109fbba7d5f275fef4b9c49e0cc1c84b219ec6ff652fda54f89f7f63c88",
+    "outputs": [
+      {
+        "amount": 34980000000000,
+        "match": true,
+        "output_idx": 0,
+        "output_pubkey": "35d7200229e725c2bce0da3a2f20ef0720d242ecf88bfcb71eff2025c2501fdb"
+      },
+      {
+        "amount": 0,
+        "match": false,
+        "output_idx": 1,
+        "output_pubkey": "44efccab9f9b42e83c12da7988785d6c4eb3ec6e7aa2ae1234e2f0f7cb9ed6dd"
+      }
+    ],
+    "tx_hash": "17049bc5f2d9fbca1ce8dae443bbbbed2fc02f1ee003ffdd0571996905faa831",
+    "tx_prove": false,
+    "viewkey": "f359631075708155cc3d92a32b75a7d02a5dcf27756707b47a2b31b21c389501"
+  },
+  "status": "success"
+}
+```
+
+Proving transfer:
+
+We use recipient's address (i.e. not our address from which we sent xmr to recipient).
+and for viewkey, we use `fc73749620badd845ff1a5aaaccae501b22ab5d024e721c8dd2cf44306d5080a` which
+is `tx_private_key` (although the GET variable is still called `viewkey`) that we obtained by sending this txs. 
+
+```bash
+curl  -w "\n" -X GET http://139.162.32.245:8081/api/outputs?txhash=a61d1b6a239357284c49fcb75730dec6be69abdb89028e50dd4a03b4a25fa6fe&address=43A7NUmo5HbhJoSKbw9bRWW4u2b8dNfhKheTR5zxoRwQ7bULK5TgUQeAvPS5EVNLAJYZRQYqXCmhdf26zG2Has35SpiF1FP&viewkey=fc73749620badd845ff1a5aaaccae501b22ab5d024e721c8dd2cf44306d5080a&txprove=1
+```
+
+```json
+{
+  "data": {
+    "address": "287e4f75723d62f0fab06a58893535adc8082f7834c462f30158cecc3e8af3276cc88f08944d5f3b4f811ae011436fbcadc668b566883ce34d06395f450288e4",
+    "outputs": [
+      {
+        "amount": 2000000000,
+        "match": true,
+        "output_idx": 0,
+        "output_pubkey": "2be5596a0ad6e49b30f2b597b27f15dc88e15cf3379ee00f13d85fa24f0beea9"
+      },
+      {
+        "amount": 0,
+        "match": false,
+        "output_idx": 1,
+        "output_pubkey": "ff30a46e53011051fc12fc55388ae1a340efada34364846068f05ab0f3e2a952"
+      }
+    ],
+    "tx_hash": "a61d1b6a239357284c49fcb75730dec6be69abdb89028e50dd4a03b4a25fa6fe",
+    "tx_prove": true,
+    "viewkey": "fc73749620badd845ff1a5aaaccae501b22ab5d024e721c8dd2cf44306d5080a"
+  },
+  "status": "success"
+}
+```
 
 ## Example screenshot
 

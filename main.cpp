@@ -388,6 +388,30 @@ int main(int ac, const char* av[]) {
         return r;
     });
 
+    CROW_ROUTE(app, "/api/outputs").methods("GET"_method)
+    ([&](const crow::request& req) {
+
+        string tx_hash = regex_search(req.raw_url, regex {"txhash=\\w+"}) ?
+                         req.url_params.get("txhash") : "";
+
+        string address  = regex_search(req.raw_url, regex {"address=\\w+"}) ?
+                       req.url_params.get("address") : "";
+
+        string viewkey = regex_search(req.raw_url, regex {"viewkey=\\w+"}) ?
+                       req.url_params.get("viewkey") : "";
+
+        bool tx_prove = regex_search(req.raw_url, regex {"txprove=[01]"}) ?
+                        boost::lexical_cast<bool>(req.url_params.get("txprove")) :
+                        false;
+
+        crow::response r {xmrblocks.json_outputs(
+                tx_hash, address, viewkey, tx_prove).dump()};
+
+        r.set_header("Content-Type", "application/json");
+
+        return r;
+    });
+
 
     if (enable_autorefresh_option)
     {
