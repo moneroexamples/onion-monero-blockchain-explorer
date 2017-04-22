@@ -415,9 +415,18 @@ int main(int ac, const char* av[]) {
         string viewkey = regex_search(req.raw_url, regex {"viewkey=\\w+"}) ?
                        req.url_params.get("viewkey") : "";
 
-        bool tx_prove = regex_search(req.raw_url, regex {"txprove=[01]"}) ?
-                        boost::lexical_cast<bool>(req.url_params.get("txprove")) :
-                        false;
+        bool tx_prove {false};
+
+        try
+        {
+            tx_prove = regex_search(req.raw_url, regex {"txprove=[01]"}) ?
+                            boost::lexical_cast<bool>(req.url_params.get("txprove")) :
+                            false;
+        }
+        catch (const boost::bad_lexical_cast& e)
+        {
+            cerr << "Cant parse tx_prove as bool. Using default value" << endl;
+        }
 
         crow::response r {xmrblocks.json_outputs(
                 tx_hash, address, viewkey, tx_prove).dump()};
