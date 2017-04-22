@@ -505,11 +505,6 @@ curl  -w "\n" -X GET "http://139.162.32.245:8082/api/outputs?txhash=94782a8c0aa8
 }
 ```
 
-## Example screenshot
-
-![Onion Monero Blockchain Explorer](https://raw.githubusercontent.com/moneroexamples/onion-monero-blockchain-explorer/master/screenshot/screenshot_01.jpg)
-
-
 ## Other monero examples
 
 Other examples can be found on  [github](https://github.com/moneroexamples?tab=repositories).
