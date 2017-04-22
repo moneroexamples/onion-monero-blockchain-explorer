@@ -340,7 +340,10 @@ int main(int ac, const char* av[]) {
     ([&](const crow::request& req, string tx_hash) {
 
         crow::response r {xmrblocks.json_transaction(tx_hash).dump()};
-        r.set_header("Content-Type", "application/json");
+
+        r.add_header("Access-Control-Allow-Origin", "*");
+        r.add_header("Access-Control-Allow-Headers", "Content-Type");
+        r.add_header("Content-Type", "application/json");
 
         return r;
     });
@@ -349,7 +352,10 @@ int main(int ac, const char* av[]) {
     ([&](const crow::request& req, string block_no_or_hash) {
 
         crow::response r {xmrblocks.json_block(block_no_or_hash).dump()};
-        r.set_header("Content-Type", "application/json");
+
+        r.add_header("Access-Control-Allow-Origin", "*");
+        r.add_header("Access-Control-Allow-Headers", "Content-Type");
+        r.add_header("Content-Type", "application/json");
 
         return r;
     });
@@ -365,7 +371,10 @@ int main(int ac, const char* av[]) {
                        req.url_params.get("limit") : "25";
 
         crow::response r {xmrblocks.json_transactions(page, limit).dump()};
-        r.set_header("Content-Type", "application/json");
+
+        r.add_header("Access-Control-Allow-Origin", "*");
+        r.add_header("Access-Control-Allow-Headers", "Content-Type");
+        r.add_header("Content-Type", "application/json");
 
         return r;
     });
@@ -374,7 +383,10 @@ int main(int ac, const char* av[]) {
     ([&](const crow::request& req) {
 
         crow::response r {xmrblocks.json_mempool().dump()};
-        r.set_header("Content-Type", "application/json");
+
+        r.add_header("Access-Control-Allow-Origin", "*");
+        r.add_header("Access-Control-Allow-Headers", "Content-Type");
+        r.add_header("Content-Type", "application/json");
 
         return r;
     });
@@ -383,7 +395,10 @@ int main(int ac, const char* av[]) {
     ([&](const crow::request& req, string search_value) {
 
         crow::response r {xmrblocks.json_search(search_value).dump()};
-        r.set_header("Content-Type", "application/json");
+
+        r.add_header("Access-Control-Allow-Origin", "*");
+        r.add_header("Access-Control-Allow-Headers", "Content-Type");
+        r.add_header("Content-Type", "application/json");
 
         return r;
     });
@@ -394,7 +409,7 @@ int main(int ac, const char* av[]) {
         string tx_hash = regex_search(req.raw_url, regex {"txhash=\\w+"}) ?
                          req.url_params.get("txhash") : "";
 
-        string address  = regex_search(req.raw_url, regex {"address=\\w+"}) ?
+        string address = regex_search(req.raw_url, regex {"address=\\w+"}) ?
                        req.url_params.get("address") : "";
 
         string viewkey = regex_search(req.raw_url, regex {"viewkey=\\w+"}) ?
@@ -407,7 +422,9 @@ int main(int ac, const char* av[]) {
         crow::response r {xmrblocks.json_outputs(
                 tx_hash, address, viewkey, tx_prove).dump()};
 
-        r.set_header("Content-Type", "application/json");
+        r.add_header("Access-Control-Allow-Origin", "*");
+        r.add_header("Access-Control-Allow-Headers", "Content-Type");
+        r.add_header("Content-Type", "application/json");
 
         return r;
     });

@@ -4566,6 +4566,7 @@ private:
     json
     get_tx_json(const transaction& tx, const tx_details& txd)
     {
+
         json j_tx {
                 {"tx_hash"     , pod_to_hex(txd.hash)},
                 {"tx_fee"      , txd.fee},
