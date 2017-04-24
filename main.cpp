@@ -41,6 +41,7 @@ int main(int ac, const char* av[]) {
     auto enable_pusher_opt             = opts.get_option<bool>("enable-pusher");
     auto enable_mixin_details_opt      = opts.get_option<bool>("enable-mixin-details");
     auto enable_mempool_cache_opt      = opts.get_option<bool>("enable-mempool-cache");
+    auto enable_json_api_opt           = opts.get_option<bool>("enable-json-api");
     auto enable_tx_cache_opt           = opts.get_option<bool>("enable-tx-cache");
     auto enable_block_cache_opt        = opts.get_option<bool>("enable-block-cache");
     auto show_cache_times_opt          = opts.get_option<bool>("show-cache-times");
@@ -52,6 +53,7 @@ int main(int ac, const char* av[]) {
     bool enable_output_key_checker    {*enable_output_key_checker_opt};
     bool enable_mixin_details         {*enable_mixin_details_opt};
     bool enable_mempool_cache         {*enable_mempool_cache_opt};
+    bool enable_json_api              {*enable_json_api_opt};
     bool enable_tx_cache              {*enable_tx_cache_opt};
     bool enable_block_cache           {*enable_block_cache_opt};
     bool show_cache_times             {*show_cache_times_opt};
@@ -336,108 +338,108 @@ int main(int ac, const char* av[]) {
         return text;
     });
 
-    CROW_ROUTE(app, "/api/transaction/<string>")
-    ([&](const crow::request& req, string tx_hash) {
+    if (enable_json_api)
+    {
+        CROW_ROUTE(app, "/api/transaction/<string>")
+        ([&](const crow::request &req, string tx_hash) {
 
-        crow::response r {xmrblocks.json_transaction(tx_hash).dump()};
+            crow::response r{xmrblocks.json_transaction(tx_hash).dump()};
 
-        r.add_header("Access-Control-Allow-Origin", "*");
-        r.add_header("Access-Control-Allow-Headers", "Content-Type");
-        r.add_header("Content-Type", "application/json");
+            r.add_header("Access-Control-Allow-Origin", "*");
+            r.add_header("Access-Control-Allow-Headers", "Content-Type");
+            r.add_header("Content-Type", "application/json");
 
-        return r;
-    });
+            return r;
+        });
 
-    CROW_ROUTE(app, "/api/block/<string>")
-    ([&](const crow::request& req, string block_no_or_hash) {
+        CROW_ROUTE(app, "/api/block/<string>")
+        ([&](const crow::request &req, string block_no_or_hash) {
 
-        crow::response r {xmrblocks.json_block(block_no_or_hash).dump()};
+            crow::response r{xmrblocks.json_block(block_no_or_hash).dump()};
 
-        r.add_header("Access-Control-Allow-Origin", "*");
-        r.add_header("Access-Control-Allow-Headers", "Content-Type");
-        r.add_header("Content-Type", "application/json");
+            r.add_header("Access-Control-Allow-Origin", "*");
+            r.add_header("Access-Control-Allow-Headers", "Content-Type");
+            r.add_header("Content-Type", "application/json");
 
-        return r;
-    });
+            return r;
+        });
 
 
-    CROW_ROUTE(app, "/api/transactions").methods("GET"_method)
-    ([&](const crow::request& req) {
+        CROW_ROUTE(app, "/api/transactions").methods("GET"_method)
+        ([&](const crow::request &req) {
 
-        string page  = regex_search(req.raw_url, regex {"page=\\d+"}) ?
-                       req.url_params.get("page") : "0";
+            string page = regex_search(req.raw_url, regex {"page=\\d+"}) ?
+                          req.url_params.get("page") : "0";
 
-        string limit = regex_search(req.raw_url, regex {"limit=\\d+"}) ?
-                       req.url_params.get("limit") : "25";
+            string limit = regex_search(req.raw_url, regex {"limit=\\d+"}) ?
+                           req.url_params.get("limit") : "25";
 
-        crow::response r {xmrblocks.json_transactions(page, limit).dump()};
+            crow::response r{xmrblocks.json_transactions(page, limit).dump()};
 
-        r.add_header("Access-Control-Allow-Origin", "*");
-        r.add_header("Access-Control-Allow-Headers", "Content-Type");
-        r.add_header("Content-Type", "application/json");
+            r.add_header("Access-Control-Allow-Origin", "*");
+            r.add_header("Access-Control-Allow-Headers", "Content-Type");
+            r.add_header("Content-Type", "application/json");
 
-        return r;
-    });
+            return r;
+        });
 
-    CROW_ROUTE(app, "/api/mempool")
-    ([&](const crow::request& req) {
+        CROW_ROUTE(app, "/api/mempool")
+        ([&](const crow::request &req) {
 
-        crow::response r {xmrblocks.json_mempool().dump()};
+            crow::response r{xmrblocks.json_mempool().dump()};
 
-        r.add_header("Access-Control-Allow-Origin", "*");
-        r.add_header("Access-Control-Allow-Headers", "Content-Type");
-        r.add_header("Content-Type", "application/json");
+            r.add_header("Access-Control-Allow-Origin", "*");
+            r.add_header("Access-Control-Allow-Headers", "Content-Type");
+            r.add_header("Content-Type", "application/json");
 
-        return r;
-    });
+            return r;
+        });
 
-    CROW_ROUTE(app, "/api/search/<string>")
-    ([&](const crow::request& req, string search_value) {
+        CROW_ROUTE(app, "/api/search/<string>")
+        ([&](const crow::request &req, string search_value) {
 
-        crow::response r {xmrblocks.json_search(search_value).dump()};
+            crow::response r{xmrblocks.json_search(search_value).dump()};
 
-        r.add_header("Access-Control-Allow-Origin", "*");
-        r.add_header("Access-Control-Allow-Headers", "Content-Type");
-        r.add_header("Content-Type", "application/json");
+            r.add_header("Access-Control-Allow-Origin", "*");
+            r.add_header("Access-Control-Allow-Headers", "Content-Type");
+            r.add_header("Content-Type", "application/json");
 
-        return r;
-    });
+            return r;
+        });
 
-    CROW_ROUTE(app, "/api/outputs").methods("GET"_method)
-    ([&](const crow::request& req) {
+        CROW_ROUTE(app, "/api/outputs").methods("GET"_method)
+        ([&](const crow::request &req) {
 
-        string tx_hash = regex_search(req.raw_url, regex {"txhash=\\w+"}) ?
-                         req.url_params.get("txhash") : "";
+            string tx_hash = regex_search(req.raw_url, regex {"txhash=\\w+"}) ?
+                             req.url_params.get("txhash") : "";
 
-        string address = regex_search(req.raw_url, regex {"address=\\w+"}) ?
-                       req.url_params.get("address") : "";
+            string address = regex_search(req.raw_url, regex {"address=\\w+"}) ?
+                             req.url_params.get("address") : "";
 
-        string viewkey = regex_search(req.raw_url, regex {"viewkey=\\w+"}) ?
-                       req.url_params.get("viewkey") : "";
+            string viewkey = regex_search(req.raw_url, regex {"viewkey=\\w+"}) ?
+                             req.url_params.get("viewkey") : "";
 
-        bool tx_prove {false};
+            bool tx_prove{false};
 
-        try
-        {
-            tx_prove = regex_search(req.raw_url, regex {"txprove=[01]"}) ?
-                            boost::lexical_cast<bool>(req.url_params.get("txprove")) :
-                            false;
-        }
-        catch (const boost::bad_lexical_cast& e)
-        {
-            cerr << "Cant parse tx_prove as bool. Using default value" << endl;
-        }
+            try {
+                tx_prove = regex_search(req.raw_url, regex {"txprove=[01]"}) ?
+                           boost::lexical_cast<bool>(req.url_params.get("txprove")) :
+                           false;
+            }
+            catch (const boost::bad_lexical_cast &e) {
+                cerr << "Cant parse tx_prove as bool. Using default value" << endl;
+            }
 
-        crow::response r {xmrblocks.json_outputs(
-                tx_hash, address, viewkey, tx_prove).dump()};
+            crow::response r{xmrblocks.json_outputs(
+                    tx_hash, address, viewkey, tx_prove).dump()};
 
-        r.add_header("Access-Control-Allow-Origin", "*");
-        r.add_header("Access-Control-Allow-Headers", "Content-Type");
-        r.add_header("Content-Type", "application/json");
+            r.add_header("Access-Control-Allow-Origin", "*");
+            r.add_header("Access-Control-Allow-Headers", "Content-Type");
+            r.add_header("Content-Type", "application/json");
 
-        return r;
-    });
-
+            return r;
+        });
+    }
 
     if (enable_autorefresh_option)
     {

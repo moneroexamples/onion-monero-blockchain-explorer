@@ -88,7 +88,7 @@ make
 ```
 
 ##### Compile and run the explorer
-Once the Monero is compiled and setup, the explorer can be downloaded and compiled
+Once the Monero is compiles, the explorer can be downloaded and compiled
 as follows:
 
 ```bash
@@ -133,7 +133,6 @@ Example output:
 ```
 
 Go to your browser: http://127.0.0.1:8081
-Go to your browser: http://127.0.0.1:8081
 
 ## The explorer's command line options
 
@@ -151,6 +150,12 @@ xmrblocks, start Onion Monero Blockchain Explorer:
                                         enable key images file checker
   --enable-output-key-checker [=arg(=1)] (=0)
                                         enable outputs key file checker
+  --enable-mempool-cache arg (=1)       enable caching txs in the mempool
+  --enable-json-api arg (=1)            enable JSON REST api
+  --enable-tx-cache [=arg(=1)] (=0)     enable caching of tx details
+  --show-cache-times [=arg(=1)] (=0)    show times of getting data from cache 
+                                        vs no cache
+  --enable-block-cache [=arg(=1)] (=0)  enable caching of block details
   --enable-autorefresh-option [=arg(=1)] (=0)
                                         enable users to have the index page on 
                                         autorefresh
@@ -168,8 +173,6 @@ xmrblocks, start Onion Monero Blockchain Explorer:
                                         functionality
   --ssl-key-file arg                    A path to key file for ssl (https) 
                                         functionality
-  -c [ --custom-db-path ] arg           path to the custom lmdb database used 
-                                        for searching things
   -d [ --deamon-url ] arg (=http:://127.0.0.1:18081)
                                         monero address string
 ```
