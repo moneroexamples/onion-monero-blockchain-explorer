@@ -2505,7 +2505,7 @@ public:
 
             for (tools::wallet2::pending_tx& ptx: ptxs)
             {
-                mstch::map tx_context = construct_tx_context(ptx.tx);
+                mstch::map tx_context = construct_tx_context(ptx.tx, 1);
 
                 if (boost::get<bool>(tx_context["has_error"]))
                 {
