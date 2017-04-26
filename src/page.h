@@ -2124,9 +2124,16 @@ public:
                 {"testnet"              , testnet},
                 {"unsigned_tx_given"    , unsigned_tx_given},
                 {"have_raw_tx"          , true},
+                {"has_error"            , false},
+                {"error_msg"            , string {}},
                 {"data_prefix"          , data_prefix},
         };
+
         context.emplace("txs", mstch::array{});
+
+        string full_page = template_file["checkrawtx"];
+
+        add_css_style(context);
 
         if (unsigned_tx_given)
         {
@@ -2427,11 +2434,12 @@ public:
                                                                  tx_hash_from_blob,
                                                                  tx_prefix_hash_from_blob))
                 {
-                    string msg = fmt::format("failed to validate transaction");
+                    string error_msg = fmt::format("failed to validate transaction");
 
-                    cout << msg << endl;
+                    context["has_error"] = true;
+                    context["error_msg"] = error_msg;
 
-                    return string(msg);
+                    return mstch::render(full_page, context);
                 }
 
                 //cout << "tx_from_blob.vout.size(): " << tx_from_blob.vout.size() << endl;
@@ -2713,10 +2721,8 @@ public:
                 {"tx_details", template_file["tx_details"]},
         };
 
-        add_css_style(context);
-
         // render the page
-        return mstch::render(template_file["checkrawtx"], context, partials);
+        return mstch::render(full_page, context, partials);
     }
 
     string
