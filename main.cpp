@@ -6,10 +6,8 @@
 #include "src/MicroCore.h"
 #include "src/page.h"
 
-
-#include "ext/member_checker.h"
-
 #include <fstream>
+#include <regex>
 
 using boost::filesystem::path;
 
@@ -21,11 +19,6 @@ int main(int ac, const char* av[]) {
     xmreg::CmdLineOptions opts {ac, av};
 
     auto help_opt                      = opts.get_option<bool>("help");
-    auto testnet_opt                   = opts.get_option<bool>("testnet");
-    auto enable_key_image_checker_opt  = opts.get_option<bool>("enable-key-image-checker");
-    auto enable_output_key_checker_opt = opts.get_option<bool>("enable-output-key-checker");
-    auto enable_autorefresh_option_opt = opts.get_option<bool>("enable-autorefresh-option");
-    auto enable_pusher_opt             = opts.get_option<bool>("enable-pusher");
 
     // if help was chosen, display help text and finish
     if (*help_opt)
@@ -33,19 +26,38 @@ int main(int ac, const char* av[]) {
         return EXIT_SUCCESS;
     }
 
-    bool testnet                   {*testnet_opt};
-    bool enable_pusher             {*enable_pusher_opt};
-    bool enable_key_image_checker  {*enable_key_image_checker_opt};
-    bool enable_autorefresh_option {*enable_autorefresh_option_opt};
-    bool enable_output_key_checker {*enable_output_key_checker_opt};
+    auto port_opt                      = opts.get_option<string>("port");
+    auto bc_path_opt                   = opts.get_option<string>("bc-path");
+    auto deamon_url_opt                = opts.get_option<string>("deamon-url");
+    auto ssl_crt_file_opt              = opts.get_option<string>("ssl-crt-file");
+    auto ssl_key_file_opt              = opts.get_option<string>("ssl-key-file");
+    auto no_blocks_on_index_opt        = opts.get_option<string>("no-blocks-on-index");
+    auto testnet_url                   = opts.get_option<string>("testnet-url");
+    auto mainnet_url                   = opts.get_option<string>("mainnet-url");
+    auto testnet_opt                   = opts.get_option<bool>("testnet");
+    auto enable_key_image_checker_opt  = opts.get_option<bool>("enable-key-image-checker");
+    auto enable_output_key_checker_opt = opts.get_option<bool>("enable-output-key-checker");
+    auto enable_autorefresh_option_opt = opts.get_option<bool>("enable-autorefresh-option");
+    auto enable_pusher_opt             = opts.get_option<bool>("enable-pusher");
+    auto enable_mixin_details_opt      = opts.get_option<bool>("enable-mixin-details");
+    auto enable_mempool_cache_opt      = opts.get_option<bool>("enable-mempool-cache");
+    auto enable_json_api_opt           = opts.get_option<bool>("enable-json-api");
+    auto enable_tx_cache_opt           = opts.get_option<bool>("enable-tx-cache");
+    auto enable_block_cache_opt        = opts.get_option<bool>("enable-block-cache");
+    auto show_cache_times_opt          = opts.get_option<bool>("show-cache-times");
 
-    auto port_opt               = opts.get_option<string>("port");
-    auto bc_path_opt            = opts.get_option<string>("bc-path");
-    auto custom_db_path_opt     = opts.get_option<string>("custom-db-path");
-    auto deamon_url_opt         = opts.get_option<string>("deamon-url");
-    auto ssl_crt_file_opt       = opts.get_option<string>("ssl-crt-file");
-    auto ssl_key_file_opt       = opts.get_option<string>("ssl-key-file");
-    auto no_blocks_on_index_opt = opts.get_option<string>("no-blocks-on-index");
+    bool testnet                      {*testnet_opt};
+    bool enable_pusher                {*enable_pusher_opt};
+    bool enable_key_image_checker     {*enable_key_image_checker_opt};
+    bool enable_autorefresh_option    {*enable_autorefresh_option_opt};
+    bool enable_output_key_checker    {*enable_output_key_checker_opt};
+    bool enable_mixin_details         {*enable_mixin_details_opt};
+    bool enable_mempool_cache         {*enable_mempool_cache_opt};
+    bool enable_json_api              {*enable_json_api_opt};
+    bool enable_tx_cache              {*enable_tx_cache_opt};
+    bool enable_block_cache           {*enable_block_cache_opt};
+    bool show_cache_times             {*show_cache_times_opt};
+
 
     // set  monero log output level
     uint32_t log_level = 0;
@@ -114,36 +126,6 @@ int main(int ac, const char* av[]) {
         return EXIT_FAILURE;
     }
 
-    // check if we have path to lmdb2 (i.e., custom db)
-    // and if it exists
-
-    string custom_db_path_str;
-
-    if (custom_db_path_opt)
-    {
-        if (boost::filesystem::exists(boost::filesystem::path(*custom_db_path_opt)))
-        {
-            custom_db_path_str = *custom_db_path_opt;
-        }
-        else
-        {
-            cerr << "Custom db path: " << *custom_db_path_opt
-                 << "does not exist" << endl;
-
-            return EXIT_FAILURE;
-        }
-    }
-    else
-    {
-        // if not given assume it is located in ~./bitmonero/lmdb2 folder
-        // or ~./bitmonero/testnet/lmdb2 for testnet network
-        custom_db_path_str = blockchain_path.parent_path().string()
-                             + string("/lmdb2");
-    }
-
-    custom_db_path_str = xmreg::remove_trailing_path_separator(custom_db_path_str);
-
-
     string deamon_url {*deamon_url_opt};
 
     if (testnet && deamon_url == "http:://127.0.0.1:18081")
@@ -154,13 +136,19 @@ int main(int ac, const char* av[]) {
     xmreg::page xmrblocks(&mcore,
                           core_storage,
                           deamon_url,
-                          custom_db_path_str,
                           testnet,
                           enable_pusher,
                           enable_key_image_checker,
                           enable_output_key_checker,
                           enable_autorefresh_option,
-                          no_blocks_on_index);
+                          enable_mixin_details,
+                          enable_mempool_cache,
+                          enable_tx_cache,
+                          enable_block_cache,
+                          show_cache_times,
+                          no_blocks_on_index,
+                          *testnet_url,
+                          *mainnet_url);
 
     // crow instance
     crow::SimpleApp app;
@@ -350,6 +338,108 @@ int main(int ac, const char* av[]) {
         return text;
     });
 
+    if (enable_json_api)
+    {
+        CROW_ROUTE(app, "/api/transaction/<string>")
+        ([&](const crow::request &req, string tx_hash) {
+
+            crow::response r{xmrblocks.json_transaction(tx_hash).dump()};
+
+            r.add_header("Access-Control-Allow-Origin", "*");
+            r.add_header("Access-Control-Allow-Headers", "Content-Type");
+            r.add_header("Content-Type", "application/json");
+
+            return r;
+        });
+
+        CROW_ROUTE(app, "/api/block/<string>")
+        ([&](const crow::request &req, string block_no_or_hash) {
+
+            crow::response r{xmrblocks.json_block(block_no_or_hash).dump()};
+
+            r.add_header("Access-Control-Allow-Origin", "*");
+            r.add_header("Access-Control-Allow-Headers", "Content-Type");
+            r.add_header("Content-Type", "application/json");
+
+            return r;
+        });
+
+
+        CROW_ROUTE(app, "/api/transactions").methods("GET"_method)
+        ([&](const crow::request &req) {
+
+            string page = regex_search(req.raw_url, regex {"page=\\d+"}) ?
+                          req.url_params.get("page") : "0";
+
+            string limit = regex_search(req.raw_url, regex {"limit=\\d+"}) ?
+                           req.url_params.get("limit") : "25";
+
+            crow::response r{xmrblocks.json_transactions(page, limit).dump()};
+
+            r.add_header("Access-Control-Allow-Origin", "*");
+            r.add_header("Access-Control-Allow-Headers", "Content-Type");
+            r.add_header("Content-Type", "application/json");
+
+            return r;
+        });
+
+        CROW_ROUTE(app, "/api/mempool")
+        ([&](const crow::request &req) {
+
+            crow::response r{xmrblocks.json_mempool().dump()};
+
+            r.add_header("Access-Control-Allow-Origin", "*");
+            r.add_header("Access-Control-Allow-Headers", "Content-Type");
+            r.add_header("Content-Type", "application/json");
+
+            return r;
+        });
+
+        CROW_ROUTE(app, "/api/search/<string>")
+        ([&](const crow::request &req, string search_value) {
+
+            crow::response r{xmrblocks.json_search(search_value).dump()};
+
+            r.add_header("Access-Control-Allow-Origin", "*");
+            r.add_header("Access-Control-Allow-Headers", "Content-Type");
+            r.add_header("Content-Type", "application/json");
+
+            return r;
+        });
+
+        CROW_ROUTE(app, "/api/outputs").methods("GET"_method)
+        ([&](const crow::request &req) {
+
+            string tx_hash = regex_search(req.raw_url, regex {"txhash=\\w+"}) ?
+                             req.url_params.get("txhash") : "";
+
+            string address = regex_search(req.raw_url, regex {"address=\\w+"}) ?
+                             req.url_params.get("address") : "";
+
+            string viewkey = regex_search(req.raw_url, regex {"viewkey=\\w+"}) ?
+                             req.url_params.get("viewkey") : "";
+
+            bool tx_prove{false};
+
+            try {
+                tx_prove = regex_search(req.raw_url, regex {"txprove=[01]"}) ?
+                           boost::lexical_cast<bool>(req.url_params.get("txprove")) :
+                           false;
+            }
+            catch (const boost::bad_lexical_cast &e) {
+                cerr << "Cant parse tx_prove as bool. Using default value" << endl;
+            }
+
+            crow::response r{xmrblocks.json_outputs(
+                    tx_hash, address, viewkey, tx_prove).dump()};
+
+            r.add_header("Access-Control-Allow-Origin", "*");
+            r.add_header("Access-Control-Allow-Headers", "Content-Type");
+            r.add_header("Content-Type", "application/json");
+
+            return r;
+        });
+    }
 
     if (enable_autorefresh_option)
     {

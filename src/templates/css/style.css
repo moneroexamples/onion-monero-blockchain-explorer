@@ -115,7 +115,7 @@ form {
 
 input#toggle-1[type=checkbox] {
     position: absolute;
-    top: -9999px;
+    /*top: -9999px;*/
     left: -9999px;
 
 }

@@ -17,12 +17,18 @@
             {{#refresh}}
                 <a href="/">Autorefresh is ON (10 s)</a>
             {{/refresh}}
-             {{^refresh}}
-                <a href="/autorefresh">Autorefresh is OFF</a>
-             {{/refresh}}
+            {{^refresh}}
+               <a href="/autorefresh">Autorefresh is OFF</a>
+            {{/refresh}}
          {{/enable_autorefresh_option}}
+         {{#testnet_url}}
+            | <a href="{{testnet_url}}">Go to testnet explorer</a>
+         {{/testnet_url}}
+         {{#mainnet_url}}
+            | <a href="{{mainnet_url}}">Go to mainnet explorer</a>
+         {{/mainnet_url}}
          {{#testnet}}
-          | This is <span style="color:#ff6b62">testnet</span> blockchian
+            | This is <span style="color:#ff6b62">testnet</span> blockchian
          {{/testnet}}
 
         </h3>
@@ -52,7 +58,6 @@
                     <td>fees</td>
                     <td>outputs</td>
                     <td>in(nonrct)/out</td>
-                    <td>rct/type</td>
                     <td>mixin</td>
                     <td>tx size [kB]</td>
                 </tr>
@@ -65,10 +70,6 @@
                     <td>{{tx_fee_short}}</td>
                     <td>{{sum_outputs_short}}</td>
                     <td>{{no_inputs}}({{no_nonrct_inputs}})/{{no_outputs}}</td>
-                    <td>
-                        {{#is_ringct}}yes/{{rct_type}}{{/is_ringct}}
-                        {{^is_ringct}}no{{/is_ringct}}
-                    </td>
                     <td>{{mixin}}</td>
                     <td>{{tx_size_short}}</td>
                 </tr>
@@ -85,3 +86,14 @@
             </div>
 
     </div>
+
+{{#show_cache_times}}
+    <div class="center">
+        <h6 style="margin-top: 1px;color:#949490">
+            Tx details construction time: {{construction_time_total}} s
+            <br/>
+            includes {{construction_time_cached}} s from block cache ({{cache_hits}} hits)
+            and {{construction_time_non_cached}} s from non cache ({{cache_misses}} misses)
+        </h6>
+    </div>
+{{/show_cache_times}}

@@ -16,7 +16,6 @@
 #include "monero_headers.h"
 
 #include "../ext/infix_iterator.h"
-#include "../ext/date/tz.h"
 #include "../ext/fmt/ostream.h"
 #include "../ext/fmt/format.h"
 #include "../ext/json.hpp"
@@ -104,10 +103,7 @@ bf::path
 remove_trailing_path_separator(const bf::path& in_path);
 
 string
-timestamp_to_str(time_t timestamp, const char* format = "%F %T");
-
-string
-timestamp_to_str_local(time_t timestamp, const char* format = "%F %T");
+timestamp_to_str_gm(time_t timestamp, const char* format = "%F %T");
 
 ostream&
 operator<< (ostream& os, const account_public_address& addr);
@@ -136,6 +132,15 @@ sum_money_in_outputs(const string& json_str);
 
 pair<uint64_t, uint64_t>
 sum_money_in_outputs(const json& _json);
+array<uint64_t, 4>
+summary_of_in_out_rct(
+        const transaction& tx,
+        vector<pair<txout_to_key, uint64_t>>& output_pub_keys,
+        vector<txin_to_key>& input_key_imgs);
+
+// this version for mempool txs from json
+array<uint64_t, 6>
+summary_of_in_out_rct(const json& _json);
 
 uint64_t
 sum_money_in_inputs(const transaction& tx);
