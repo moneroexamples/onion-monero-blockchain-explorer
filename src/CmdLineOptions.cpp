@@ -27,14 +27,30 @@ namespace xmreg
                  "use testnet blockchain")
                 ("enable-pusher", value<bool>()->default_value(false)->implicit_value(true),
                  "enable pushing signed tx")
+                ("enable-mixin-details", value<bool>()->default_value(false)->implicit_value(true),
+                 "enable mixin details for key images, e.g., timescale, mixin of mixins, in tx context")
                 ("enable-key-image-checker", value<bool>()->default_value(false)->implicit_value(true),
                  "enable key images file checker")
                 ("enable-output-key-checker", value<bool>()->default_value(false)->implicit_value(true),
                  "enable outputs key file checker")
+                ("enable-mempool-cache", value<bool>()->default_value(true),
+                 "enable caching txs in the mempool")
+                ("enable-json-api", value<bool>()->default_value(true),
+                 "enable JSON REST api")
+                ("enable-tx-cache", value<bool>()->default_value(false)->implicit_value(true),
+                 "enable caching of tx details")
+                ("show-cache-times", value<bool>()->default_value(false)->implicit_value(true),
+                 "show times of getting data from cache vs no cache")
+                ("enable-block-cache", value<bool>()->default_value(false)->implicit_value(true),
+                 "enable caching of block details")
                 ("enable-autorefresh-option", value<bool>()->default_value(false)->implicit_value(true),
                  "enable users to have the index page on autorefresh")
                 ("port,p", value<string>()->default_value("8081"),
                  "default port")
+                ("testnet-url", value<string>()->default_value(""),
+                 "you can specifiy testnet url, if you run it on mainet. link will show on front page to testnet explorer")
+                ("mainnet-url", value<string>()->default_value(""),
+                 "you can specifiy mainnet url, if you run it on testnet. link will show on front page to mainnet explorer")
                 ("no-blocks-on-index", value<string>()->default_value("10"),
                  "number of last blocks to be shown on index page")
                 ("bc-path,b", value<string>(),
@@ -43,8 +59,6 @@ namespace xmreg
                  "A path to crt file for ssl (https) functionality")
                 ("ssl-key-file", value<string>(),
                  "A path to key file for ssl (https) functionality")
-                ("custom-db-path,c", value<string>(),
-                 "path to the custom lmdb database used for searching things")
                 ("deamon-url,d", value<string>()->default_value("http:://127.0.0.1:18081"),
                  "monero address string");
 

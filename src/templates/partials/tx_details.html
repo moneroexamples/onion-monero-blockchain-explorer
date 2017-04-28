@@ -2,12 +2,10 @@
 <div>
 
     <H4 style="margin:5px">Tx hash: {{tx_hash}}</H4>
-    <H5 style="margin:5px">Tx prefix hash: {{tx_prefix_hash}}</H5>
+    {{#enable_mixins_details}}
+        <H5 style="margin:5px">Tx prefix hash: {{tx_prefix_hash}}</H5>
+    {{/enable_mixins_details}}
     <H5 style="margin:5px">Tx public key: {{tx_pub_key}}</H5>
-    {{#have_raw_tx}}
-        <!--<H5 style="margin:5px">Tx private key: {{tx_prv_key}}</H5>-->
-    {{/have_raw_tx}}
-
 
     {{#has_payment_id}}
         <H5 style="margin:5px">Payment id: {{payment_id}}</H5>
@@ -19,11 +17,11 @@
 
 
     {{#have_prev_hash}}
-    <H5>Previous tx: <a href="/tx/{{prev_hash}}">{{prev_hash}}</a></H5>
+        <H5>Previous tx: <a href="/tx/{{prev_hash}}">{{prev_hash}}</a></H5>
     {{/have_prev_hash}}
 
     {{#have_next_hash}}
-    <H5>Next tx: <a href="/tx/{{next_hash}}">{{next_hash}}</a></H5>
+        <H5>Next tx: <a href="/tx/{{next_hash}}">{{next_hash}}</a></H5>
     {{/have_next_hash}}
 
 
@@ -126,19 +124,21 @@
 
 
 {{#has_inputs}}
-  <h3>Inputs' mixins time scale (from {{min_mix_time}} till {{max_mix_time}};
-    resolution: {{timescales_scale}} days{{#have_raw_tx}}; R - real mixin {{/have_raw_tx}})</h3>
-  <div class="center">
-    <ul class="center">
-      {{#timescales}}
-        <li  style="list-style-type: none; text-align: center; font-size: 8px">|{{timescale}}|</li>
-      {{/timescales}}
-    </ul>
-  </div>
-
+    {{#enable_mixins_details}}
+      <h3>Inputs' mixins time scale (from {{min_mix_time}} till {{max_mix_time}};
+        resolution: {{timescales_scale}} days{{#have_raw_tx}}; R - real mixin {{/have_raw_tx}})
+      </h3>
+      <div class="center">
+        <ul class="center">
+          {{#timescales}}
+            <li  style="list-style-type: none; text-align: center; font-size: 8px">|{{timescale}}|</li>
+          {{/timescales}}
+        </ul>
+      </div>
+    {{/enable_mixins_details}}
 
     {{^inputs_xmr_sum_not_zero}}
-        <h3>{{inputs_no}} inputs(s) for total of {{inputs_xmr_sum}} xmr</h3>
+        <h3>{{inputs_no}} input(s) for total of {{inputs_xmr_sum}} xmr</h3>
     {{/inputs_xmr_sum_not_zero}}
     {{#inputs_xmr_sum_not_zero}}
         {{^have_any_unknown_amount}}
@@ -149,6 +149,12 @@
         {{/have_any_unknown_amount}}
     {{/inputs_xmr_sum_not_zero}}
 
+    {{#show_part_of_inputs}}
+        <h5 style="margin-top: 2px">
+           Only {{max_no_of_inputs_to_show}} are inputs shown. To see all,
+            click "<a href="/tx/{{tx_hash}}/1">more details</a>"
+        </h5>
+    {{/show_part_of_inputs}}
 
     <div class="center">
        <table class="center">
@@ -171,39 +177,65 @@
        </tr>
           <tr>
             <td colspan="2">
+                {{#enable_mixins_details}}
+                    <table style="width:100%; margin-bottom:20px">
+                    <tr>
+                      <td>Mixin stealth address</td>
+                      {{#have_raw_tx}}
+                        <td>Is it real?</td>
+                      {{/have_raw_tx}}
+                      <td>blk</td>
+                      <td>mixin</td>
+                      <td>in/out</td>
+                      <td>timestamp</td>
+                      <td>age [y:d:h:m:s]</td>
+
+                    </tr>
+                 {{#mixins}}
+                    <tr>
+                      <td> - {{mix_idx}}: <a href="/tx/{{mix_tx_hash}}">{{mix_pub_key}}</a></td>
+                      {{#have_raw_tx}}
+                        {{#mix_is_it_real}}
+                            <td><span style="color: #008009;font-weight: bold">{{mix_is_it_real}}</span></td>
+                        {{/mix_is_it_real}}
+                        {{^mix_is_it_real}}
+                            <td>{{mix_is_it_real}}</td>
+                        {{/mix_is_it_real}}
+                      {{/have_raw_tx}}
+                      <td>{{mix_blk}}</td>
+                      <td>{{mix_mixin_no}}</td>
+                      <td>{{mix_inputs_no}}/{{mix_outputs_no}}</td>
+                      <td>{{mix_timestamp}}</td>
+                      <td>{{mix_age}}</td>
+                    </tr>
+                 {{/mixins}}
+                 </table>
+                {{/enable_mixins_details}}
+                {{^enable_mixins_details}}
                 <table style="width:100%; margin-bottom:20px">
-                <tr>
-                  <td>Mixin stealth address</td>
-                  {{#have_raw_tx}}
-                    <td>Is it real?</td>
-                  {{/have_raw_tx}}
-                  <td>blk</td>
-                  <td>mixin</td>
-                  <td>in/out</td>
-                  <td>timestamp</td>
-                  <td>age [y:d:h:m:s]</td>
-
-                </tr>
-             {{#mixins}}
-                <tr>
-                  <td> - {{mix_idx}}: <a href="/tx/{{mix_tx_hash}}">{{mix_pub_key}}</a></td>
-                  {{#have_raw_tx}}
-                    {{#mix_is_it_real}}
-                        <td><span style="color: #008009;font-weight: bold">{{mix_is_it_real}}</span></td>
-                    {{/mix_is_it_real}}
-                    {{^mix_is_it_real}}
-                        <td>{{mix_is_it_real}}</td>
-                    {{/mix_is_it_real}}
-                  {{/have_raw_tx}}
-                  <td>{{mix_blk}}</td>
-                  <td>{{mix_mixin_no}}</td>
-                  <td>{{mix_inputs_no}}/{{mix_outputs_no}}</td>
-                  <td>{{mix_timestamp}}</td>
-                  <td>{{mix_age}}</td>
-
-                </tr>
-             {{/mixins}}
-             </table>
+                    <tr>
+                        <td>Mixin stealth address</td>
+                        {{#have_raw_tx}}
+                            <td>Is it real?</td>
+                        {{/have_raw_tx}}
+                        <td>blk</td>
+                    </tr>
+                    {{#mixins}}
+                    <tr>
+                        <td> - {{mix_idx}}: {{mix_pub_key}}</td>
+                        {{#have_raw_tx}}
+                            {{#mix_is_it_real}}
+                                <td><span style="color: #008009;font-weight: bold">{{mix_is_it_real}}</span></td>
+                            {{/mix_is_it_real}}
+                            {{^mix_is_it_real}}
+                                <td>{{mix_is_it_real}}</td>
+                            {{/mix_is_it_real}}
+                        {{/have_raw_tx}}
+                        <td>{{mix_blk}}</td>
+                    </tr>
+                    {{/mixins}}
+                </table>
+                {{/enable_mixins_details}}
            </td>
          </tr>
 
@@ -234,6 +266,7 @@
 
   </div>
 
+
  {{/has_inputs}}
 
 {{^have_raw_tx}}
@@ -243,14 +276,32 @@
         {{/show_more_details_link}}
     {{/with_ring_signatures}}
     {{#with_ring_signatures}}
-        <h3>JSON representation of tx</h3>
-        <div class="center">
-            <code style="white-space: pre-wrap; font-size: 10px">
-                {{tx_json}}
-            </code>
+        <label id="show-decoded-inputs" for="toggle-1">Show JSON representation of tx</label>
+        <input type="checkbox" id="toggle-1">
+        <div id="decoded-inputs">
+            <div class="center">
+                <code style="white-space: pre-wrap; font-size: 10px">
+                    {{tx_json}}
+                </code>
+            </div>
         </div>
+        <br/><br/>
         <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}">Less details</a></h5>
     {{/with_ring_signatures}}
 {{/have_raw_tx}}
+
+
+{{#show_cache_times}}
+    <div class="center">
+        {{#construction_time}}
+            <h6 style="margin-top: 1px;color:#949490">
+                Tx details construction time: {{construction_time}} s
+                {{#from_cache}}
+                    <br/>Tx read from the tx cache
+                {{/from_cache}}
+            </h6>
+        {{/construction_time}}
+    </div>
+{{/show_cache_times}}
 
 </div>

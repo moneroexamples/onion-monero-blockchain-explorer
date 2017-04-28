@@ -55,8 +55,8 @@ find_package(Boost COMPONENTS
 
 
 if(APPLE)
-  include_directories(/usr/local/opt/openssl/include)
-  link_directories(/usr/local/opt/openssl/lib)
+    include_directories(/usr/local/opt/openssl/include)
+    link_directories(/usr/local/opt/openssl/lib)
 endif()
 
 
@@ -116,16 +116,16 @@ set(LIBRARIES
         ssl)
 
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND NOT WIN32)
-        set(LIBRARIES ${LIBRARIES} unwind)
+    set(LIBRARIES ${LIBRARIES} unwind)
 endif()
 
 if (WIN32)
     set(LIBRARIES ${LIBRARIES}
-        wsock32
-        ntdll
-        ws2_32
-        Iphlpapi
-    )
+            wsock32
+            ntdll
+            ws2_32
+            Iphlpapi
+            )
 else()
     set(LIBRARIES ${LIBRARIES} dl)
 endif()

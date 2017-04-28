@@ -11,7 +11,6 @@
                 <td>fee</td>
                 <td>outputs</td>
                 <td>in(nonrct)/out</td>
-                <td>rct/type</td>
                 <td>mixin</td>
                 <td>tx size [kB]</td>
             </tr>
@@ -22,7 +21,6 @@
                 <td>{{fee}}</td>
                 <td>{{xmr_outputs}}</td>
                 <td>{{no_inputs}}({{no_nonrct_inputs}})/{{no_outputs}}</td>
-                <td>{{is_ringct}}{{rct_type}}</td>
                 <td>{{mixin}}</td>
                 <td>{{txsize}}</td>
             </tr>
@@ -31,12 +29,25 @@
 
     {{^mempool_fits_on_front_page}}
       {{#partial_mempool_shown}}
-      <div class="center" style="text-align: center">
+      <div class="center" style="text-align: center; margin-bottom: 10px">
           <a href="/mempool">Only {{no_of_mempool_tx_of_frontpage}} txs shown. Click here to see all of them</a>
       </div>
       {{/partial_mempool_shown}}
 
     {{/mempool_fits_on_front_page}}
+
+
+
+    {{#show_cache_times}}
+        <div class="center">
+            <h6 style="margin-top: 1px;color:#949490">
+                Mempoool tx details construction time: {{construction_time_total}} s
+                <br/>
+                includes {{construction_time_cached}} s from mempool cache ({{cache_hits}} hits)
+                and {{construction_time_non_cached}} s from non cache ({{cache_misses}} misses)
+            </h6>
+        </div>
+    {{/show_cache_times}}
 
 
 </div>

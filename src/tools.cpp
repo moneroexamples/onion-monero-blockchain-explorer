@@ -148,52 +148,31 @@ remove_trailing_path_separator(const bf::path& in_path)
     return bf::path(remove_trailing_path_separator(path_str));
 }
 
-string
-timestamp_to_str(time_t timestamp, const char* format)
-{
-    auto a_time_point = chrono::system_clock::from_time_t(timestamp);
-
-    try
-    {
-        auto utc          = date::to_utc_time(chrono::system_clock::from_time_t(timestamp));
-        auto sys_time     = date::to_sys_time(utc);
-
-        return date::format(format, date::floor<chrono::seconds>(sys_time));
-    }
-    catch (std::runtime_error& e)
-    {
-        cerr << "xmreg::timestamp_to_str: " << e.what() << endl;
-        cerr << "Seems cant convert to UTC timezone using date library. "
-                "So just use local timezone." <<endl;
-
-        return timestamp_to_str_local(timestamp, format);
-    }
-}
-
 //string
 //timestamp_to_str(time_t timestamp, const char* format)
 //{
 //    return get_human_readable_timestamp(timestamp);
 //}
 
+
 string
-timestamp_to_str_local(time_t timestamp, const char* format)
+timestamp_to_str_gm(time_t timestamp, const char* format)
 {
+    const time_t* t = &timestamp;
 
     const int TIME_LENGTH = 60;
 
     char str_buff[TIME_LENGTH];
 
-    tm *tm_ptr;
-    tm_ptr = localtime(&timestamp);
+    std::tm tmp;
+    gmtime_r(t, &tmp);
 
     size_t len;
 
-    len = std::strftime(str_buff, TIME_LENGTH, format, tm_ptr);
+    len = std::strftime(str_buff, TIME_LENGTH, format, &tmp);
 
     return string(str_buff, len);
 }
-
 
 ostream&
 operator<< (ostream& os, const account_public_address& addr)
@@ -356,6 +335,109 @@ sum_money_in_outputs(const json& _json)
 
     return sum_xmr;
 };
+
+
+array<uint64_t, 4>
+summary_of_in_out_rct(
+        const transaction& tx,
+        vector<pair<txout_to_key, uint64_t>>& output_pub_keys,
+        vector<txin_to_key>& input_key_imgs)
+{
+
+    uint64_t xmr_outputs       {0};
+    uint64_t xmr_inputs        {0};
+    uint64_t mixin_no          {0};
+    uint64_t num_nonrct_inputs {0};
+
+
+    for (const tx_out& txout: tx.vout)
+    {
+        if (txout.target.type() != typeid(txout_to_key))
+        {
+            // push empty pair.
+            output_pub_keys.push_back(pair<txout_to_key, uint64_t>{});
+            continue;
+        }
+
+        // get tx input key
+        const txout_to_key& txout_key
+                = boost::get<cryptonote::txout_to_key>(txout.target);
+
+        output_pub_keys.push_back(make_pair(txout_key, txout.amount));
+
+        xmr_outputs += txout.amount;
+    }
+
+    size_t input_no = tx.vin.size();
+
+    for (size_t i = 0; i < input_no; ++i)
+    {
+
+        if(tx.vin[i].type() != typeid(cryptonote::txin_to_key))
+        {
+            continue;
+        }
+
+        // get tx input key
+        const cryptonote::txin_to_key& tx_in_to_key
+                = boost::get<cryptonote::txin_to_key>(tx.vin[i]);
+
+        xmr_inputs += tx_in_to_key.amount;
+
+        if (tx_in_to_key.amount != 0)
+        {
+            ++num_nonrct_inputs;
+        }
+
+        if (mixin_no == 0)
+        {
+            mixin_no = tx_in_to_key.key_offsets.size();
+        }
+
+        input_key_imgs.push_back(tx_in_to_key);
+
+    } //  for (size_t i = 0; i < input_no; ++i)
+
+
+    return {xmr_outputs, xmr_inputs, mixin_no, num_nonrct_inputs};
+};
+
+
+// this version for mempool txs from json
+array<uint64_t, 6>
+summary_of_in_out_rct(const json& _json)
+{
+    uint64_t xmr_outputs       {0};
+    uint64_t xmr_inputs        {0};
+    uint64_t no_outputs        {0};
+    uint64_t no_inputs         {0};
+    uint64_t mixin_no          {0};
+    uint64_t num_nonrct_inputs {0};
+
+    for (const json& vout: _json["vout"])
+    {
+        xmr_outputs += vout["amount"].get<uint64_t>();
+    }
+
+    no_outputs = _json["vout"].size();
+
+    for (const json& vin: _json["vin"])
+    {
+        uint64_t amount = vin["key"]["amount"].get<uint64_t>();
+
+        xmr_inputs += amount;
+
+        if (amount != 0)
+            ++num_nonrct_inputs;
+    }
+
+    no_inputs  = _json["vin"].size();
+
+    mixin_no = _json["vin"].at(0)["key"]["key_offsets"].size() - 1;
+
+    return {xmr_outputs, xmr_inputs, no_outputs, no_inputs, mixin_no, num_nonrct_inputs};
+};
+
 
 uint64_t
 sum_money_in_inputs(const transaction& tx)
@@ -1033,21 +1115,6 @@ get_tx_pub_key_from_received_outs(const transaction &tx)
     }
 
     return null_pkey;
-}
-
-date::sys_seconds
-parse(const std::string& str, string format)
-{
-    std::istringstream in(str);
-    date::sys_seconds tp;
-    in >> date::parse(format, tp);
-    if (in.fail())
-    {
-        in.clear();
-        in.str(str);
-        in >> date::parse(format, tp);
-    }
-    return tp;
 }
 
 /**
