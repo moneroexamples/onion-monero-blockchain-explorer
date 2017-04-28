@@ -1,6 +1,7 @@
 # Onion Monero Blockchain Explorer
 
-Currently available Monero blockchain explorer websites have several limitations which are of special importance to privacy-oriented users:
+Currently available Monero blockchain explorers have several limitations which are of 
+special importance to privacy-oriented users:
 
  - they use JavaScript,
  - have images which might be used for [cookieless tracking](http://lucb1e.com/rp/cookielesscookies/),
@@ -28,10 +29,10 @@ Tor users:
 Clearnet versions:
 
  - [http://139.162.32.245:8081/](http://139.162.32.245:8081/) - bleeding edge version, no https.
- - [https://explorer.xmr.my/](https://explorer.xmr.my/) - https enabled, up to date, but sometimes down.
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
+ - [https://explorer.xmr.my/](https://explorer.xmr.my/) - https enabled, up to date, but sometimes down.
   
 Clearnet testnet Monero version:
 
@@ -64,7 +65,6 @@ The key features of the Onion Monero Blockchain Explorer are:
  - the only explorer providing tx checker and pusher for online pushing of transactions,
  - the only explorer able to estimate possible spendings based on address and viewkey.
 
-## Prerequisite
 
 ## Compilation on Ubuntu 16.04
 
