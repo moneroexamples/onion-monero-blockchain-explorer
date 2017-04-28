@@ -4,6 +4,6 @@
 *.user
 .idea/
 *.log
-.orig
+*.orig
 tests/
 cmake-build-debug/
