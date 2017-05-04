@@ -1198,8 +1198,9 @@ namespace xmreg
                 cerr << "Cant get tx in blockchain: " << tx_hash
                      << ". \n Check mempool now" << endl;
 
-                vector<pair<tx_info, transaction>> found_txs
-                        = search_mempool(tx_hash);
+                vector<pair<tx_info, transaction>> found_txs;
+
+                search_mempool(tx_hash, found_txs);
 
                 if (!found_txs.empty())
                 {
@@ -1518,8 +1519,9 @@ namespace xmreg
                 cerr << "Cant get tx in blockchain: " << tx_hash
                      << ". \n Check mempool now" << endl;
 
-                vector<pair<tx_info, transaction>> found_txs
-                        = search_mempool(tx_hash);
+                vector<pair<tx_info, transaction>> found_txs;
+
+                search_mempool(tx_hash, found_txs);
 
                 if (!found_txs.empty())
                 {
@@ -2823,8 +2825,9 @@ namespace xmreg
                 };
 
                 // check in mempool already contains tx to be submited
-                vector<pair<tx_info, transaction>> found_mempool_txs
-                        = search_mempool(txd.hash);
+                vector<pair<tx_info, transaction>> found_mempool_txs;
+
+                search_mempool(txd.hash, found_mempool_txs);
 
                 if (!found_mempool_txs.empty())
                 {
@@ -3809,8 +3812,9 @@ namespace xmreg
                         {
                             // check in mempool if tx_hash not found in the
                             // blockchain
-                            vector<pair<tx_info, transaction>> found_txs
-                                    = search_mempool(tx_hash_pod);
+                            vector<pair<tx_info, transaction>> found_txs;
+
+                            search_mempool(tx_hash_pod, found_txs);
 
                             if (!found_txs.empty())
                             {
@@ -4280,7 +4284,19 @@ namespace xmreg
 
             uint64_t height = core_storage->get_current_blockchain_height();
 
-            vector<pair<tx_info, transaction>> mempool_data = search_mempool();
+            vector<pair<tx_info, transaction>> mempool_data;
+
+            crypto::hash tx_hash_dummy = null_hash;
+
+            if (!search_mempool(tx_hash_dummy, mempool_data))
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = fmt::format("Cant connect to the mempool");
+
+                return j_response;
+            }
+
+            (void) tx_hash_dummy;
 
             // for each transaction in the memory pool
             for (const auto& a_pair: mempool_data)
@@ -4606,8 +4622,9 @@ namespace xmreg
                 cerr << "Cant get tx in blockchain: " << tx_hash
                      << ". \n Check mempool now" << endl;
 
-                vector<pair<tx_info, transaction>> found_txs
-                        = search_mempool(tx_hash);
+                vector<pair<tx_info, transaction>> found_txs;
+
+                search_mempool(tx_hash, found_txs);
 
                 if (!found_txs.empty())
                 {
@@ -5227,14 +5244,13 @@ namespace xmreg
         }
 
 
-        vector<pair<tx_info, transaction>>
-        search_mempool(crypto::hash tx_hash = null_hash)
+        bool
+        search_mempool(crypto::hash tx_hash,
+                       vector<pair<tx_info, transaction>>& found_txs)
         {
             // if tx_hash == null_hash then this method
             // will just return the vector containing all
             // txs in mempool
-
-            vector<pair<tx_info, transaction>> found_txs;
 
             // get txs in the mempool
             std::vector<tx_info> mempool_txs;
@@ -5242,7 +5258,7 @@ namespace xmreg
             if (!rpc.get_mempool(mempool_txs))
             {
                 cerr << "Getting mempool failed " << endl;
-                return found_txs;
+                return false;
             }
 
             // if dont have tx_blob member, construct tx
@@ -5286,7 +5302,7 @@ namespace xmreg
             } // for (size_t i = 0; i < mempool_txs.size(); ++i)
 
 
-            return found_txs;
+            return true;
         }
 
         pair<string, string>
