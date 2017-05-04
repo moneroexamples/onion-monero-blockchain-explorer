@@ -8,7 +8,8 @@ special importance to privacy-oriented users:
  - track users activates through google analytics,
  - are closed sourced,
  - are not available as hidden services,
- - do not support Monero testnet
+ - do not support Monero testnet,
+ - have limited JSON API.
 
 
 In this example, these limitations are addressed by development of
@@ -32,7 +33,8 @@ Clearnet versions:
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
- - [https://explorer.xmr.my/](https://explorer.xmr.my/) - https enabled, up to date, but sometimes down.
+ - [https://explorer.xmr.my/](https://explorer.xmr.my/) - https enabled.
+ - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
   
 Clearnet testnet Monero version:
 
