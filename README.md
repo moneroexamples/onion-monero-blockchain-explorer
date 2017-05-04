@@ -185,7 +185,7 @@ Example usage, defined as bash aliases.
 
 ```bash
 alias xmrblockstestnet='~/onion-monero-blockchain-explorer/build/xmrblocks -t --port 8082 --no-blocks-on-index 24 --mainnet-url "http://139.162.32.245:8081" --enable-block-cache=1 --enable-tx-cache=1 --enable-mempool-cache=1 --show-cache-times=1 --enable-pusher'
-alias xmrblocksmainnet='~/onion-monero-blockchain-explorer/build/xmrblocks --port 8081 --no-blocks-on-index 49 --testnet-url "http://139.162.32.245:8082" --enable-block-cache=1 --enable-tx-cache=1 --enable-mempool-cache=1 --show-cache-times=1 --enable-pusher'
+alias xmrblocksmainnet='~/onion-monero-blockchain-explorer/build/xmrblocks    --port 8081 --no-blocks-on-index 49 --testnet-url "http://139.162.32.245:8082" --enable-block-cache=1 --enable-tx-cache=1 --enable-mempool-cache=1 --show-cache-times=1 --enable-pusher'
 ```
 
 These are explorer commands used for http://139.162.32.245:8081/ and http://139.162.32.245:8082/, respectively.
