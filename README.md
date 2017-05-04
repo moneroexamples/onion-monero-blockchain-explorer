@@ -226,19 +226,33 @@ The explorer has JSON api. For the API, it uses conventions defined by [JSend](h
 curl  -w "\n" -X GET "http://139.162.32.245:8081/api/transaction/6093260dbe79fd6277694d14789dc8718f1bd54457df8bab338c2efa3bb0f03d"
 ```
 
+Partial results shown:
+
 ```json
 {
   "data": {
     "block_height": 1268252,
-    "coinbase": 0,
+    "coinbase": false,
     "confirmations": 1,
-    "fee": 12517785574,
+    "current_height": 1268253,
+    "extra": "01be23e277aed6b5f41f66b05244bf994c13108347366ec678ae16657f0fc3a22b",
     "inputs": [
       {
         "amount": 0,
-        "key_image": "67838fd0ffd79f13e735830d3ec60412aed59e53e1f997feb6f73d088b949611"
+        "key_image": "67838fd0ffd79f13e735830d3ec60412aed59e53e1f997feb6f73d088b949611",
+        "mixins": [
+          {
+            "block_no": 1238623,
+            "public_key": "0a5b853c55303c10e1326acfb085b9e246e088b1ccac7e37f7a810d46a28a914"
+          },
+          {
+            "block_no": 1246942,
+            "public_key": "527cf86f5abbfb006c970f7c6eb40493786d4751306f8985c6a43f98a88c0dff"
+          }
+        ]
       }
     ],
+    "mixin": 9,
     "outputs": [
       {
         "amount": 0,
@@ -249,12 +263,17 @@ curl  -w "\n" -X GET "http://139.162.32.245:8081/api/transaction/6093260dbe79fd6
         "public_key": "e25f00fceb77af841d780b68647618812695b4ca6ebe338faba6e077f758ac30"
       }
     ],
+    "payment_id": "",
+    "payment_id8": "",
     "rct_type": 1,
-    "size": 13323000000000000,
     "timestamp": 1489753456,
     "timestamp_utc": "2017-03-17 12:24:16",
+    "tx_fee": 12517785574,
     "tx_hash": "6093260dbe79fd6277694d14789dc8718f1bd54457df8bab338c2efa3bb0f03d",
-    "version": 2
+    "tx_size": 13323,
+    "tx_version": 2,
+    "xmr_inputs": 0,
+    "xmr_outputs": 0
   },
   "status": "success"
 }

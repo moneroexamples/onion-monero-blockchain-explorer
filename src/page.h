@@ -3962,12 +3962,45 @@ namespace xmreg
 
             json inputs;
 
-            for (const auto& input: txd.input_key_imgs)
+            for (const txin_to_key &in_key: txd.input_key_imgs)
             {
+
+                // get absolute offsets of mixins
+                std::vector<uint64_t> absolute_offsets
+                        = cryptonote::relative_output_offsets_to_absolute(
+                                in_key.key_offsets);
+
+                // get public keys of outputs used in the mixins that match to the offests
+                std::vector<output_data_t> outputs;
+
+                try
+                {
+                    core_storage->get_db().get_output_key(in_key.amount,
+                                                          absolute_offsets,
+                                                          outputs);
+                }
+                catch (const OUTPUT_DNE &e)
+                {
+                    j_response["status"]  = "error";
+                    j_response["message"] = "Failed to retrive outputs (mixins) used in key images";
+                    return j_response;
+                }
+
                 inputs.push_back(json {
-                        {"key_image"  , pod_to_hex(input.k_image)},
-                        {"amount"     , input.amount}
+                        {"key_image"  , pod_to_hex(in_key.k_image)},
+                        {"amount"     , in_key.amount},
+                        {"mixins"     , json {}}
                 });
+
+                json& mixins = inputs.back()["mixins"];
+
+                for (const output_data_t& output_data: outputs)
+                {
+                    mixins.push_back(json {
+                            {"public_key"  , pod_to_hex(output_data.pubkey)},
+                            {"block_no"    , output_data.height},
+                    });
+                }
             }
 
             if (found_in_mempool == false)
