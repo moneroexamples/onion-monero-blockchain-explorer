@@ -3219,7 +3219,7 @@ namespace xmreg
 
                 // if the output is RingCT, i.e., tx version is 2
                 // need to decode its amount
-                if (td.m_tx.version == 2)
+                if (td.is_rct())
                 {
                     // get tx associated with the given output
                     transaction tx;
@@ -3236,25 +3236,33 @@ namespace xmreg
 
                     public_key tx_pub_key = xmreg::get_tx_pub_key_from_received_outs(tx);
 
-                    bool r = decode_ringct(tx.rct_signatures,
-                                           tx_pub_key,
-                                           prv_view_key,
-                                           td.m_internal_output_index,
-                                           tx.rct_signatures.ecdhInfo[td.m_internal_output_index].mask,
-                                           xmr_amount);
-
-                    if (!r)
+                    // cointbase txs have amounts in plain sight.
+                    // so use amount from ringct, only for non-coinbase txs
+                    if (!is_coinbase(tx))
                     {
-                        string error_msg = fmt::format(
-                                "Cant decode RingCT for output: {:s}",
-                                txout_key.key);
 
-                        context["has_error"] = true;
-                        context["error_msg"] = error_msg;
+                        bool r = decode_ringct(tx.rct_signatures,
+                                               tx_pub_key,
+                                               prv_view_key,
+                                               td.m_internal_output_index,
+                                               tx.rct_signatures.ecdhInfo[td.m_internal_output_index].mask,
+                                               xmr_amount);
 
-                        return mstch::render(full_page, context);
-                    }
-                }
+                        if (!r)
+                        {
+                            string error_msg = fmt::format(
+                                    "Cant decode RingCT for output: {:s}",
+                                    txout_key.key);
+
+                            context["has_error"] = true;
+                            context["error_msg"] = error_msg;
+
+                            return mstch::render(full_page, context);
+                        }
+
+                    } //  if (!is_coinbase(tx))
+
+                } // if (td.is_rct())
 
                 uint64_t blk_timestamp = core_storage
                         ->get_db().get_block_timestamp(td.m_block_height);
