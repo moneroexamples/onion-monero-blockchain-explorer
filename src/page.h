@@ -4092,8 +4092,7 @@ namespace xmreg
             j_data["page"]           = page;
             j_data["limit"]          = limit;
             j_data["current_height"] = height;
-            j_data["total_page_no"]  = (height / limit);
-
+            j_data["total_page_no"]  = (limit == 0 ? 0 : height / limit);
 
             j_response["status"] = "success";
 
