@@ -4092,7 +4092,7 @@ namespace xmreg
             j_data["page"]           = page;
             j_data["limit"]          = limit;
             j_data["current_height"] = height;
-            j_data["total_page_no"]  = (height / limit);
+            j_data["total_page_no"]  = limit > 0 ? (height / limit) : 0;
 
 
             j_response["status"] = "success";
@@ -4106,7 +4106,7 @@ namespace xmreg
      * https://labs.omniti.com/labs/jsend
      */
         json
-        json_mempool()
+        json_mempool(string _page, string _limit)
         {
             json j_response {
                     {"status", "fail"},
@@ -4114,6 +4114,23 @@ namespace xmreg
             };
 
             json& j_data = j_response["data"];
+
+            // parse page and limit into numbers
+
+            uint64_t page {0};
+            uint64_t limit {0};
+
+            try
+            {
+                page  = boost::lexical_cast<uint64_t>(_page);
+                limit = boost::lexical_cast<uint64_t>(_limit);
+            }
+            catch (const boost::bad_lexical_cast& e)
+            {
+                j_data["title"] = fmt::format(
+                        "Cant parse page and/or limit numbers: {:s}, {:s}", _page, _limit);
+                return j_response;
+            }
 
             //get current server timestamp
             server_timestamp = std::time(nullptr);
@@ -4136,20 +4153,56 @@ namespace xmreg
 
             (void) tx_hash_dummy;
 
-            // for each transaction in the memory pool
-            for (const auto& a_pair: mempool_data)
+            uint64_t no_mempool_txs = mempool_data.size();
+
+            // calculate starting and ending block numbers to show
+            int64_t start_height = no_mempool_txs - limit * (page + 1);
+
+            // check if start height is not below range
+            start_height = start_height < 0 ? 0 : start_height;
+
+            int64_t end_height = start_height + limit;
+
+            end_height = end_height > no_mempool_txs ? no_mempool_txs : end_height;
+
+            // loop index
+            int64_t i = end_height;
+
+            json j_txs = json::array();
+
+            // for each transaction in the memory pool in current page
+            while (i > start_height)
             {
-                const tx_details& txd = get_tx_details(a_pair.second, false, 1, height); // 1 is dummy here
+                const pair<tx_info, transaction>* a_pair {nullptr};
+
+                try
+                {
+                    a_pair = &(mempool_data.at(i - 1));
+                }
+                catch (const std::out_of_range& e)
+                {
+                    break;
+                }
+
+                const tx_details& txd = get_tx_details(a_pair->second, false, 1, height); // 1 is dummy here
 
                 // get basic tx info
-                json j_tx = get_tx_json(a_pair.second, txd);
+                json j_tx = get_tx_json(a_pair->second, txd);
 
                 // we add some extra data, for mempool txs, such as recieve timestamp
-                j_tx["timestamp"]     = a_pair.first.receive_time;
-                j_tx["timestamp_utc"] = xmreg::timestamp_to_str_gm(a_pair.first.receive_time);
+                j_tx["timestamp"]     = a_pair->first.receive_time;
+                j_tx["timestamp_utc"] = xmreg::timestamp_to_str_gm(a_pair->first.receive_time);
 
-                j_data.push_back(j_tx);
+                j_txs.push_back(j_tx);
+
+                --i;
             }
+
+            j_data["txs"]            = j_txs;
+            j_data["page"]           = page;
+            j_data["limit"]          = limit;
+            j_data["txs_no"]         = no_mempool_txs;
+            j_data["total_page_no"]  = limit > 0 ? (no_mempool_txs / limit) : 0;
 
             j_response["status"] = "success";
 
