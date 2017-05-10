@@ -4181,7 +4181,10 @@ namespace xmreg
                 }
                 catch (const std::out_of_range& e)
                 {
-                    break;
+                    j_response["status"]  = "error";
+                    j_response["message"] = fmt::format("Getting mempool txs failed due to std::out_of_range");
+
+                    return j_response;
                 }
 
                 const tx_details& txd = get_tx_details(a_pair->second, false, 1, height); // 1 is dummy here

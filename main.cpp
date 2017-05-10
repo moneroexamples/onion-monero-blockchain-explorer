@@ -392,8 +392,11 @@ int main(int ac, const char* av[]) {
             string page = regex_search(req.raw_url, regex {"page=\\d+"}) ?
                           req.url_params.get("page") : "0";
 
+            // default value for limit is some large number, so that
+            // a call to api/mempool without any arguments return all
+            // mempool txs
             string limit = regex_search(req.raw_url, regex {"limit=\\d+"}) ?
-                           req.url_params.get("limit") : "25";
+                           req.url_params.get("limit") : "100000000";
 
             myxmr::jsonresponse r{xmrblocks.json_mempool(page, limit)};
 
