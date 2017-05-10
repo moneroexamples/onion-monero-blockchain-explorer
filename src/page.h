@@ -4214,9 +4214,9 @@ namespace xmreg
 
 
         /*
-     * Lets use this json api convention for success and error
-     * https://labs.omniti.com/labs/jsend
-     */
+         * Lets use this json api convention for success and error
+         * https://labs.omniti.com/labs/jsend
+         */
         json
         json_search(const string& search_text)
         {

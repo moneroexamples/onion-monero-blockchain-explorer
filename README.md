@@ -383,6 +383,7 @@ Partial results shown:
 
 #### api/mempool
 
+Return all txs in the mempool.
 
 ```bash
 curl  -w "\n" -X GET "http://139.162.32.245:8081/api/mempool"
@@ -413,6 +414,17 @@ Partial results shown:
   "status": "success"
 }
 ```
+
+
+#### api/mempool?limit=<no_of_top_txs>
+
+Return number of newest mempool txs, e.g., only 10.
+
+```bash
+curl  -w "\n" -X GET "http://139.162.32.245:8081/api/mempool?limit=10"
+```
+
+Result analogical to the one above.
 
 #### api/search/<block_number|tx_hash|block_hash>
 
