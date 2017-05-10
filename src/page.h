@@ -4156,28 +4156,30 @@ namespace xmreg
             uint64_t no_mempool_txs = mempool_data.size();
 
             // calculate starting and ending block numbers to show
-            int64_t start_height = no_mempool_txs - limit * (page + 1);
-
-            // check if start height is not below range
-            start_height = start_height < 0 ? 0 : start_height;
+            int64_t start_height = limit * page;
 
             int64_t end_height = start_height + limit;
 
             end_height = end_height > no_mempool_txs ? no_mempool_txs : end_height;
 
+            // check if start height is not below range
+            start_height = start_height > end_height ? end_height - limit : start_height;
+
+            start_height = start_height < 0 ? 0 : start_height;
+
             // loop index
-            int64_t i = end_height;
+            int64_t i = start_height;
 
             json j_txs = json::array();
 
             // for each transaction in the memory pool in current page
-            while (i > start_height)
+            while (i < end_height)
             {
                 const pair<tx_info, transaction>* a_pair {nullptr};
 
                 try
                 {
-                    a_pair = &(mempool_data.at(i - 1));
+                    a_pair = &(mempool_data.at(i));
                 }
                 catch (const std::out_of_range& e)
                 {
@@ -4198,7 +4200,7 @@ namespace xmreg
 
                 j_txs.push_back(j_tx);
 
-                --i;
+               ++i;
             }
 
             j_data["txs"]            = j_txs;
