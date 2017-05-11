@@ -549,6 +549,43 @@ curl  -w "\n" -X GET "http://139.162.32.245:8082/api/outputs?txhash=94782a8c0aa8
 }
 ```
 
+
+Result analogical to the one above.
+
+#### api/networkinfo
+
+```bash
+curl  -w "\n" -X GET "http://139.162.32.245:8081/api/networkinfo"
+```
+
+```json
+{
+  "data": {
+    "alt_blocks_count": 0,
+    "block_size_limit": 600000,
+    "cumulative_difficulty": 2067724366624367,
+    "difficulty": 7530486740,
+    "grey_peerlist_size": 4987,
+    "hash_rate": 62754056,
+    "height": 1307537,
+    "incoming_connections_count": 0,
+    "outgoing_connections_count": 8,
+    "start_time": 1494473774,
+    "status": "OK",
+    "target": 120,
+    "target_height": 1307518,
+    "testnet": false,
+    "top_block_hash": "0726de5b86f431547fc64fc2c8e1c11d76843ada0561993ee540e4eee29d83c3",
+    "tx_count": 1210222,
+    "tx_pool_size": 5,
+    "white_peerlist_size": 1000
+  },
+  "status": "success"
+}
+```
+
+
+
 ## Other monero examples
 
 Other examples can be found on  [github](https://github.com/moneroexamples?tab=repositories).

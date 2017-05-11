@@ -426,6 +426,14 @@ int main(int ac, const char* av[]) {
             return r;
         });
 
+        CROW_ROUTE(app, "/api/networkinfo")
+        ([&](const crow::request &req) {
+
+            myxmr::jsonresponse r{xmrblocks.json_networkinfo()};
+
+            return r;
+        });
+
         CROW_ROUTE(app, "/api/outputs").methods("GET"_method)
         ([&](const crow::request &req) {
 

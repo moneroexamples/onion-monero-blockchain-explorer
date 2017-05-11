@@ -4660,6 +4660,38 @@ namespace xmreg
 
             return j_response;
         }
+
+        /*
+         * Lets use this json api convention for success and error
+         * https://labs.omniti.com/labs/jsend
+         */
+        json
+        json_networkinfo()
+        {
+            json j_response {
+                    {"status", "fail"},
+                    {"data",   json {}}
+            };
+
+            json& j_data = j_response["data"];
+
+            json j_info;
+
+            if (!get_monero_network_info(j_info))
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Cant get monero network info";
+                return j_response;
+            }
+
+            j_data = j_info;
+
+            j_response["status"]  = "success";
+
+            return j_response;
+        }
+
+
     private:
 
         json
@@ -5430,6 +5462,40 @@ namespace xmreg
             return template_file["header"]
                    + middle
                    + template_file["footer"];
+        }
+
+       bool
+        get_monero_network_info(json& j_info)
+        {
+            COMMAND_RPC_GET_INFO::response network_info;
+
+            if (!rpc.get_network_info(network_info))
+            {
+                return false;
+            }
+
+            j_info = json {
+               {"status"                    , network_info.status},
+               {"height"                    , network_info.height},
+               {"target_height"             , network_info.target_height},
+               {"difficulty"                , network_info.difficulty},
+               {"target"                    , network_info.target},
+               {"hash_rate"                 , (network_info.difficulty/network_info.target)},
+               {"tx_count"                  , network_info.tx_count},
+               {"tx_pool_size"              , network_info.tx_pool_size},
+               {"alt_blocks_count"          , network_info.alt_blocks_count},
+               {"outgoing_connections_count", network_info.outgoing_connections_count},
+               {"incoming_connections_count", network_info.incoming_connections_count},
+               {"white_peerlist_size"       , network_info.white_peerlist_size},
+               {"grey_peerlist_size"        , network_info.grey_peerlist_size},
+               {"testnet"                   , network_info.testnet},
+               {"top_block_hash"            , network_info.top_block_hash},
+               {"cumulative_difficulty"     , network_info.cumulative_difficulty},
+               {"block_size_limit"          , network_info.block_size_limit},
+               {"start_time"                , network_info.start_time}
+            };
+
+            return true;
         }
 
         string
