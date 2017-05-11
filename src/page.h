@@ -3677,9 +3677,9 @@ namespace xmreg
 
 
         /*
-     * Lets use this json api convention for success and error
-     * https://labs.omniti.com/labs/jsend
-     */
+         * Lets use this json api convention for success and error
+         * https://labs.omniti.com/labs/jsend
+         */
         json
         json_transaction(string tx_hash_str)
         {
@@ -3834,10 +3834,95 @@ namespace xmreg
             return j_response;
         }
 
+
+
         /*
-     * Lets use this json api convention for success and error
-     * https://labs.omniti.com/labs/jsend
-     */
+         * Lets use this json api convention for success and error
+         * https://labs.omniti.com/labs/jsend
+         */
+        json
+        json_rawtransaction(string tx_hash_str)
+        {
+            json j_response {
+                    {"status", "fail"},
+                    {"data"  , json {}}
+            };
+
+            json& j_data = j_response["data"];
+
+            // parse tx hash string to hash object
+            crypto::hash tx_hash;
+
+            if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+            {
+                j_data["title"] = fmt::format("Cant parse tx hash: {:s}", tx_hash_str);
+                return j_response;
+            }
+
+            // get transaction
+            transaction tx;
+
+            // flag to indicate if tx is in mempool
+            bool found_in_mempool {false};
+
+            // for tx in blocks we get block timestamp
+            // for tx in mempool we get recievive time
+            uint64_t tx_timestamp {0};
+
+            if (!find_tx(tx_hash, tx, found_in_mempool, tx_timestamp))
+            {
+                j_data["title"] = fmt::format("Cant find tx hash: {:s}", tx_hash_str);
+                return j_response;
+            }
+
+            if (found_in_mempool == false)
+            {
+
+                block blk;
+
+                try
+                {
+                    // get block cointaining this tx
+                    uint64_t block_height = core_storage->get_db().get_tx_block_height(tx_hash);
+
+                    if (!mcore->get_block_by_height(block_height, blk))
+                    {
+                        j_data["title"] = fmt::format("Cant get block: {:d}", block_height);
+                        return j_response;
+                    }
+                }
+                catch (const exception& e)
+                {
+                    j_response["status"]  = "error";
+                    j_response["message"] = fmt::format("Tx does not exist in blockchain, "
+                                                        "but was there before: {:s}",
+                                                        tx_hash_str);
+                    return j_response;
+                }
+            }
+
+            // get raw tx json as in monero
+
+            try
+            {
+                j_data = json::parse(obj_to_json_str(tx));
+            }
+            catch (std::invalid_argument& e)
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Faild parsing raw tx data into json";
+                return j_response;
+            }
+
+            j_response["status"] = "success";
+
+            return j_response;
+        }
+
+        /*
+         * Lets use this json api convention for success and error
+         * https://labs.omniti.com/labs/jsend
+         */
         json
         json_block(string block_no_or_hash)
         {
@@ -3978,9 +4063,105 @@ namespace xmreg
 
 
         /*
-     * Lets use this json api convention for success and error
-     * https://labs.omniti.com/labs/jsend
-     */
+         * Lets use this json api convention for success and error
+         * https://labs.omniti.com/labs/jsend
+         */
+        json
+        json_rawblock(string block_no_or_hash)
+        {
+            json j_response {
+                    {"status", "fail"},
+                    {"data"  , json {}}
+            };
+
+            json& j_data = j_response["data"];
+
+            uint64_t current_blockchain_height
+                    =  core_storage->get_current_blockchain_height();
+
+            uint64_t block_height {0};
+
+            crypto::hash blk_hash;
+
+            block blk;
+
+            if (block_no_or_hash.length() <= 8)
+            {
+                // we have something that seems to be a block number
+                try
+                {
+                    block_height  = boost::lexical_cast<uint64_t>(block_no_or_hash);
+                }
+                catch (const boost::bad_lexical_cast& e)
+                {
+                    j_data["title"] = fmt::format(
+                            "Cant parse block number: {:s}", block_no_or_hash);
+                    return j_response;
+                }
+
+                if (block_height > current_blockchain_height)
+                {
+                    j_data["title"] = fmt::format(
+                            "Requested block is higher than blockchain:"
+                                    " {:d}, {:d}", block_height,current_blockchain_height);
+                    return j_response;
+                }
+
+                if (!mcore->get_block_by_height(block_height, blk))
+                {
+                    j_data["title"] = fmt::format("Cant get block: {:d}", block_height);
+                    return j_response;
+                }
+
+                blk_hash = core_storage->get_block_id_by_height(block_height);
+
+            }
+            else if (block_no_or_hash.length() == 64)
+            {
+                // this seems to be block hash
+                if (!xmreg::parse_str_secret_key(block_no_or_hash, blk_hash))
+                {
+                    j_data["title"] = fmt::format("Cant parse blk hash: {:s}", block_no_or_hash);
+                    return j_response;
+                }
+
+                if (!core_storage->get_block_by_hash(blk_hash, blk))
+                {
+                    j_data["title"] = fmt::format("Cant get block: {:s}", blk_hash);
+                    return j_response;
+                }
+
+                block_height = core_storage->get_db().get_block_height(blk_hash);
+            }
+            else
+            {
+                j_data["title"] = fmt::format("Cant find blk using search string: {:s}", block_no_or_hash);
+                return j_response;
+            }
+
+            // get raw tx json as in monero
+
+            try
+            {
+                j_data = json::parse(obj_to_json_str(blk));
+            }
+            catch (std::invalid_argument& e)
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Faild parsing raw blk data into json";
+                return j_response;
+            }
+
+            j_response["status"] = "success";
+
+            return j_response;
+        }
+
+
+        /*
+         * Lets use this json api convention for success and error
+         * https://labs.omniti.com/labs/jsend
+         */
         json
         json_transactions(string _page, string _limit)
         {

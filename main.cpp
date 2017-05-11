@@ -363,6 +363,14 @@ int main(int ac, const char* av[]) {
             return r;
         });
 
+        CROW_ROUTE(app, "/api/rawtransaction/<string>")
+        ([&](const crow::request &req, string tx_hash) {
+
+            myxmr::jsonresponse r{xmrblocks.json_rawtransaction(tx_hash)};
+
+            return r;
+        });
+
         CROW_ROUTE(app, "/api/block/<string>")
         ([&](const crow::request &req, string block_no_or_hash) {
 
@@ -371,6 +379,13 @@ int main(int ac, const char* av[]) {
             return r;
         });
 
+        CROW_ROUTE(app, "/api/rawblock/<string>")
+        ([&](const crow::request &req, string block_no_or_hash) {
+
+            myxmr::jsonresponse r{xmrblocks.json_rawblock(block_no_or_hash)};
+
+            return r;
+        });
 
         CROW_ROUTE(app, "/api/transactions").methods("GET"_method)
         ([&](const crow::request &req) {
