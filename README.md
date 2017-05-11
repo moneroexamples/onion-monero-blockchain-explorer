@@ -380,7 +380,6 @@ Partial results shown:
 }
 ```
 
-
 #### api/mempool
 
 Return all txs in the mempool.
@@ -472,6 +471,7 @@ Partial results shown:
   "status": "success"
 }
 ```
+
 
 #### api/outputs?txhash=<tx_hash>&address=<address>&viewkey=<viewkey>&txprove=<0|1>
 
@@ -585,6 +585,25 @@ curl  -w "\n" -X GET "http://139.162.32.245:8081/api/networkinfo"
 ```
 
 
+#### api/rawblock/<block_number|block_hash>
+
+Return raw json block data, as represented in Monero.
+
+```bash
+curl  -w "\n" -X GET "http://139.162.32.245:8081/api/rawblock/1293257"
+```
+
+Example result not shown.
+
+#### api/rawtransaction/<tx_hash>
+
+Return raw json tx data, as represented in Monero.
+
+```bash
+curl  -w "\n" -X GET "http://139.162.32.245:8081/api/rawtransaction/6093260dbe79fd6277694d14789dc8718f1bd54457df8bab338c2efa3bb0f03d"
+```
+
+Example result not shown.
 
 ## Other monero examples
 
