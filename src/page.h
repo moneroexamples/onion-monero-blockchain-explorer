@@ -4273,8 +4273,8 @@ namespace xmreg
             j_data["page"]           = page;
             j_data["limit"]          = limit;
             j_data["current_height"] = height;
-            j_data["total_page_no"]  = limit > 0 ? (height / limit) : 0;
 
+            j_data["total_page_no"]  = limit > 0 ? (height / limit) : 0;
 
             j_response["status"] = "success";
 
