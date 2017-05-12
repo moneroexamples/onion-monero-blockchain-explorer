@@ -363,6 +363,14 @@ int main(int ac, const char* av[]) {
             return r;
         });
 
+        CROW_ROUTE(app, "/api/rawtransaction/<string>")
+        ([&](const crow::request &req, string tx_hash) {
+
+            myxmr::jsonresponse r{xmrblocks.json_rawtransaction(tx_hash)};
+
+            return r;
+        });
+
         CROW_ROUTE(app, "/api/block/<string>")
         ([&](const crow::request &req, string block_no_or_hash) {
 
@@ -371,6 +379,13 @@ int main(int ac, const char* av[]) {
             return r;
         });
 
+        CROW_ROUTE(app, "/api/rawblock/<string>")
+        ([&](const crow::request &req, string block_no_or_hash) {
+
+            myxmr::jsonresponse r{xmrblocks.json_rawblock(block_no_or_hash)};
+
+            return r;
+        });
 
         CROW_ROUTE(app, "/api/transactions").methods("GET"_method)
         ([&](const crow::request &req) {
@@ -386,10 +401,19 @@ int main(int ac, const char* av[]) {
             return r;
         });
 
-        CROW_ROUTE(app, "/api/mempool")
+        CROW_ROUTE(app, "/api/mempool").methods("GET"_method)
         ([&](const crow::request &req) {
 
-            myxmr::jsonresponse r{xmrblocks.json_mempool()};
+            string page = regex_search(req.raw_url, regex {"page=\\d+"}) ?
+                          req.url_params.get("page") : "0";
+
+            // default value for limit is some large number, so that
+            // a call to api/mempool without any limit return all
+            // mempool txs
+            string limit = regex_search(req.raw_url, regex {"limit=\\d+"}) ?
+                           req.url_params.get("limit") : "100000000";
+
+            myxmr::jsonresponse r{xmrblocks.json_mempool(page, limit)};
 
             return r;
         });
@@ -398,6 +422,14 @@ int main(int ac, const char* av[]) {
         ([&](const crow::request &req, string search_value) {
 
             myxmr::jsonresponse r{xmrblocks.json_search(search_value)};
+
+            return r;
+        });
+
+        CROW_ROUTE(app, "/api/networkinfo")
+        ([&](const crow::request &req) {
+
+            myxmr::jsonresponse r{xmrblocks.json_networkinfo()};
 
             return r;
         });

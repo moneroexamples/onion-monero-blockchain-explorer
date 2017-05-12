@@ -380,9 +380,9 @@ Partial results shown:
 }
 ```
 
-
 #### api/mempool
 
+Return all txs in the mempool.
 
 ```bash
 curl  -w "\n" -X GET "http://139.162.32.245:8081/api/mempool"
@@ -392,27 +392,46 @@ Partial results shown:
 
 ```json
 {
-  "data": [
-    {
-      "coinbase": false,
-      "extra": "02210001c32d313b74a859b904079c69dbc04ea6e37eddcf4aeb34e9400cc12831da5401b34082a9ff7476fe29a19fa6a1735a9c59db226b9ddcf715928aa71625b13062",
-      "mixin": 7,
-      "payment_id": "01c32d313b74a859b904079c69dbc04ea6e37eddcf4aeb34e9400cc12831da54",
-      "payment_id8": "",
-      "rct_type": 1,
-      "timestamp": 1492763220,
-      "timestamp_utc": "2017-04-21 08:27:00",
-      "tx_fee": 4083040000,
-      "tx_hash": "6751e0029558fdc4ab4528896529e32b2864c6ad43c5d8838c8ebe156ada0514",
-      "tx_size": 13224,
-      "tx_version": 2,
-      "xmr_inputs": 0,
-      "xmr_outputs": 0
-    }
-  ],
+  "data": {
+    "limit": 100000000,
+    "page": 0,
+    "total_page_no": 0,
+    "txs": [
+      {
+        "coinbase": false,
+        "extra": "022100325f677d96f94155a4840a84d8e0c905f7a4697a25744633bcb438feb1e51fb2012eda81bf552c53c2168f4130dbe0265c3a7898f3a7eee7c1fed955a778167b5d",
+        "mixin": 3,
+        "payment_id": "325f677d96f94155a4840a84d8e0c905f7a4697a25744633bcb438feb1e51fb2",
+        "payment_id8": "",
+        "rct_type": 2,
+        "timestamp": 1494470894,
+        "timestamp_utc": "2017-05-11 02:48:14",
+        "tx_fee": 15894840000,
+        "tx_hash": "9f3374f8ac67febaab153eab297937a3d0d2c706601e496bf5028146da0c9aef",
+        "tx_size": 13291,
+        "tx_version": 2,
+        "xmr_inputs": 0,
+        "xmr_outputs": 0
+      }
+    ],
+    "txs_no": 7
+  },
   "status": "success"
 }
 ```
+
+Limit of 100000000 is just default value above to ensure that all mempool txs are fetched
+if no specific limit given.
+
+#### api/mempool?limit=<no_of_top_txs>
+
+Return number of newest mempool txs, e.g., only 10.
+
+```bash
+curl  -w "\n" -X GET "http://139.162.32.245:8081/api/mempool?limit=10"
+```
+
+Result analogical to the one above.
 
 #### api/search/<block_number|tx_hash|block_hash>
 
@@ -452,6 +471,7 @@ Partial results shown:
   "status": "success"
 }
 ```
+
 
 #### api/outputs?txhash=<tx_hash>&address=<address>&viewkey=<viewkey>&txprove=<0|1>
 
@@ -528,6 +548,62 @@ curl  -w "\n" -X GET "http://139.162.32.245:8082/api/outputs?txhash=94782a8c0aa8
   "status": "success"
 }
 ```
+
+
+Result analogical to the one above.
+
+#### api/networkinfo
+
+```bash
+curl  -w "\n" -X GET "http://139.162.32.245:8081/api/networkinfo"
+```
+
+```json
+{
+  "data": {
+    "alt_blocks_count": 0,
+    "block_size_limit": 600000,
+    "cumulative_difficulty": 2067724366624367,
+    "difficulty": 7530486740,
+    "grey_peerlist_size": 4987,
+    "hash_rate": 62754056,
+    "height": 1307537,
+    "incoming_connections_count": 0,
+    "outgoing_connections_count": 8,
+    "start_time": 1494473774,
+    "status": "OK",
+    "target": 120,
+    "target_height": 1307518,
+    "testnet": false,
+    "top_block_hash": "0726de5b86f431547fc64fc2c8e1c11d76843ada0561993ee540e4eee29d83c3",
+    "tx_count": 1210222,
+    "tx_pool_size": 5,
+    "white_peerlist_size": 1000
+  },
+  "status": "success"
+}
+```
+
+
+#### api/rawblock/<block_number|block_hash>
+
+Return raw json block data, as represented in Monero.
+
+```bash
+curl  -w "\n" -X GET "http://139.162.32.245:8081/api/rawblock/1293257"
+```
+
+Example result not shown.
+
+#### api/rawtransaction/<tx_hash>
+
+Return raw json tx data, as represented in Monero.
+
+```bash
+curl  -w "\n" -X GET "http://139.162.32.245:8081/api/rawtransaction/6093260dbe79fd6277694d14789dc8718f1bd54457df8bab338c2efa3bb0f03d"
+```
+
+Example result not shown.
 
 ## Other monero examples
 

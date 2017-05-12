@@ -147,6 +147,64 @@ rpccalls::commit_tx(tools::wallet2::pending_tx& ptx, string& error_msg)
     return true;
 }
 
+bool
+rpccalls::get_network_info(COMMAND_RPC_GET_INFO::response& response)
+{
+
+    epee::json_rpc::request<cryptonote::COMMAND_RPC_GET_INFO::request> req_t = AUTO_VAL_INIT(req_t);
+    epee::json_rpc::response<cryptonote::COMMAND_RPC_GET_INFO::response, std::string> resp_t = AUTO_VAL_INIT(resp_t);
+
+    bool r {false};
+
+    req_t.jsonrpc = "2.0";
+    req_t.id = epee::serialization::storage_entry(0);
+    req_t.method = "get_info";
+
+    {
+        std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
+
+        if (!connect_to_monero_deamon())
+        {
+            cerr << "get_mempool: not connected to deamon" << endl;
+            return false;
+        }
+
+        r = epee::net_utils::invoke_http_json("/json_rpc",
+                                              req_t, resp_t,
+                                              m_http_client);
+    }
+
+    string err;
+
+    if (r)
+    {
+        if (resp_t.result.status == CORE_RPC_STATUS_BUSY)
+        {
+            err = "daemon is busy. Please try again later.";
+        }
+        else if (resp_t.result.status != CORE_RPC_STATUS_OK)
+        {
+            err = resp_t.result.status;
+        }
+
+        if (!err.empty())
+        {
+            cerr << "Error connecting to Monero deamon due to "
+                 << err << endl;
+            return false;
+        }
+    }
+    else
+    {
+        cerr << "Error connecting to Monero deamon at "
+             << deamon_url << endl;
+        return false;
+    }
+
+    response = resp_t.result;
+
+    return true;
+}
 
 
 }

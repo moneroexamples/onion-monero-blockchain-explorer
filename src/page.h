@@ -3677,9 +3677,9 @@ namespace xmreg
 
 
         /*
-     * Lets use this json api convention for success and error
-     * https://labs.omniti.com/labs/jsend
-     */
+         * Lets use this json api convention for success and error
+         * https://labs.omniti.com/labs/jsend
+         */
         json
         json_transaction(string tx_hash_str)
         {
@@ -3834,10 +3834,95 @@ namespace xmreg
             return j_response;
         }
 
+
+
         /*
-     * Lets use this json api convention for success and error
-     * https://labs.omniti.com/labs/jsend
-     */
+         * Lets use this json api convention for success and error
+         * https://labs.omniti.com/labs/jsend
+         */
+        json
+        json_rawtransaction(string tx_hash_str)
+        {
+            json j_response {
+                    {"status", "fail"},
+                    {"data"  , json {}}
+            };
+
+            json& j_data = j_response["data"];
+
+            // parse tx hash string to hash object
+            crypto::hash tx_hash;
+
+            if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+            {
+                j_data["title"] = fmt::format("Cant parse tx hash: {:s}", tx_hash_str);
+                return j_response;
+            }
+
+            // get transaction
+            transaction tx;
+
+            // flag to indicate if tx is in mempool
+            bool found_in_mempool {false};
+
+            // for tx in blocks we get block timestamp
+            // for tx in mempool we get recievive time
+            uint64_t tx_timestamp {0};
+
+            if (!find_tx(tx_hash, tx, found_in_mempool, tx_timestamp))
+            {
+                j_data["title"] = fmt::format("Cant find tx hash: {:s}", tx_hash_str);
+                return j_response;
+            }
+
+            if (found_in_mempool == false)
+            {
+
+                block blk;
+
+                try
+                {
+                    // get block cointaining this tx
+                    uint64_t block_height = core_storage->get_db().get_tx_block_height(tx_hash);
+
+                    if (!mcore->get_block_by_height(block_height, blk))
+                    {
+                        j_data["title"] = fmt::format("Cant get block: {:d}", block_height);
+                        return j_response;
+                    }
+                }
+                catch (const exception& e)
+                {
+                    j_response["status"]  = "error";
+                    j_response["message"] = fmt::format("Tx does not exist in blockchain, "
+                                                        "but was there before: {:s}",
+                                                        tx_hash_str);
+                    return j_response;
+                }
+            }
+
+            // get raw tx json as in monero
+
+            try
+            {
+                j_data = json::parse(obj_to_json_str(tx));
+            }
+            catch (std::invalid_argument& e)
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Faild parsing raw tx data into json";
+                return j_response;
+            }
+
+            j_response["status"] = "success";
+
+            return j_response;
+        }
+
+        /*
+         * Lets use this json api convention for success and error
+         * https://labs.omniti.com/labs/jsend
+         */
         json
         json_block(string block_no_or_hash)
         {
@@ -3978,9 +4063,105 @@ namespace xmreg
 
 
         /*
-     * Lets use this json api convention for success and error
-     * https://labs.omniti.com/labs/jsend
-     */
+         * Lets use this json api convention for success and error
+         * https://labs.omniti.com/labs/jsend
+         */
+        json
+        json_rawblock(string block_no_or_hash)
+        {
+            json j_response {
+                    {"status", "fail"},
+                    {"data"  , json {}}
+            };
+
+            json& j_data = j_response["data"];
+
+            uint64_t current_blockchain_height
+                    =  core_storage->get_current_blockchain_height();
+
+            uint64_t block_height {0};
+
+            crypto::hash blk_hash;
+
+            block blk;
+
+            if (block_no_or_hash.length() <= 8)
+            {
+                // we have something that seems to be a block number
+                try
+                {
+                    block_height  = boost::lexical_cast<uint64_t>(block_no_or_hash);
+                }
+                catch (const boost::bad_lexical_cast& e)
+                {
+                    j_data["title"] = fmt::format(
+                            "Cant parse block number: {:s}", block_no_or_hash);
+                    return j_response;
+                }
+
+                if (block_height > current_blockchain_height)
+                {
+                    j_data["title"] = fmt::format(
+                            "Requested block is higher than blockchain:"
+                                    " {:d}, {:d}", block_height,current_blockchain_height);
+                    return j_response;
+                }
+
+                if (!mcore->get_block_by_height(block_height, blk))
+                {
+                    j_data["title"] = fmt::format("Cant get block: {:d}", block_height);
+                    return j_response;
+                }
+
+                blk_hash = core_storage->get_block_id_by_height(block_height);
+
+            }
+            else if (block_no_or_hash.length() == 64)
+            {
+                // this seems to be block hash
+                if (!xmreg::parse_str_secret_key(block_no_or_hash, blk_hash))
+                {
+                    j_data["title"] = fmt::format("Cant parse blk hash: {:s}", block_no_or_hash);
+                    return j_response;
+                }
+
+                if (!core_storage->get_block_by_hash(blk_hash, blk))
+                {
+                    j_data["title"] = fmt::format("Cant get block: {:s}", blk_hash);
+                    return j_response;
+                }
+
+                block_height = core_storage->get_db().get_block_height(blk_hash);
+            }
+            else
+            {
+                j_data["title"] = fmt::format("Cant find blk using search string: {:s}", block_no_or_hash);
+                return j_response;
+            }
+
+            // get raw tx json as in monero
+
+            try
+            {
+                j_data = json::parse(obj_to_json_str(blk));
+            }
+            catch (std::invalid_argument& e)
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Faild parsing raw blk data into json";
+                return j_response;
+            }
+
+            j_response["status"] = "success";
+
+            return j_response;
+        }
+
+
+        /*
+         * Lets use this json api convention for success and error
+         * https://labs.omniti.com/labs/jsend
+         */
         json
         json_transactions(string _page, string _limit)
         {
@@ -4092,7 +4273,8 @@ namespace xmreg
             j_data["page"]           = page;
             j_data["limit"]          = limit;
             j_data["current_height"] = height;
-            j_data["total_page_no"]  = (limit == 0 ? 0 : height / limit);
+
+            j_data["total_page_no"]  = limit > 0 ? (height / limit) : 0;
 
             j_response["status"] = "success";
 
@@ -4105,7 +4287,7 @@ namespace xmreg
      * https://labs.omniti.com/labs/jsend
      */
         json
-        json_mempool()
+        json_mempool(string _page, string _limit)
         {
             json j_response {
                     {"status", "fail"},
@@ -4113,6 +4295,23 @@ namespace xmreg
             };
 
             json& j_data = j_response["data"];
+
+            // parse page and limit into numbers
+
+            uint64_t page {0};
+            uint64_t limit {0};
+
+            try
+            {
+                page  = boost::lexical_cast<uint64_t>(_page);
+                limit = boost::lexical_cast<uint64_t>(_limit);
+            }
+            catch (const boost::bad_lexical_cast& e)
+            {
+                j_data["title"] = fmt::format(
+                        "Cant parse page and/or limit numbers: {:s}, {:s}", _page, _limit);
+                return j_response;
+            }
 
             //get current server timestamp
             server_timestamp = std::time(nullptr);
@@ -4135,20 +4334,61 @@ namespace xmreg
 
             (void) tx_hash_dummy;
 
-            // for each transaction in the memory pool
-            for (const auto& a_pair: mempool_data)
+            uint64_t no_mempool_txs = mempool_data.size();
+
+            // calculate starting and ending block numbers to show
+            int64_t start_height = limit * page;
+
+            int64_t end_height = start_height + limit;
+
+            end_height = end_height > no_mempool_txs ? no_mempool_txs : end_height;
+
+            // check if start height is not below range
+            start_height = start_height > end_height ? end_height - limit : start_height;
+
+            start_height = start_height < 0 ? 0 : start_height;
+
+            // loop index
+            int64_t i = start_height;
+
+            json j_txs = json::array();
+
+            // for each transaction in the memory pool in current page
+            while (i < end_height)
             {
-                const tx_details& txd = get_tx_details(a_pair.second, false, 1, height); // 1 is dummy here
+                const pair<tx_info, transaction>* a_pair {nullptr};
+
+                try
+                {
+                    a_pair = &(mempool_data.at(i));
+                }
+                catch (const std::out_of_range& e)
+                {
+                    j_response["status"]  = "error";
+                    j_response["message"] = fmt::format("Getting mempool txs failed due to std::out_of_range");
+
+                    return j_response;
+                }
+
+                const tx_details& txd = get_tx_details(a_pair->second, false, 1, height); // 1 is dummy here
 
                 // get basic tx info
-                json j_tx = get_tx_json(a_pair.second, txd);
+                json j_tx = get_tx_json(a_pair->second, txd);
 
                 // we add some extra data, for mempool txs, such as recieve timestamp
-                j_tx["timestamp"]     = a_pair.first.receive_time;
-                j_tx["timestamp_utc"] = xmreg::timestamp_to_str_gm(a_pair.first.receive_time);
+                j_tx["timestamp"]     = a_pair->first.receive_time;
+                j_tx["timestamp_utc"] = xmreg::timestamp_to_str_gm(a_pair->first.receive_time);
 
-                j_data.push_back(j_tx);
+                j_txs.push_back(j_tx);
+
+               ++i;
             }
+
+            j_data["txs"]            = j_txs;
+            j_data["page"]           = page;
+            j_data["limit"]          = limit;
+            j_data["txs_no"]         = no_mempool_txs;
+            j_data["total_page_no"]  = limit > 0 ? (no_mempool_txs / limit) : 0;
 
             j_response["status"] = "success";
 
@@ -4157,9 +4397,9 @@ namespace xmreg
 
 
         /*
-     * Lets use this json api convention for success and error
-     * https://labs.omniti.com/labs/jsend
-     */
+         * Lets use this json api convention for success and error
+         * https://labs.omniti.com/labs/jsend
+         */
         json
         json_search(const string& search_text)
         {
@@ -4420,6 +4660,38 @@ namespace xmreg
 
             return j_response;
         }
+
+        /*
+         * Lets use this json api convention for success and error
+         * https://labs.omniti.com/labs/jsend
+         */
+        json
+        json_networkinfo()
+        {
+            json j_response {
+                    {"status", "fail"},
+                    {"data",   json {}}
+            };
+
+            json& j_data = j_response["data"];
+
+            json j_info;
+
+            if (!get_monero_network_info(j_info))
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Cant get monero network info";
+                return j_response;
+            }
+
+            j_data = j_info;
+
+            j_response["status"]  = "success";
+
+            return j_response;
+        }
+
+
     private:
 
         json
@@ -5190,6 +5462,40 @@ namespace xmreg
             return template_file["header"]
                    + middle
                    + template_file["footer"];
+        }
+
+       bool
+        get_monero_network_info(json& j_info)
+        {
+            COMMAND_RPC_GET_INFO::response network_info;
+
+            if (!rpc.get_network_info(network_info))
+            {
+                return false;
+            }
+
+            j_info = json {
+               {"status"                    , network_info.status},
+               {"height"                    , network_info.height},
+               {"target_height"             , network_info.target_height},
+               {"difficulty"                , network_info.difficulty},
+               {"target"                    , network_info.target},
+               {"hash_rate"                 , (network_info.difficulty/network_info.target)},
+               {"tx_count"                  , network_info.tx_count},
+               {"tx_pool_size"              , network_info.tx_pool_size},
+               {"alt_blocks_count"          , network_info.alt_blocks_count},
+               {"outgoing_connections_count", network_info.outgoing_connections_count},
+               {"incoming_connections_count", network_info.incoming_connections_count},
+               {"white_peerlist_size"       , network_info.white_peerlist_size},
+               {"grey_peerlist_size"        , network_info.grey_peerlist_size},
+               {"testnet"                   , network_info.testnet},
+               {"top_block_hash"            , network_info.top_block_hash},
+               {"cumulative_difficulty"     , network_info.cumulative_difficulty},
+               {"block_size_limit"          , network_info.block_size_limit},
+               {"start_time"                , network_info.start_time}
+            };
+
+            return true;
         }
 
         string
