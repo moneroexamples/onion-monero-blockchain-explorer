@@ -35,6 +35,7 @@ Clearnet versions:
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
  - [https://explorer.xmr.my/](https://explorer.xmr.my/) - https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
+ - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.
   
 Clearnet testnet Monero version:
 
