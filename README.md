@@ -113,6 +113,9 @@ mkdir build && cd build
 # create the makefile
 cmake ..
 
+# altearnatively can use: cmake -DMONERO_DIR=/path/to/monero_folder .. 
+# if monero is not in ~/monero
+
 # compile
 make
 ```
