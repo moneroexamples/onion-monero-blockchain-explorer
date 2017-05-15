@@ -32,6 +32,18 @@
          {{/testnet}}
 
         </h3>
+
+
+    {{#network_info}}
+
+        <h3 style="font-size: 12px; margin-top: 10px">
+            Network difficulty: {{difficulty}}
+            | Hash rate: {{hash_rate}}
+            | Fee per kb: {{fee_per_kb}}
+        </h3>
+        {{/network_info}}
+
+
 </div>
 
     {{{mempool_info}}}
@@ -86,6 +98,7 @@
             </div>
 
     </div>
+
 
 {{#show_cache_times}}
     <div class="center">

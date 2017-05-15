@@ -14,6 +14,8 @@
 #define KEY_IMAGE_EXPORT_FILE_MAGIC "Monero key image export\002"
 #define OUTPUT_EXPORT_FILE_MAGIC "Monero output export\003"
 
+#define FEE_ESTIMATE_GRACE_BLOCKS 10 // estimate fee valid for that many blocks
+
 #include "release/version/version.h"
 
 #include "net/http_client.h"

@@ -394,6 +394,33 @@ namespace xmreg
         string
         index2(uint64_t page_no = 0, bool refresh_page = false)
         {
+
+            // we get network info, such as current hash rate
+            // but since this makes a rpc call to deamon, we make it as an async
+            // call. this way we dont have to wait with execution of the rest of the
+            // index2 method, until deamon gives as the required result.
+            std::future<json> network_info_ftr = std::async(std::launch::async, [&]
+            {
+                json j_info;
+
+                if (!get_monero_network_info(j_info))
+                {
+                    return json{};
+                }
+
+                uint64_t fee_estimated {0};
+
+                // get dynamic fee estimate from last 10 blocks
+                if (!get_dynamic_per_kb_fee_estimate(fee_estimated))
+                {
+                    return json{};
+                }
+
+                j_info["fee_per_kb"] = fee_estimated;
+
+                return j_info;
+            });
+
             //get current server timestamp
             server_timestamp = std::time(nullptr);
 
@@ -693,6 +720,42 @@ namespace xmreg
 
             context["cache_hits"]   = cache_hits;
             context["cache_misses"] = cache_misses;
+
+            // now time to check if we have our networkinfo from network_info future
+            // wait a bit (200 millisecond max) if not, just in case, but we dont wait more.
+            // if its not ready by now, forget about it.
+
+            std::future_status ftr_status = network_info_ftr.wait_for(
+                    std::chrono::milliseconds(200));
+
+            if (ftr_status == std::future_status::ready)
+            {
+                json j_network_info = network_info_ftr.get();
+
+                if (!j_network_info.empty())
+                {
+                    string difficulty;
+
+                    if (testnet)
+                    {
+                        difficulty = std::to_string(j_network_info["hash_rate"].get<uint64_t>()) + " H/s";
+                    }
+                    else
+                    {
+                        difficulty = fmt::format("{:0.3f} MH/s", j_network_info["hash_rate"].get<uint64_t>()/1.0e6);
+                    }
+
+                    context["network_info"] = mstch::map {
+                            {"difficulty", j_network_info["difficulty"].get<uint64_t>()},
+                            {"hash_rate" , difficulty},
+                            {"fee_per_kb", xmreg::xmr_amount_to_str(j_network_info["fee_per_kb"], "{:0.12f}")}
+                    };
+                }
+            }
+            else
+            {
+                cerr  << "network_info future not ready yet, skipping." << endl;
+            }
 
             // get memory pool rendered template
             string mempool_html = mempool(false, no_of_mempool_tx_of_frontpage);
@@ -4677,12 +4740,25 @@ namespace xmreg
 
             json j_info;
 
+            // get basic network info
             if (!get_monero_network_info(j_info))
             {
                 j_response["status"]  = "error";
                 j_response["message"] = "Cant get monero network info";
                 return j_response;
             }
+
+            uint64_t fee_estimated {0};
+
+            // get dynamic fee estimate from last 10 blocks
+            if (!get_dynamic_per_kb_fee_estimate(fee_estimated))
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Cant get dynamic fee esimate";
+                return j_response;
+            }
+
+            j_info["fee_per_kb"] = fee_estimated;
 
             j_data = j_info;
 
@@ -4716,6 +4792,7 @@ namespace xmreg
 
             return j_tx;
         }
+
 
         bool
         find_tx(const crypto::hash& tx_hash,
@@ -5464,7 +5541,7 @@ namespace xmreg
                    + template_file["footer"];
         }
 
-       bool
+        bool
         get_monero_network_info(json& j_info)
         {
             COMMAND_RPC_GET_INFO::response network_info;
@@ -5494,6 +5571,25 @@ namespace xmreg
                {"block_size_limit"          , network_info.block_size_limit},
                {"start_time"                , network_info.start_time}
             };
+
+            return true;
+        }
+
+        bool
+        get_dynamic_per_kb_fee_estimate(uint64_t& fee_estimated)
+        {
+
+            string error_msg;
+
+            if (!rpc.get_dynamic_per_kb_fee_estimate(
+                    FEE_ESTIMATE_GRACE_BLOCKS,
+                    fee_estimated, error_msg))
+            {
+                cerr << "rpc.get_dynamic_per_kb_fee_estimate failed" << endl;
+                return false;
+            }
+
+            (void) error_msg;
 
             return true;
         }
