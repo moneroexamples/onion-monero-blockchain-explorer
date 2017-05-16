@@ -128,6 +128,19 @@ int main(int ac, const char* av[]) {
 
     cout << blockchain_path << endl;
 
+    if (!xmreg::CurrentBlockchainStatus::init_monero_blockchain())
+    {
+        cerr << "Error accessing blockchain." << endl;
+        return EXIT_FAILURE;
+    }
+
+    // launch the status monitoring thread so that it keeps track of blockchain
+    // info, e.g., current height. Information from this thread is used
+    // by tx searching threads that are launched for each user independently,
+    // when they log back or create new account.
+    xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
+
+
     // create instance of our MicroCore
     // and make pointer to the Blockchain
     xmreg::MicroCore mcore;

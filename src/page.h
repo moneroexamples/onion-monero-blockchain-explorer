@@ -17,6 +17,8 @@
 #include "tools.h"
 #include "rpccalls.h"
 
+#include "CurrentBlockchainStatus.h"
+
 #include "../ext/crow/http_request.h"
 
 #include "../ext/vpetrigocaches/cache.hpp"
@@ -746,9 +748,9 @@ namespace xmreg
                     }
 
                     context["network_info"] = mstch::map {
-                            {"difficulty", j_network_info["difficulty"].get<uint64_t>()},
-                            {"hash_rate" , difficulty},
-                            {"fee_per_kb", xmreg::xmr_amount_to_str(j_network_info["fee_per_kb"], "{:0.12f}")}
+                            {"difficulty"         , j_network_info["difficulty"].get<uint64_t>()},
+                            {"hash_rate"          , difficulty},
+                            {"fee_per_kb"         , print_money(j_network_info["fee_per_kb"])}
                     };
                 }
             }
@@ -756,6 +758,27 @@ namespace xmreg
             {
                 cerr  << "network_info future not ready yet, skipping." << endl;
             }
+
+            if (CurrentBlockchainStatus::is_thread_running())
+            {
+                vector<uint64_t> emission_values
+                        = CurrentBlockchainStatus::get_emission_amount();
+
+                string emission_blk_no     = std::to_string(emission_values.at(0) - 1);
+                string emission_amount     = xmr_amount_to_str(emission_values.at(1), "{:0.3f}");
+                string emission_fee_amount = xmr_amount_to_str(emission_values.at(2), "{:0.3f}");
+
+                context["emission"] = mstch::map {
+                        {"blk_no"    , emission_blk_no},
+                        {"amount"    , emission_amount},
+                        {"fee_amount", emission_fee_amount}
+                };
+            }
+            else
+            {
+                cerr  << "emission thread not running, skipping." << endl;
+            }
+
 
             // get memory pool rendered template
             string mempool_html = mempool(false, no_of_mempool_tx_of_frontpage);

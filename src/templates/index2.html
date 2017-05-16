@@ -35,13 +35,18 @@
 
 
     {{#network_info}}
-
-        <h3 style="font-size: 12px; margin-top: 10px">
+        <h3 style="font-size: 12px; margin-top: 5px; margin-bottom: 3">
             Network difficulty: {{difficulty}}
             | Hash rate: {{hash_rate}}
             | Fee per kb: {{fee_per_kb}}
         </h3>
-        {{/network_info}}
+    {{/network_info}}
+
+    {{#emission}}
+        <h3 style="font-size: 12px; margin-top: 2px">
+            Monero emission (fees) is {{amount}} ({{fee_amount}}) as of {{blk_no}} block
+        </h3>
+    {{/emission}}
 
 
 </div>
