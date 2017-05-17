@@ -20,17 +20,23 @@ namespace xmreg
 
 using namespace std;
 
-class CurrentBlockchainStatus
+struct CurrentBlockchainStatus
 {
+
     static string blockchain_path;
+
+    static bool testnet;
 
     static string output_file;
 
     static string deamon_url;
 
+    static uint64_t blockchain_chunk_size;
+
     static atomic<uint64_t> current_height;
 
     static atomic<uint64_t> total_emission_amount;
+
     static atomic<uint64_t> total_fee_amount;
 
     static atomic<uint64_t> searched_blk_no;
@@ -41,10 +47,9 @@ class CurrentBlockchainStatus
 
     // make object for accessing the blockchain here
     static unique_ptr<xmreg::MicroCore> mcore;
+
     static cryptonote::Blockchain *core_storage;
 
-
-public:
     static void
     start_monitor_blockchain_thread();
 
@@ -63,9 +68,11 @@ public:
     static vector<uint64_t>
     get_emission_amount();
 
+    static string
+    get_output_file_path();
+
     static bool
     is_thread_running();
-
 };
 
 }

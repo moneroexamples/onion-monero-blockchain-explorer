@@ -128,18 +128,6 @@ int main(int ac, const char* av[]) {
 
     cout << blockchain_path << endl;
 
-    if (!xmreg::CurrentBlockchainStatus::init_monero_blockchain())
-    {
-        cerr << "Error accessing blockchain." << endl;
-        return EXIT_FAILURE;
-    }
-
-    // launch the status monitoring thread so that it keeps track of blockchain
-    // info, e.g., current height. Information from this thread is used
-    // by tx searching threads that are launched for each user independently,
-    // when they log back or create new account.
-    xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
-
 
     // create instance of our MicroCore
     // and make pointer to the Blockchain
@@ -157,7 +145,28 @@ int main(int ac, const char* av[]) {
     string deamon_url {*deamon_url_opt};
 
     if (testnet && deamon_url == "http:://127.0.0.1:18081")
+    {
         deamon_url = "http:://127.0.0.1:28081";
+    }
+
+    xmreg::CurrentBlockchainStatus::blockchain_path
+            =  blockchain_path.string();
+    xmreg::CurrentBlockchainStatus::testnet
+            = testnet;
+    xmreg::CurrentBlockchainStatus::deamon_url
+            = deamon_url;
+
+    if (!xmreg::CurrentBlockchainStatus::init_monero_blockchain())
+    {
+        cerr << "Error accessing blockchain from CurrentBlockchainStatus." << endl;
+        return EXIT_FAILURE;
+    }
+
+    // launch the status monitoring thread so that it keeps track of blockchain
+    // info, e.g., current height. Information from this thread is used
+    // by tx searching threads that are launched for each user independently,
+    // when they log back or create new account.
+    xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
 
     // create instance of page class which
     // contains logic for the website

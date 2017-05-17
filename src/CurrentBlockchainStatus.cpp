@@ -39,13 +39,21 @@ void
 CurrentBlockchainStatus::start_monitor_blockchain_thread()
 {
 
-    string emmision_saved_file = blockchain_path + output_file;
+    string emmision_saved_file = get_output_file_path();
 
     if (boost::filesystem::exists(emmision_saved_file))
     {
         if (!load_current_emission_amount())
         {
-            cerr << "Cant read or has incorrect format: " << emmision_saved_file << endl;
+            cerr << "Emission file cant be read, got corrupted or has incorrect format:\n " << emmision_saved_file
+                 << "\nEmission monitoring thread is not started.\nDelete the file and"
+                 << " restart the explorer or disable emission monitoring."
+                 << endl;
+
+            cerr << "Press ENTER to continue without emission monitoring or Ctr+C to exit" << endl;
+
+            cin.get();
+
             return;
         }
     }
@@ -62,7 +70,7 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
 
                    save_current_emission_amount();
 
-                   if (searched_blk_no < current_height - 1000)
+                   if (searched_blk_no < current_height - blockchain_chunk_size)
                    {
                        std::this_thread::sleep_for(std::chrono::seconds(1));
                    }
@@ -84,11 +92,9 @@ CurrentBlockchainStatus::update_current_emission_amount()
 
     cout << "updating emission rate: " << current_height << endl;
 
-    uint64_t no_of_blocks_to_search_at_once {1000};
-
     uint64_t blk_no = searched_blk_no;
 
-    uint64_t end_block = blk_no + no_of_blocks_to_search_at_once;
+    uint64_t end_block = blk_no + blockchain_chunk_size;
 
     uint64_t current_blockchain_height = current_height;
 
@@ -140,7 +146,7 @@ bool
 CurrentBlockchainStatus::save_current_emission_amount()
 {
 
-    string emmision_saved_file = blockchain_path + output_file;
+    string emmision_saved_file = get_output_file_path();
 
     ofstream out(emmision_saved_file);
 
@@ -168,33 +174,39 @@ CurrentBlockchainStatus::save_current_emission_amount()
 bool
 CurrentBlockchainStatus::load_current_emission_amount()
 {
-    string emmision_saved_file = blockchain_path + output_file;
+    string emmision_saved_file = get_output_file_path();
 
     string last_saved_emmision = xmreg::read(emmision_saved_file);
 
-    if (last_saved_emmision.empty()) {
+    if (last_saved_emmision.empty())
+    {
         cerr << "Couldn't open file." << endl;
         return false;
     }
 
+    last_saved_emmision.erase(last_saved_emmision.find_last_not_of(" \n\r\t")+1);
+
     vector<string> strs;
     boost::split(strs, last_saved_emmision, boost::is_any_of(","));
 
-    if (strs.empty()) {
+    if (strs.empty())
+    {
         cerr << "Problem spliting string values form  emission_amount." << endl;
         return false;
     }
 
     uint64_t read_check_sum{0};
 
-    try {
-        searched_blk_no = boost::lexical_cast<uint64_t>(strs.at(0));
+    try
+    {
+        searched_blk_no       = boost::lexical_cast<uint64_t>(strs.at(0));
         total_emission_amount = boost::lexical_cast<uint64_t>(strs.at(1));
-        total_fee_amount = boost::lexical_cast<uint64_t>(strs.at(2));
-        read_check_sum = boost::lexical_cast<uint64_t>(strs.at(3));
+        total_fee_amount      = boost::lexical_cast<uint64_t>(strs.at(2));
+        read_check_sum        = boost::lexical_cast<uint64_t>(strs.at(3));
     }
-    catch (boost::bad_lexical_cast &e) {
-        cerr << "Cant parse to number: " << last_saved_emmision << endl;
+    catch (boost::bad_lexical_cast &e)
+    {
+        cerr << "Cant parse to number date from string: " << last_saved_emmision << endl;
         return false;
     }
 
@@ -202,7 +214,8 @@ CurrentBlockchainStatus::load_current_emission_amount()
                          + uint64_t(total_emission_amount)
                          + uint64_t(total_fee_amount);
 
-    if (read_check_sum != check_sum) {
+    if (read_check_sum != check_sum)
+    {
         cerr << "read_check_sum != check_sum: "
              << read_check_sum << " != " << check_sum
              << endl;
@@ -213,6 +226,15 @@ CurrentBlockchainStatus::load_current_emission_amount()
     return true;
 
 }
+
+string
+CurrentBlockchainStatus::get_output_file_path()
+{
+    string emmision_saved_file = blockchain_path + output_file;
+
+    return emmision_saved_file;
+}
+
 
 vector<uint64_t>
 CurrentBlockchainStatus::get_emission_amount()
@@ -234,9 +256,13 @@ CurrentBlockchainStatus::is_thread_running()
 
 string CurrentBlockchainStatus::blockchain_path{"/home/mwo/.bitmonero/lmdb"};
 
+bool   CurrentBlockchainStatus::testnet {false};
+
 string CurrentBlockchainStatus::output_file {"/emission_amount.txt"};
 
 string CurrentBlockchainStatus::deamon_url{"http:://127.0.0.1:18081"};
+
+uint64_t  CurrentBlockchainStatus::blockchain_chunk_size {10000};
 
 atomic<uint64_t> CurrentBlockchainStatus::current_height {0};
 
