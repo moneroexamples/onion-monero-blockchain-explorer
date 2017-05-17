@@ -761,17 +761,17 @@ namespace xmreg
 
             if (CurrentBlockchainStatus::is_thread_running())
             {
-                vector<uint64_t> emission_values
-                        = CurrentBlockchainStatus::get_emission_amount();
+                CurrentBlockchainStatus::Emission current_values
+                        = CurrentBlockchainStatus::get_emission();
 
-                string emission_blk_no     = std::to_string(emission_values.at(0) - 1);
-                string emission_amount     = xmr_amount_to_str(emission_values.at(1), "{:0.3f}");
-                string emission_fee_amount = xmr_amount_to_str(emission_values.at(2), "{:0.3f}");
+                string emission_blk_no  = std::to_string(current_values.blk_no);
+                string emission_coinbase = xmr_amount_to_str(current_values.coinbase, "{:0.3f}");
+                string emission_fee      = xmr_amount_to_str(current_values.fee, "{:0.3f}");
 
                 context["emission"] = mstch::map {
                         {"blk_no"    , emission_blk_no},
-                        {"amount"    , emission_amount},
-                        {"fee_amount", emission_fee_amount}
+                        {"amount"    , emission_coinbase},
+                        {"fee_amount", emission_fee}
                 };
             }
             else

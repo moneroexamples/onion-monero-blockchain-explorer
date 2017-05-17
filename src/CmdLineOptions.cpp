@@ -45,6 +45,8 @@ namespace xmreg
                  "enable caching of block details")
                 ("enable-autorefresh-option", value<bool>()->default_value(false)->implicit_value(true),
                  "enable users to have the index page on autorefresh")
+                ("enable-emission-monitor", value<bool>()->default_value(false)->implicit_value(true),
+                 "enable Monero total emission monitoring thread")
                 ("port,p", value<string>()->default_value("8081"),
                  "default port")
                 ("testnet-url", value<string>()->default_value(""),

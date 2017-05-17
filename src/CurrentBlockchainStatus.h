@@ -23,6 +23,26 @@ using namespace std;
 struct CurrentBlockchainStatus
 {
 
+    struct Emission
+    {
+        uint64_t coinbase;
+        uint64_t fee;
+        uint64_t blk_no;
+
+        inline uint64_t
+        checksum() const
+        {
+            return coinbase + fee + blk_no;
+        }
+
+        operator
+        std::string() const
+        {
+            return to_string(blk_no) + "," + to_string(coinbase)
+                   + "," + to_string(fee) + "," + to_string(checksum());
+        }
+    };
+
     static string blockchain_path;
 
     static bool testnet;
@@ -35,11 +55,7 @@ struct CurrentBlockchainStatus
 
     static atomic<uint64_t> current_height;
 
-    static atomic<uint64_t> total_emission_amount;
-
-    static atomic<uint64_t> total_fee_amount;
-
-    static atomic<uint64_t> searched_blk_no;
+    static atomic<Emission> total_emission_atomic;
 
     static std::thread m_thread;
 
@@ -65,8 +81,8 @@ struct CurrentBlockchainStatus
     static bool
     load_current_emission_amount();
 
-    static vector<uint64_t>
-    get_emission_amount();
+    static Emission
+    get_emission();
 
     static string
     get_output_file_path();

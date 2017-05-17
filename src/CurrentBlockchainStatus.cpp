@@ -38,6 +38,7 @@ CurrentBlockchainStatus::init_monero_blockchain()
 void
 CurrentBlockchainStatus::start_monitor_blockchain_thread()
 {
+    total_emission_atomic = Emission {0, 0, 0};
 
     string emmision_saved_file = get_output_file_path();
 
@@ -64,13 +65,15 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
            {
                while (true)
                {
+                   Emission current_emission = total_emission_atomic;
+
                    current_height = core_storage->get_current_blockchain_height();
 
                    update_current_emission_amount();
 
                    save_current_emission_amount();
 
-                   if (searched_blk_no < current_height - blockchain_chunk_size)
+                   if (current_emission.blk_no < current_height - blockchain_chunk_size)
                    {
                        std::this_thread::sleep_for(std::chrono::seconds(1));
                    }
@@ -90,9 +93,9 @@ void
 CurrentBlockchainStatus::update_current_emission_amount()
 {
 
-    cout << "updating emission rate: " << current_height << endl;
+    Emission current_emission = total_emission_atomic;
 
-    uint64_t blk_no = searched_blk_no;
+    uint64_t blk_no = current_emission.blk_no;
 
     uint64_t end_block = blk_no + blockchain_chunk_size;
 
@@ -100,8 +103,8 @@ CurrentBlockchainStatus::update_current_emission_amount()
 
     end_block = end_block > current_blockchain_height ? current_blockchain_height : end_block;
 
-    uint64_t current_emission_amount {0};
-    uint64_t current_fee_amount {0};
+    uint64_t temp_emission_amount {0};
+    uint64_t temp_fee_amount {0};
 
     while (blk_no < end_block)
     {
@@ -124,20 +127,19 @@ CurrentBlockchainStatus::update_current_emission_amount()
             tx_fee_amount += get_tx_fee(tx);
         }
 
-        current_emission_amount += coinbase_amount - tx_fee_amount;
-        current_fee_amount += tx_fee_amount;
+        temp_emission_amount += coinbase_amount - tx_fee_amount;
+        temp_fee_amount      += tx_fee_amount;
 
         ++blk_no;
     }
 
-    searched_blk_no = blk_no;
-    total_emission_amount += current_emission_amount;
-    total_fee_amount += current_fee_amount;
+    current_emission.coinbase += temp_emission_amount;
+    current_emission.fee      += temp_fee_amount;
+    current_emission.blk_no    = blk_no;
 
-    cout << "blk: " << blk_no
-         << " total_emission_amount: " << xmr_amount_to_str(uint64_t(total_emission_amount))
-         << " total_fee_amount: " << xmr_amount_to_str(uint64_t(total_fee_amount))
-         << endl;
+    total_emission_atomic = current_emission;
+
+    cout << "total emission: " << string(current_emission) << endl;
 }
 
 
@@ -156,16 +158,9 @@ CurrentBlockchainStatus::save_current_emission_amount()
         return false;
     }
 
-    uint64_t check_sum = uint64_t(searched_blk_no)
-                         + uint64_t(total_emission_amount)
-                         + uint64_t(total_fee_amount);
+    Emission current_emission = total_emission_atomic;
 
-    string out_line = to_string(searched_blk_no)
-                      + "," + to_string(total_emission_amount)
-                      + "," + to_string(total_fee_amount)
-                      + "," + to_string(check_sum);
-
-    out << out_line << flush;
+    out << string(current_emission) << flush;
 
     return true;
 }
@@ -195,14 +190,16 @@ CurrentBlockchainStatus::load_current_emission_amount()
         return false;
     }
 
-    uint64_t read_check_sum{0};
+    Emission emission_loaded {0, 0, 0};
+
+    uint64_t read_check_sum {0};
 
     try
     {
-        searched_blk_no       = boost::lexical_cast<uint64_t>(strs.at(0));
-        total_emission_amount = boost::lexical_cast<uint64_t>(strs.at(1));
-        total_fee_amount      = boost::lexical_cast<uint64_t>(strs.at(2));
-        read_check_sum        = boost::lexical_cast<uint64_t>(strs.at(3));
+        emission_loaded.blk_no   = boost::lexical_cast<uint64_t>(strs.at(0));
+        emission_loaded.coinbase = boost::lexical_cast<uint64_t>(strs.at(1));
+        emission_loaded.fee      = boost::lexical_cast<uint64_t>(strs.at(2));
+        read_check_sum           = boost::lexical_cast<uint64_t>(strs.at(3));
     }
     catch (boost::bad_lexical_cast &e)
     {
@@ -210,18 +207,16 @@ CurrentBlockchainStatus::load_current_emission_amount()
         return false;
     }
 
-    uint64_t check_sum = uint64_t(searched_blk_no)
-                         + uint64_t(total_emission_amount)
-                         + uint64_t(total_fee_amount);
-
-    if (read_check_sum != check_sum)
+    if (read_check_sum != emission_loaded.checksum())
     {
         cerr << "read_check_sum != check_sum: "
-             << read_check_sum << " != " << check_sum
+             << read_check_sum << " != " << emission_loaded.checksum()
              << endl;
 
         return false;
     }
+
+    total_emission_atomic = emission_loaded;
 
     return true;
 
@@ -236,16 +231,10 @@ CurrentBlockchainStatus::get_output_file_path()
 }
 
 
-vector<uint64_t>
-CurrentBlockchainStatus::get_emission_amount()
+CurrentBlockchainStatus::Emission
+CurrentBlockchainStatus::get_emission()
 {
-
-    uint64_t searched_block  = searched_blk_no;
-    uint64_t emission_amount = total_emission_amount;
-    uint64_t fee_amount      = total_fee_amount;
-
-    return {searched_block, emission_amount, fee_amount};
-
+    return total_emission_atomic.load();
 }
 
 bool
@@ -266,11 +255,7 @@ uint64_t  CurrentBlockchainStatus::blockchain_chunk_size {10000};
 
 atomic<uint64_t> CurrentBlockchainStatus::current_height {0};
 
-atomic<uint64_t> CurrentBlockchainStatus::total_emission_amount {0} ;
-
-atomic<uint64_t> CurrentBlockchainStatus::total_fee_amount {0} ;
-
-atomic<uint64_t> CurrentBlockchainStatus::searched_blk_no {0};
+atomic<CurrentBlockchainStatus::Emission> CurrentBlockchainStatus::total_emission_atomic;
 
 std::thread      CurrentBlockchainStatus::m_thread;
 

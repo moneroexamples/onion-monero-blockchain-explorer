@@ -26,7 +26,18 @@ struct jsonresponse: crow::response
 };
 }
 
+class ExitHandler
+{
+public:
+    void exit() { exitHandler(0); }
+    static void exitHandler(int) { s_shouldExit = true; }
+    bool shouldExit() const { return s_shouldExit; }
 
+private:
+    static bool s_shouldExit;
+};
+
+bool ExitHandler::s_shouldExit = false;
 
 int main(int ac, const char* av[]) {
 
@@ -60,6 +71,8 @@ int main(int ac, const char* av[]) {
     auto enable_tx_cache_opt           = opts.get_option<bool>("enable-tx-cache");
     auto enable_block_cache_opt        = opts.get_option<bool>("enable-block-cache");
     auto show_cache_times_opt          = opts.get_option<bool>("show-cache-times");
+    auto enable_emission_monitor_opt   = opts.get_option<bool>("enable-emission-monitor");
+
 
     bool testnet                      {*testnet_opt};
     bool enable_pusher                {*enable_pusher_opt};
@@ -71,6 +84,7 @@ int main(int ac, const char* av[]) {
     bool enable_json_api              {*enable_json_api_opt};
     bool enable_tx_cache              {*enable_tx_cache_opt};
     bool enable_block_cache           {*enable_block_cache_opt};
+    bool enable_emission_monitor      {*enable_emission_monitor_opt};
     bool show_cache_times             {*show_cache_times_opt};
 
 
@@ -149,24 +163,41 @@ int main(int ac, const char* av[]) {
         deamon_url = "http:://127.0.0.1:28081";
     }
 
-    xmreg::CurrentBlockchainStatus::blockchain_path
-            =  blockchain_path.string();
-    xmreg::CurrentBlockchainStatus::testnet
-            = testnet;
-    xmreg::CurrentBlockchainStatus::deamon_url
-            = deamon_url;
 
-    if (!xmreg::CurrentBlockchainStatus::init_monero_blockchain())
+    if (enable_emission_monitor == true)
     {
-        cerr << "Error accessing blockchain from CurrentBlockchainStatus." << endl;
-        return EXIT_FAILURE;
-    }
+        // This starts new thread, which aim is
+        // to calculate, store and monitor
+        // current total Monero emission amount.
 
-    // launch the status monitoring thread so that it keeps track of blockchain
-    // info, e.g., current height. Information from this thread is used
-    // by tx searching threads that are launched for each user independently,
-    // when they log back or create new account.
-    xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
+        // This thread stores the current emission
+        // which it has caluclated in
+        // <blockchain_path>/emission_amount.txt file,
+        // e.g., ~/.bitmonero/lmdb/emission_amount.txt.
+        // So instead of calcualting the emission
+        // from scrach whenever the explorer is started,
+        // the thread is initalized with the values
+        // found in emission_amount.txt file.
+
+        xmreg::CurrentBlockchainStatus::blockchain_path
+                = blockchain_path.string();
+        xmreg::CurrentBlockchainStatus::testnet
+                = testnet;
+        xmreg::CurrentBlockchainStatus::deamon_url
+                = deamon_url;
+
+        if (!xmreg::CurrentBlockchainStatus::init_monero_blockchain())
+        {
+            cerr << "Error accessing blockchain from CurrentBlockchainStatus." << endl;
+            return EXIT_FAILURE;
+        }
+
+        // launch the status monitoring thread so that it keeps track of blockchain
+        // info, e.g., current height. Information from this thread is used
+        // by tx searching threads that are launched for each user independently,
+        // when they log back or create new account.
+        xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
+    }
 
     // create instance of page class which
     // contains logic for the website
