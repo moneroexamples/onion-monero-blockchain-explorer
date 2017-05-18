@@ -21,7 +21,7 @@ CurrentBlockchainStatus::init_monero_blockchain()
     mcore = unique_ptr<xmreg::MicroCore>(new xmreg::MicroCore{});
 
     // initialize the core using the blockchain path
-    if (!mcore->init(blockchain_path))
+    if (!mcore->init(blockchain_path.string()))
     {
         cerr << "Error accessing blockchain." << endl;
         return false;
@@ -40,7 +40,7 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
 {
     total_emission_atomic = Emission {0, 0, 0};
 
-    string emmision_saved_file = get_output_file_path();
+    string emmision_saved_file = get_output_file_path().string();
 
     if (boost::filesystem::exists(emmision_saved_file))
     {
@@ -148,7 +148,7 @@ bool
 CurrentBlockchainStatus::save_current_emission_amount()
 {
 
-    string emmision_saved_file = get_output_file_path();
+    string emmision_saved_file = get_output_file_path().string();
 
     ofstream out(emmision_saved_file);
 
@@ -169,7 +169,7 @@ CurrentBlockchainStatus::save_current_emission_amount()
 bool
 CurrentBlockchainStatus::load_current_emission_amount()
 {
-    string emmision_saved_file = get_output_file_path();
+    string emmision_saved_file = get_output_file_path().string();
 
     string last_saved_emmision = xmreg::read(emmision_saved_file);
 
@@ -222,12 +222,10 @@ CurrentBlockchainStatus::load_current_emission_amount()
 
 }
 
-string
+bf::path
 CurrentBlockchainStatus::get_output_file_path()
 {
-    string emmision_saved_file = blockchain_path + output_file;
-
-    return emmision_saved_file;
+    return blockchain_path / output_file;
 }
 
 
@@ -243,13 +241,13 @@ CurrentBlockchainStatus::is_thread_running()
    return is_running;
 }
 
-string CurrentBlockchainStatus::blockchain_path{"/home/mwo/.bitmonero/lmdb"};
+bf::path CurrentBlockchainStatus::blockchain_path {"/home/mwo/.bitmonero/lmdb"};
 
 bool   CurrentBlockchainStatus::testnet {false};
 
-string CurrentBlockchainStatus::output_file {"/emission_amount.txt"};
+string CurrentBlockchainStatus::output_file {"emission_amount.txt"};
 
-string CurrentBlockchainStatus::deamon_url{"http:://127.0.0.1:18081"};
+string CurrentBlockchainStatus::deamon_url {"http:://127.0.0.1:18081"};
 
 uint64_t  CurrentBlockchainStatus::blockchain_chunk_size {10000};
 

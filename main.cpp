@@ -180,7 +180,7 @@ int main(int ac, const char* av[]) {
         // found in emission_amount.txt file.
 
         xmreg::CurrentBlockchainStatus::blockchain_path
-                = blockchain_path.string();
+                = blockchain_path;
         xmreg::CurrentBlockchainStatus::testnet
                 = testnet;
         xmreg::CurrentBlockchainStatus::deamon_url

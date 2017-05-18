@@ -20,6 +20,8 @@ namespace xmreg
 
 using namespace std;
 
+namespace bf = boost::filesystem;
+
 struct CurrentBlockchainStatus
 {
 
@@ -43,7 +45,7 @@ struct CurrentBlockchainStatus
         }
     };
 
-    static string blockchain_path;
+    static bf::path blockchain_path;
 
     static bool testnet;
 
@@ -84,7 +86,7 @@ struct CurrentBlockchainStatus
     static Emission
     get_emission();
 
-    static string
+    static bf::path
     get_output_file_path();
 
     static bool
