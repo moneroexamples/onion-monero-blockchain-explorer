@@ -750,7 +750,8 @@ namespace xmreg
                     context["network_info"] = mstch::map {
                             {"difficulty"         , j_network_info["difficulty"].get<uint64_t>()},
                             {"hash_rate"          , difficulty},
-                            {"fee_per_kb"         , print_money(j_network_info["fee_per_kb"])}
+                            {"fee_per_kb"         , print_money(j_network_info["fee_per_kb"])},
+                            {"alt_blocks_no"      , j_network_info["alt_blocks_count"].get<uint64_t>()}
                     };
                 }
             }
