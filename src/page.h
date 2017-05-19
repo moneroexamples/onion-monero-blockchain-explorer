@@ -4802,6 +4802,50 @@ namespace xmreg
         }
 
 
+        /*
+        * Lets use this json api convention for success and error
+        * https://labs.omniti.com/labs/jsend
+        */
+        json
+        json_emission()
+        {
+            json j_response {
+                    {"status", "fail"},
+                    {"data",   json {}}
+            };
+
+            json& j_data = j_response["data"];
+
+            json j_info;
+
+            // get basic network info
+            if (!CurrentBlockchainStatus::is_thread_running())
+            {
+                j_data["title"] = "Emission monitoring thread not enabled.";
+                return j_response;
+            }
+            else
+            {
+                CurrentBlockchainStatus::Emission current_values
+                        = CurrentBlockchainStatus::get_emission();
+
+                string emission_blk_no   = std::to_string(current_values.blk_no - 1);
+                string emission_coinbase = xmr_amount_to_str(current_values.coinbase, "{:0.3f}");
+                string emission_fee      = xmr_amount_to_str(current_values.fee, "{:0.3f}");
+
+                j_data = json {
+                        {"blk_no"  , current_values.blk_no - 1},
+                        {"coinbase", current_values.coinbase},
+                        {"fee"     , current_values.fee},
+                };
+            }
+
+            j_response["status"]  = "success";
+
+            return j_response;
+        }
+
+
     private:
 
         json
@@ -5657,3 +5701,4 @@ namespace xmreg
 
 
 #endif //CROWXMR_PAGE_H
+

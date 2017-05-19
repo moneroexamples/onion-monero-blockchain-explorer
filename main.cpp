@@ -487,6 +487,14 @@ int main(int ac, const char* av[]) {
             return r;
         });
 
+        CROW_ROUTE(app, "/api/emission")
+        ([&](const crow::request &req) {
+
+            myxmr::jsonresponse r{xmrblocks.json_emission()};
+
+            return r;
+        });
+
         CROW_ROUTE(app, "/api/outputs").methods("GET"_method)
         ([&](const crow::request &req) {
 
