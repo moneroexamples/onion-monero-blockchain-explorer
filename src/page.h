@@ -151,7 +151,7 @@ namespace xmreg
 
             if (!input_key_imgs.empty())
             {
-                mixin_str     = std::to_string(mixin_no - 1);
+                mixin_str     = std::to_string(mixin_no);
                 fee_str       = fmt::format("{:0.6f}", xmr_amount);
                 fee_short_str = fmt::format("{:0.3f}", xmr_amount);
             }
@@ -1012,7 +1012,7 @@ namespace xmreg
                         {"no_inputs"       , no_inputs},
                         {"no_outputs"      , no_outputs},
                         {"no_nonrct_inputs", num_nonrct_inputs},
-                        {"mixin"           , mixin_no},
+                        {"mixin"           , mixin_no+1},
                         {"txsize"          , txsize}
                 });
 
