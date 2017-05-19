@@ -53,11 +53,24 @@ struct CurrentBlockchainStatus
 
     static string deamon_url;
 
+    // how many blocks to read before thread goes to sleep
     static uint64_t blockchain_chunk_size;
 
+    // gap from what we store total_emission_atomic and
+    // current blockchain height. We dont want to store
+    // what is on, e.g., top block, as this can get messy
+    // if the block gets orphaned or blockchain reorganization
+    // occurs. So the top 3 blocks (default number) will always
+    // be calculated in flight and added to what we have so far.
+    static uint64_t blockchain_chunk_gap;
+
+    // current blockchain height and
+    // hash of top block
     static atomic<uint64_t> current_height;
 
+
     static atomic<Emission> total_emission_atomic;
+
 
     static std::thread m_thread;
 
@@ -76,6 +89,9 @@ struct CurrentBlockchainStatus
 
     static void
     update_current_emission_amount();
+
+    static Emission
+    calculate_emission_in_blocks(uint64_t start_blk, uint64_t end_blk);
 
     static bool
     save_current_emission_amount();
