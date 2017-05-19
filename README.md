@@ -146,10 +146,10 @@ Go to your browser: http://127.0.0.1:8081
 
 ```
 ./xmrblocks -h
-xmrblocks, start Onion Monero Blockchain Explorer:
+xmrblocks, Onion Monero Blockchain Explorer:
   -h [ --help ] [=arg(=1)] (=0)         produce help message
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
-  --enable-pusher [=arg(=1)] (=0)       enable pushing signed tx
+  --enable-pusher [=arg(=1)] (=0)       enable signed transaction pusher
   --enable-mixin-details [=arg(=1)] (=0)
                                         enable mixin details for key images, 
                                         e.g., timescale, mixin of mixins, in tx
@@ -158,45 +158,79 @@ xmrblocks, start Onion Monero Blockchain Explorer:
                                         enable key images file checker
   --enable-output-key-checker [=arg(=1)] (=0)
                                         enable outputs key file checker
-  --enable-mempool-cache arg (=1)       enable caching txs in the mempool
+  --enable-mempool-cache arg (=1)       enable caching of transactions from the
+                                        mempool
   --enable-json-api arg (=1)            enable JSON REST api
-  --enable-tx-cache [=arg(=1)] (=0)     enable caching of tx details
+  --enable-tx-cache [=arg(=1)] (=0)     enable caching of transaction details
   --show-cache-times [=arg(=1)] (=0)    show times of getting data from cache 
                                         vs no cache
   --enable-block-cache [=arg(=1)] (=0)  enable caching of block details
   --enable-autorefresh-option [=arg(=1)] (=0)
                                         enable users to have the index page on 
                                         autorefresh
-  -p [ --port ] arg (=8081)             default port
-  --testnet-url arg                     you can specifiy testnet url, if you 
-                                        run it on mainet. link will show on 
-                                        front page to testnet explorer
-  --mainnet-url arg                     you can specifiy mainnet url, if you 
-                                        run it on testnet. link will show on 
-                                        front page to mainnet explorer
+  --enable-emission-monitor [=arg(=1)] (=0)
+                                        enable Monero total emission monitoring
+                                        thread
+  -p [ --port ] arg (=8081)             default explorer port
+  --testnet-url arg                     you can specify testnet url, if you run
+                                        it on mainnet. link will show on front 
+                                        page to testnet explorer
+  --mainnet-url arg                     you can specify mainnet url, if you run
+                                        it on testnet. link will show on front 
+                                        page to mainnet explorer
   --no-blocks-on-index arg (=10)        number of last blocks to be shown on 
                                         index page
-  -b [ --bc-path ] arg                  path to lmdb blockchain
-  --ssl-crt-file arg                    A path to crt file for ssl (https) 
+  -b [ --bc-path ] arg                  path to lmdb folder of the blockchain, 
+                                        e.g., ~/.bitmonero/lmdb
+  --ssl-crt-file arg                    path to crt file for ssl (https) 
                                         functionality
-  --ssl-key-file arg                    A path to key file for ssl (https) 
+  --ssl-key-file arg                    path to key file for ssl (https) 
                                         functionality
   -d [ --deamon-url ] arg (=http:://127.0.0.1:18081)
-                                        monero address string
+                                        Monero deamon url
 ```
 
 Example usage, defined as bash aliases.
 
 ```bash
 # for mainnet explorer
-alias xmrblocksmainnet='~/onion-monero-blockchain-explorer/build/xmrblocks    --port 8081 --no-blocks-on-index 49 --testnet-url "http://139.162.32.245:8082" --enable-block-cache=1 --enable-tx-cache=1 --enable-mempool-cache=1 --show-cache-times=1 --enable-pusher'
+alias xmrblocksmainnet='~/onion-monero-blockchain-explorer/build/xmrblocks    --port 8081 --no-blocks-on-index 24 --testnet-url "http://139.162.32.245:8082" --enable-pusher --enable-emission-monitor'
 
 # for testnet explorer
-alias xmrblockstestnet='~/onion-monero-blockchain-explorer/build/xmrblocks -t --port 8082 --no-blocks-on-index 24 --mainnet-url "http://139.162.32.245:8081" --enable-block-cache=1 --enable-tx-cache=1 --enable-mempool-cache=1 --show-cache-times=1 --enable-pusher'
+alias xmrblockstestnet='~/onion-monero-blockchain-explorer/build/xmrblocks -t --port 8082 --no-blocks-on-index 24 --mainnet-url "http://139.162.32.245:8081" --enable-pusher --enable-emission-monitor'
 ```
 
-These are explorer commands used for http://139.162.32.245:8081/ and http://139.162.32.245:8082/, respectively.
+These are aliases similar to those used for http://139.162.32.245:8081/ and http://139.162.32.245:8082/, respectively.
 
+## Enable Monero emission 
+
+Obtaining current Monero emission amount is not straight forward. Thus, by default it is 
+disabled. To enable it use `--enable-emission-monitor` flag, e.g., 
+
+
+```bash
+xmrblocks --enable-emission-monitor 
+```
+
+This flag will enable emission monitoring thread. When first started, the thread
+ will scan entire blockchain, and calculate the emission based on each block.
+Since it is a separate thread, the explorer will work as usual during this time. 
+Every 10000 blocks, the thread will save current emission in a file, by default, 
+ in `~/.bitmonero/lmdb/emission_amount.txt`. This file is used so that we don't
+ need to rescan entire blockchain whenever the explorer is restarted. When the 
+ explorer restarts, the thread will first check if `~/.bitmonero/lmdb/emission_amount.txt`
+ is present, read its values, and continue from there if possible. Subsequently, only the initial
+ use of the tread is time consuming. Once the thread scans the entire blockchain, it updates
+ the emission with new blocks as they come.
+ 
+ When the emission monitor is enabled, information about current emission of coinbase and fees is 
+ displied on the front page, e.g., :
+ 
+```
+Monero emission (fees) is 14485540.430 (52545.373) as of 1313448 block
+```
+ 
+    
 ## Enable SSL (https)
 
 By default, the explorer does not use ssl. But it has such a functionality. 
