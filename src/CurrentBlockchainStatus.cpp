@@ -249,15 +249,6 @@ CurrentBlockchainStatus::get_output_file_path()
 CurrentBlockchainStatus::Emission
 CurrentBlockchainStatus::get_emission()
 {
-    // we store gap emission from last few blocks
-    // we use it together with last_block_hash, so that
-    // we can reuse gap emission if hash is same between
-    // requests. no need to always keep recalucalting
-    // it, if top block hash is same as last time.
-    static Emission total_emission_gap {0, 0, 0};
-    static crypto::hash last_block_hash {null_hash};
-
-
     // get current emission
     Emission current_emission = total_emission_atomic;
 
@@ -266,60 +257,34 @@ CurrentBlockchainStatus::get_emission()
     // the emission from the top missing blocks, to have complete
     // emission data.
 
-    Emission gap_emission_calculated {0, 0, 0};
+    uint64_t current_blockchain_height = current_height;
 
-    crypto::hash top_block_id = core_storage->get_tail_id();
+    uint64_t start_blk = current_emission.blk_no;
 
-    if (last_block_hash == top_block_id)
+    // this should be at current hight or above
+    // as we calculate missing blocks only for top blockchain
+    // height
+    uint64_t end_block = start_blk + blockchain_chunk_gap;
+
+    if (end_block >= current_blockchain_height
+        && start_blk < current_blockchain_height)
     {
-        // if we already calclated gap for the same few blocks
-        // just reuse the emission calcualted for the gap.
+        // make sure we are not over the blockchain height
+        end_block = end_block > current_blockchain_height
+                    ? current_blockchain_height : end_block;
 
-        //cout << "reusing total_emission_gap" << endl;
+        // calculated emission for missing blocks
+        Emission gap_emission_calculated
+                = calculate_emission_in_blocks(start_blk, end_block);
 
-        gap_emission_calculated = total_emission_gap;
+        //cout << "gap_emission_calculated: " << std::string(gap_emission_calculated) << endl;
+
+        current_emission.coinbase += gap_emission_calculated.coinbase;
+        current_emission.fee      += gap_emission_calculated.fee;
+        current_emission.blk_no    = gap_emission_calculated.blk_no > 0
+                                     ? gap_emission_calculated.blk_no
+                                     : current_emission.blk_no;
     }
-    else
-    {
-        // if top height has change for whatever reason, e.g, new block
-        // was added, blockchain reoraganization happened, then
-        // recaulate the gap emission
-
-        //cout << "recalculate total_emission_gap" << endl;
-
-        uint64_t current_blockchain_height = current_height;
-
-        uint64_t start_blk = current_emission.blk_no;
-
-        // this should be at current hight or above
-        // as we calculate missing blocks only for top blockchain
-        // height
-        uint64_t end_block = start_blk + blockchain_chunk_gap;
-
-        if (end_block >= current_blockchain_height && start_blk < current_blockchain_height)
-        {
-            // make sure we are not over the blockchain height
-            end_block = end_block > current_blockchain_height
-                        ? current_blockchain_height : end_block;
-
-            // calculated emission for missing blocks
-            gap_emission_calculated = calculate_emission_in_blocks(start_blk, end_block);
-        }
-
-        // store calcualted gap emission for future use
-        total_emission_gap = gap_emission_calculated;
-
-        // update stored top block hash
-        last_block_hash = top_block_id;
-    }
-
-    //cout << "gap_emission_calculated: " << std::string(gap_emission_calculated) << endl;
-
-    current_emission.coinbase += gap_emission_calculated.coinbase;
-    current_emission.fee      += gap_emission_calculated.fee;
-    current_emission.blk_no    = gap_emission_calculated.blk_no > 0
-                                 ? gap_emission_calculated.blk_no
-                                 : current_emission.blk_no;
 
     return current_emission;
 }
