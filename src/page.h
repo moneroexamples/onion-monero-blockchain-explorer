@@ -5680,7 +5680,8 @@ namespace xmreg
             static const mstch::map footer_context {
                     {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
                     {"last_git_commit_date", string {GIT_COMMIT_DATETIME}},
-                    {"monero_version_full" , string {MONERO_VERSION_FULL}},
+                    {"git_branch_name"     , string {GIT_BRANCH_NAME}},
+                    {"monero_version_full" , string {MONERO_VERSION_FULL}}
             };
 
             string footer_html = mstch::render(xmreg::read(TMPL_FOOTER), footer_context);
