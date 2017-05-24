@@ -17,7 +17,8 @@ namespace myxmr
 {
 struct jsonresponse: crow::response
 {
-    jsonresponse(const nlohmann::json& _body) : crow::response {_body.dump()}
+    jsonresponse(const nlohmann::json& _body)
+            : crow::response {_body.dump()}
     {
         add_header("Access-Control-Allow-Origin", "*");
         add_header("Access-Control-Allow-Headers", "Content-Type");
@@ -26,21 +27,9 @@ struct jsonresponse: crow::response
 };
 }
 
-class ExitHandler
+int
+main(int ac, const char* av[])
 {
-public:
-    void exit() { exitHandler(0); }
-    static void exitHandler(int) { s_shouldExit = true; }
-    bool shouldExit() const { return s_shouldExit; }
-
-private:
-    static bool s_shouldExit;
-};
-
-bool ExitHandler::s_shouldExit = false;
-
-int main(int ac, const char* av[]) {
-
     // get command line options
     xmreg::CmdLineOptions opts {ac, av};
 
@@ -185,12 +174,8 @@ int main(int ac, const char* av[]) {
                 = testnet;
         xmreg::CurrentBlockchainStatus::deamon_url
                 = deamon_url;
-
-        if (!xmreg::CurrentBlockchainStatus::init_monero_blockchain())
-        {
-            cerr << "Error accessing blockchain from CurrentBlockchainStatus." << endl;
-            return EXIT_FAILURE;
-        }
+        xmreg::CurrentBlockchainStatus::set_blockchain_variables(
+                &mcore, core_storage);
 
         // launch the status monitoring thread so that it keeps track of blockchain
         // info, e.g., current height. Information from this thread is used
@@ -550,6 +535,17 @@ int main(int ac, const char* av[]) {
         app.port(app_port).multithreaded().run();
     }
 
+
+    if (enable_emission_monitor == true)
+    {
+        // finish Emission monitoring thread in a cotrolled manner.
+        xmreg::CurrentBlockchainStatus::m_thread.interrupt();
+        xmreg::CurrentBlockchainStatus::m_thread.join();
+
+        cout << "Emission monitoring thread joined." << endl;
+    }
+
+    cout << "The explorer is terminating." << endl;
 
     return EXIT_SUCCESS;
 }

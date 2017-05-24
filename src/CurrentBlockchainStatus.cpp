@@ -11,27 +11,12 @@ using namespace std;
 
 
 
-bool
-CurrentBlockchainStatus::init_monero_blockchain()
+void
+CurrentBlockchainStatus::set_blockchain_variables(MicroCore* _mcore,
+                                                  Blockchain* _core_storage)
 {
-    // set  monero log output level
-    uint32_t log_level = 0;
-    mlog_configure(mlog_get_default_log_path(""), true);
-
-    mcore = unique_ptr<xmreg::MicroCore>(new xmreg::MicroCore{});
-
-    // initialize the core using the blockchain path
-    if (!mcore->init(blockchain_path.string()))
-    {
-        cerr << "Error accessing blockchain." << endl;
-        return false;
-    }
-
-    // get the high level Blockchain object to interact
-    // with the blockchain lmdb database
-    core_storage = &(mcore->get_core());
-
-    return true;
+    mcore = _mcore;
+    core_storage =_core_storage;
 }
 
 
@@ -62,31 +47,50 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
 
     if (!is_running)
     {
-        m_thread = std::thread{[]()
+        m_thread = boost::thread{[]()
            {
-               while (true)
+               try
                {
-                   Emission current_emission = total_emission_atomic;
-
-                   current_height = core_storage->get_current_blockchain_height();
-
-                   update_current_emission_amount();
-
-                   save_current_emission_amount();
-
-                   if (current_emission.blk_no < current_height - blockchain_chunk_size)
+                   while (true)
                    {
-                       std::this_thread::sleep_for(std::chrono::seconds(1));
-                   }
-                   else
-                   {
-                       std::this_thread::sleep_for(std::chrono::seconds(60));
-                   }
+                       Emission current_emission = total_emission_atomic;
+
+                       current_height = core_storage->get_current_blockchain_height();
+
+                       // scan 10000 blocks for emissiom or if we are at the top of
+                       // the blockchain, only few top blocks
+                       update_current_emission_amount();
+
+                       cout << "current emission: " << string(current_emission) << endl;
+
+                       save_current_emission_amount();
+
+                       if (current_emission.blk_no < current_height - blockchain_chunk_size)
+                       {
+                           // while we scan the blockchain from scrach, every 10000
+                           // blocks take 1 second break
+                           boost::this_thread::sleep_for(boost::chrono::seconds(1));
+                       }
+                       else
+                       {
+                           // when we reach top of the blockchain, update
+                           // the emission amount every minute.
+                           boost::this_thread::sleep_for(boost::chrono::seconds(60));
+                       }
+
+                   } // while (true)
                }
-           }};
+               catch (boost::thread_interrupted&)
+               {
+                   cout << "Emission monitoring thread interrupted." << endl;
+                   return;
+               }
+
+           }}; //  m_thread = boost::thread{[]()
 
         is_running = true;
-    }
+
+    } //  if (!is_running)
 }
 
 
@@ -117,8 +121,6 @@ CurrentBlockchainStatus::update_current_emission_amount()
     current_emission.blk_no    = emission_calculated.blk_no;
 
     total_emission_atomic = current_emission;
-
-    cout << "total emission: " << string(current_emission) << endl;
 }
 
 CurrentBlockchainStatus::Emission
@@ -311,11 +313,10 @@ atomic<uint64_t> CurrentBlockchainStatus::current_height {0};
 
 atomic<CurrentBlockchainStatus::Emission> CurrentBlockchainStatus::total_emission_atomic;
 
-std::thread      CurrentBlockchainStatus::m_thread;
+boost::thread      CurrentBlockchainStatus::m_thread;
 
 atomic<bool>     CurrentBlockchainStatus::is_running {false};
 
-cryptonote::Blockchain*       CurrentBlockchainStatus::core_storage;
-unique_ptr<xmreg::MicroCore>  CurrentBlockchainStatus::mcore;
-
+Blockchain*       CurrentBlockchainStatus::core_storage {nullptr};
+xmreg::MicroCore*  CurrentBlockchainStatus::mcore {nullptr};
 }

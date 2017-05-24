@@ -72,20 +72,20 @@ struct CurrentBlockchainStatus
     static atomic<Emission> total_emission_atomic;
 
 
-    static std::thread m_thread;
+    static boost::thread m_thread;
 
     static atomic<bool> is_running;
 
     // make object for accessing the blockchain here
-    static unique_ptr<xmreg::MicroCore> mcore;
-
-    static cryptonote::Blockchain *core_storage;
+    static MicroCore* mcore;
+    static Blockchain* core_storage;
 
     static void
     start_monitor_blockchain_thread();
 
-    static bool
-    init_monero_blockchain();
+    static void
+    set_blockchain_variables(MicroCore* _mcore,
+                             Blockchain* _core_storage);
 
     static void
     update_current_emission_amount();

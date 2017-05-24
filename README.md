@@ -212,8 +212,8 @@ disabled. To enable it use `--enable-emission-monitor` flag, e.g.,
 xmrblocks --enable-emission-monitor 
 ```
 
-This flag will enable emission monitoring thread. When first started, the thread
- will scan entire blockchain, and calculate the emission based on each block.
+This flag will enable emission monitoring thread. When started, the thread
+ will initially scan the entire blockchain, and calculate the cumulative emission based on each block.
 Since it is a separate thread, the explorer will work as usual during this time. 
 Every 10000 blocks, the thread will save current emission in a file, by default, 
  in `~/.bitmonero/lmdb/emission_amount.txt`. This file is used so that we don't
@@ -221,15 +221,16 @@ Every 10000 blocks, the thread will save current emission in a file, by default,
  explorer restarts, the thread will first check if `~/.bitmonero/lmdb/emission_amount.txt`
  is present, read its values, and continue from there if possible. Subsequently, only the initial
  use of the tread is time consuming. Once the thread scans the entire blockchain, it updates
- the emission with new blocks as they come.
+ the emission amount using new blocks as they come.
  
  When the emission monitor is enabled, information about current emission of coinbase and fees is 
- displied on the front page, e.g., :
+ displayed on the front page, e.g., :
  
 ```
 Monero emission (fees) is 14485540.430 (52545.373) as of 1313448 block
 ```
  
+To disable the monitor, simply restart the explorer without `--enable-emission-monitor` flag. 
     
 ## Enable SSL (https)
 
