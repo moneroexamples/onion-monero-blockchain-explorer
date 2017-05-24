@@ -17,7 +17,8 @@ namespace myxmr
 {
 struct jsonresponse: crow::response
 {
-    jsonresponse(const nlohmann::json& _body) : crow::response {_body.dump()}
+    jsonresponse(const nlohmann::json& _body)
+            : crow::response {_body.dump()}
     {
         add_header("Access-Control-Allow-Origin", "*");
         add_header("Access-Control-Allow-Headers", "Content-Type");
@@ -26,10 +27,9 @@ struct jsonresponse: crow::response
 };
 }
 
-
-
-int main(int ac, const char* av[]) {
-
+int
+main(int ac, const char* av[])
+{
     // get command line options
     xmreg::CmdLineOptions opts {ac, av};
 
@@ -60,6 +60,8 @@ int main(int ac, const char* av[]) {
     auto enable_tx_cache_opt           = opts.get_option<bool>("enable-tx-cache");
     auto enable_block_cache_opt        = opts.get_option<bool>("enable-block-cache");
     auto show_cache_times_opt          = opts.get_option<bool>("show-cache-times");
+    auto enable_emission_monitor_opt   = opts.get_option<bool>("enable-emission-monitor");
+
 
     bool testnet                      {*testnet_opt};
     bool enable_pusher                {*enable_pusher_opt};
@@ -71,6 +73,7 @@ int main(int ac, const char* av[]) {
     bool enable_json_api              {*enable_json_api_opt};
     bool enable_tx_cache              {*enable_tx_cache_opt};
     bool enable_block_cache           {*enable_block_cache_opt};
+    bool enable_emission_monitor      {*enable_emission_monitor_opt};
     bool show_cache_times             {*show_cache_times_opt};
 
 
@@ -128,6 +131,7 @@ int main(int ac, const char* av[]) {
 
     cout << blockchain_path << endl;
 
+
     // create instance of our MicroCore
     // and make pointer to the Blockchain
     xmreg::MicroCore mcore;
@@ -144,7 +148,41 @@ int main(int ac, const char* av[]) {
     string deamon_url {*deamon_url_opt};
 
     if (testnet && deamon_url == "http:://127.0.0.1:18081")
+    {
         deamon_url = "http:://127.0.0.1:28081";
+    }
+
+
+    if (enable_emission_monitor == true)
+    {
+        // This starts new thread, which aim is
+        // to calculate, store and monitor
+        // current total Monero emission amount.
+
+        // This thread stores the current emission
+        // which it has caluclated in
+        // <blockchain_path>/emission_amount.txt file,
+        // e.g., ~/.bitmonero/lmdb/emission_amount.txt.
+        // So instead of calcualting the emission
+        // from scrach whenever the explorer is started,
+        // the thread is initalized with the values
+        // found in emission_amount.txt file.
+
+        xmreg::CurrentBlockchainStatus::blockchain_path
+                = blockchain_path;
+        xmreg::CurrentBlockchainStatus::testnet
+                = testnet;
+        xmreg::CurrentBlockchainStatus::deamon_url
+                = deamon_url;
+        xmreg::CurrentBlockchainStatus::set_blockchain_variables(
+                &mcore, core_storage);
+
+        // launch the status monitoring thread so that it keeps track of blockchain
+        // info, e.g., current height. Information from this thread is used
+        // by tx searching threads that are launched for each user independently,
+        // when they log back or create new account.
+        xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
+    }
 
     // create instance of page class which
     // contains logic for the website
@@ -434,6 +472,14 @@ int main(int ac, const char* av[]) {
             return r;
         });
 
+        CROW_ROUTE(app, "/api/emission")
+        ([&](const crow::request &req) {
+
+            myxmr::jsonresponse r{xmrblocks.json_emission()};
+
+            return r;
+        });
+
         CROW_ROUTE(app, "/api/outputs").methods("GET"_method)
         ([&](const crow::request &req) {
 
@@ -489,6 +535,17 @@ int main(int ac, const char* av[]) {
         app.port(app_port).multithreaded().run();
     }
 
+
+    if (enable_emission_monitor == true)
+    {
+        // finish Emission monitoring thread in a cotrolled manner.
+        xmreg::CurrentBlockchainStatus::m_thread.interrupt();
+        xmreg::CurrentBlockchainStatus::m_thread.join();
+
+        cout << "Emission monitoring thread joined." << endl;
+    }
+
+    cout << "The explorer is terminating." << endl;
 
     return EXIT_SUCCESS;
 }

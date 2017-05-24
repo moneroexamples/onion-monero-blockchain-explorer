@@ -6,7 +6,7 @@ set(SOURCE_HEADERS
         MicroCore.h
 		tools.h
 		monero_headers.h
-        )
+		CurrentBlockchainStatus.h)
 
 set(SOURCE_FILES
 		MicroCore.cpp
@@ -14,7 +14,7 @@ set(SOURCE_FILES
 		CmdLineOptions.cpp
 		page.h
 		rpccalls.cpp rpccalls.h
-		version.h.in)
+		version.h.in CurrentBlockchainStatus.cpp)
 
 # make static library called libmyxrm
 # that we are going to link to

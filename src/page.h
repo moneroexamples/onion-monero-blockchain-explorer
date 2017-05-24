@@ -17,6 +17,8 @@
 #include "tools.h"
 #include "rpccalls.h"
 
+#include "CurrentBlockchainStatus.h"
+
 #include "../ext/crow/http_request.h"
 
 #include "../ext/vpetrigocaches/cache.hpp"
@@ -149,7 +151,7 @@ namespace xmreg
 
             if (!input_key_imgs.empty())
             {
-                mixin_str     = std::to_string(mixin_no - 1);
+                mixin_str     = std::to_string(mixin_no);
                 fee_str       = fmt::format("{:0.6f}", xmr_amount);
                 fee_short_str = fmt::format("{:0.3f}", xmr_amount);
             }
@@ -454,6 +456,16 @@ namespace xmreg
                     {"show_cache_times"         , show_cache_times}
             };
 
+//            std::list<block> atl_blks;
+//
+//            if (core_storage->get_alternative_blocks(atl_blks))
+//            {
+//                for (const block& alt_blk: atl_blks)
+//                {
+//                    //cout << "alt_blk: " << get_block_height(alt_blk) << endl;
+//                }
+//            }
+
             context.emplace("txs", mstch::array()); // will keep tx to show
 
             // get reference to txs mstch map to be field below
@@ -746,9 +758,10 @@ namespace xmreg
                     }
 
                     context["network_info"] = mstch::map {
-                            {"difficulty", j_network_info["difficulty"].get<uint64_t>()},
-                            {"hash_rate" , difficulty},
-                            {"fee_per_kb", xmreg::xmr_amount_to_str(j_network_info["fee_per_kb"], "{:0.12f}")}
+                            {"difficulty"         , j_network_info["difficulty"].get<uint64_t>()},
+                            {"hash_rate"          , difficulty},
+                            {"fee_per_kb"         , print_money(j_network_info["fee_per_kb"])},
+                            {"alt_blocks_no"      , j_network_info["alt_blocks_count"].get<uint64_t>()}
                     };
                 }
             }
@@ -756,6 +769,27 @@ namespace xmreg
             {
                 cerr  << "network_info future not ready yet, skipping." << endl;
             }
+
+            if (CurrentBlockchainStatus::is_thread_running())
+            {
+                CurrentBlockchainStatus::Emission current_values
+                        = CurrentBlockchainStatus::get_emission();
+
+                string emission_blk_no  = std::to_string(current_values.blk_no - 1);
+                string emission_coinbase = xmr_amount_to_str(current_values.coinbase, "{:0.3f}");
+                string emission_fee      = xmr_amount_to_str(current_values.fee, "{:0.3f}");
+
+                context["emission"] = mstch::map {
+                        {"blk_no"    , emission_blk_no},
+                        {"amount"    , emission_coinbase},
+                        {"fee_amount", emission_fee}
+                };
+            }
+            else
+            {
+                cerr  << "emission thread not running, skipping." << endl;
+            }
+
 
             // get memory pool rendered template
             string mempool_html = mempool(false, no_of_mempool_tx_of_frontpage);
@@ -978,7 +1012,7 @@ namespace xmreg
                         {"no_inputs"       , no_inputs},
                         {"no_outputs"      , no_outputs},
                         {"no_nonrct_inputs", num_nonrct_inputs},
-                        {"mixin"           , mixin_no},
+                        {"mixin"           , mixin_no+1},
                         {"txsize"          , txsize}
                 });
 
@@ -4768,6 +4802,50 @@ namespace xmreg
         }
 
 
+        /*
+        * Lets use this json api convention for success and error
+        * https://labs.omniti.com/labs/jsend
+        */
+        json
+        json_emission()
+        {
+            json j_response {
+                    {"status", "fail"},
+                    {"data",   json {}}
+            };
+
+            json& j_data = j_response["data"];
+
+            json j_info;
+
+            // get basic network info
+            if (!CurrentBlockchainStatus::is_thread_running())
+            {
+                j_data["title"] = "Emission monitoring thread not enabled.";
+                return j_response;
+            }
+            else
+            {
+                CurrentBlockchainStatus::Emission current_values
+                        = CurrentBlockchainStatus::get_emission();
+
+                string emission_blk_no   = std::to_string(current_values.blk_no - 1);
+                string emission_coinbase = xmr_amount_to_str(current_values.coinbase, "{:0.3f}");
+                string emission_fee      = xmr_amount_to_str(current_values.fee, "{:0.3f}");
+
+                j_data = json {
+                        {"blk_no"  , current_values.blk_no - 1},
+                        {"coinbase", current_values.coinbase},
+                        {"fee"     , current_values.fee},
+                };
+            }
+
+            j_response["status"]  = "success";
+
+            return j_response;
+        }
+
+
     private:
 
         json
@@ -5623,3 +5701,4 @@ namespace xmreg
 
 
 #endif //CROWXMR_PAGE_H
+

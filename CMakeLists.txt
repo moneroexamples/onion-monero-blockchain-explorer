@@ -113,6 +113,7 @@ set(LIBRARIES
         unbound
         curl
         crypto
+        atomic
         ssl)
 
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND NOT WIN32)
