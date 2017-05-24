@@ -624,6 +624,25 @@ curl  -w "\n" -X GET "http://139.162.32.245:8081/api/networkinfo"
 }
 ```
 
+#### api/emission
+
+```bash
+curl  -w "\n" -X GET "http://139.162.32.245:8081/api/emission"
+```
+
+```json
+{
+  "data": {
+    "blk_no": 1313969,
+    "coinbase": 14489473877253413000,
+    "fee": 52601974988641130
+  },
+  "status": "success"
+}
+```
+
+Emission only works when the emission monitoring thread is enabled.
+
 
 #### api/rawblock/<block_number|block_hash>
 
