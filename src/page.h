@@ -402,8 +402,6 @@ namespace xmreg
         index2(uint64_t page_no = 0, bool refresh_page = false)
         {
 
-
-
             // we get network info, such as current hash rate
             // but since this makes a rpc call to deamon, we make it as an async
             // call. this way we dont have to wait with execution of the rest of the
@@ -4824,6 +4822,26 @@ namespace xmreg
             }
 
             j_info["fee_per_kb"] = fee_estimated;
+
+            // get mempool size in kB.
+            std::vector<tx_info> mempool_txs;
+
+            if (!rpc.get_mempool(mempool_txs))
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Cant get mempool transactions";
+                return j_response;
+            }
+
+            uint64_t tx_pool_size_kbytes {0};
+
+            for (const tx_info& tx_i: mempool_txs)
+            {
+                tx_pool_size_kbytes += tx_i.blob_size;
+            }
+
+            j_info["tx_pool_size"]        = mempool_txs.size();
+            j_info["tx_pool_size_kbytes"] = tx_pool_size_kbytes;
 
             j_data = j_info;
 
