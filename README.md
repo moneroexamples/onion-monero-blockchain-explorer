@@ -47,6 +47,11 @@ i2p users (main Monero network) - down for now:
 
  - [http://monerotools.i2p](http://monerotools.i2p)
 
+Alternative Monero block explorers:
+
+- [http://moneroblocks.info](http://moneroblocks.info/)
+- [https://monerobase.com](https://monerobase.com/)
+- [http://chainradar.com](http://chainradar.com/xmr/blocks)
  
 ## Onion Monero Blockchain Explorer features
 
