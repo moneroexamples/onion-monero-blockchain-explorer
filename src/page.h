@@ -35,6 +35,7 @@
 #define TMPL_INDEX                  TMPL_DIR "/index.html"
 #define TMPL_INDEX2                 TMPL_DIR "/index2.html"
 #define TMPL_MEMPOOL                TMPL_DIR "/mempool.html"
+#define TMPL_MEMPOOL_ERROR          TMPL_DIR "/mempool_error.html"
 #define TMPL_HEADER                 TMPL_DIR "/header.html"
 #define TMPL_FOOTER                 TMPL_DIR "/footer.html"
 #define TMPL_BLOCK                  TMPL_DIR "/block.html"
@@ -261,6 +262,7 @@ namespace xmreg
 
         uint64_t no_of_mempool_tx_of_frontpage;
         uint64_t no_blocks_on_index;
+        uint64_t network_info_timeout;
 
         string testnet_url;
         string mainnet_url;
@@ -335,6 +337,7 @@ namespace xmreg
              bool _enable_block_cache,
              bool _show_cache_times,
              uint64_t _no_blocks_on_index,
+             uint64_t _network_info_timeout,
              string _testnet_url,
              string _mainnet_url)
                 : mcore {_mcore},
@@ -352,6 +355,7 @@ namespace xmreg
                   enable_block_cache {_enable_block_cache},
                   show_cache_times {_show_cache_times},
                   no_blocks_on_index {_no_blocks_on_index},
+                  network_info_timeout {_network_info_timeout},
                   testnet_url {_testnet_url},
                   mainnet_url {_mainnet_url},
                   mempool_tx_json_cache(1000),
@@ -369,6 +373,7 @@ namespace xmreg
             template_file["footer"]          = get_footer();
             template_file["index2"]          = get_full_page(xmreg::read(TMPL_INDEX2));
             template_file["mempool"]         = xmreg::read(TMPL_MEMPOOL);
+            template_file["mempool_error"]   = xmreg::read(TMPL_MEMPOOL_ERROR);
             template_file["mempool_full"]    = get_full_page(template_file["mempool"]);
             template_file["block"]           = get_full_page(xmreg::read(TMPL_BLOCK));
             template_file["tx"]              = get_full_page(xmreg::read(TMPL_TX));
@@ -397,6 +402,8 @@ namespace xmreg
         index2(uint64_t page_no = 0, bool refresh_page = false)
         {
 
+
+
             // we get network info, such as current hash rate
             // but since this makes a rpc call to deamon, we make it as an async
             // call. this way we dont have to wait with execution of the rest of the
@@ -419,6 +426,9 @@ namespace xmreg
                 }
 
                 j_info["fee_per_kb"] = fee_estimated;
+
+                // get memory pool rendered template
+                j_info["mempool_html"] = mempool(false, no_of_mempool_tx_of_frontpage);
 
                 return j_info;
             });
@@ -734,11 +744,13 @@ namespace xmreg
             context["cache_misses"] = cache_misses;
 
             // now time to check if we have our networkinfo from network_info future
-            // wait a bit (200 millisecond max) if not, just in case, but we dont wait more.
+            // wait a bit (network_info_timeout millisecond max) if not, just in case, but we dont wait more.
             // if its not ready by now, forget about it.
 
+            string mempool_html {"Cant get mempool_pool"};
+
             std::future_status ftr_status = network_info_ftr.wait_for(
-                    std::chrono::milliseconds(200));
+                    std::chrono::milliseconds(network_info_timeout));
 
             if (ftr_status == std::future_status::ready)
             {
@@ -758,16 +770,20 @@ namespace xmreg
                     }
 
                     context["network_info"] = mstch::map {
-                            {"difficulty"         , j_network_info["difficulty"].get<uint64_t>()},
-                            {"hash_rate"          , difficulty},
-                            {"fee_per_kb"         , print_money(j_network_info["fee_per_kb"])},
-                            {"alt_blocks_no"      , j_network_info["alt_blocks_count"].get<uint64_t>()}
+                            {"difficulty"     , j_network_info["difficulty"].get<uint64_t>()},
+                            {"hash_rate"      , difficulty},
+                            {"fee_per_kb"     , print_money(j_network_info["fee_per_kb"])},
+                            {"alt_blocks_no"  , j_network_info["alt_blocks_count"].get<uint64_t>()}
                     };
+
+                    mempool_html = j_network_info["mempool_html"];
                 }
             }
             else
             {
-                cerr  << "network_info future not ready yet, skipping." << endl;
+                mempool_html = template_file["mempool_error"];
+
+                cerr  << "network_info and mempool future not ready yet, skipping." << endl;
             }
 
             if (CurrentBlockchainStatus::is_thread_running())
@@ -792,7 +808,7 @@ namespace xmreg
 
 
             // get memory pool rendered template
-            string mempool_html = mempool(false, no_of_mempool_tx_of_frontpage);
+            //string mempool_html = mempool(false, no_of_mempool_tx_of_frontpage);
 
             // append mempool_html to the index context map
             context["mempool_info"] = mempool_html;
@@ -804,8 +820,8 @@ namespace xmreg
         }
 
         /**
-     * Render mempool data
-     */
+         * Render mempool data
+         */
         string
         mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
         {

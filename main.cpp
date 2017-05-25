@@ -49,6 +49,7 @@ main(int ac, const char* av[])
     auto no_blocks_on_index_opt        = opts.get_option<string>("no-blocks-on-index");
     auto testnet_url                   = opts.get_option<string>("testnet-url");
     auto mainnet_url                   = opts.get_option<string>("mainnet-url");
+    auto network_info_timeout_opt      = opts.get_option<string>("network-info-timeout");
     auto testnet_opt                   = opts.get_option<bool>("testnet");
     auto enable_key_image_checker_opt  = opts.get_option<bool>("enable-key-image-checker");
     auto enable_output_key_checker_opt = opts.get_option<bool>("enable-output-key-checker");
@@ -61,6 +62,7 @@ main(int ac, const char* av[])
     auto enable_block_cache_opt        = opts.get_option<bool>("enable-block-cache");
     auto show_cache_times_opt          = opts.get_option<bool>("show-cache-times");
     auto enable_emission_monitor_opt   = opts.get_option<bool>("enable-emission-monitor");
+
 
 
     bool testnet                      {*testnet_opt};
@@ -152,6 +154,21 @@ main(int ac, const char* av[])
         deamon_url = "http:://127.0.0.1:28081";
     }
 
+    uint64_t network_info_timeout {3000};
+
+    try
+    {
+        network_info_timeout = boost::lexical_cast<uint64_t>(*network_info_timeout_opt);
+    }
+    catch (boost::bad_lexical_cast &e)
+    {
+        cout << "Cant cast " << (*network_info_timeout_opt) << " into number."
+             << "Using default value of " << network_info_timeout <<  " milliseconds."
+             << endl;
+
+    }
+
+
 
     if (enable_emission_monitor == true)
     {
@@ -200,6 +217,7 @@ main(int ac, const char* av[])
                           enable_block_cache,
                           show_cache_times,
                           no_blocks_on_index,
+                          network_info_timeout,
                           *testnet_url,
                           *mainnet_url);
 
