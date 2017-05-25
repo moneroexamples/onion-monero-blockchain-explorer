@@ -427,10 +427,15 @@ namespace xmreg
 
                 j_info["fee_per_kb"] = fee_estimated;
 
-                // get memory pool rendered template
-                j_info["mempool_html"] = mempool(false, no_of_mempool_tx_of_frontpage);
-
                 return j_info;
+            });
+
+
+            // get mempool for the front page also using async future
+            std::future<string> mempool_ftr = std::async(std::launch::async, [&]
+            {
+                // get memory pool rendered template
+                return mempool(false, no_of_mempool_tx_of_frontpage);
             });
 
             //get current server timestamp
@@ -744,13 +749,11 @@ namespace xmreg
             context["cache_misses"] = cache_misses;
 
             // now time to check if we have our networkinfo from network_info future
-            // wait a bit (network_info_timeout millisecond max) if not, just in case, but we dont wait more.
+            // wait a bit (300 millisecond max) if not, just in case, but we dont wait more.
             // if its not ready by now, forget about it.
 
-            string mempool_html {"Cant get mempool_pool"};
-
             std::future_status ftr_status = network_info_ftr.wait_for(
-                    std::chrono::milliseconds(network_info_timeout));
+                    std::chrono::milliseconds(300));
 
             if (ftr_status == std::future_status::ready)
             {
@@ -775,15 +778,27 @@ namespace xmreg
                             {"fee_per_kb"     , print_money(j_network_info["fee_per_kb"])},
                             {"alt_blocks_no"  , j_network_info["alt_blocks_count"].get<uint64_t>()}
                     };
-
-                    mempool_html = j_network_info["mempool_html"];
                 }
             }
             else
             {
-                mempool_html = template_file["mempool_error"];
+                cerr  << "network_info future not ready yet, skipping." << endl;
+            }
 
-                cerr  << "network_info and mempool future not ready yet, skipping." << endl;
+            string mempool_html {"Cant get mempool_pool"};
+
+            // get mempool data for the front page, if ready. If not, then just skip.
+            std::future_status mempool_ftr_status = mempool_ftr.wait_for(
+                    std::chrono::milliseconds(network_info_timeout));
+
+            if (mempool_ftr_status == std::future_status::ready)
+            {
+                mempool_html = mempool_ftr.get();
+            }
+            else
+            {
+                cerr  << "mempool future not ready yet, skipping." << endl;
+                mempool_html = template_file["mempool_error"];
             }
 
             if (CurrentBlockchainStatus::is_thread_running())
@@ -791,7 +806,7 @@ namespace xmreg
                 CurrentBlockchainStatus::Emission current_values
                         = CurrentBlockchainStatus::get_emission();
 
-                string emission_blk_no  = std::to_string(current_values.blk_no - 1);
+                string emission_blk_no   = std::to_string(current_values.blk_no - 1);
                 string emission_coinbase = xmr_amount_to_str(current_values.coinbase, "{:0.3f}");
                 string emission_fee      = xmr_amount_to_str(current_values.fee, "{:0.3f}");
 
