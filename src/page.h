@@ -774,7 +774,8 @@ namespace xmreg
                             {"difficulty"     , j_network_info["difficulty"].get<uint64_t>()},
                             {"hash_rate"      , difficulty},
                             {"fee_per_kb"     , print_money(j_network_info["fee_per_kb"])},
-                            {"alt_blocks_no"  , j_network_info["alt_blocks_count"].get<uint64_t>()}
+                            {"alt_blocks_no"  , j_network_info["alt_blocks_count"].get<uint64_t>()},
+                            {"tx_pool_size"   , j_network_info["tx_pool_size"].get<uint64_t>()},
                     };
                 }
             }
@@ -796,7 +797,7 @@ namespace xmreg
             else
             {
                 cerr  << "mempool future not ready yet, skipping." << endl;
-                mempool_html = template_file["mempool_error"];
+                mempool_html = mstch::render(template_file["mempool_error"], context);
             }
 
             if (CurrentBlockchainStatus::is_thread_running())
@@ -4823,25 +4824,25 @@ namespace xmreg
 
             j_info["fee_per_kb"] = fee_estimated;
 
-            // get mempool size in kB.
-            std::vector<tx_info> mempool_txs;
-
-            if (!rpc.get_mempool(mempool_txs))
-            {
-                j_response["status"]  = "error";
-                j_response["message"] = "Cant get mempool transactions";
-                return j_response;
-            }
-
-            uint64_t tx_pool_size_kbytes {0};
-
-            for (const tx_info& tx_i: mempool_txs)
-            {
-                tx_pool_size_kbytes += tx_i.blob_size;
-            }
-
-            j_info["tx_pool_size"]        = mempool_txs.size();
-            j_info["tx_pool_size_kbytes"] = tx_pool_size_kbytes;
+//            // get mempool size in kB.
+//            std::vector<tx_info> mempool_txs;
+//
+//            if (!rpc.get_mempool(mempool_txs))
+//            {
+//                j_response["status"]  = "error";
+//                j_response["message"] = "Cant get mempool transactions";
+//                return j_response;
+//            }
+//
+//            uint64_t tx_pool_size_kbytes {0};
+//
+//            for (const tx_info& tx_i: mempool_txs)
+//            {
+//                tx_pool_size_kbytes += tx_i.blob_size;
+//            }
+//
+//            j_info["tx_pool_size"]        = mempool_txs.size();
+//            j_info["tx_pool_size_kbytes"] = tx_pool_size_kbytes;
 
             j_data = j_info;
 
