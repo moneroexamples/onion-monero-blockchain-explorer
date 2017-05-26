@@ -751,7 +751,7 @@ namespace xmreg
             // if its not ready by now, forget about it.
 
             std::future_status ftr_status = network_info_ftr.wait_for(
-                    std::chrono::milliseconds(300));
+                    std::chrono::milliseconds(1000));
 
             if (ftr_status == std::future_status::ready)
             {
