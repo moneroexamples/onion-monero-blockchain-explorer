@@ -33,7 +33,7 @@ Clearnet versions:
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
- - [https://explorer.xmr.my/](https://explorer.xmr.my/) - https enabled.
+ - [https://explorer.xmr.my/](https://explorer.xmr.my/) - nice looking one, https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.
   
@@ -47,7 +47,7 @@ i2p users (main Monero network) - down for now:
 
  - [http://monerotools.i2p](http://monerotools.i2p)
 
-Alternative Monero block explorers:
+Alternative block explorers:
 
 - [http://moneroblocks.info](http://moneroblocks.info/)
 - [https://monerobase.com](https://monerobase.com/)
@@ -71,7 +71,8 @@ The key features of the Onion Monero Blockchain Explorer are:
  - the only explorer showing number of amount output indices,
  - the only explorer supporting Monero testnet network,
  - the only explorer providing tx checker and pusher for online pushing of transactions,
- - the only explorer able to estimate possible spendings based on address and viewkey.
+ - the only explorer able to estimate possible spendings based on address and viewkey,
+ - the only explorer that can provide total amount of all miner fees.
 
 
 ## Compilation on Ubuntu 16.04
@@ -221,12 +222,18 @@ This flag will enable emission monitoring thread. When started, the thread
  will initially scan the entire blockchain, and calculate the cumulative emission based on each block.
 Since it is a separate thread, the explorer will work as usual during this time. 
 Every 10000 blocks, the thread will save current emission in a file, by default, 
- in `~/.bitmonero/lmdb/emission_amount.txt`. This file is used so that we don't
+ in `~/.bitmonero/lmdb/emission_amount.txt`. For testnet network, 
+ it is `~/.bitmonero/testnet/lmdb/emission_amount.txt`. This file is used so that we don't
  need to rescan entire blockchain whenever the explorer is restarted. When the 
  explorer restarts, the thread will first check if `~/.bitmonero/lmdb/emission_amount.txt`
  is present, read its values, and continue from there if possible. Subsequently, only the initial
  use of the tread is time consuming. Once the thread scans the entire blockchain, it updates
- the emission amount using new blocks as they come.
+ the emission amount using new blocks as they come. Since the explorer writes this file, there can
+ be only one instance of it running for mainnet and testnet. Thus, for example, you cant have 
+ two explorers for mainnet
+ running at the same time, as they will be trying to write and read the same file at the same time,
+ leading to unexpected results. Off course having one instance for mainnet and one instance for testnet
+ is fine, as they write to different files.
  
  When the emission monitor is enabled, information about current emission of coinbase and fees is 
  displayed on the front page, e.g., :
