@@ -241,6 +241,9 @@ Every 10000 blocks, the thread will save current emission in a file, by default,
 ```
 Monero emission (fees) is 14485540.430 (52545.373) as of 1313448 block
 ```
+
+The values given, can be checked using Monero daemon's  `print_coinbase_tx_sum` command. 
+For example, for the above example: `print_coinbase_tx_sum 0 1313449`.
  
 To disable the monitor, simply restart the explorer without `--enable-emission-monitor` flag. 
     
