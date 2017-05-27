@@ -18,6 +18,7 @@
 #include "rpccalls.h"
 
 #include "CurrentBlockchainStatus.h"
+#include "MempoolStatus.h"
 
 #include "../ext/crow/http_request.h"
 

@@ -204,6 +204,22 @@ main(int ac, const char* av[])
         xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
     }
 
+
+    xmreg::MempoolStatus::blockchain_path
+            = blockchain_path;
+    xmreg::MempoolStatus::testnet
+            = testnet;
+    xmreg::MempoolStatus::deamon_url
+            = deamon_url;
+    xmreg::MempoolStatus::set_blockchain_variables(
+            &mcore, core_storage);
+
+    // launch the status monitoring thread so that it keeps track of blockchain
+    // info, e.g., current height. Information from this thread is used
+    // by tx searching threads that are launched for each user independently,
+    // when they log back or create new account.
+    xmreg::MempoolStatus::start_mempool_status_thread();
+
     // create instance of page class which
     // contains logic for the website
     xmreg::page xmrblocks(&mcore,
