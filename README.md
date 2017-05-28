@@ -188,7 +188,7 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         index page
   --network-info-timeout arg (=1000)    maximum time, in milliseconds, to wait 
                                         for network info availability
-  --mempool-info-timeout arg (=1000)    maximum time, in milliseconds, to wait 
+  --mempool-info-timeout arg (=3000)    maximum time, in milliseconds, to wait 
                                         for mempool data for the front page
   -b [ --bc-path ] arg                  path to lmdb folder of the blockchain, 
                                         e.g., ~/.bitmonero/lmdb

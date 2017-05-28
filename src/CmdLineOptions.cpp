@@ -57,7 +57,7 @@ namespace xmreg
                  "number of last blocks to be shown on index page")
                 ("network-info-timeout", value<string>()->default_value("1000"),
                  "maximum time, in milliseconds, to wait for network info availability")
-                ("mempool-info-timeout", value<string>()->default_value("1000"),
+                ("mempool-info-timeout", value<string>()->default_value("5000"),
                  "maximum time, in milliseconds, to wait for mempool data for the front page")
                 ("bc-path,b", value<string>(),
                  "path to lmdb folder of the blockchain, e.g., ~/.bitmonero/lmdb")

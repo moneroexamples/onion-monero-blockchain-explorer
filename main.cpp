@@ -156,7 +156,7 @@ main(int ac, const char* av[])
     }
 
     uint64_t network_info_timeout {1000};
-    uint64_t mempool_info_timeout {3000};
+    uint64_t mempool_info_timeout {5000};
     try
     {
         network_info_timeout = boost::lexical_cast<uint64_t>(*network_info_timeout_opt);
