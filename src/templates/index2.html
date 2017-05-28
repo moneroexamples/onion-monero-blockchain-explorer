@@ -40,6 +40,9 @@
             | Hash rate: {{hash_rate}}
             | Fee per kb: {{fee_per_kb}}
             | Alternative blocks no: {{alt_blocks_no}}
+            {{^is_current_info}}
+            | Data from {{age}} {{age_format}} ago
+            {{/is_current_info}}
         </h3>
     {{/network_info}}
 

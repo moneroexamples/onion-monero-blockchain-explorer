@@ -313,6 +313,21 @@ namespace xmreg
         // parse their json for each request
         fifo_cache_t<string, mempool_tx_info> mempool_tx_json_cache;
 
+        // to keep network_info in cache
+        // and to show previous info in case current querry for
+        // the current info timesout.
+        struct network_info
+        {
+            uint64_t difficulty;
+            uint64_t hash_rate;
+            uint64_t fee_per_kb;
+            uint64_t alt_blocks_no;
+            uint64_t tx_pool_size;
+            uint64_t info_timestamp;
+        };
+
+        atomic<network_info> previous_network_info;
+
         // cache of txs_map of txs in blocks. this is useful for
         // index2 page, so that we dont parse txs in each block
         // for each request.
@@ -364,6 +379,9 @@ namespace xmreg
         {
 
             no_of_mempool_tx_of_frontpage = 25;
+
+            // initialized stored network info atomic
+            previous_network_info = network_info {0, 0, 0, 0, 0, 0};
 
             // read template files for all the pages
             // into template_file map
@@ -751,7 +769,11 @@ namespace xmreg
             // if its not ready by now, forget about it.
 
             std::future_status ftr_status = network_info_ftr.wait_for(
-                    std::chrono::milliseconds(2000));
+                    std::chrono::milliseconds(200));
+
+            network_info current_network_info {0, 0, 0, 0, 0, 0};
+
+            bool is_network_info_current {false};
 
             if (ftr_status == std::future_status::ready)
             {
@@ -759,30 +781,58 @@ namespace xmreg
 
                 if (!j_network_info.empty())
                 {
-                    string difficulty;
+                    current_network_info.difficulty     = j_network_info["difficulty"];
+                    current_network_info.hash_rate      = j_network_info["hash_rate"];
+                    current_network_info.fee_per_kb     = j_network_info["fee_per_kb"];
+                    current_network_info.tx_pool_size   = j_network_info["tx_pool_size"];
+                    current_network_info.alt_blocks_no  = j_network_info["alt_blocks_count"];
+                    current_network_info.info_timestamp = local_copy_server_timestamp;
 
-                    if (testnet)
-                    {
-                        difficulty = std::to_string(j_network_info["hash_rate"].get<uint64_t>()) + " H/s";
-                    }
-                    else
-                    {
-                        difficulty = fmt::format("{:0.3f} MH/s", j_network_info["hash_rate"].get<uint64_t>()/1.0e6);
-                    }
+                    previous_network_info = current_network_info;
 
-                    context["network_info"] = mstch::map {
-                            {"difficulty"     , j_network_info["difficulty"].get<uint64_t>()},
-                            {"hash_rate"      , difficulty},
-                            {"fee_per_kb"     , print_money(j_network_info["fee_per_kb"])},
-                            {"alt_blocks_no"  , j_network_info["alt_blocks_count"].get<uint64_t>()},
-                            {"tx_pool_size"   , j_network_info["tx_pool_size"].get<uint64_t>()},
-                    };
+                    is_network_info_current = true;
                 }
             }
             else
             {
-                cerr  << "network_info future not ready yet, skipping." << endl;
+                current_network_info = previous_network_info;
+                cerr  << "network_info future not ready yet, use the previous_network_info." << endl;
             }
+
+            // perapre network info mstch::map for the front page
+
+            string hash_rate;
+
+            if (testnet)
+            {
+                hash_rate = std::to_string(current_network_info.hash_rate) + " H/s";
+            }
+            else
+            {
+                hash_rate = fmt::format("{:0.3f} MH/s", current_network_info.hash_rate/1.0e6);
+            }
+
+            pair<string, string> network_info_age = get_age(local_copy_server_timestamp,
+                                                            current_network_info.info_timestamp);
+
+            // if network info is younger than 2 minute, assume its current. No sense
+            // showing that it is not current if its less then block time.
+
+            if (local_copy_server_timestamp - current_network_info.info_timestamp < 120)
+            {
+                is_network_info_current = true;
+            }
+
+            context["network_info"] = mstch::map {
+                    {"difficulty"      , current_network_info.difficulty},
+                    {"hash_rate"       , hash_rate},
+                    {"fee_per_kb"      , print_money(current_network_info.fee_per_kb)},
+                    {"alt_blocks_no"   , current_network_info.alt_blocks_no},
+                    {"tx_pool_size"    , current_network_info.tx_pool_size},
+                    {"is_current_info" , is_network_info_current},
+                    {"age"             , network_info_age.first},
+                    {"age_format"      , network_info_age.second},
+            };
 
             string mempool_html {"Cant get mempool_pool"};
 
