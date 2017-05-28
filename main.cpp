@@ -50,6 +50,7 @@ main(int ac, const char* av[])
     auto testnet_url                   = opts.get_option<string>("testnet-url");
     auto mainnet_url                   = opts.get_option<string>("mainnet-url");
     auto network_info_timeout_opt      = opts.get_option<string>("network-info-timeout");
+    auto mempool_info_timeout_opt      = opts.get_option<string>("mempool-info-timeout");
     auto testnet_opt                   = opts.get_option<bool>("testnet");
     auto enable_key_image_checker_opt  = opts.get_option<bool>("enable-key-image-checker");
     auto enable_output_key_checker_opt = opts.get_option<bool>("enable-output-key-checker");
@@ -154,16 +155,18 @@ main(int ac, const char* av[])
         deamon_url = "http:://127.0.0.1:28081";
     }
 
-    uint64_t network_info_timeout {3000};
-
+    uint64_t network_info_timeout {1000};
+    uint64_t mempool_info_timeout {3000};
     try
     {
         network_info_timeout = boost::lexical_cast<uint64_t>(*network_info_timeout_opt);
+        mempool_info_timeout = boost::lexical_cast<uint64_t>(*mempool_info_timeout_opt);
+
     }
     catch (boost::bad_lexical_cast &e)
     {
-        cout << "Cant cast " << (*network_info_timeout_opt) << " into number."
-             << "Using default value of " << network_info_timeout <<  " milliseconds."
+        cout << "Cant cast " << (*network_info_timeout_opt)
+             << " or/and "   << (*mempool_info_timeout_opt) <<" into numbers. Using default values."
              << endl;
 
     }
@@ -218,6 +221,7 @@ main(int ac, const char* av[])
                           show_cache_times,
                           no_blocks_on_index,
                           network_info_timeout,
+                          mempool_info_timeout,
                           *testnet_url,
                           *mainnet_url);
 

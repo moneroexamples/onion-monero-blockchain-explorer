@@ -186,6 +186,10 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         page to mainnet explorer
   --no-blocks-on-index arg (=10)        number of last blocks to be shown on 
                                         index page
+  --network-info-timeout arg (=1000)    maximum time, in milliseconds, to wait 
+                                        for network info availability
+  --mempool-info-timeout arg (=1000)    maximum time, in milliseconds, to wait 
+                                        for mempool data for the front page
   -b [ --bc-path ] arg                  path to lmdb folder of the blockchain, 
                                         e.g., ~/.bitmonero/lmdb
   --ssl-crt-file arg                    path to crt file for ssl (https) 

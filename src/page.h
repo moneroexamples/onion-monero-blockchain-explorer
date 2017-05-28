@@ -263,6 +263,7 @@ namespace xmreg
         uint64_t no_of_mempool_tx_of_frontpage;
         uint64_t no_blocks_on_index;
         uint64_t network_info_timeout;
+        uint64_t mempool_info_timeout;
 
         string testnet_url;
         string mainnet_url;
@@ -353,6 +354,7 @@ namespace xmreg
              bool _show_cache_times,
              uint64_t _no_blocks_on_index,
              uint64_t _network_info_timeout,
+             uint64_t _mempool_info_timeout,
              string _testnet_url,
              string _mainnet_url)
                 : mcore {_mcore},
@@ -371,6 +373,7 @@ namespace xmreg
                   show_cache_times {_show_cache_times},
                   no_blocks_on_index {_no_blocks_on_index},
                   network_info_timeout {_network_info_timeout},
+                  mempool_info_timeout {_mempool_info_timeout},
                   testnet_url {_testnet_url},
                   mainnet_url {_mainnet_url},
                   mempool_tx_json_cache(1000),
@@ -769,7 +772,7 @@ namespace xmreg
             // if its not ready by now, forget about it.
 
             std::future_status ftr_status = network_info_ftr.wait_for(
-                    std::chrono::milliseconds(200));
+                    std::chrono::milliseconds(network_info_timeout));
 
             network_info current_network_info {0, 0, 0, 0, 0, 0};
 
@@ -838,7 +841,7 @@ namespace xmreg
 
             // get mempool data for the front page, if ready. If not, then just skip.
             std::future_status mempool_ftr_status = mempool_ftr.wait_for(
-                    std::chrono::milliseconds(network_info_timeout));
+                    std::chrono::milliseconds(mempool_info_timeout));
 
             if (mempool_ftr_status == std::future_status::ready)
             {
