@@ -827,14 +827,15 @@ namespace xmreg
             }
 
             context["network_info"] = mstch::map {
-                    {"difficulty"      , current_network_info.difficulty},
-                    {"hash_rate"       , hash_rate},
-                    {"fee_per_kb"      , print_money(current_network_info.fee_per_kb)},
-                    {"alt_blocks_no"   , current_network_info.alt_blocks_no},
-                    {"tx_pool_size"    , current_network_info.tx_pool_size},
-                    {"is_current_info" , is_network_info_current},
-                    {"age"             , network_info_age.first},
-                    {"age_format"      , network_info_age.second},
+                    {"difficulty"        , current_network_info.difficulty},
+                    {"hash_rate"         , hash_rate},
+                    {"fee_per_kb"        , print_money(current_network_info.fee_per_kb)},
+                    {"alt_blocks_no"     , current_network_info.alt_blocks_no},
+                    {"tx_pool_size"      , current_network_info.tx_pool_size},
+                    {"is_current_info"   , is_network_info_current},
+                    {"is_pool_size_zero" , (current_network_info.tx_pool_size == 0)},
+                    {"age"               , network_info_age.first},
+                    {"age_format"        , network_info_age.second},
             };
 
             string mempool_html {"Cant get mempool_pool"};
