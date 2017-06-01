@@ -107,7 +107,6 @@ set(LIBRARIES
         common
         mnemonics
         epee
-        easylogging
         ${Boost_LIBRARIES}
         pthread
         unbound

@@ -95,7 +95,7 @@ git clone https://github.com/monero-project/monero
 cd monero/
 
 # checkout last monero version
-git checkout -b v0.10.3.1
+git checkout -b last_release v0.10.3.1
 
 make
 ```
