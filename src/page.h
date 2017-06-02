@@ -897,6 +897,9 @@ namespace xmreg
             std::vector<MempoolStatus::mempool_tx> mempool_txs
                 = MempoolStatus::get_mempool_txs();
 
+            // size of mempool in bytes
+            uint64_t mempool_size_bytes = MempoolStatus::mempool_size;
+
             // initalise page tempate map with basic info about mempool
             mstch::map context {
                     {"mempool_size"          , mempool_txs.size()},
@@ -1101,14 +1104,6 @@ namespace xmreg
 
             }
 
-            // calculate mempool size using all txs in mempool.
-            // not only those shown on the front page
-            uint64_t mempool_size_bytes {0};
-
-            for (const MempoolStatus::mempool_tx& mempool_tx: mempool_txs)
-            {
-                mempool_size_bytes += mempool_tx.info.blob_size;
-            }
 
             context.insert({"mempool_size_kB",
                             fmt::format("{:0.2f}",
@@ -4867,25 +4862,8 @@ namespace xmreg
 
             j_info["fee_per_kb"] = fee_estimated;
 
-//            // get mempool size in kB.
-//            std::vector<tx_info> mempool_txs;
-//
-//            if (!rpc.get_mempool(mempool_txs))
-//            {
-//                j_response["status"]  = "error";
-//                j_response["message"] = "Cant get mempool transactions";
-//                return j_response;
-//            }
-//
-//            uint64_t tx_pool_size_kbytes {0};
-//
-//            for (const tx_info& tx_i: mempool_txs)
-//            {
-//                tx_pool_size_kbytes += tx_i.blob_size;
-//            }
-//
-//            j_info["tx_pool_size"]        = mempool_txs.size();
-//            j_info["tx_pool_size_kbytes"] = tx_pool_size_kbytes;
+            j_info["tx_pool_size"]        = MempoolStatus::mempool_no.load();
+            j_info["tx_pool_size_kbytes"] = MempoolStatus::mempool_size.load();
 
             j_data = j_info;
 

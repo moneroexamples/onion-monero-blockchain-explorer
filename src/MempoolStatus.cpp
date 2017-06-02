@@ -86,6 +86,8 @@ MempoolStatus::read_mempool()
     // if dont have tx_blob member, construct tx
     // from json obtained from the rpc call
 
+    uint64_t mempool_size_kB {0};
+
     for (size_t i = 0; i < mempool_tx_info.size(); ++i)
     {
         // get transaction info of the tx in the mempool
@@ -114,11 +116,15 @@ MempoolStatus::read_mempool()
                 return false;
             }
 
+            mempool_size_kB += _tx_info.blob_size;
+
             local_copy_of_mempool_txs.emplace_back(tx_hash_reconstructed, _tx_info, tx);
 
         } // if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
 
     } // for (size_t i = 0; i < mempool_tx_info.size(); ++i)
+
+
 
     std::lock_guard<std::mutex> lck (mempool_mutx);
 
@@ -126,6 +132,9 @@ MempoolStatus::read_mempool()
     // repopulate it with each execution of read_mempool()
     // not very efficient but good enough for now.
     mempool_txs = std::move(local_copy_of_mempool_txs);
+
+    mempool_no = local_copy_of_mempool_txs.size();
+    mempool_size = mempool_size_kB;
 
     return true;
 }
@@ -152,5 +161,7 @@ boost::thread      MempoolStatus::m_thread;
 Blockchain*        MempoolStatus::core_storage {nullptr};
 xmreg::MicroCore*  MempoolStatus::mcore {nullptr};
 vector<MempoolStatus::mempool_tx> MempoolStatus::mempool_txs;
+atomic<uint64_t> MempoolStatus::mempool_no {0};   // no of txs
+atomic<uint64_t> MempoolStatus::mempool_size {0}; // size in bytes.
 mutex MempoolStatus::mempool_mutx;
 }

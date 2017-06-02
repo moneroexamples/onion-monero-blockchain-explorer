@@ -43,6 +43,9 @@ struct MempoolStatus
 
     static atomic<bool> is_running;
 
+    static atomic<uint64_t> mempool_no;   // no of txs
+    static atomic<uint64_t> mempool_size; // size in bytes.
+
     static bf::path blockchain_path;
     static string deamon_url;
     static bool testnet;
