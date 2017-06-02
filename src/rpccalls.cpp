@@ -76,25 +76,28 @@ rpccalls::get_mempool(vector<tx_info>& mempool_txs)
     COMMAND_RPC_GET_TRANSACTION_POOL::request  req;
     COMMAND_RPC_GET_TRANSACTION_POOL::response res;
 
-    std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
+    bool r;
 
-    if (!connect_to_monero_deamon())
     {
-        cerr << "get_mempool: not connected to deamon" << endl;
-        return false;
+        std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
+
+        if (!connect_to_monero_deamon())
+        {
+            cerr << "get_mempool: not connected to deamon" << endl;
+            return false;
+        }
+
+        r = epee::net_utils::invoke_http_json(
+                "/get_transaction_pool",
+                req, res, m_http_client, timeout_time_ms);
     }
 
-    bool r = epee::net_utils::invoke_http_json(
-            "/get_transaction_pool",
-            req, res, m_http_client, timeout_time_ms);
-
-    if (!r)
+    if (!r || res.status != CORE_RPC_STATUS_OK)
     {
         cerr << "Error connecting to Monero deamon at "
              << deamon_url << endl;
         return false;
     }
-
 
     mempool_txs = res.transactions;
 
@@ -106,7 +109,6 @@ rpccalls::get_mempool(vector<tx_info>& mempool_txs)
     {
         return t1.receive_time > t2.receive_time;
     });
-
 
     return true;
 }
