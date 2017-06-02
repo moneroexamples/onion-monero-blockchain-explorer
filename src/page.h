@@ -894,12 +894,8 @@ namespace xmreg
         string
         mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
         {
-            std::vector<tx_info> mempool_txs;
-
-            if (!rpc.get_mempool(mempool_txs))
-            {
-                return "Getting mempool failed";
-            }
+            std::vector<MempoolStatus::mempool_tx> mempool_txs
+                = MempoolStatus::get_mempool_txs();
 
             // initalise page tempate map with basic info about mempool
             mstch::map context {
@@ -944,12 +940,12 @@ namespace xmreg
             for (size_t i = 0; i < no_of_mempool_tx; ++i)
             {
                 // get transaction info of the tx in the mempool
-                tx_info _tx_info = mempool_txs.at(i);
+                const MempoolStatus::mempool_tx& mempool_tx = mempool_txs.at(i);
 
                 // calculate difference between tx in mempool and server timestamps
                 array<size_t, 5> delta_time = timestamp_difference(
                         local_copy_server_timestamp,
-                        _tx_info.receive_time);
+                        mempool_tx.info.receive_time);
 
                 // use only hours, so if we have days, add
                 // it to hours
@@ -990,7 +986,8 @@ namespace xmreg
 
                     json j_tx;
 
-                    if (enable_mempool_cache && mempool_tx_json_cache.Contains(_tx_info.id_hash))
+                    if (enable_mempool_cache
+                        && mempool_tx_json_cache.Contains(mempool_tx.info.id_hash))
                     {
                         // maybe its already in cashe, so we can save some time
                         // by using this, rather then making parsing json
@@ -999,7 +996,8 @@ namespace xmreg
                         // start measure time here
                         auto start = std::chrono::steady_clock::now();
 
-                        const mempool_tx_info& cached_tx_info = mempool_tx_json_cache.Get(_tx_info.id_hash);
+                        const mempool_tx_info& cached_tx_info
+                                = mempool_tx_json_cache.Get(mempool_tx.info.id_hash);
 
                         sum_inputs        = cached_tx_info.sum_inputs;
                         sum_outputs       = cached_tx_info.sum_outputs;
@@ -1033,7 +1031,7 @@ namespace xmreg
                         // start measure time here
                         auto start = std::chrono::steady_clock::now();
 
-                        j_tx = json::parse(_tx_info.tx_json);
+                        j_tx = json::parse(mempool_tx.info.tx_json);
 
                         // sum xmr in inputs and ouputs in the given tx
                         const array<uint64_t, 6>& sum_data = summary_of_in_out_rct(j_tx);
@@ -1045,14 +1043,14 @@ namespace xmreg
                         mixin_no          = sum_data[4];
                         num_nonrct_inputs = sum_data[5];
 
-                        hash_str        = _tx_info.id_hash;
-                        fee_str         = xmreg::xmr_amount_to_str(_tx_info.fee, "{:0.3f}");
+                        hash_str        = mempool_tx.info.id_hash;
+                        fee_str         = xmreg::xmr_amount_to_str(mempool_tx.info.fee, "{:0.3f}");
                         xmr_inputs_str  = xmreg::xmr_amount_to_str(sum_inputs , "{:0.3f}");
                         xmr_outputs_str = xmreg::xmr_amount_to_str(sum_outputs, "{:0.3f}");
-                        timestamp_str   = xmreg::timestamp_to_str_gm(_tx_info.receive_time);
+                        timestamp_str   = xmreg::timestamp_to_str_gm(mempool_tx.info.receive_time);
 
                         txsize          = fmt::format("{:0.2f}",
-                                                      static_cast<double>(_tx_info.blob_size)/1024.0);
+                                                      static_cast<double>(mempool_tx.info.blob_size)/1024.0);
 
                         auto duration = std::chrono::duration_cast<std::chrono::microseconds>
                                 (std::chrono::steady_clock::now() - start);
@@ -1067,7 +1065,7 @@ namespace xmreg
                         {
                             // save in mempool cache
                             mempool_tx_json_cache.Put(
-                                    _tx_info.id_hash,
+                                    mempool_tx.info.id_hash,
                                     mempool_tx_info {
                                             sum_inputs, sum_outputs,
                                             no_inputs, no_outputs,
@@ -1087,7 +1085,7 @@ namespace xmreg
 
                 // set output page template map
                 txs.push_back(mstch::map {
-                        {"timestamp_no"    , _tx_info.receive_time},
+                        {"timestamp_no"    , mempool_tx.info.receive_time},
                         {"timestamp"       , timestamp_str},
                         {"age"             , age_str},
                         {"hash"            , hash_str},
@@ -1107,9 +1105,9 @@ namespace xmreg
             // not only those shown on the front page
             uint64_t mempool_size_bytes {0};
 
-            for (const tx_info& _tx_info: mempool_txs)
+            for (const MempoolStatus::mempool_tx& mempool_tx: mempool_txs)
             {
-                mempool_size_bytes += _tx_info.blob_size;
+                mempool_size_bytes += mempool_tx.info.blob_size;
             }
 
             context.insert({"mempool_size_kB",
@@ -1380,20 +1378,20 @@ namespace xmreg
                 cerr << "Cant get tx in blockchain: " << tx_hash
                      << ". \n Check mempool now" << endl;
 
-                vector<pair<tx_info, transaction>> found_txs;
+                vector<MempoolStatus::mempool_tx> found_txs;
 
                 search_mempool(tx_hash, found_txs);
 
                 if (!found_txs.empty())
                 {
                     // there should be only one tx found
-                    tx = found_txs.at(0).second;
+                    tx = found_txs.at(0).tx;
 
                     // since its tx in mempool, it has no blk yet
                     // so use its recive_time as timestamp to show
 
                     uint64_t tx_recieve_timestamp
-                            = found_txs.at(0).first.receive_time;
+                            = found_txs.at(0).info.receive_time;
 
                     blk_timestamp = xmreg::timestamp_to_str_gm(tx_recieve_timestamp);
 
@@ -1701,20 +1699,20 @@ namespace xmreg
                 cerr << "Cant get tx in blockchain: " << tx_hash
                      << ". \n Check mempool now" << endl;
 
-                vector<pair<tx_info, transaction>> found_txs;
+                vector<MempoolStatus::mempool_tx> found_txs;
 
                 search_mempool(tx_hash, found_txs);
 
                 if (!found_txs.empty())
                 {
                     // there should be only one tx found
-                    tx = found_txs.at(0).second;
+                    tx = found_txs.at(0).tx;
 
                     // since its tx in mempool, it has no blk yet
                     // so use its recive_time as timestamp to show
 
                     uint64_t tx_recieve_timestamp
-                            = found_txs.at(0).first.receive_time;
+                            = found_txs.at(0).info.receive_time;
 
                     blk_timestamp = xmreg::timestamp_to_str_gm(tx_recieve_timestamp);
 
@@ -3007,7 +3005,7 @@ namespace xmreg
                 };
 
                 // check in mempool already contains tx to be submited
-                vector<pair<tx_info, transaction>> found_mempool_txs;
+                vector<MempoolStatus::mempool_tx> found_mempool_txs;
 
                 search_mempool(txd.hash, found_mempool_txs);
 
@@ -3797,14 +3795,14 @@ namespace xmreg
                         {
                             // check in mempool if tx_hash not found in the
                             // blockchain
-                            vector<pair<tx_info, transaction>> found_txs;
+                            vector<MempoolStatus::mempool_tx> found_txs;
 
                             search_mempool(tx_hash_pod, found_txs);
 
                             if (!found_txs.empty())
                             {
                                 // there should be only one tx found
-                                tx = found_txs.at(0).second;
+                                tx = found_txs.at(0).tx;
                             }
                             else
                             {
@@ -3813,7 +3811,7 @@ namespace xmreg
 
                             // tx in mempool have no blk_timestamp
                             // but can use their recive time
-                            blk_timestamp = found_txs.at(0).first.receive_time;
+                            blk_timestamp = found_txs.at(0).info.receive_time;
 
                         }
 
@@ -4528,11 +4526,11 @@ namespace xmreg
             // for each transaction in the memory pool in current page
             while (i < end_height)
             {
-                const pair<tx_info, transaction>* a_pair {nullptr};
+                const MempoolStatus::mempool_tx* mempool_tx {nullptr};
 
                 try
                 {
-                    a_pair = &(mempool_data.at(i));
+                    mempool_tx = &(mempool_data.at(i));
                 }
                 catch (const std::out_of_range& e)
                 {
@@ -4542,14 +4540,14 @@ namespace xmreg
                     return j_response;
                 }
 
-                const tx_details& txd = get_tx_details(a_pair->second, false, 1, height); // 1 is dummy here
+                const tx_details& txd = get_tx_details(mempool_tx->tx, false, 1, height); // 1 is dummy here
 
                 // get basic tx info
-                json j_tx = get_tx_json(a_pair->second, txd);
+                json j_tx = get_tx_json(mempool_tx->tx, txd);
 
                 // we add some extra data, for mempool txs, such as recieve timestamp
-                j_tx["timestamp"]     = a_pair->first.receive_time;
-                j_tx["timestamp_utc"] = xmreg::timestamp_to_str_gm(a_pair->first.receive_time);
+                j_tx["timestamp"]     = mempool_tx->info.receive_time;
+                j_tx["timestamp_utc"] = xmreg::timestamp_to_str_gm(mempool_tx->info.receive_time);
 
                 j_txs.push_back(j_tx);
 
@@ -4981,16 +4979,16 @@ namespace xmreg
                 cerr << "Cant get tx in blockchain: " << tx_hash
                      << ". \n Check mempool now" << endl;
 
-                vector<pair<tx_info, transaction>> found_txs;
+                vector<MempoolStatus::mempool_tx> found_txs;
 
                 search_mempool(tx_hash, found_txs);
 
                 if (!found_txs.empty())
                 {
                     // there should be only one tx found
-                    tx = found_txs.at(0).second;
+                    tx = found_txs.at(0).tx;
                     found_in_mempool = true;
-                    tx_timestamp = found_txs.at(0).first.receive_time;
+                    tx_timestamp = found_txs.at(0).info.receive_time;
                 }
                 else
                 {
@@ -5605,20 +5603,17 @@ namespace xmreg
 
         bool
         search_mempool(crypto::hash tx_hash,
-                       vector<pair<tx_info, transaction>>& found_txs)
+                       vector<MempoolStatus::mempool_tx>& found_txs)
         {
             // if tx_hash == null_hash then this method
             // will just return the vector containing all
             // txs in mempool
 
-            // get txs in the mempool
-            std::vector<tx_info> mempool_txs;
 
-            if (!rpc.get_mempool(mempool_txs))
-            {
-                cerr << "Getting mempool failed " << endl;
-                return false;
-            }
+
+            // get mempool tx from mempoolstatus thread
+            vector<MempoolStatus::mempool_tx> mempool_txs
+                    = MempoolStatus::get_mempool_txs();
 
             // if dont have tx_blob member, construct tx
             // from json obtained from the rpc call
@@ -5626,40 +5621,17 @@ namespace xmreg
             for (size_t i = 0; i < mempool_txs.size(); ++i)
             {
                 // get transaction info of the tx in the mempool
-                tx_info _tx_info = mempool_txs.at(i);
+                const MempoolStatus::mempool_tx& mempool_tx = mempool_txs.at(i);
 
-                crypto::hash mem_tx_hash = null_hash;
-
-                if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
+                if (tx_hash == mempool_tx.tx_hash || tx_hash == null_hash)
                 {
-                    transaction tx;
+                    found_txs.push_back(mempool_tx);
 
-                    if (!xmreg::make_tx_from_json(_tx_info.tx_json, tx))
-                    {
-                        cerr << "Cant make tx from _tx_info.tx_json" << endl;
-                        continue;
-                    }
-
-                    if (mem_tx_hash != get_transaction_hash(tx))
-                    {
-                        cerr << "Hash of reconstructed tx from json does not match "
-                                "what we should get!"
-                             << endl;
-                        continue;
-                    }
-
-                    if (tx_hash == mem_tx_hash || tx_hash == null_hash)
-                    {
-                        found_txs.push_back(make_pair(_tx_info, tx));
-
-                        if (tx_hash != null_hash)
-                            break;
-                    }
-
-                } //  if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
+                    if (tx_hash != null_hash)
+                        break;
+                }
 
             } // for (size_t i = 0; i < mempool_txs.size(); ++i)
-
 
             return true;
         }

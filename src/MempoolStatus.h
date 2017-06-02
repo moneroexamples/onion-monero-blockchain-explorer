@@ -22,7 +22,20 @@ namespace xmreg
 struct MempoolStatus
 {
 
-    using mempool_tx = pair<tx_info, transaction>;
+    struct mempool_tx
+    {
+        crypto::hash tx_hash;
+        tx_info info;
+        transaction tx;
+
+        mempool_tx(
+            crypto::hash _tx_hash,
+            tx_info _info,
+            transaction _tx)
+            : tx_hash(_tx_hash), info(_info), tx(_tx)
+        {}
+
+    };
 
     static boost::thread m_thread;
 

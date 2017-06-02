@@ -34,7 +34,7 @@ MempoolStatus::start_mempool_status_thread()
                  if (MempoolStatus::read_mempool())
                  {
                      vector<mempool_tx> current_mempool_txs = get_mempool_txs();
-                     cout << "mempool status: " << current_mempool_txs.size() << endl;
+                     cout << "mempool status txs: " << current_mempool_txs.size() << endl;
                  }
                  else
                  {
@@ -103,7 +103,9 @@ MempoolStatus::read_mempool()
                 return false;
             }
 
-            if (_tx_info.id_hash != epee::string_tools::pod_to_hex(get_transaction_hash(tx)))
+            crypto::hash tx_hash_reconstructed = get_transaction_hash(tx);
+
+            if (mem_tx_hash != tx_hash_reconstructed)
             {
                 cerr << "Hash of reconstructed tx from json does not match "
                         "what we should get!"
@@ -112,7 +114,7 @@ MempoolStatus::read_mempool()
                 return false;
             }
 
-            local_copy_of_mempool_txs.emplace_back(_tx_info, tx);
+            local_copy_of_mempool_txs.emplace_back(tx_hash_reconstructed, _tx_info, tx);
 
         } // if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
 
