@@ -252,7 +252,6 @@ namespace xmreg
         bool enable_key_image_checker;
         bool enable_output_key_checker;
         bool enable_mixins_details;
-        bool enable_mempool_cache;
         bool enable_tx_cache;
         bool enable_block_cache;
         bool show_cache_times;
@@ -286,34 +285,6 @@ namespace xmreg
         // alias for easy class typing
         template <typename Key, typename Value>
         using fifo_cache_t = caches::fixed_sized_cache<Key, Value, caches::FIFOCachePolicy<Key>>;
-
-
-        // this struct is used to keep info about mempool
-        // txs in FIFO cache. Should speed up processing
-        // mempool txs for each request
-        struct mempool_tx_info
-        {
-            uint64_t sum_inputs;
-            uint64_t sum_outputs;
-            uint64_t no_inputs;
-            uint64_t no_outputs;
-
-            uint64_t num_nonrct_inputs;
-
-            uint64_t mixin_no;
-
-            string hash;
-            string fee;
-            string xmr_inputs_str;
-            string xmr_outputs_str;
-            string timestamp;
-
-            string txsize;
-        };
-
-        // cache of txs in mempool, so that we dont
-        // parse their json for each request
-        fifo_cache_t<string, mempool_tx_info> mempool_tx_json_cache;
 
         // to keep network_info in cache
         // and to show previous info in case current querry for
@@ -349,7 +320,6 @@ namespace xmreg
              bool _enable_output_key_checker,
              bool _enable_autorefresh_option,
              bool _enable_mixins_details,
-             bool _enable_mempool_cache,
              bool _enable_tx_cache,
              bool _enable_block_cache,
              bool _show_cache_times,
@@ -368,7 +338,6 @@ namespace xmreg
                   enable_output_key_checker {_enable_output_key_checker},
                   enable_autorefresh_option {_enable_autorefresh_option},
                   enable_mixins_details {_enable_mixins_details},
-                  enable_mempool_cache {_enable_mempool_cache},
                   enable_tx_cache {_enable_tx_cache},
                   enable_block_cache {_enable_block_cache},
                   show_cache_times {_show_cache_times},
@@ -377,7 +346,6 @@ namespace xmreg
                   mempool_info_timeout {_mempool_info_timeout},
                   testnet_url {_testnet_url},
                   mainnet_url {_mainnet_url},
-                  mempool_tx_json_cache(1000),
                   block_tx_cache(200),
                   tx_context_cache(1000)
         {
@@ -410,16 +378,16 @@ namespace xmreg
             template_file["address"]         = get_full_page(xmreg::read(TMPL_ADDRESS));
             template_file["search_results"]  = get_full_page(xmreg::read(TMPL_SEARCH_RESULTS));
             template_file["tx_details"]      = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html");
-            template_file["tx_table_header"]   = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html");
+            template_file["tx_table_header"] = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html");
             template_file["tx_table_row"]    = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html");
         }
 
         /**
-     * @brief show recent transactions and mempool
-     * @param page_no block page to show
-     * @param refresh_page enable autorefresh
-     * @return rendered index page
-     */
+         * @brief show recent transactions and mempool
+         * @param page_no block page to show
+         * @param refresh_page enable autorefresh
+         * @return rendered index page
+         */
         string
         index2(uint64_t page_no = 0, bool refresh_page = false)
         {
@@ -967,159 +935,28 @@ namespace xmreg
                                           delta_time[3], delta_time[4]);
                 }
 
-                // sum xmr in inputs and ouputs in the given tx
-                uint64_t sum_inputs {0};
-                uint64_t sum_outputs {0};
-                uint64_t no_inputs {0};
-                uint64_t no_outputs {0};
-                uint64_t num_nonrct_inputs {0};
-                uint64_t mixin_no {0};
-
-                string hash_str;
-                string fee_str;
-                string xmr_inputs_str;
-                string xmr_outputs_str;
-                string timestamp_str;
-
-                string txsize;
-
-                try
-                {
-                    // get the above incormation from json of that tx
-
-                    json j_tx;
-
-                    if (enable_mempool_cache
-                        && mempool_tx_json_cache.Contains(mempool_tx.info.id_hash))
-                    {
-                        // maybe its already in cashe, so we can save some time
-                        // by using this, rather then making parsing json
-                        // and calculating it from json
-
-                        // start measure time here
-                        auto start = std::chrono::steady_clock::now();
-
-                        const mempool_tx_info& cached_tx_info
-                                = mempool_tx_json_cache.Get(mempool_tx.info.id_hash);
-
-                        sum_inputs        = cached_tx_info.sum_inputs;
-                        sum_outputs       = cached_tx_info.sum_outputs;
-                        no_inputs         = cached_tx_info.no_inputs;
-                        no_outputs        = cached_tx_info.no_outputs;
-                        num_nonrct_inputs = cached_tx_info.num_nonrct_inputs;
-                        mixin_no          = cached_tx_info.mixin_no;
-                        hash_str          = cached_tx_info.hash;
-                        fee_str           = cached_tx_info.fee;
-                        xmr_inputs_str    = cached_tx_info.xmr_inputs_str;
-                        xmr_outputs_str   = cached_tx_info.xmr_outputs_str;
-                        timestamp_str     = cached_tx_info.timestamp;
-                        txsize            = cached_tx_info.txsize;
-
-                        auto duration = std::chrono::duration_cast<std::chrono::microseconds>
-                                (std::chrono::steady_clock::now() - start);
-
-                        // cout << "block_tx_json_cache from cache" << endl;
-
-                        duration_cached += duration.count();
-
-                        ++cache_hits;
-
-                        //cout << "getting json from cash for: " << _tx_info.id_hash << endl;
-                    }
-                    else
-                    {
-                        // its not in cash. Its new tx in mempool, so
-                        // construct this data and save into cash for later use
-
-                        // start measure time here
-                        auto start = std::chrono::steady_clock::now();
-
-                        j_tx = json::parse(mempool_tx.info.tx_json);
-
-                        // sum xmr in inputs and ouputs in the given tx
-                        const array<uint64_t, 6>& sum_data = summary_of_in_out_rct(j_tx);
-
-                        sum_outputs       = sum_data[0];
-                        sum_inputs        = sum_data[1];
-                        no_outputs        = sum_data[2];
-                        no_inputs         = sum_data[3];
-                        mixin_no          = sum_data[4];
-                        num_nonrct_inputs = sum_data[5];
-
-                        hash_str        = mempool_tx.info.id_hash;
-                        fee_str         = xmreg::xmr_amount_to_str(mempool_tx.info.fee, "{:0.3f}");
-                        xmr_inputs_str  = xmreg::xmr_amount_to_str(sum_inputs , "{:0.3f}");
-                        xmr_outputs_str = xmreg::xmr_amount_to_str(sum_outputs, "{:0.3f}");
-                        timestamp_str   = xmreg::timestamp_to_str_gm(mempool_tx.info.receive_time);
-
-                        txsize          = fmt::format("{:0.2f}",
-                                                      static_cast<double>(mempool_tx.info.blob_size)/1024.0);
-
-                        auto duration = std::chrono::duration_cast<std::chrono::microseconds>
-                                (std::chrono::steady_clock::now() - start);
-
-                        // cout << "block_tx_json_cache from cache" << endl;
-
-                        duration_non_cached += duration.count();
-
-                        ++cache_misses;
-
-                        if (enable_mempool_cache)
-                        {
-                            // save in mempool cache
-                            mempool_tx_json_cache.Put(
-                                    mempool_tx.info.id_hash,
-                                    mempool_tx_info {
-                                            sum_inputs, sum_outputs,
-                                            no_inputs, no_outputs,
-                                            num_nonrct_inputs, mixin_no,
-                                            hash_str, fee_str,
-                                            xmr_inputs_str, xmr_outputs_str,
-                                            timestamp_str, txsize
-                                    });
-                        }
-                    } // else if (mempool_tx_json_cache.Contains(_tx_info.id_hash))
-
-                }
-                catch (std::invalid_argument& e)
-                {
-                    cerr << " j_tx = json::parse(_tx_info.tx_json): " << e.what() << endl;
-                }
+                // cout << "block_tx_json_cache from cache" << endl;
 
                 // set output page template map
                 txs.push_back(mstch::map {
                         {"timestamp_no"    , mempool_tx.info.receive_time},
-                        {"timestamp"       , timestamp_str},
+                        {"timestamp"       , mempool_tx.timestamp_str},
                         {"age"             , age_str},
-                        {"hash"            , hash_str},
-                        {"fee"             , fee_str},
-                        {"xmr_inputs"      , xmr_inputs_str},
-                        {"xmr_outputs"     , xmr_outputs_str},
-                        {"no_inputs"       , no_inputs},
-                        {"no_outputs"      , no_outputs},
-                        {"no_nonrct_inputs", num_nonrct_inputs},
-                        {"mixin"           , mixin_no+1},
-                        {"txsize"          , txsize}
+                        {"hash"            , mempool_tx.info.id_hash},
+                        {"fee"             , mempool_tx.fee_str},
+                        {"xmr_inputs"      , mempool_tx.xmr_inputs_str},
+                        {"xmr_outputs"     , mempool_tx.xmr_outputs_str},
+                        {"no_inputs"       , mempool_tx.no_inputs},
+                        {"no_outputs"      , mempool_tx.no_outputs},
+                        {"no_nonrct_inputs", mempool_tx.num_nonrct_inputs},
+                        {"mixin"           , mempool_tx.mixin_no + 1},
+                        {"txsize"          , mempool_tx.txsize}
                 });
-
             }
-
 
             context.insert({"mempool_size_kB",
                             fmt::format("{:0.2f}",
                                         static_cast<double>(mempool_size_bytes)/1024.0)});
-
-            context["construction_time_cached"] = fmt::format(
-                    "{:0.4f}", duration_cached/1.0e6);
-
-            context["construction_time_non_cached"] = fmt::format(
-                    "{:0.4f}", duration_non_cached/1.0e6);
-
-            context["construction_time_total"] = fmt::format(
-                    "{:0.4f}", (duration_non_cached+duration_cached)/1.0e6);
-
-            context["cache_hits"]   = cache_hits;
-            context["cache_misses"] = cache_misses;
 
             if (add_header_and_footer)
             {
@@ -4542,7 +4379,7 @@ namespace xmreg
 
                 // we add some extra data, for mempool txs, such as recieve timestamp
                 j_tx["timestamp"]     = mempool_tx->info.receive_time;
-                j_tx["timestamp_utc"] = xmreg::timestamp_to_str_gm(mempool_tx->info.receive_time);
+                j_tx["timestamp_utc"] = mempool_tx->timestamp_str;
 
                 j_txs.push_back(j_tx);
 

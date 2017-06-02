@@ -28,13 +28,18 @@ struct MempoolStatus
         tx_info info;
         transaction tx;
 
-        mempool_tx(
-            crypto::hash _tx_hash,
-            tx_info _info,
-            transaction _tx)
-            : tx_hash(_tx_hash), info(_info), tx(_tx)
-        {}
+        uint64_t sum_inputs {0};
+        uint64_t sum_outputs {0};
+        uint64_t no_inputs {0};
+        uint64_t no_outputs {0};
+        uint64_t num_nonrct_inputs {0};
+        uint64_t mixin_no {0};
 
+        string fee_str;
+        string xmr_inputs_str;
+        string xmr_outputs_str;
+        string timestamp_str;
+        string txsize;
     };
 
     static boost::thread m_thread;

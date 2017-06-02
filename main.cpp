@@ -58,7 +58,6 @@ main(int ac, const char* av[])
     auto enable_autorefresh_option_opt = opts.get_option<bool>("enable-autorefresh-option");
     auto enable_pusher_opt             = opts.get_option<bool>("enable-pusher");
     auto enable_mixin_details_opt      = opts.get_option<bool>("enable-mixin-details");
-    auto enable_mempool_cache_opt      = opts.get_option<bool>("enable-mempool-cache");
     auto enable_json_api_opt           = opts.get_option<bool>("enable-json-api");
     auto enable_tx_cache_opt           = opts.get_option<bool>("enable-tx-cache");
     auto enable_block_cache_opt        = opts.get_option<bool>("enable-block-cache");
@@ -73,7 +72,6 @@ main(int ac, const char* av[])
     bool enable_autorefresh_option    {*enable_autorefresh_option_opt};
     bool enable_output_key_checker    {*enable_output_key_checker_opt};
     bool enable_mixin_details         {*enable_mixin_details_opt};
-    bool enable_mempool_cache         {*enable_mempool_cache_opt};
     bool enable_json_api              {*enable_json_api_opt};
     bool enable_tx_cache              {*enable_tx_cache_opt};
     bool enable_block_cache           {*enable_block_cache_opt};
@@ -247,7 +245,6 @@ main(int ac, const char* av[])
                           enable_output_key_checker,
                           enable_autorefresh_option,
                           enable_mixin_details,
-                          enable_mempool_cache,
                           enable_tx_cache,
                           enable_block_cache,
                           show_cache_times,

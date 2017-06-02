@@ -37,17 +37,4 @@
     {{/mempool_fits_on_front_page}}
 
 
-
-    {{#show_cache_times}}
-        <div class="center">
-            <h6 style="margin-top: 1px;color:#949490">
-                Mempoool tx details construction time: {{construction_time_total}} s
-                <br/>
-                includes {{construction_time_cached}} s from mempool cache ({{cache_hits}} hits)
-                and {{construction_time_non_cached}} s from non cache ({{cache_misses}} misses)
-            </h6>
-        </div>
-    {{/show_cache_times}}
-
-
 </div>
