@@ -36,10 +36,6 @@ MempoolStatus::start_mempool_status_thread()
                      vector<mempool_tx> current_mempool_txs = get_mempool_txs();
                      cout << "mempool status txs: " << current_mempool_txs.size() << endl;
                  }
-                 else
-                 {
-                     cerr << "Cant read_mempool()" << endl;
-                 }
 
                  // when we reach top of the blockchain, update
                  // the emission amount every minute.
