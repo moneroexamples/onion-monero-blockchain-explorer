@@ -34,12 +34,16 @@ MempoolStatus::start_mempool_status_thread()
                  if (MempoolStatus::read_mempool())
                  {
                      vector<mempool_tx> current_mempool_txs = get_mempool_txs();
-                     cout << "mempool status txs: " << current_mempool_txs.size() << endl;
+
+                     cout << "mempool status txs: "
+                          << current_mempool_txs.size()
+                          << endl;
                  }
 
                  // when we reach top of the blockchain, update
                  // the emission amount every minute.
-                 boost::this_thread::sleep_for(boost::chrono::seconds(10));
+                 boost::this_thread::sleep_for(
+                         boost::chrono::seconds(mempool_refresh_time));
 
              } // while (true)
          }
@@ -159,5 +163,6 @@ xmreg::MicroCore*  MempoolStatus::mcore {nullptr};
 vector<MempoolStatus::mempool_tx> MempoolStatus::mempool_txs;
 atomic<uint64_t> MempoolStatus::mempool_no {0};   // no of txs
 atomic<uint64_t> MempoolStatus::mempool_size {0}; // size in bytes.
+uint64_t MempoolStatus::mempool_refresh_time {10};
 mutex MempoolStatus::mempool_mutx;
 }

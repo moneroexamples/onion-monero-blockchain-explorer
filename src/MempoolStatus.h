@@ -43,6 +43,8 @@ struct MempoolStatus
 
     static atomic<bool> is_running;
 
+    static uint64_t mempool_refresh_time;
+
     static atomic<uint64_t> mempool_no;   // no of txs
     static atomic<uint64_t> mempool_size; // size in bytes.
 

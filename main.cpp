@@ -51,6 +51,7 @@ main(int ac, const char* av[])
     auto mainnet_url                   = opts.get_option<string>("mainnet-url");
     auto network_info_timeout_opt      = opts.get_option<string>("network-info-timeout");
     auto mempool_info_timeout_opt      = opts.get_option<string>("mempool-info-timeout");
+    auto mempool_refresh_time_opt      = opts.get_option<string>("mempool-refresh-time");
     auto testnet_opt                   = opts.get_option<bool>("testnet");
     auto enable_key_image_checker_opt  = opts.get_option<bool>("enable-key-image-checker");
     auto enable_output_key_checker_opt = opts.get_option<bool>("enable-output-key-checker");
@@ -157,6 +158,7 @@ main(int ac, const char* av[])
 
     uint64_t network_info_timeout {1000};
     uint64_t mempool_info_timeout {5000};
+
     try
     {
         network_info_timeout = boost::lexical_cast<uint64_t>(*network_info_timeout_opt);
@@ -168,9 +170,9 @@ main(int ac, const char* av[])
         cout << "Cant cast " << (*network_info_timeout_opt)
              << " or/and "   << (*mempool_info_timeout_opt) <<" into numbers. Using default values."
              << endl;
-
     }
 
+    uint64_t mempool_refresh_time {10};
 
 
     if (enable_emission_monitor == true)
@@ -214,10 +216,24 @@ main(int ac, const char* av[])
     xmreg::MempoolStatus::set_blockchain_variables(
             &mcore, core_storage);
 
+
+    try
+    {
+        mempool_refresh_time = boost::lexical_cast<uint64_t>(*mempool_refresh_time_opt);
+
+    }
+    catch (boost::bad_lexical_cast &e)
+    {
+        cout << "Cant cast " << (*mempool_refresh_time_opt)
+             <<" into number. Using default value."
+             << endl;
+    }
+
     // launch the status monitoring thread so that it keeps track of blockchain
     // info, e.g., current height. Information from this thread is used
     // by tx searching threads that are launched for each user independently,
     // when they log back or create new account.
+    xmreg::MempoolStatus::mempool_refresh_time = mempool_refresh_time;
     xmreg::MempoolStatus::start_mempool_status_thread();
 
     // create instance of page class which
