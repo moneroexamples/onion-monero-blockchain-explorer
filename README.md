@@ -151,7 +151,6 @@ Go to your browser: http://127.0.0.1:8081
 ## The explorer's command line options
 
 ```
-./xmrblocks -h
 xmrblocks, Onion Monero Blockchain Explorer:
   -h [ --help ] [=arg(=1)] (=0)         produce help message
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
@@ -164,8 +163,6 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         enable key images file checker
   --enable-output-key-checker [=arg(=1)] (=0)
                                         enable outputs key file checker
-  --enable-mempool-cache arg (=1)       enable caching of transactions from the
-                                        mempool
   --enable-json-api arg (=1)            enable JSON REST api
   --enable-tx-cache [=arg(=1)] (=0)     enable caching of transaction details
   --show-cache-times [=arg(=1)] (=0)    show times of getting data from cache 
@@ -190,6 +187,8 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         for network info availability
   --mempool-info-timeout arg (=5000)    maximum time, in milliseconds, to wait 
                                         for mempool data for the front page
+  --mempool-refresh-time arg (=10)      time, in seconds, for each refresh of 
+                                        mempool state
   -b [ --bc-path ] arg                  path to lmdb folder of the blockchain, 
                                         e.g., ~/.bitmonero/lmdb
   --ssl-crt-file arg                    path to crt file for ssl (https) 
