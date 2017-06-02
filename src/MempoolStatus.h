@@ -22,7 +22,7 @@ namespace xmreg
 struct MempoolStatus
 {
 
-    using mempool_tx = pair<uint64_t, transaction>;
+    using mempool_tx = pair<tx_info, transaction>;
 
     static boost::thread m_thread;
 

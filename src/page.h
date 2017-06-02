@@ -4502,19 +4502,9 @@ namespace xmreg
 
             uint64_t height = core_storage->get_current_blockchain_height();
 
-            vector<pair<tx_info, transaction>> mempool_data;
-
-            crypto::hash tx_hash_dummy = null_hash;
-
-            if (!search_mempool(tx_hash_dummy, mempool_data))
-            {
-                j_response["status"]  = "error";
-                j_response["message"] = fmt::format("Cant connect to the mempool");
-
-                return j_response;
-            }
-
-            (void) tx_hash_dummy;
+            // get mempool tx from mempoolstatus thread
+            vector<MempoolStatus::mempool_tx> mempool_data
+                    = MempoolStatus::get_mempool_txs();
 
             uint64_t no_mempool_txs = mempool_data.size();
 

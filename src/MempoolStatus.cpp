@@ -112,7 +112,7 @@ MempoolStatus::read_mempool()
                 return false;
             }
 
-            local_copy_of_mempool_txs.emplace_back(_tx_info.receive_time, tx);
+            local_copy_of_mempool_txs.emplace_back(_tx_info, tx);
 
         } // if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
 
