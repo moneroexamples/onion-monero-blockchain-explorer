@@ -36,6 +36,7 @@ Clearnet versions:
  - [https://explorer.xmr.my/](https://explorer.xmr.my/) - nice looking one, https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.
+ - [http://66.85.74.134:8081/](http://66.85.74.134:8081/) - fluffynet subnet explorer.
   
 Clearnet testnet Monero version:
 
@@ -107,6 +108,7 @@ as follows:
 ```bash
 # go to home folder if still in ~/monero
 cd ~
+
 # download the source code
 git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
 
