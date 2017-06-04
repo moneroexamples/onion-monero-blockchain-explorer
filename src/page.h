@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <limits>
 #include <ctime>
+#include <future>
 
 #define TMPL_DIR                    "./templates"
 #define TMPL_PARIALS_DIR            TMPL_DIR "/partials"

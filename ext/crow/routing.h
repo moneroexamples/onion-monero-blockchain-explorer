@@ -389,32 +389,32 @@ namespace crow
         // enable_if Arg1 == request && Arg2 == response
         // enable_if Arg1 == request && Arg2 != resposne
         // enable_if Arg1 != request
-#ifdef CROW_MSVC_WORKAROUND
-        template <typename Func, size_t ... Indices>
-#else
-        template <typename Func, unsigned ... Indices>
-#endif
-        std::function<void(const request&, response&, const routing_params&)> 
-        wrap(Func f, black_magic::seq<Indices...>)
-        {
-#ifdef CROW_MSVC_WORKAROUND
-            using function_t = utility::function_traits<decltype(&Func::operator())>;
-#else
-            using function_t = utility::function_traits<Func>;
-#endif
-            if (!black_magic::is_parameter_tag_compatible(
-                black_magic::get_parameter_tag_runtime(rule_.c_str()), 
-                black_magic::compute_parameter_tag_from_args_list<
-                    typename function_t::template arg<Indices>...>::value))
-            {
-                throw std::runtime_error("route_dynamic: Handler type is mismatched with URL parameters: " + rule_);
-            }
-            auto ret = detail::routing_handler_call_helper::Wrapped<Func, typename function_t::template arg<Indices>...>();
-            ret.template set<
-                typename function_t::template arg<Indices>...
-            >(std::move(f));
-            return ret;
-        }
+//#ifdef CROW_MSVC_WORKAROUND
+//        template <typename Func, size_t ... Indices>
+//#else
+//        template <typename Func, unsigned ... Indices>
+//#endif
+//        std::function<void(const request&, response&, const routing_params&)>
+//        wrap(Func f, black_magic::seq<Indices...>)
+//        {
+//#ifdef CROW_MSVC_WORKAROUND
+//            using function_t = utility::function_traits<decltype(&Func::operator())>;
+//#else
+//            using function_t = utility::function_traits<Func>;
+//#endif
+//            if (!black_magic::is_parameter_tag_compatible(
+//                black_magic::get_parameter_tag_runtime(rule_.c_str()),
+//                black_magic::compute_parameter_tag_from_args_list<
+//                    typename function_t::template arg<Indices>...>::value))
+//            {
+//                throw std::runtime_error("route_dynamic: Handler type is mismatched with URL parameters: " + rule_);
+//            }
+//            auto ret = detail::routing_handler_call_helper::Wrapped<Func, typename function_t::template arg<Indices>...>();
+//            ret.template set<
+//                typename function_t::template arg<Indices>...
+//            >(std::move(f));
+//            return ret;
+//        }
 
         template <typename Func>
         void operator()(std::string name, Func&& f)

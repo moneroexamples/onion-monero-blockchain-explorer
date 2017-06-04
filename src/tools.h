@@ -13,26 +13,23 @@
 #define REMOVE_HASH_BRAKETS(a_hash) \
     a_hash.substr(1, a_hash.size()-2)
 
-#include "../ext/json.hpp"
+
 
 #include "monero_headers.h"
 
 #include "../ext/fmt/ostream.h"
 #include "../ext/fmt/format.h"
-
+#include "../ext/json.hpp"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
-//#include <boost/date_time/posix_time/posix_time.hpp>
 
 
 #include <string>
 #include <vector>
-//#include <array>
 #include <iterator>
 #include <algorithm>
-
 
 
 
@@ -49,9 +46,6 @@ namespace xmreg
     using namespace std;
 
     namespace bf = boost::filesystem;
-    namespace pt = boost::posix_time;
-    namespace gt = boost::gregorian;
-    namespace lt = boost::local_time;
 
     using json = nlohmann::json;
 
@@ -224,10 +218,6 @@ namespace xmreg
     timestamps_time_scale(const vector<uint64_t>& timestamps,
                           uint64_t timeN, uint64_t resolution = 80,
                           uint64_t time0 = 1397818193 /* timestamp of the second block */);
-
-
-    time_t
-    ptime_to_time_t(const pt::ptime& in_ptime);
 
     bool
     decode_ringct(const rct::rctSig & rv,

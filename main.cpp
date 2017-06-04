@@ -604,10 +604,10 @@ main(int ac, const char* av[])
 
     cout << "Waiting for mempool monitoring thread to finish." << endl;
 
-    xmerg::MempoolStatus::m_thread.interrupt();
-    xmerg::MempoolStatus::m_thread.join();
+    xmreg::MempoolStatus::m_thread.interrupt();
+    xmreg::MempoolStatus::m_thread.join();
 
-    cout << "Mmempool monitoring thread finished." << endl;
+    cout << "Mempool monitoring thread finished." << endl;
 
     cout << "The explorer is terminating." << endl;
 
