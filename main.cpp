@@ -1,10 +1,11 @@
 #define CROW_ENABLE_SSL
 
-#include "ext/crow/crow.h"
 
+#include "src/page.h"
+
+#include "ext/crow/crow.h"
 #include "src/CmdLineOptions.h"
 #include "src/MicroCore.h"
-#include "src/page.h"
 
 #include <fstream>
 #include <regex>
@@ -590,11 +591,23 @@ main(int ac, const char* av[])
     if (enable_emission_monitor == true)
     {
         // finish Emission monitoring thread in a cotrolled manner.
+
+        cout << "Waiting for emission monitoring thread to finish." << endl;
+
         xmreg::CurrentBlockchainStatus::m_thread.interrupt();
         xmreg::CurrentBlockchainStatus::m_thread.join();
 
-        cout << "Emission monitoring thread joined." << endl;
+        cout << "Emission monitoring thread finished." << endl;
     }
+
+    // finish mempool thread
+
+    cout << "Waiting for mempool monitoring thread to finish." << endl;
+
+    xmerg::MempoolStatus::m_thread.interrupt();
+    xmerg::MempoolStatus::m_thread.join();
+
+    cout << "Mmempool monitoring thread finished." << endl;
 
     cout << "The explorer is terminating." << endl;
 
