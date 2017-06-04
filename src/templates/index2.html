@@ -32,6 +32,27 @@
          {{/testnet}}
 
         </h3>
+
+
+    {{#network_info}}
+        <h3 style="font-size: 12px; margin-top: 5px; margin-bottom: 3">
+            Network difficulty: {{difficulty}}
+            | Hash rate: {{hash_rate}}
+            | Fee per kb: {{fee_per_kb}}
+            | Alternative blocks no: {{alt_blocks_no}}
+            {{^is_current_info}}
+            | Data from {{age}} {{age_format}} ago
+            {{/is_current_info}}
+        </h3>
+    {{/network_info}}
+
+    {{#emission}}
+        <h3 style="font-size: 12px; margin-top: 2px">
+            Monero emission (fees) is {{amount}} ({{fee_amount}}) as of {{blk_no}} block
+        </h3>
+    {{/emission}}
+
+
 </div>
 
     {{{mempool_info}}}
@@ -58,7 +79,7 @@
                     <td>fees</td>
                     <td>outputs</td>
                     <td>in(nonrct)/out</td>
-                    <td>mixin</td>
+                    <td>ring size</td>
                     <td>tx size [kB]</td>
                 </tr>
                 {{#txs}}
@@ -86,6 +107,7 @@
             </div>
 
     </div>
+
 
 {{#show_cache_times}}
     <div class="center">

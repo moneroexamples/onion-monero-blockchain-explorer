@@ -17,6 +17,8 @@
 #include "tools.h"
 #include "rpccalls.h"
 
+#include "CurrentBlockchainStatus.h"
+
 #include "../ext/crow/http_request.h"
 
 #include "../ext/vpetrigocaches/cache.hpp"
@@ -33,6 +35,7 @@
 #define TMPL_INDEX                  TMPL_DIR "/index.html"
 #define TMPL_INDEX2                 TMPL_DIR "/index2.html"
 #define TMPL_MEMPOOL                TMPL_DIR "/mempool.html"
+#define TMPL_MEMPOOL_ERROR          TMPL_DIR "/mempool_error.html"
 #define TMPL_HEADER                 TMPL_DIR "/header.html"
 #define TMPL_FOOTER                 TMPL_DIR "/footer.html"
 #define TMPL_BLOCK                  TMPL_DIR "/block.html"
@@ -149,7 +152,7 @@ namespace xmreg
 
             if (!input_key_imgs.empty())
             {
-                mixin_str     = std::to_string(mixin_no - 1);
+                mixin_str     = std::to_string(mixin_no);
                 fee_str       = fmt::format("{:0.6f}", xmr_amount);
                 fee_short_str = fmt::format("{:0.3f}", xmr_amount);
             }
@@ -259,6 +262,8 @@ namespace xmreg
 
         uint64_t no_of_mempool_tx_of_frontpage;
         uint64_t no_blocks_on_index;
+        uint64_t network_info_timeout;
+        uint64_t mempool_info_timeout;
 
         string testnet_url;
         string mainnet_url;
@@ -309,6 +314,21 @@ namespace xmreg
         // parse their json for each request
         fifo_cache_t<string, mempool_tx_info> mempool_tx_json_cache;
 
+        // to keep network_info in cache
+        // and to show previous info in case current querry for
+        // the current info timesout.
+        struct network_info
+        {
+            uint64_t difficulty;
+            uint64_t hash_rate;
+            uint64_t fee_per_kb;
+            uint64_t alt_blocks_no;
+            uint64_t tx_pool_size;
+            uint64_t info_timestamp;
+        };
+
+        atomic<network_info> previous_network_info;
+
         // cache of txs_map of txs in blocks. this is useful for
         // index2 page, so that we dont parse txs in each block
         // for each request.
@@ -333,6 +353,8 @@ namespace xmreg
              bool _enable_block_cache,
              bool _show_cache_times,
              uint64_t _no_blocks_on_index,
+             uint64_t _network_info_timeout,
+             uint64_t _mempool_info_timeout,
              string _testnet_url,
              string _mainnet_url)
                 : mcore {_mcore},
@@ -350,6 +372,8 @@ namespace xmreg
                   enable_block_cache {_enable_block_cache},
                   show_cache_times {_show_cache_times},
                   no_blocks_on_index {_no_blocks_on_index},
+                  network_info_timeout {_network_info_timeout},
+                  mempool_info_timeout {_mempool_info_timeout},
                   testnet_url {_testnet_url},
                   mainnet_url {_mainnet_url},
                   mempool_tx_json_cache(1000),
@@ -359,6 +383,9 @@ namespace xmreg
 
             no_of_mempool_tx_of_frontpage = 25;
 
+            // initialized stored network info atomic
+            previous_network_info = network_info {0, 0, 0, 0, 0, 0};
+
             // read template files for all the pages
             // into template_file map
 
@@ -367,6 +394,7 @@ namespace xmreg
             template_file["footer"]          = get_footer();
             template_file["index2"]          = get_full_page(xmreg::read(TMPL_INDEX2));
             template_file["mempool"]         = xmreg::read(TMPL_MEMPOOL);
+            template_file["mempool_error"]   = xmreg::read(TMPL_MEMPOOL_ERROR);
             template_file["mempool_full"]    = get_full_page(template_file["mempool"]);
             template_file["block"]           = get_full_page(xmreg::read(TMPL_BLOCK));
             template_file["tx"]              = get_full_page(xmreg::read(TMPL_TX));
@@ -394,6 +422,41 @@ namespace xmreg
         string
         index2(uint64_t page_no = 0, bool refresh_page = false)
         {
+
+            // we get network info, such as current hash rate
+            // but since this makes a rpc call to deamon, we make it as an async
+            // call. this way we dont have to wait with execution of the rest of the
+            // index2 method, until deamon gives as the required result.
+            std::future<json> network_info_ftr = std::async(std::launch::async, [&]
+            {
+                json j_info;
+
+                if (!get_monero_network_info(j_info))
+                {
+                    return json{};
+                }
+
+                uint64_t fee_estimated {0};
+
+                // get dynamic fee estimate from last 10 blocks
+                if (!get_dynamic_per_kb_fee_estimate(fee_estimated))
+                {
+                    return json{};
+                }
+
+                j_info["fee_per_kb"] = fee_estimated;
+
+                return j_info;
+            });
+
+
+            // get mempool for the front page also using async future
+            std::future<string> mempool_ftr = std::async(std::launch::async, [&]
+            {
+                // get memory pool rendered template
+                return mempool(false, no_of_mempool_tx_of_frontpage);
+            });
+
             //get current server timestamp
             server_timestamp = std::time(nullptr);
 
@@ -426,6 +489,16 @@ namespace xmreg
                     {"enable_autorefresh_option", enable_autorefresh_option},
                     {"show_cache_times"         , show_cache_times}
             };
+
+//            std::list<block> atl_blks;
+//
+//            if (core_storage->get_alternative_blocks(atl_blks))
+//            {
+//                for (const block& alt_blk: atl_blks)
+//                {
+//                    //cout << "alt_blk: " << get_block_height(alt_blk) << endl;
+//                }
+//            }
 
             context.emplace("txs", mstch::array()); // will keep tx to show
 
@@ -694,8 +767,116 @@ namespace xmreg
             context["cache_hits"]   = cache_hits;
             context["cache_misses"] = cache_misses;
 
+            // now time to check if we have our networkinfo from network_info future
+            // wait a bit (300 millisecond max) if not, just in case, but we dont wait more.
+            // if its not ready by now, forget about it.
+
+            std::future_status ftr_status = network_info_ftr.wait_for(
+                    std::chrono::milliseconds(network_info_timeout));
+
+            network_info current_network_info {0, 0, 0, 0, 0, 0};
+
+            bool is_network_info_current {false};
+
+            if (ftr_status == std::future_status::ready)
+            {
+                json j_network_info = network_info_ftr.get();
+
+                if (!j_network_info.empty())
+                {
+                    current_network_info.difficulty     = j_network_info["difficulty"];
+                    current_network_info.hash_rate      = j_network_info["hash_rate"];
+                    current_network_info.fee_per_kb     = j_network_info["fee_per_kb"];
+                    current_network_info.tx_pool_size   = j_network_info["tx_pool_size"];
+                    current_network_info.alt_blocks_no  = j_network_info["alt_blocks_count"];
+                    current_network_info.info_timestamp = local_copy_server_timestamp;
+
+                    previous_network_info = current_network_info;
+
+                    is_network_info_current = true;
+                }
+            }
+            else
+            {
+                current_network_info = previous_network_info;
+                cerr  << "network_info future not ready yet, use the previous_network_info." << endl;
+            }
+
+            // perapre network info mstch::map for the front page
+
+            string hash_rate;
+
+            if (testnet)
+            {
+                hash_rate = std::to_string(current_network_info.hash_rate) + " H/s";
+            }
+            else
+            {
+                hash_rate = fmt::format("{:0.3f} MH/s", current_network_info.hash_rate/1.0e6);
+            }
+
+            pair<string, string> network_info_age = get_age(local_copy_server_timestamp,
+                                                            current_network_info.info_timestamp);
+
+            // if network info is younger than 2 minute, assume its current. No sense
+            // showing that it is not current if its less then block time.
+
+            if (local_copy_server_timestamp - current_network_info.info_timestamp < 120)
+            {
+                is_network_info_current = true;
+            }
+
+            context["network_info"] = mstch::map {
+                    {"difficulty"        , current_network_info.difficulty},
+                    {"hash_rate"         , hash_rate},
+                    {"fee_per_kb"        , print_money(current_network_info.fee_per_kb)},
+                    {"alt_blocks_no"     , current_network_info.alt_blocks_no},
+                    {"tx_pool_size"      , current_network_info.tx_pool_size},
+                    {"is_current_info"   , is_network_info_current},
+                    {"is_pool_size_zero" , (current_network_info.tx_pool_size == 0)},
+                    {"age"               , network_info_age.first},
+                    {"age_format"        , network_info_age.second},
+            };
+
+            string mempool_html {"Cant get mempool_pool"};
+
+            // get mempool data for the front page, if ready. If not, then just skip.
+            std::future_status mempool_ftr_status = mempool_ftr.wait_for(
+                    std::chrono::milliseconds(mempool_info_timeout));
+
+            if (mempool_ftr_status == std::future_status::ready)
+            {
+                mempool_html = mempool_ftr.get();
+            }
+            else
+            {
+                cerr  << "mempool future not ready yet, skipping." << endl;
+                mempool_html = mstch::render(template_file["mempool_error"], context);
+            }
+
+            if (CurrentBlockchainStatus::is_thread_running())
+            {
+                CurrentBlockchainStatus::Emission current_values
+                        = CurrentBlockchainStatus::get_emission();
+
+                string emission_blk_no   = std::to_string(current_values.blk_no - 1);
+                string emission_coinbase = xmr_amount_to_str(current_values.coinbase, "{:0.3f}");
+                string emission_fee      = xmr_amount_to_str(current_values.fee, "{:0.3f}");
+
+                context["emission"] = mstch::map {
+                        {"blk_no"    , emission_blk_no},
+                        {"amount"    , emission_coinbase},
+                        {"fee_amount", emission_fee}
+                };
+            }
+            else
+            {
+                cerr  << "emission thread not running, skipping." << endl;
+            }
+
+
             // get memory pool rendered template
-            string mempool_html = mempool(false, no_of_mempool_tx_of_frontpage);
+            //string mempool_html = mempool(false, no_of_mempool_tx_of_frontpage);
 
             // append mempool_html to the index context map
             context["mempool_info"] = mempool_html;
@@ -707,8 +888,8 @@ namespace xmreg
         }
 
         /**
-     * Render mempool data
-     */
+         * Render mempool data
+         */
         string
         mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
         {
@@ -915,7 +1096,7 @@ namespace xmreg
                         {"no_inputs"       , no_inputs},
                         {"no_outputs"      , no_outputs},
                         {"no_nonrct_inputs", num_nonrct_inputs},
-                        {"mixin"           , mixin_no},
+                        {"mixin"           , mixin_no+1},
                         {"txsize"          , txsize}
                 });
 
@@ -4677,6 +4858,7 @@ namespace xmreg
 
             json j_info;
 
+            // get basic network info
             if (!get_monero_network_info(j_info))
             {
                 j_response["status"]  = "error";
@@ -4684,7 +4866,83 @@ namespace xmreg
                 return j_response;
             }
 
+            uint64_t fee_estimated {0};
+
+            // get dynamic fee estimate from last 10 blocks
+            if (!get_dynamic_per_kb_fee_estimate(fee_estimated))
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Cant get dynamic fee esimate";
+                return j_response;
+            }
+
+            j_info["fee_per_kb"] = fee_estimated;
+
+//            // get mempool size in kB.
+//            std::vector<tx_info> mempool_txs;
+//
+//            if (!rpc.get_mempool(mempool_txs))
+//            {
+//                j_response["status"]  = "error";
+//                j_response["message"] = "Cant get mempool transactions";
+//                return j_response;
+//            }
+//
+//            uint64_t tx_pool_size_kbytes {0};
+//
+//            for (const tx_info& tx_i: mempool_txs)
+//            {
+//                tx_pool_size_kbytes += tx_i.blob_size;
+//            }
+//
+//            j_info["tx_pool_size"]        = mempool_txs.size();
+//            j_info["tx_pool_size_kbytes"] = tx_pool_size_kbytes;
+
             j_data = j_info;
+
+            j_response["status"]  = "success";
+
+            return j_response;
+        }
+
+
+        /*
+        * Lets use this json api convention for success and error
+        * https://labs.omniti.com/labs/jsend
+        */
+        json
+        json_emission()
+        {
+            json j_response {
+                    {"status", "fail"},
+                    {"data",   json {}}
+            };
+
+            json& j_data = j_response["data"];
+
+            json j_info;
+
+            // get basic network info
+            if (!CurrentBlockchainStatus::is_thread_running())
+            {
+                j_data["title"] = "Emission monitoring thread not enabled.";
+                return j_response;
+            }
+            else
+            {
+                CurrentBlockchainStatus::Emission current_values
+                        = CurrentBlockchainStatus::get_emission();
+
+                string emission_blk_no   = std::to_string(current_values.blk_no - 1);
+                string emission_coinbase = xmr_amount_to_str(current_values.coinbase, "{:0.3f}");
+                string emission_fee      = xmr_amount_to_str(current_values.fee, "{:0.3f}");
+
+                j_data = json {
+                        {"blk_no"  , current_values.blk_no - 1},
+                        {"coinbase", current_values.coinbase},
+                        {"fee"     , current_values.fee},
+                };
+            }
 
             j_response["status"]  = "success";
 
@@ -4716,6 +4974,7 @@ namespace xmreg
 
             return j_tx;
         }
+
 
         bool
         find_tx(const crypto::hash& tx_hash,
@@ -5464,7 +5723,7 @@ namespace xmreg
                    + template_file["footer"];
         }
 
-       bool
+        bool
         get_monero_network_info(json& j_info)
         {
             COMMAND_RPC_GET_INFO::response network_info;
@@ -5498,6 +5757,25 @@ namespace xmreg
             return true;
         }
 
+        bool
+        get_dynamic_per_kb_fee_estimate(uint64_t& fee_estimated)
+        {
+
+            string error_msg;
+
+            if (!rpc.get_dynamic_per_kb_fee_estimate(
+                    FEE_ESTIMATE_GRACE_BLOCKS,
+                    fee_estimated, error_msg))
+            {
+                cerr << "rpc.get_dynamic_per_kb_fee_estimate failed" << endl;
+                return false;
+            }
+
+            (void) error_msg;
+
+            return true;
+        }
+
         string
         get_footer()
         {
@@ -5506,7 +5784,8 @@ namespace xmreg
             static const mstch::map footer_context {
                     {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
                     {"last_git_commit_date", string {GIT_COMMIT_DATETIME}},
-                    {"monero_version_full" , string {MONERO_VERSION_FULL}},
+                    {"git_branch_name"     , string {GIT_BRANCH_NAME}},
+                    {"monero_version_full" , string {MONERO_VERSION_FULL}}
             };
 
             string footer_html = mstch::render(xmreg::read(TMPL_FOOTER), footer_context);
@@ -5527,3 +5806,4 @@ namespace xmreg
 
 
 #endif //CROWXMR_PAGE_H
+

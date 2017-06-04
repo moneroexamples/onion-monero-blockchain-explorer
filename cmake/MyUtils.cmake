@@ -42,6 +42,16 @@ macro(create_git_version)
             OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
+    # Get current branch name
+    execute_process(
+            COMMAND git rev-parse --abbrev-ref HEAD
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_VARIABLE GIT_BRANCH_NAME
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+
+
     configure_file(
             ${CMAKE_SOURCE_DIR}/src/version.h.in
             ${CMAKE_BINARY_DIR}/gen/version.h

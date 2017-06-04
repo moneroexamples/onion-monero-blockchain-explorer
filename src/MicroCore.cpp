@@ -327,6 +327,7 @@ MicroCore::get_blk_timestamp(uint64_t blk_height)
  */
 MicroCore::~MicroCore()
 {
+    //m_blockchain_storage.get_db().close();
     delete &m_blockchain_storage.get_db();
 }
 

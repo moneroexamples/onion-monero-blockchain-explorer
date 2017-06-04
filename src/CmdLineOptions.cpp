@@ -18,7 +18,7 @@ namespace xmreg
         p.add("txhash", -1);
 
         options_description desc(
-                "xmrblocks, start Onion Monero Blockchain Explorer");
+                "xmrblocks, Onion Monero Blockchain Explorer");
 
         desc.add_options()
                 ("help,h", value<bool>()->default_value(false)->implicit_value(true),
@@ -26,7 +26,7 @@ namespace xmreg
                 ("testnet,t", value<bool>()->default_value(false)->implicit_value(true),
                  "use testnet blockchain")
                 ("enable-pusher", value<bool>()->default_value(false)->implicit_value(true),
-                 "enable pushing signed tx")
+                 "enable signed transaction pusher")
                 ("enable-mixin-details", value<bool>()->default_value(false)->implicit_value(true),
                  "enable mixin details for key images, e.g., timescale, mixin of mixins, in tx context")
                 ("enable-key-image-checker", value<bool>()->default_value(false)->implicit_value(true),
@@ -34,33 +34,39 @@ namespace xmreg
                 ("enable-output-key-checker", value<bool>()->default_value(false)->implicit_value(true),
                  "enable outputs key file checker")
                 ("enable-mempool-cache", value<bool>()->default_value(true),
-                 "enable caching txs in the mempool")
+                 "enable caching of transactions from the mempool")
                 ("enable-json-api", value<bool>()->default_value(true),
                  "enable JSON REST api")
                 ("enable-tx-cache", value<bool>()->default_value(false)->implicit_value(true),
-                 "enable caching of tx details")
+                 "enable caching of transaction details")
                 ("show-cache-times", value<bool>()->default_value(false)->implicit_value(true),
                  "show times of getting data from cache vs no cache")
                 ("enable-block-cache", value<bool>()->default_value(false)->implicit_value(true),
                  "enable caching of block details")
                 ("enable-autorefresh-option", value<bool>()->default_value(false)->implicit_value(true),
                  "enable users to have the index page on autorefresh")
+                ("enable-emission-monitor", value<bool>()->default_value(false)->implicit_value(true),
+                 "enable Monero total emission monitoring thread")
                 ("port,p", value<string>()->default_value("8081"),
-                 "default port")
+                 "default explorer port")
                 ("testnet-url", value<string>()->default_value(""),
-                 "you can specifiy testnet url, if you run it on mainet. link will show on front page to testnet explorer")
+                 "you can specify testnet url, if you run it on mainnet. link will show on front page to testnet explorer")
                 ("mainnet-url", value<string>()->default_value(""),
-                 "you can specifiy mainnet url, if you run it on testnet. link will show on front page to mainnet explorer")
+                 "you can specify mainnet url, if you run it on testnet. link will show on front page to mainnet explorer")
                 ("no-blocks-on-index", value<string>()->default_value("10"),
                  "number of last blocks to be shown on index page")
+                ("network-info-timeout", value<string>()->default_value("1000"),
+                 "maximum time, in milliseconds, to wait for network info availability")
+                ("mempool-info-timeout", value<string>()->default_value("5000"),
+                 "maximum time, in milliseconds, to wait for mempool data for the front page")
                 ("bc-path,b", value<string>(),
-                 "path to lmdb blockchain")
+                 "path to lmdb folder of the blockchain, e.g., ~/.bitmonero/lmdb")
                 ("ssl-crt-file", value<string>(),
-                 "A path to crt file for ssl (https) functionality")
+                 "path to crt file for ssl (https) functionality")
                 ("ssl-key-file", value<string>(),
-                 "A path to key file for ssl (https) functionality")
+                 "path to key file for ssl (https) functionality")
                 ("deamon-url,d", value<string>()->default_value("http:://127.0.0.1:18081"),
-                 "monero address string");
+                 "Monero deamon url");
 
 
         store(command_line_parser(acc, avv)
