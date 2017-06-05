@@ -6382,7 +6382,8 @@ class basic_json
                 case value_t::array:
                 {
                     //return *lhs.m_value.array < *rhs.m_value.array;
-                    return *lhs.m_value.array.operator<(lhs, rhs);
+                    //return *lhs.m_value.array.operator<(rhs);
+                    return (*lhs.m_value.array) < *rhs.m_value.array;
                    // return nlohmann::detail::operator<(lhs, rhs);
                 }
                 case value_t::object:
