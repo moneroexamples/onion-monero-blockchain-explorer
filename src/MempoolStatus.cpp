@@ -31,7 +31,11 @@ MempoolStatus::start_mempool_status_thread()
     local_copy.info_timestamp = 0;
     current_network_info = local_copy;
 
-
+    if (mempool_refresh_time < 1)
+    {
+        // to protect from diviation by zero below.
+        mempool_refresh_time = 1;
+    }
 
     if (!is_running)
     {
@@ -50,7 +54,7 @@ MempoolStatus::start_mempool_status_thread()
 
                  // we just query network status every minute. No sense
                  // to do it as frequently as getting mempool data.
-                 if (loop_index % 4 == 0)
+                 if (loop_index % loop_index_divider == 0)
                  {
                      if (!MempoolStatus::read_network_info())
                      {
