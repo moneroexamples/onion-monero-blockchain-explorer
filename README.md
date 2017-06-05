@@ -25,7 +25,8 @@ Monero C++ libraries, but also demonstrates how to use:
 
 Tor users:
  
- - [http://dvwae436pd7nt4bc.onion](http://dvwae436pd7nt4bc.onion)
+ - [http://dvwae436pd7nt4bc.onion](http://dvwae436pd7nt4bc.onion) (Front-end templates are [maintained by @suhz](https://github.com/suhz/onion-monero-blockchain-explorer/tree/new_template/src/templates)).
+
   
 Clearnet versions:
 
