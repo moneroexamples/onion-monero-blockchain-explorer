@@ -50,7 +50,6 @@ main(int ac, const char* av[])
     auto no_blocks_on_index_opt        = opts.get_option<string>("no-blocks-on-index");
     auto testnet_url                   = opts.get_option<string>("testnet-url");
     auto mainnet_url                   = opts.get_option<string>("mainnet-url");
-    auto network_info_timeout_opt      = opts.get_option<string>("network-info-timeout");
     auto mempool_info_timeout_opt      = opts.get_option<string>("mempool-info-timeout");
     auto mempool_refresh_time_opt      = opts.get_option<string>("mempool-refresh-time");
     auto testnet_opt                   = opts.get_option<bool>("testnet");
@@ -155,19 +154,16 @@ main(int ac, const char* av[])
         deamon_url = "http:://127.0.0.1:28081";
     }
 
-    uint64_t network_info_timeout {1000};
     uint64_t mempool_info_timeout {5000};
 
     try
     {
-        network_info_timeout = boost::lexical_cast<uint64_t>(*network_info_timeout_opt);
         mempool_info_timeout = boost::lexical_cast<uint64_t>(*mempool_info_timeout_opt);
 
     }
     catch (boost::bad_lexical_cast &e)
     {
-        cout << "Cant cast " << (*network_info_timeout_opt)
-             << " or/and "   << (*mempool_info_timeout_opt) <<" into numbers. Using default values."
+        cout << "Cant cast " << (*mempool_info_timeout_opt) <<" into numbers. Using default values."
              << endl;
     }
 
@@ -250,7 +246,6 @@ main(int ac, const char* av[])
                           enable_block_cache,
                           show_cache_times,
                           no_blocks_on_index,
-                          network_info_timeout,
                           mempool_info_timeout,
                           *testnet_url,
                           *mainnet_url);

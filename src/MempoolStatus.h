@@ -42,6 +42,34 @@ struct MempoolStatus
         string txsize;
     };
 
+
+    // to keep network_info in cache
+    // and to show previous info in case current querry for
+    // the current info timesout.
+    struct network_info
+    {
+        uint64_t height;
+        bool testnet;
+        bool current;
+        crypto::hash top_block_hash;
+        uint64_t target_height;
+        uint64_t difficulty;
+        uint64_t target;
+        uint64_t tx_count;
+        uint64_t tx_pool_size;
+        uint64_t alt_blocks_count;
+        uint64_t outgoing_connections_count;
+        uint64_t incoming_connections_count;
+        uint64_t white_peerlist_size;
+        uint64_t grey_peerlist_size;
+        uint64_t cumulative_difficulty;
+        uint64_t block_size_limit;
+        uint64_t start_time;
+        uint64_t hash_rate;
+        uint64_t fee_per_kb;
+        uint64_t info_timestamp;
+    };
+
     static boost::thread m_thread;
 
     static mutex mempool_mutx;
@@ -66,6 +94,8 @@ struct MempoolStatus
     //           <recieved_time, transaction>
     static vector<mempool_tx> mempool_txs;
 
+    static atomic<network_info> current_network_info;
+
     static void
     set_blockchain_variables(MicroCore* _mcore,
                              Blockchain* _core_storage);
@@ -75,6 +105,10 @@ struct MempoolStatus
 
     static bool
     read_mempool();
+
+    static bool
+    read_network_info();
+
 
     static vector<mempool_tx>
     get_mempool_txs();

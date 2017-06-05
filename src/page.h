@@ -263,7 +263,6 @@ namespace xmreg
 
         uint64_t no_of_mempool_tx_of_frontpage;
         uint64_t no_blocks_on_index;
-        uint64_t network_info_timeout;
         uint64_t mempool_info_timeout;
 
         string testnet_url;
@@ -282,25 +281,9 @@ namespace xmreg
         using lru_cache_t = caches::fixed_sized_cache<Key, Value, caches::LRUCachePolicy<Key>>;
 
 
-
         // alias for easy class typing
         template <typename Key, typename Value>
         using fifo_cache_t = caches::fixed_sized_cache<Key, Value, caches::FIFOCachePolicy<Key>>;
-
-        // to keep network_info in cache
-        // and to show previous info in case current querry for
-        // the current info timesout.
-        struct network_info
-        {
-            uint64_t difficulty;
-            uint64_t hash_rate;
-            uint64_t fee_per_kb;
-            uint64_t alt_blocks_no;
-            uint64_t tx_pool_size;
-            uint64_t info_timestamp;
-        };
-
-        atomic<network_info> previous_network_info;
 
         // cache of txs_map of txs in blocks. this is useful for
         // index2 page, so that we dont parse txs in each block
@@ -325,7 +308,6 @@ namespace xmreg
              bool _enable_block_cache,
              bool _show_cache_times,
              uint64_t _no_blocks_on_index,
-             uint64_t _network_info_timeout,
              uint64_t _mempool_info_timeout,
              string _testnet_url,
              string _mainnet_url)
@@ -343,7 +325,6 @@ namespace xmreg
                   enable_block_cache {_enable_block_cache},
                   show_cache_times {_show_cache_times},
                   no_blocks_on_index {_no_blocks_on_index},
-                  network_info_timeout {_network_info_timeout},
                   mempool_info_timeout {_mempool_info_timeout},
                   testnet_url {_testnet_url},
                   mainnet_url {_mainnet_url},
@@ -352,9 +333,6 @@ namespace xmreg
         {
 
             no_of_mempool_tx_of_frontpage = 25;
-
-            // initialized stored network info atomic
-            previous_network_info = network_info {0, 0, 0, 0, 0, 0};
 
             // read template files for all the pages
             // into template_file map
@@ -405,16 +383,6 @@ namespace xmreg
                 {
                     return json{};
                 }
-
-                uint64_t fee_estimated {0};
-
-                // get dynamic fee estimate from last 10 blocks
-                if (!get_dynamic_per_kb_fee_estimate(fee_estimated))
-                {
-                    return json{};
-                }
-
-                j_info["fee_per_kb"] = fee_estimated;
 
                 return j_info;
             });
@@ -737,43 +705,12 @@ namespace xmreg
             context["cache_hits"]   = cache_hits;
             context["cache_misses"] = cache_misses;
 
-            // now time to check if we have our networkinfo from network_info future
-            // wait a bit (300 millisecond max) if not, just in case, but we dont wait more.
-            // if its not ready by now, forget about it.
 
-            std::future_status ftr_status = network_info_ftr.wait_for(
-                    std::chrono::milliseconds(network_info_timeout));
-
-            network_info current_network_info {0, 0, 0, 0, 0, 0};
-
-            bool is_network_info_current {false};
-
-            if (ftr_status == std::future_status::ready)
-            {
-                json j_network_info = network_info_ftr.get();
-
-                if (!j_network_info.empty())
-                {
-                    current_network_info.difficulty     = j_network_info["difficulty"];
-                    current_network_info.hash_rate      = j_network_info["hash_rate"];
-                    current_network_info.fee_per_kb     = j_network_info["fee_per_kb"];
-                    current_network_info.tx_pool_size   = j_network_info["tx_pool_size"];
-                    current_network_info.alt_blocks_no  = j_network_info["alt_blocks_count"];
-                    current_network_info.info_timestamp = local_copy_server_timestamp;
-
-                    previous_network_info = current_network_info;
-
-                    is_network_info_current = true;
-                }
-            }
-            else
-            {
-                current_network_info = previous_network_info;
-                cerr  << "network_info future not ready yet, use the previous_network_info." << endl;
-            }
+            // get current network info from MemoryStatus thread.
+            MempoolStatus::network_info current_network_info
+                = MempoolStatus::current_network_info;
 
             // perapre network info mstch::map for the front page
-
             string hash_rate;
 
             if (testnet)
@@ -790,19 +727,23 @@ namespace xmreg
 
             // if network info is younger than 2 minute, assume its current. No sense
             // showing that it is not current if its less then block time.
-
             if (local_copy_server_timestamp - current_network_info.info_timestamp < 120)
             {
-                is_network_info_current = true;
+                current_network_info.current = true;
             }
+
+            string block_size_limit = fmt::format("{:0.2f}",
+                              static_cast<double>(
+                                      current_network_info.block_size_limit)/1024.0);
 
             context["network_info"] = mstch::map {
                     {"difficulty"        , current_network_info.difficulty},
                     {"hash_rate"         , hash_rate},
                     {"fee_per_kb"        , print_money(current_network_info.fee_per_kb)},
-                    {"alt_blocks_no"     , current_network_info.alt_blocks_no},
+                    {"alt_blocks_no"     , current_network_info.alt_blocks_count},
                     {"tx_pool_size"      , current_network_info.tx_pool_size},
-                    {"is_current_info"   , is_network_info_current},
+                    {"block_size_limit"  , block_size_limit},
+                    {"is_current_info"   , current_network_info.current},
                     {"is_pool_size_zero" , (current_network_info.tx_pool_size == 0)},
                     {"age"               , network_info_age.first},
                     {"age_format"        , network_info_age.second},
@@ -5505,32 +5446,35 @@ namespace xmreg
         bool
         get_monero_network_info(json& j_info)
         {
-            COMMAND_RPC_GET_INFO::response network_info;
+            MempoolStatus::network_info local_copy_network_info
+                = MempoolStatus::current_network_info;
 
-            if (!rpc.get_network_info(network_info))
+            if (local_copy_network_info.current == false)
             {
                 return false;
             }
 
             j_info = json {
-               {"status"                    , network_info.status},
-               {"height"                    , network_info.height},
-               {"target_height"             , network_info.target_height},
-               {"difficulty"                , network_info.difficulty},
-               {"target"                    , network_info.target},
-               {"hash_rate"                 , (network_info.difficulty/network_info.target)},
-               {"tx_count"                  , network_info.tx_count},
-               {"tx_pool_size"              , network_info.tx_pool_size},
-               {"alt_blocks_count"          , network_info.alt_blocks_count},
-               {"outgoing_connections_count", network_info.outgoing_connections_count},
-               {"incoming_connections_count", network_info.incoming_connections_count},
-               {"white_peerlist_size"       , network_info.white_peerlist_size},
-               {"grey_peerlist_size"        , network_info.grey_peerlist_size},
-               {"testnet"                   , network_info.testnet},
-               {"top_block_hash"            , network_info.top_block_hash},
-               {"cumulative_difficulty"     , network_info.cumulative_difficulty},
-               {"block_size_limit"          , network_info.block_size_limit},
-               {"start_time"                , network_info.start_time}
+               {"status"                    , local_copy_network_info.current},
+               {"current"                   , local_copy_network_info.current},
+               {"height"                    , local_copy_network_info.height},
+               {"target_height"             , local_copy_network_info.target_height},
+               {"difficulty"                , local_copy_network_info.difficulty},
+               {"target"                    , local_copy_network_info.target},
+               {"hash_rate"                 , local_copy_network_info.hash_rate},
+               {"tx_count"                  , local_copy_network_info.tx_count},
+               {"tx_pool_size"              , local_copy_network_info.tx_pool_size},
+               {"alt_blocks_count"          , local_copy_network_info.alt_blocks_count},
+               {"outgoing_connections_count", local_copy_network_info.outgoing_connections_count},
+               {"incoming_connections_count", local_copy_network_info.incoming_connections_count},
+               {"white_peerlist_size"       , local_copy_network_info.white_peerlist_size},
+               {"grey_peerlist_size"        , local_copy_network_info.grey_peerlist_size},
+               {"testnet"                   , local_copy_network_info.testnet},
+               {"top_block_hash"            , pod_to_hex(local_copy_network_info.top_block_hash)},
+               {"cumulative_difficulty"     , local_copy_network_info.cumulative_difficulty},
+               {"block_size_limit"          , local_copy_network_info.block_size_limit},
+               {"start_time"                , local_copy_network_info.start_time},
+               {"fee_per_kb"                , local_copy_network_info.fee_per_kb}
             };
 
             return true;

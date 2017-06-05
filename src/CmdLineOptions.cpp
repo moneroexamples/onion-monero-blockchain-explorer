@@ -53,11 +53,9 @@ namespace xmreg
                  "you can specify mainnet url, if you run it on testnet. link will show on front page to mainnet explorer")
                 ("no-blocks-on-index", value<string>()->default_value("10"),
                  "number of last blocks to be shown on index page")
-                ("network-info-timeout", value<string>()->default_value("1000"),
-                 "maximum time, in milliseconds, to wait for network info availability")
                 ("mempool-info-timeout", value<string>()->default_value("5000"),
                  "maximum time, in milliseconds, to wait for mempool data for the front page")
-                ("mempool-refresh-time", value<string>()->default_value("10"),
+                ("mempool-refresh-time", value<string>()->default_value("15"),
                  "time, in seconds, for each refresh of mempool state")
                 ("bc-path,b", value<string>(),
                  "path to lmdb folder of the blockchain, e.g., ~/.bitmonero/lmdb")

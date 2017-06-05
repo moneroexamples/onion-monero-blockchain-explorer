@@ -23,14 +23,52 @@ MempoolStatus::set_blockchain_variables(MicroCore *_mcore,
 void
 MempoolStatus::start_mempool_status_thread()
 {
+    // initialize network info as not current.
+    // so we know that what ever values are returned, they
+    // dont come from the deamon now.
+    network_info local_copy = current_network_info;
+    local_copy.current        = false;
+    local_copy.info_timestamp = 0;
+    current_network_info = local_copy;
+
+
+
     if (!is_running)
     {
         m_thread = boost::thread{[]()
         {
          try
          {
+             uint64_t loop_index {0};
+
+             // so that network status is checked every minute
+             uint64_t loop_index_divider = 60 / mempool_refresh_time;
+             loop_index_divider = loop_index_divider == 0 ? 1 : loop_index_divider;
+
              while (true)
              {
+
+                 // we just query network status every minute. No sense
+                 // to do it as frequently as getting mempool data.
+                 if (loop_index % 4 == 0)
+                 {
+                     if (!MempoolStatus::read_network_info())
+                     {
+                         network_info local_copy = current_network_info;
+
+                         cerr << " Cant read network info "<< endl;
+
+                         local_copy.current = false;
+
+                         current_network_info = local_copy;
+                     }
+                     else
+                     {
+                         cout << "Current network info read, ";
+                         loop_index == 0;
+                     }
+                 }
+
                  if (MempoolStatus::read_mempool())
                  {
                      vector<mempool_tx> current_mempool_txs = get_mempool_txs();
@@ -44,6 +82,8 @@ MempoolStatus::start_mempool_status_thread()
                  // the emission amount every minute.
                  boost::this_thread::sleep_for(
                          boost::chrono::seconds(mempool_refresh_time));
+
+                 ++loop_index;
 
              } // while (true)
          }
@@ -166,6 +206,61 @@ MempoolStatus::read_mempool()
     return true;
 }
 
+
+bool
+MempoolStatus::read_network_info()
+{
+    rpccalls rpc {deamon_url};
+
+    COMMAND_RPC_GET_INFO::response rpc_network_info;
+
+    if (!rpc.get_network_info(rpc_network_info))
+    {
+        return false;
+    }
+
+    uint64_t fee_estimated;
+
+    string error_msg;
+
+    if (!rpc.get_dynamic_per_kb_fee_estimate(
+            FEE_ESTIMATE_GRACE_BLOCKS,
+            fee_estimated, error_msg))
+    {
+        cerr << "rpc.get_dynamic_per_kb_fee_estimate failed" << endl;
+        return false;
+    }
+
+    (void) error_msg;
+
+
+    network_info local_copy;
+
+    local_copy.height                     = rpc_network_info.height;
+    local_copy.target_height              = rpc_network_info.target_height;
+    local_copy.difficulty                 = rpc_network_info.difficulty;
+    local_copy.target                     = rpc_network_info.target;
+    local_copy.hash_rate                  = (rpc_network_info.difficulty/rpc_network_info.target);
+    local_copy.tx_count                   = rpc_network_info.tx_count;
+    local_copy.tx_pool_size               = rpc_network_info.tx_pool_size;
+    local_copy.alt_blocks_count           = rpc_network_info.alt_blocks_count;
+    local_copy.outgoing_connections_count = rpc_network_info.outgoing_connections_count;
+    local_copy.incoming_connections_count = rpc_network_info.incoming_connections_count;
+    local_copy.white_peerlist_size        = rpc_network_info.white_peerlist_size;
+    local_copy.testnet                    = rpc_network_info.testnet;
+    epee::string_tools::hex_to_pod(rpc_network_info.top_block_hash, local_copy.top_block_hash);
+    local_copy.cumulative_difficulty      = rpc_network_info.cumulative_difficulty;
+    local_copy.block_size_limit           = rpc_network_info.block_size_limit;
+    local_copy.start_time                 = rpc_network_info.start_time;
+    local_copy.fee_per_kb                 = fee_estimated;
+    local_copy.info_timestamp             = static_cast<uint64_t>(std::time(nullptr));
+    local_copy.current                    = true;
+
+    current_network_info = local_copy;
+
+    return true;
+}
+
 vector<MempoolStatus::mempool_tx>
 MempoolStatus::get_mempool_txs()
 {
@@ -188,6 +283,7 @@ boost::thread      MempoolStatus::m_thread;
 Blockchain*        MempoolStatus::core_storage {nullptr};
 xmreg::MicroCore*  MempoolStatus::mcore {nullptr};
 vector<MempoolStatus::mempool_tx> MempoolStatus::mempool_txs;
+atomic<MempoolStatus::network_info> MempoolStatus::current_network_info;
 atomic<uint64_t> MempoolStatus::mempool_no {0};   // no of txs
 atomic<uint64_t> MempoolStatus::mempool_size {0}; // size in bytes.
 uint64_t MempoolStatus::mempool_refresh_time {10};
