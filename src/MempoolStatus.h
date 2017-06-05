@@ -25,9 +25,9 @@ struct MempoolStatus
     struct mempool_tx
     {
         crypto::hash tx_hash;
-        tx_info info;
         transaction tx;
 
+        uint64_t receive_time {0};
         uint64_t sum_inputs {0};
         uint64_t sum_outputs {0};
         uint64_t no_inputs {0};
@@ -48,26 +48,28 @@ struct MempoolStatus
     // the current info timesout.
     struct network_info
     {
-        uint64_t height;
-        bool testnet;
-        bool current;
+        uint64_t height  {0};
+        uint64_t target_height  {0};
+        uint64_t difficulty  {0};
+        uint64_t target  {0};
+        uint64_t tx_count  {0};
+        uint64_t tx_pool_size  {0};
+        uint64_t alt_blocks_count  {0};
+        uint64_t outgoing_connections_count  {0};
+        uint64_t incoming_connections_count  {0};
+        uint64_t white_peerlist_size  {0};
+        uint64_t grey_peerlist_size  {0};
+        bool testnet {false};
         crypto::hash top_block_hash;
-        uint64_t target_height;
-        uint64_t difficulty;
-        uint64_t target;
-        uint64_t tx_count;
-        uint64_t tx_pool_size;
-        uint64_t alt_blocks_count;
-        uint64_t outgoing_connections_count;
-        uint64_t incoming_connections_count;
-        uint64_t white_peerlist_size;
-        uint64_t grey_peerlist_size;
-        uint64_t cumulative_difficulty;
-        uint64_t block_size_limit;
-        uint64_t start_time;
-        uint64_t hash_rate;
-        uint64_t fee_per_kb;
-        uint64_t info_timestamp;
+        uint64_t cumulative_difficulty  {0};
+        uint64_t block_size_limit  {0};
+        uint64_t start_time  {0};
+
+        uint64_t hash_rate  {0};
+        uint64_t fee_per_kb  {0};
+        uint64_t info_timestamp  {0};
+
+        bool current {false};
     };
 
     static boost::thread m_thread;

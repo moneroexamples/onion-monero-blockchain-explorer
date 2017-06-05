@@ -23,13 +23,6 @@ MempoolStatus::set_blockchain_variables(MicroCore *_mcore,
 void
 MempoolStatus::start_mempool_status_thread()
 {
-    // initialize network info as not current.
-    // so we know that what ever values are returned, they
-    // dont come from the deamon now.
-    network_info local_copy = current_network_info;
-    local_copy.current        = false;
-    local_copy.info_timestamp = 0;
-    current_network_info = local_copy;
 
     if (mempool_refresh_time < 1)
     {
@@ -162,7 +155,7 @@ MempoolStatus::read_mempool()
 
             mempool_size_kB += _tx_info.blob_size;
 
-            local_copy_of_mempool_txs.push_back(mempool_tx {tx_hash_reconstructed, _tx_info, tx});
+            local_copy_of_mempool_txs.push_back(mempool_tx {tx_hash_reconstructed, tx});
 
             mempool_tx& last_tx = local_copy_of_mempool_txs.back();
 
@@ -175,6 +168,8 @@ MempoolStatus::read_mempool()
             // sum xmr in inputs and ouputs in the given tx
             const array<uint64_t, 4>& sum_data = summary_of_in_out_rct(
                    tx, output_pub_keys, input_key_imgs);
+
+            last_tx.receive_time = _tx_info.receive_time;
 
             last_tx.sum_outputs       = sum_data[0];
             last_tx.sum_inputs        = sum_data[1];
@@ -252,12 +247,14 @@ MempoolStatus::read_network_info()
     local_copy.incoming_connections_count = rpc_network_info.incoming_connections_count;
     local_copy.white_peerlist_size        = rpc_network_info.white_peerlist_size;
     local_copy.testnet                    = rpc_network_info.testnet;
-    epee::string_tools::hex_to_pod(rpc_network_info.top_block_hash, local_copy.top_block_hash);
     local_copy.cumulative_difficulty      = rpc_network_info.cumulative_difficulty;
     local_copy.block_size_limit           = rpc_network_info.block_size_limit;
     local_copy.start_time                 = rpc_network_info.start_time;
+
+    epee::string_tools::hex_to_pod(rpc_network_info.top_block_hash, local_copy.top_block_hash);
     local_copy.fee_per_kb                 = fee_estimated;
     local_copy.info_timestamp             = static_cast<uint64_t>(std::time(nullptr));
+
     local_copy.current                    = true;
 
     current_network_info = local_copy;

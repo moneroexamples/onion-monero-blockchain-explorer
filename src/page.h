@@ -858,7 +858,7 @@ namespace xmreg
                 // calculate difference between tx in mempool and server timestamps
                 array<size_t, 5> delta_time = timestamp_difference(
                         local_copy_server_timestamp,
-                        mempool_tx.info.receive_time);
+                        mempool_tx.receive_time);
 
                 // use only hours, so if we have days, add
                 // it to hours
@@ -881,10 +881,10 @@ namespace xmreg
 
                 // set output page template map
                 txs.push_back(mstch::map {
-                        {"timestamp_no"    , mempool_tx.info.receive_time},
+                        {"timestamp_no"    , mempool_tx.receive_time},
                         {"timestamp"       , mempool_tx.timestamp_str},
                         {"age"             , age_str},
-                        {"hash"            , mempool_tx.info.id_hash},
+                        {"hash"            , pod_to_hex(mempool_tx.tx_hash)},
                         {"fee"             , mempool_tx.fee_str},
                         {"xmr_inputs"      , mempool_tx.xmr_inputs_str},
                         {"xmr_outputs"     , mempool_tx.xmr_outputs_str},
@@ -1165,7 +1165,7 @@ namespace xmreg
                     // so use its recive_time as timestamp to show
 
                     uint64_t tx_recieve_timestamp
-                            = found_txs.at(0).info.receive_time;
+                            = found_txs.at(0).receive_time;
 
                     blk_timestamp = xmreg::timestamp_to_str_gm(tx_recieve_timestamp);
 
@@ -1486,7 +1486,7 @@ namespace xmreg
                     // so use its recive_time as timestamp to show
 
                     uint64_t tx_recieve_timestamp
-                            = found_txs.at(0).info.receive_time;
+                            = found_txs.at(0).receive_time;
 
                     blk_timestamp = xmreg::timestamp_to_str_gm(tx_recieve_timestamp);
 
@@ -3585,7 +3585,7 @@ namespace xmreg
 
                             // tx in mempool have no blk_timestamp
                             // but can use their recive time
-                            blk_timestamp = found_txs.at(0).info.receive_time;
+                            blk_timestamp = found_txs.at(0).receive_time;
 
                         }
 
@@ -4320,7 +4320,7 @@ namespace xmreg
                 json j_tx = get_tx_json(mempool_tx->tx, txd);
 
                 // we add some extra data, for mempool txs, such as recieve timestamp
-                j_tx["timestamp"]     = mempool_tx->info.receive_time;
+                j_tx["timestamp"]     = mempool_tx->receive_time;
                 j_tx["timestamp_utc"] = mempool_tx->timestamp_str;
 
                 j_txs.push_back(j_tx);
@@ -4745,7 +4745,7 @@ namespace xmreg
                     // there should be only one tx found
                     tx = found_txs.at(0).tx;
                     found_in_mempool = true;
-                    tx_timestamp = found_txs.at(0).info.receive_time;
+                    tx_timestamp = found_txs.at(0).receive_time;
                 }
                 else
                 {
