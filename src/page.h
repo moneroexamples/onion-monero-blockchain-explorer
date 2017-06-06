@@ -804,15 +804,29 @@ namespace xmreg
         string
         mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
         {
-            std::vector<MempoolStatus::mempool_tx> mempool_txs
-                = MempoolStatus::get_mempool_txs();
+            std::vector<MempoolStatus::mempool_tx> mempool_txs;
 
-            // size of mempool in bytes
+            if (add_header_and_footer)
+            {
+                // get all memmpool txs
+                mempool_txs = MempoolStatus::get_mempool_txs();
+            }
+            else
+            {
+                // get only first no_of_mempool_tx txs
+                mempool_txs = MempoolStatus::get_mempool_txs(no_of_mempool_tx);
+            }
+
+            // total size of mempool in bytes
             uint64_t mempool_size_bytes = MempoolStatus::mempool_size;
+
+            // reasign this number, in case no of txs in mempool is smaller
+            // than what we requested or we want all txs.
+            no_of_mempool_tx = mempool_txs.size();
 
             // initalise page tempate map with basic info about mempool
             mstch::map context {
-                    {"mempool_size"          , mempool_txs.size()},
+                    {"mempool_size"          , MempoolStatus::mempool_no}, // total no of mempool txs
                     {"show_cache_times"      , show_cache_times}
             };
 
@@ -820,27 +834,6 @@ namespace xmreg
 
             // get reference to blocks template map to be field below
             mstch::array& txs = boost::get<mstch::array>(context["mempooltxs"]);
-
-            // process only up to no_of_mempool_tx txs of mempool.
-            // this is useful from the front page were we show by default
-            // only 25 mempool txs. this way, we just parse 25 txs, rather
-            // than potentially hundrets just to ditch most of them later.
-
-            if (add_header_and_footer == false)
-            {
-                // this is to show limited number of txs in mempool
-                // for example, in the front page
-                no_of_mempool_tx = mempool_txs.size() > no_of_mempool_tx
-                                   ? no_of_mempool_tx
-                                   : mempool_txs.size();
-            }
-            else
-            {
-                // if we are adding footers and headers, means we
-                // disply mempool on its own page, thus show all mempoool txs.
-                no_of_mempool_tx = mempool_txs.size();
-            }
-
 
             double duration_cached     {0.0};
             double duration_non_cached {0.0};

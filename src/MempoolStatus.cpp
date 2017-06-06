@@ -265,6 +265,15 @@ MempoolStatus::get_mempool_txs()
     return mempool_txs;
 }
 
+vector<MempoolStatus::mempool_tx>
+MempoolStatus::get_mempool_txs(uint64_t no_of_tx)
+{
+    Guard lck (mempool_mutx);
+
+    no_of_tx = std::min<uint64_t>(no_of_tx, mempool_txs.size());
+
+    return vector<mempool_tx>(mempool_txs.begin(), mempool_txs.begin() + no_of_tx);
+}
 
 bool
 MempoolStatus::is_thread_running()

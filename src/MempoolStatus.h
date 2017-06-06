@@ -113,9 +113,12 @@ struct MempoolStatus
     static bool
     read_network_info();
 
-
     static vector<mempool_tx>
     get_mempool_txs();
+
+    // get first no_of_tx from the vector
+    static vector<mempool_tx>
+    get_mempool_txs(uint64_t no_of_tx);
 
     static bool
     is_thread_running();
