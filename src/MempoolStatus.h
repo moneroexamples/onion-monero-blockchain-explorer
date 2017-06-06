@@ -22,6 +22,8 @@ namespace xmreg
 struct MempoolStatus
 {
 
+    using Guard = std::lock_guard<std::mutex>;
+
     struct mempool_tx
     {
         crypto::hash tx_hash;

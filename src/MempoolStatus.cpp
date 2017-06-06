@@ -24,11 +24,8 @@ void
 MempoolStatus::start_mempool_status_thread()
 {
 
-    if (mempool_refresh_time < 1)
-    {
-        // to protect from diviation by zero below.
-        mempool_refresh_time = 1;
-    }
+    // to protect from deviation by zero below.
+    mempool_refresh_time = std::max<uint64_t>(1, mempool_refresh_time);
 
     if (!is_running)
     {
@@ -39,8 +36,7 @@ MempoolStatus::start_mempool_status_thread()
              uint64_t loop_index {0};
 
              // so that network status is checked every minute
-             uint64_t loop_index_divider = 60 / mempool_refresh_time;
-             loop_index_divider = loop_index_divider == 0 ? 1 : loop_index_divider;
+             uint64_t loop_index_divider = std::max<uint64_t>(1, 60 / mempool_refresh_time);
 
              while (true)
              {
@@ -192,7 +188,7 @@ MempoolStatus::read_mempool()
 
 
 
-    std::lock_guard<std::mutex> lck (mempool_mutx);
+    Guard lck (mempool_mutx);
 
     // clear current mempool txs vector
     // repopulate it with each execution of read_mempool()
@@ -265,7 +261,7 @@ MempoolStatus::read_network_info()
 vector<MempoolStatus::mempool_tx>
 MempoolStatus::get_mempool_txs()
 {
-    std::lock_guard<std::mutex> lck (mempool_mutx);
+    Guard lck (mempool_mutx);
     return mempool_txs;
 }
 
