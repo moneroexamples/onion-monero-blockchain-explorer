@@ -193,10 +193,11 @@ MempoolStatus::read_mempool()
     // clear current mempool txs vector
     // repopulate it with each execution of read_mempool()
     // not very efficient but good enough for now.
-    mempool_txs = std::move(local_copy_of_mempool_txs);
 
-    mempool_no = local_copy_of_mempool_txs.size();
+    mempool_no   = local_copy_of_mempool_txs.size();
     mempool_size = mempool_size_kB;
+
+    mempool_txs = std::move(local_copy_of_mempool_txs);
 
     return true;
 }
