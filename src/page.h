@@ -824,9 +824,11 @@ namespace xmreg
             // than what we requested or we want all txs.
             no_of_mempool_tx = mempool_txs.size();
 
+            uint64_t total_no_of_mempool_tx = MempoolStatus::mempool_no;
+
             // initalise page tempate map with basic info about mempool
             mstch::map context {
-                    {"mempool_size"          , MempoolStatus::mempool_no}, // total no of mempool txs
+                    {"mempool_size"          , total_no_of_mempool_tx}, // total no of mempool txs
                     {"show_cache_times"      , show_cache_times}
             };
 
@@ -906,7 +908,7 @@ namespace xmreg
 
             // this is for partial disply on front page.
 
-            context["mempool_fits_on_front_page"]    = (mempool_txs.size() <= no_of_mempool_tx);
+            context["mempool_fits_on_front_page"]    = (mempool_txs.size() <= total_no_of_mempool_tx);
             context["no_of_mempool_tx_of_frontpage"] = no_of_mempool_tx;
 
             context["partial_mempool_shown"] = true;
