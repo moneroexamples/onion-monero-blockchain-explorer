@@ -736,7 +736,7 @@ namespace xmreg
                               static_cast<double>(
                                       current_network_info.block_size_limit / 2)/1024.0);
 
-            context["network_info"] = mstch::map {
+            context["network_inf   o"] = mstch::map {
                     {"difficulty"        , current_network_info.difficulty},
                     {"hash_rate"         , hash_rate},
                     {"fee_per_kb"        , print_money(current_network_info.fee_per_kb)},
@@ -810,11 +810,13 @@ namespace xmreg
             {
                 // get all memmpool txs
                 mempool_txs = MempoolStatus::get_mempool_txs();
+                no_of_mempool_tx = mempool_txs.size();
             }
             else
             {
                 // get only first no_of_mempool_tx txs
                 mempool_txs = MempoolStatus::get_mempool_txs(no_of_mempool_tx);
+                no_of_mempool_tx = std::min(no_of_mempool_tx, mempool_txs.size());
             }
 
             // total size of mempool in bytes
@@ -822,7 +824,7 @@ namespace xmreg
 
             // reasign this number, in case no of txs in mempool is smaller
             // than what we requested or we want all txs.
-            no_of_mempool_tx = mempool_txs.size();
+
 
             uint64_t total_no_of_mempool_tx = MempoolStatus::mempool_no;
 
@@ -908,7 +910,7 @@ namespace xmreg
 
             // this is for partial disply on front page.
 
-            context["mempool_fits_on_front_page"]    = (mempool_txs.size() <= total_no_of_mempool_tx);
+            context["mempool_fits_on_front_page"]    = (total_no_of_mempool_tx <= mempool_txs.size());
             context["no_of_mempool_tx_of_frontpage"] = no_of_mempool_tx;
 
             context["partial_mempool_shown"] = true;
@@ -5444,11 +5446,6 @@ namespace xmreg
             MempoolStatus::network_info local_copy_network_info
                 = MempoolStatus::current_network_info;
 
-            if (local_copy_network_info.current == false)
-            {
-                return false;
-            }
-
             j_info = json {
                {"status"                    , local_copy_network_info.current},
                {"current"                   , local_copy_network_info.current},
@@ -5472,7 +5469,7 @@ namespace xmreg
                {"fee_per_kb"                , local_copy_network_info.fee_per_kb}
             };
 
-            return true;
+            return local_copy_network_info.current;
         }
 
         bool
