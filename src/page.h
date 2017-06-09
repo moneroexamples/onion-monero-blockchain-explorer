@@ -434,6 +434,10 @@ namespace xmreg
                     cout << "alt_blk tx: " << alt_blk.tx_hashes.size() << endl;
                 }
             }
+            else
+            {
+                cerr << "get_alternative_blocks(atl_blks) returned false" << endl;
+            }
 
             context.emplace("txs", mstch::array()); // will keep tx to show
 
