@@ -50,6 +50,7 @@ struct MempoolStatus
     // the current info timesout.
     struct network_info
     {
+        uint64_t status {0};
         uint64_t height  {0};
         uint64_t target_height  {0};
         uint64_t difficulty  {0};
@@ -72,6 +73,32 @@ struct MempoolStatus
         uint64_t info_timestamp  {0};
 
         bool current {false};
+
+        static uint64_t
+        get_status_uint(const string& status)
+        {
+            if (status == CORE_RPC_STATUS_OK)
+                return 1;
+
+            if (status == CORE_RPC_STATUS_BUSY)
+                return 2;
+
+            // default
+            return 0;
+        }
+
+        static string
+        get_status_string(const uint64_t& status)
+        {
+            if (status == 1)
+                return CORE_RPC_STATUS_OK;
+
+            if (status == 2)
+                return CORE_RPC_STATUS_BUSY;
+
+            // default
+            return 0;
+        }
     };
 
     static boost::thread m_thread;

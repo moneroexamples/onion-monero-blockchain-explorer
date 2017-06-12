@@ -5447,7 +5447,7 @@ namespace xmreg
                 = MempoolStatus::current_network_info;
 
             j_info = json {
-               {"status"                    , local_copy_network_info.current},
+               {"status"                    , MempoolStatus::network_info::get_status_string(local_copy_network_info.status)},
                {"current"                   , local_copy_network_info.current},
                {"height"                    , local_copy_network_info.height},
                {"target_height"             , local_copy_network_info.target_height},

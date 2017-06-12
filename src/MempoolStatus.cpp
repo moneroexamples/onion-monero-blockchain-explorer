@@ -232,6 +232,7 @@ MempoolStatus::read_network_info()
 
     network_info local_copy;
 
+    local_copy.status                     = network_info::get_status_uint(rpc_network_info.status);
     local_copy.height                     = rpc_network_info.height;
     local_copy.target_height              = rpc_network_info.target_height;
     local_copy.difficulty                 = rpc_network_info.difficulty;
