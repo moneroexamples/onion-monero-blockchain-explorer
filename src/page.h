@@ -379,10 +379,7 @@ namespace xmreg
             {
                 json j_info;
 
-                if (!get_monero_network_info(j_info))
-                {
-                    return json{};
-                }
+                get_monero_network_info(j_info);
 
                 return j_info;
             });
@@ -736,7 +733,7 @@ namespace xmreg
                               static_cast<double>(
                                       current_network_info.block_size_limit / 2)/1024.0);
 
-            context["network_inf   o"] = mstch::map {
+            context["network_info"] = mstch::map {
                     {"difficulty"        , current_network_info.difficulty},
                     {"hash_rate"         , hash_rate},
                     {"fee_per_kb"        , print_money(current_network_info.fee_per_kb)},
