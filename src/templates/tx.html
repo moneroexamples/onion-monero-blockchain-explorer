@@ -1,8 +1,22 @@
 
 <div>
 
-    {{#txs}}
-        {{>tx_details}}
-    {{/txs}}
-
+    {{#has_error}}
+        <h4 style="color:red">Attempt failed</h4>
+        {{#error_tx_not_found}}
+            <h4>Tx {{tx_hash}} not found. </h4>
+            <div class="center" style="text-align: center;width:80%">
+                <p> If this is newly made tx, it can take some time (up to minute)
+                    for it to get propagated to all nodes' mempools.
+                    <br/><br/>
+                    Please refresh in 10-20 seconds to check if its here then.
+                </p>
+            </div>
+        {{/error_tx_not_found}}
+    {{/has_error}}
+    {{^has_error}}
+        {{#txs}}
+            {{>tx_details}}
+        {{/txs}}
+    {{/has_error}}
 </div>
