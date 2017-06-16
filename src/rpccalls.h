@@ -53,6 +53,9 @@ public:
     get_network_info(COMMAND_RPC_GET_INFO::response& info);
 
     bool
+    get_alt_blocks(vector<block_complete_entry>& alt_blocks);
+
+    bool
     get_dynamic_per_kb_fee_estimate(
             uint64_t grace_blocks,
             uint64_t& fee,

@@ -425,18 +425,15 @@ namespace xmreg
                     {"show_cache_times"         , show_cache_times}
             };
 
-            std::list<block> atl_blks;
+            vector<block_complete_entry> atl_blks;
 
-            if (core_storage->get_alternative_blocks(atl_blks))
+            rpc.get_alt_blocks(atl_blks);
+
+            cout << "atl_blks.size(): " << atl_blks.size() << endl;
+
+            for (const block_complete_entry& alt_blk: atl_blks)
             {
-                for (const block& alt_blk: atl_blks)
-                {
-                    cout << "alt_blk tx: " << alt_blk.tx_hashes.size() << endl;
-                }
-            }
-            else
-            {
-                cerr << "get_alternative_blocks(atl_blks) returned false" << endl;
+                cout << "alt_blk tx: " << alt_blk.txs.size() << endl;
             }
 
             context.emplace("txs", mstch::array()); // will keep tx to show

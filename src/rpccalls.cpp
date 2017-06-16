@@ -208,6 +208,60 @@ rpccalls::get_network_info(COMMAND_RPC_GET_INFO::response& response)
     return true;
 }
 
+bool
+rpccalls::get_alt_blocks(vector<block_complete_entry>& alt_blocks)
+{
+    bool r {false};
+
+    COMMAND_RPC_GET_ALT_BLOCKS::request req;
+    COMMAND_RPC_GET_ALT_BLOCKS::response resp;
+
+    {
+        std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
+
+        if (!connect_to_monero_deamon())
+        {
+            cerr << "get_mempool: not connected to deamon" << endl;
+            return false;
+        }
+
+        r = epee::net_utils::invoke_http_bin("/getaltblocks.bin",
+                                              req, resp,
+                                              m_http_client);
+    }
+
+    string err;
+
+    if (r)
+    {
+        if (resp.status == CORE_RPC_STATUS_BUSY)
+        {
+            err = "daemon is busy. Please try again later.";
+        }
+        else if (resp.status != CORE_RPC_STATUS_OK)
+        {
+            err = "daemon rpc failed. Please try again later.";
+        }
+
+        if (!err.empty())
+        {
+            cerr << "Error connecting to Monero deamon due to "
+                 << err << endl;
+            return false;
+        }
+    }
+    else
+    {
+        cerr << "Error connecting to Monero deamon at "
+             << deamon_url << endl;
+        return false;
+    }
+
+    alt_blocks = resp.blocks;
+
+    return true;
+}
+
 
 bool
 rpccalls::get_dynamic_per_kb_fee_estimate(
