@@ -1123,17 +1123,6 @@ namespace xmreg
         show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0)
         {
 
-            mstch::map context {
-                    {"testnet"                , this->testnet},
-                    {"show_cache_times"       , show_cache_times},
-                    {"has_error"              , false},
-                    {"error_tx_not_found"     , false},
-                    {"error_msg"              , string{}},
-                    {"txs"                    , mstch::array{}}
-            };
-
-            add_css_style(context);
-
             // parse tx hash string to hash object
             crypto::hash tx_hash;
 
@@ -1147,8 +1136,6 @@ namespace xmreg
             pair<string, string> age;
 
             string blk_timestamp {"N/A"};
-
-            mstch::map tx_context;
 
             // get transaction
             transaction tx;
@@ -1187,15 +1174,11 @@ namespace xmreg
                 else
                 {
                     // tx is nowhere to be found :-(
-
-                    context["has_error"]          = true;
-                    context["error_tx_not_found"] = true;
-                    context["tx_hash"]            = tx_hash_str;
-
-                    return mstch::render(template_file["tx"], context);
+                    return string("Cant get tx: " + tx_hash_str);
                 }
+            }
 
-            } // if (!mcore->get_tx(tx_hash, tx))
+            mstch::map tx_context;
 
             if (enable_tx_cache && tx_context_cache.Contains({tx_hash, with_ring_signatures}))
             {
@@ -1347,6 +1330,12 @@ namespace xmreg
             {
                 return boost::get<string>(tx_context["error_msg"]);
             }
+
+            mstch::map context {
+                    {"testnet"          , this->testnet},
+                    {"show_cache_times" , show_cache_times},
+                    {"txs"              , mstch::array{}}
+            };
 
             boost::get<mstch::array>(context["txs"]).push_back(tx_context);
 
@@ -5456,7 +5445,7 @@ namespace xmreg
                 = MempoolStatus::current_network_info;
 
             j_info = json {
-               {"status"                    , MempoolStatus::network_info::get_status_string(local_copy_network_info.status)},
+               {"status"                    , local_copy_network_info.current},
                {"current"                   , local_copy_network_info.current},
                {"height"                    , local_copy_network_info.height},
                {"target_height"             , local_copy_network_info.target_height},
