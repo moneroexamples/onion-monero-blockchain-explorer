@@ -209,12 +209,12 @@ rpccalls::get_network_info(COMMAND_RPC_GET_INFO::response& response)
 }
 
 bool
-rpccalls::get_alt_blocks(vector<block_complete_entry>& alt_blocks)
+rpccalls::get_alt_blocks(vector<string>& alt_blocks_hashes)
 {
     bool r {false};
 
-    COMMAND_RPC_GET_ALT_BLOCKS::request req;
-    COMMAND_RPC_GET_ALT_BLOCKS::response resp;
+    COMMAND_RPC_GET_ALT_BLOCKS_HASHES::request req;
+    COMMAND_RPC_GET_ALT_BLOCKS_HASHES::response resp;
 
     {
         std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
@@ -225,7 +225,7 @@ rpccalls::get_alt_blocks(vector<block_complete_entry>& alt_blocks)
             return false;
         }
 
-        r = epee::net_utils::invoke_http_bin("/getaltblocks.bin",
+        r = epee::net_utils::invoke_http_json("/get_alt_blocks_hashes",
                                               req, resp,
                                               m_http_client);
     }
@@ -257,7 +257,7 @@ rpccalls::get_alt_blocks(vector<block_complete_entry>& alt_blocks)
         return false;
     }
 
-    alt_blocks = resp.blocks;
+    alt_blocks_hashes = resp.blks_hashes;
 
     return true;
 }
