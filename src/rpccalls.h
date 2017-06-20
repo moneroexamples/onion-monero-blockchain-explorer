@@ -11,36 +11,49 @@
 #include <mutex>
 
 
+
+
 namespace
 {
 
-    // can be used to check if given class/struct exist
-    // from: https://stackoverflow.com/a/10722840/248823
-    template <typename T>
-    struct has_destructor
+// can be used to check if given class/struct exist
+// from: https://stackoverflow.com/a/10722840/248823
+template <typename T>
+struct has_destructor
+{
+    // has destructor
+    template <typename A>
+    static std::true_type test(decltype(declval<A>().~A()) *)
     {
-        // has destructor
-        template <typename A>
-        static std::true_type test(decltype(declval<A>().~A()) *)
-        {
-            return std::true_type();
-        }
+        return std::true_type();
+    }
 
-        // no constructor
-        template <typename A>
-        static std::false_type test(...)
-        {
-            return std::false_type();
-        }
+    // no constructor
+    template <typename A>
+    static std::false_type test(...)
+    {
+        return std::false_type();
+    }
 
-        /* This will be either `std::true_type` or `std::false_type` */
-        typedef decltype(test<T>(0)) type;
+    /* This will be either `std::true_type` or `std::false_type` */
+    typedef decltype(test<T>(0)) type;
 
-        static const bool value = type::value;
-    };
+    static const bool value = type::value;
+};
 
 }
 
+
+namespace cryptonote
+{
+// declare struct in monero's cryptonote namespace.
+// monero should provide definition for this,
+// but we need to have it declared as we are going to
+// check if its definition exist or not. depending on this
+// we decide what gets to be defined as
+// get_alt_blocks(vector<string>& alt_blocks_hashes);
+struct COMMAND_RPC_GET_ALT_BLOCKS_HASHES;
+}
 
 namespace xmreg
 {
@@ -49,12 +62,7 @@ using namespace cryptonote;
 using namespace crypto;
 using namespace std;
 
-// declare it. monero should provide definition for this,
-// but we need to have it declared as we are going to
-// check if its definition exist or not. depending on this
-// we decide what gets to be defined as
-// get_alt_blocks(vector<string>& alt_blocks_hashes);
-struct COMMAND_RPC_GET_ALT_BLOCKS_HASHES;
+
 
 class rpccalls
 {
