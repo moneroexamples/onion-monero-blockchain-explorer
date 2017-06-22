@@ -37,6 +37,7 @@
 #define TMPL_INDEX                  TMPL_DIR "/index.html"
 #define TMPL_INDEX2                 TMPL_DIR "/index2.html"
 #define TMPL_MEMPOOL                TMPL_DIR "/mempool.html"
+#define TMPL_ALTBLOCKS              TMPL_DIR "/altblocks.html"
 #define TMPL_MEMPOOL_ERROR          TMPL_DIR "/mempool_error.html"
 #define TMPL_HEADER                 TMPL_DIR "/header.html"
 #define TMPL_FOOTER                 TMPL_DIR "/footer.html"
@@ -342,6 +343,7 @@ namespace xmreg
             template_file["footer"]          = get_footer();
             template_file["index2"]          = get_full_page(xmreg::read(TMPL_INDEX2));
             template_file["mempool"]         = xmreg::read(TMPL_MEMPOOL);
+            template_file["altblocks"]       = get_full_page(xmreg::read(TMPL_ALTBLOCKS));
             template_file["mempool_error"]   = xmreg::read(TMPL_MEMPOOL_ERROR);
             template_file["mempool_full"]    = get_full_page(template_file["mempool"]);
             template_file["block"]           = get_full_page(xmreg::read(TMPL_BLOCK));
@@ -424,17 +426,6 @@ namespace xmreg
                     {"enable_autorefresh_option", enable_autorefresh_option},
                     {"show_cache_times"         , show_cache_times}
             };
-
-            vector<string> atl_blks_hashes;
-
-            rpc.get_alt_blocks(atl_blks_hashes);
-
-            cout << "atl_blks_hashes.size(): " << atl_blks_hashes.size() << endl;
-
-            for (const string& alt_blk_hash: atl_blks_hashes)
-            {
-                cout << "alt_blk_hash: " << alt_blk_hash << endl;
-            }
 
             context.emplace("txs", mstch::array()); // will keep tx to show
 
@@ -915,6 +906,51 @@ namespace xmreg
 
             // render the page
             return mstch::render(template_file["mempool"], context);
+        }
+
+
+        string
+        altblocks()
+        {
+
+            // initalise page tempate map with basic info about blockchain
+            mstch::map context {
+                    {"testnet"              , testnet},
+                    {"blocks"               , mstch::array()}
+            };
+
+            // get reference to alt blocks template map to be field below
+            mstch::array& blocks = boost::get<mstch::array>(context["blocks"]);
+
+            vector<string> atl_blks_hashes;
+
+            rpc.get_alt_blocks(atl_blks_hashes);
+
+            cout << "atl_blks_hashes.size(): " << atl_blks_hashes.size() << endl;
+
+            context.emplace("no_alt_blocks", atl_blks_hashes.size());
+
+            for (const string& alt_blk_hash: atl_blks_hashes)
+            {
+                cout << "alt_blk_hash: " << alt_blk_hash << endl;
+
+                block alt_blk;
+                string error_msg;
+
+                blocks.push_back(mstch::map {
+                       {"hash", alt_blk_hash}
+                });
+
+                if (rpc.get_block(alt_blk_hash, alt_blk, error_msg))
+                {
+                    cout << " - alt block txs no: " << alt_blk.tx_hashes.size() << endl;
+                }
+            }
+
+            add_css_style(context);
+
+            // render the page
+            return mstch::render(template_file["altblocks"], context);
         }
 
 

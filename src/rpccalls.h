@@ -128,7 +128,7 @@ public:
 
             if (!connect_to_monero_deamon())
             {
-                cerr << "get_mempool: not connected to deamon" << endl;
+                cerr << "get_alt_blocks: not connected to deamon" << endl;
                 return false;
             }
 
@@ -178,6 +178,9 @@ public:
         // so dont do anything
         return false;
     }
+
+    bool
+    get_block(string const& blk_hash, block& blk, string& error_msg);
 
 };
 
