@@ -937,14 +937,22 @@ namespace xmreg
                 block alt_blk;
                 string error_msg;
 
-                blocks.push_back(mstch::map {
-                       {"hash", alt_blk_hash}
-                });
+                int64_t no_of_txs {-1};
+                int64_t blk_height {-1};
 
                 if (rpc.get_block(alt_blk_hash, alt_blk, error_msg))
                 {
-                    cout << " - alt block txs no: " << alt_blk.tx_hashes.size() << endl;
+                    no_of_txs  = alt_blk.tx_hashes.size();
+                    blk_height = get_block_height(alt_blk);
+                    cout << "alt blk_height: " << blk_height << ", ";
+                    cout << "txs no: " << alt_blk.tx_hashes.size() << endl;
                 }
+
+                blocks.push_back(mstch::map {
+                        {"hash"     , alt_blk_hash},
+                        {"no_of_txs", no_of_txs}
+                });
+
             }
 
             add_css_style(context);
@@ -1149,7 +1157,7 @@ namespace xmreg
             else
             {
                 cerr << "Cant get block: " << blk_hash << endl;
-                return fmt::format("Cant get block {:s} for some uknown reason", blk_hash);
+                return fmt::format("Cant get block {:s}", blk_hash);
             }
 
             return show_block(blk_height);
