@@ -730,6 +730,7 @@ namespace xmreg
                     {"hash_rate"         , hash_rate},
                     {"fee_per_kb"        , print_money(current_network_info.fee_per_kb)},
                     {"alt_blocks_no"     , current_network_info.alt_blocks_count},
+                    {"have_alt_block"    , (current_network_info.alt_blocks_count > 0)},
                     {"tx_pool_size"      , current_network_info.tx_pool_size},
                     {"block_size_limit"  , block_size_limit},
                     {"is_current_info"   , current_network_info.current},
