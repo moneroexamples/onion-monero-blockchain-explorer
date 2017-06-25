@@ -919,36 +919,44 @@ namespace xmreg
                     {"blocks"               , mstch::array()}
             };
 
+            uint64_t local_copy_server_timestamp = server_timestamp;
+
             // get reference to alt blocks template map to be field below
             mstch::array& blocks = boost::get<mstch::array>(context["blocks"]);
 
             vector<string> atl_blks_hashes;
 
-            rpc.get_alt_blocks(atl_blks_hashes);
-
-            cout << "atl_blks_hashes.size(): " << atl_blks_hashes.size() << endl;
+            if (!rpc.get_alt_blocks(atl_blks_hashes))
+            {
+                cerr << "rpc.get_alt_blocks(atl_blks_hashes) failed" << endl;
+            }
 
             context.emplace("no_alt_blocks", atl_blks_hashes.size());
 
             for (const string& alt_blk_hash: atl_blks_hashes)
             {
-                cout << "alt_blk_hash: " << alt_blk_hash << endl;
-
                 block alt_blk;
                 string error_msg;
 
                 int64_t no_of_txs {-1};
                 int64_t blk_height {-1};
 
+                // get block age
+                pair<string, string> age {"-1", "-1"};
+
+
                 if (rpc.get_block(alt_blk_hash, alt_blk, error_msg))
                 {
                     no_of_txs  = alt_blk.tx_hashes.size();
+
                     blk_height = get_block_height(alt_blk);
-                    cout << "alt blk_height: " << blk_height << ", ";
-                    cout << "txs no: " << alt_blk.tx_hashes.size() << endl;
+
+                    age = get_age(local_copy_server_timestamp, alt_blk.timestamp);
                 }
 
                 blocks.push_back(mstch::map {
+                        {"height"   , blk_height},
+                        {"age"      , age.first},
                         {"hash"     , alt_blk_hash},
                         {"no_of_txs", no_of_txs}
                 });
