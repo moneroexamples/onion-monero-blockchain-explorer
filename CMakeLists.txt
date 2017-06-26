@@ -100,13 +100,14 @@ set(LIBRARIES
         cryptonote_protocol
         cryptonote_basic
         daemonizer
-        cryptoxmr
+        cncrypto
         blocks
         lmdb
         ringct
         common
         mnemonics
         epee
+        easylogging
         ${Boost_LIBRARIES}
         pthread
         unbound
