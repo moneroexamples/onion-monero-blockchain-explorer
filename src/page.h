@@ -878,7 +878,7 @@ namespace xmreg
                         {"no_inputs"       , mempool_tx.no_inputs},
                         {"no_outputs"      , mempool_tx.no_outputs},
                         {"no_nonrct_inputs", mempool_tx.num_nonrct_inputs},
-                        {"mixin"           , mempool_tx.mixin_no + 1},
+                        {"mixin"           , mempool_tx.mixin_no},
                         {"txsize"          , mempool_tx.txsize}
                 });
             }
