@@ -108,6 +108,7 @@ set(LIBRARIES
         mnemonics
         epee
         easylogging
+        readline
         ${Boost_LIBRARIES}
         pthread
         unbound
