@@ -3586,8 +3586,6 @@ namespace xmreg
 
                 crypto::hash8 encrypted_payment_id;
 
-                bool testnet;
-
                 if (!get_account_integrated_address_from_str(address,
                                                              has_payment_id,
                                                              encrypted_payment_id,
