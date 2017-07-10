@@ -1566,7 +1566,6 @@ namespace xmreg
                      << e.what() << endl;
             }
 
-
             // get block cointaining this tx
             block blk;
 
@@ -1611,6 +1610,7 @@ namespace xmreg
                     {"has_payment_id8"      , txd.payment_id8 != null_hash8},
                     {"payment_id"           , pid_str},
                     {"payment_id8"          , pid8_str},
+                    {"decrypted_payment_id8", string{}},
                     {"tx_prove"             , tx_prove}
             };
 
@@ -1633,6 +1633,17 @@ namespace xmreg
                      << "prv_view_key" << prv_view_key << endl;
 
                 return string("Cant get key_derivation");
+            }
+
+            // decrypt encrypted payment id, as used in integreated addresses
+            crypto::hash8 decrypted_payment_id8 = txd.payment_id8;
+
+            if (decrypted_payment_id8 != null_hash8)
+            {
+                if (decrypt_payment_id(decrypted_payment_id8, pub_key, prv_view_key))
+                {
+                    context["decrypted_payment_id8"] = pod_to_hex(decrypted_payment_id8);
+                }
             }
 
             mstch::array outputs;
