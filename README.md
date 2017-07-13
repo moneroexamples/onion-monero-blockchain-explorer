@@ -80,7 +80,7 @@ The key features of the Onion Monero Blockchain Explorer are:
 
 ##### Compile latest Monero
 
-Download and compile recent Monero release into your home folder:
+Download and compile recent Monero into your home folder:
 
 ```bash
 # first install monero dependecines
@@ -94,9 +94,6 @@ cd ~
 git clone https://github.com/monero-project/monero
 
 cd monero/
-
-# checkout last monero version
-git checkout -b last_release v0.10.3.1
 
 make
 ```
