@@ -642,6 +642,61 @@ curl  -w "\n" -X GET "http://139.162.32.245:8081/api/networkinfo"
 }
 ```
 
+#### api/outputsblocks
+
+Search for our outputs in last few blocks (up to 5 blocks), using provided address and viewkey. 
+
+
+```bash
+# testnet address
+curl  -w "\n" -X GET http://127.0.0.1:8081/api/outputsblocks?address=9sDyNU82ih1gdhDgrqHbEcfSDFASjFgxL9B9v5f1AytFUrYsVEj7bD9Pyx5Sw2qLk8HgGdFM8qj5DNecqGhm24Ce6QwEGDi&viewkey=807079280293998634d66e745562edaaca45c0a75c8290603578b54e9397e90a&limit=5&mempool=1
+```
+
+Example result:
+
+```json
+{
+{
+  "data": {
+    "address": "0182d5be0f708cecf2b6f9889738bde5c930fad846d5b530e021afd1ae7e24a687ad50af3a5d38896655669079ad0163b4a369f6c852cc816dace5fc7792b72f",
+    "height": 960526,
+    "limit": "5",
+    "mempool": true,
+    "outputs": [
+      {
+        "amount": 33000000000000,
+        "block_no": 0,
+        "in_mempool": true,
+        "output_idx": 1,
+        "output_pubkey": "2417b24fc99b2cbd9459278b532b37f15eab6b09bbfc44f9d17e15cd25d5b44f",
+        "payment_id": "",
+        "tx_hash": "9233708004c51d15f44e86ac1a3b99582ed2bede4aaac6e2dd71424a9147b06f"
+      },
+      {
+        "amount": 2000000000000,
+        "block_no": 960525,
+        "in_mempool": false,
+        "output_idx": 0,
+        "output_pubkey": "9984101f5471dda461f091962f1f970b122d4469077aed6b978a910dc3ed4576",
+        "payment_id": "0000000000000055",
+        "tx_hash": "37825d0feb2e96cd10fa9ec0b990ac2e97d2648c0f23e4f7d68d2298996acefd"
+      },
+      {
+        "amount": 96947454120000,
+        "block_no": 960525,
+        "in_mempool": false,
+        "output_idx": 1,
+        "output_pubkey": "e4bded8e2a9ec4d41682a34d0a37596ec62742b28e74b897fcc00a47fcaa8629",
+        "payment_id": "0000000000000000000000000000000000000000000000000000000000001234",
+        "tx_hash": "4fad5f2bdb6dbd7efc2ce7efa3dd20edbd2a91640ce35e54c6887f0ee5a1a679"
+      }
+    ],
+    "viewkey": "807079280293998634d66e745562edaaca45c0a75c8290603578b54e9397e90a"
+  },
+  "status": "success"
+}
+```
+
 #### api/emission
 
 ```bash

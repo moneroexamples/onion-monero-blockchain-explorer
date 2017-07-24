@@ -4662,6 +4662,190 @@ namespace xmreg
             return j_response;
         }
 
+
+
+        json
+        json_outputsblocks(string _limit,
+                           string address_str,
+                           string viewkey_str,
+                           bool in_mempool_aswell = false)
+        {
+            boost::trim(_limit);
+            boost::trim(address_str);
+            boost::trim(viewkey_str);
+
+            json j_response {
+                    {"status", "fail"},
+                    {"data",   json {}}
+            };
+
+            json& j_data = j_response["data"];
+
+            uint64_t no_of_last_blocks {3};
+
+            try
+            {
+                no_of_last_blocks = boost::lexical_cast<uint64_t>(_limit);
+            }
+            catch (const boost::bad_lexical_cast& e)
+            {
+                j_data["title"] = fmt::format(
+                        "Cant parse page and/or limit numbers: {:s}", _limit);
+                return j_response;
+            }
+
+            // maxium five last blocks
+            no_of_last_blocks = std::min(no_of_last_blocks, 5ul);
+
+            if (address_str.empty())
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Monero address not provided";
+                return j_response;
+            }
+
+            if (viewkey_str.empty())
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Viewkey not provided";
+                return j_response;
+            }
+
+            // parse string representing given monero address
+            cryptonote::account_public_address address;
+
+            if (!xmreg::parse_str_address(address_str, address, testnet))
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Cant parse monero address: " + address_str;
+                return j_response;
+
+            }
+
+            // parse string representing given private key
+            crypto::secret_key prv_view_key;
+
+            if (!xmreg::parse_str_secret_key(viewkey_str, prv_view_key))
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Cant parse view key: "
+                                        + viewkey_str;
+                return j_response;
+            }
+
+            string error_msg;
+
+            j_data["outputs"] = json::array();
+            json& j_outptus   = j_data["outputs"];
+
+
+            if (in_mempool_aswell)
+            {
+                // first check if there is something for us in the mempool
+                // get mempool tx from mempoolstatus thread
+                vector<MempoolStatus::mempool_tx> mempool_txs
+                        = MempoolStatus::get_mempool_txs();
+
+                uint64_t no_mempool_txs = mempool_txs.size();
+
+                // need to use vector<transactions>,
+                // not vector<MempoolStatus::mempool_tx>
+                vector<transaction> tmp_vector;
+                tmp_vector.reserve(no_mempool_txs);
+
+                for (size_t i = 0; i < no_mempool_txs; ++i)
+                {
+                    // get transaction info of the tx in the mempool
+                    tmp_vector.push_back(std::move(mempool_txs.at(i).tx));
+                }
+
+                if (!find_our_outputs(
+                        address, prv_view_key,
+                        0 /* block_no */, true /*is mempool*/,
+                        tmp_vector.cbegin(), tmp_vector.cend(),
+                        j_outptus /* found outputs are pushed to this*/,
+                        error_msg))
+                {
+                    j_response["status"] = "error";
+                    j_response["message"] = error_msg;
+                    return j_response;
+                }
+
+            } // if (in_mempool_aswell)
+
+
+            // and now serach for outputs in last few blocks in the blockchain
+
+            uint64_t height = core_storage->get_current_blockchain_height();
+
+            // calculate starting and ending block numbers to show
+            int64_t start_height = height - no_of_last_blocks;
+
+            // check if start height is not below range
+            start_height = start_height < 0 ? 0 : start_height;
+
+            int64_t end_height = start_height + no_of_last_blocks - 1;
+
+            // loop index
+            int64_t block_no = end_height;
+
+
+            // iterate over last no_of_last_blocks of blocks
+            while (block_no >= start_height)
+            {
+                // get block at the given height block_no
+                block blk;
+
+                if (!mcore->get_block_by_height(block_no, blk))
+                {
+                    j_response["status"] = "error";
+                    j_response["message"] = fmt::format("Cant get block: {:d}", block_no);
+                    return j_response;
+                }
+
+                // get transactions in the given block
+                list <cryptonote::transaction> blk_txs{blk.miner_tx};
+                list <crypto::hash> missed_txs;
+
+                if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs))
+                {
+                    j_response["status"] = "error";
+                    j_response["message"] = fmt::format("Cant get transactions in block: {:d}", block_no);
+                    return j_response;
+                }
+
+                (void) missed_txs;
+
+                if (!find_our_outputs(
+                        address, prv_view_key,
+                        block_no, false /*is mempool*/,
+                        blk_txs.cbegin(), blk_txs.cend(),
+                        j_outptus /* found outputs are pushed to this*/,
+                        error_msg))
+                {
+                    j_response["status"] = "error";
+                    j_response["message"] = error_msg;
+                    return j_response;
+                }
+
+                --block_no;
+
+            }  //  while (block_no >= start_height)
+
+            // return parsed values. can be use to double
+            // check if submited data in the request
+            // matches to what was used to produce response.
+            j_data["address"]  = pod_to_hex(address);
+            j_data["viewkey"]  = pod_to_hex(prv_view_key);
+            j_data["limit"]    = _limit;
+            j_data["height"]   = height;
+            j_data["mempool"]  = in_mempool_aswell;
+
+            j_response["status"] = "success";
+
+            return j_response;
+        }
+
         /*
          * Lets use this json api convention for success and error
          * https://labs.omniti.com/labs/jsend
@@ -4754,6 +4938,137 @@ namespace xmreg
 
 
     private:
+
+        template <typename Iterator>
+        bool
+        find_our_outputs(
+                account_public_address const& address,
+                secret_key const& prv_view_key,
+                uint64_t const& block_no,
+                bool const& is_mempool,
+                Iterator const& txs_begin,
+                Iterator const& txs_end,
+                json& j_outptus,
+                string& error_msg)
+        {
+
+            // for each tx, perform output search using provided
+            // address and viewkey
+            for (auto it = txs_begin; it != txs_end; ++it)
+            {
+                cryptonote::transaction const& tx = *it;
+
+                tx_details txd = get_tx_details(tx);
+
+                // public transaction key is combined with our viewkey
+                // to create, so called, derived key.
+                key_derivation derivation;
+
+                if (!generate_key_derivation(txd.pk, prv_view_key, derivation))
+                {
+                    error_msg = "Cant calculate key_derivation";
+                    return false;
+                }
+
+                uint64_t output_idx{0};
+
+                std::vector<uint64_t> money_transfered(tx.vout.size(), 0);
+
+                //j_data["outputs"] = json::array();
+                //json& j_outptus   = j_data["outputs"];
+
+                for (pair<txout_to_key, uint64_t> &outp: txd.output_pub_keys)
+                {
+
+                    // get the tx output public key
+                    // that normally would be generated for us,
+                    // if someone had sent us some xmr.
+                    public_key tx_pubkey;
+
+                    derive_public_key(derivation,
+                                      output_idx,
+                                      address.m_spend_public_key,
+                                      tx_pubkey);
+
+                    // check if generated public key matches the current output's key
+                    bool mine_output = (outp.first.key == tx_pubkey);
+
+                    // if mine output has RingCT, i.e., tx version is 2
+                    if (mine_output && tx.version == 2)
+                    {
+                        // cointbase txs have amounts in plain sight.
+                        // so use amount from ringct, only for non-coinbase txs
+                        if (!is_coinbase(tx))
+                        {
+
+                            // initialize with regular amount
+                            uint64_t rct_amount = money_transfered[output_idx];
+
+                            bool r {false};
+
+                            rct::key mask = tx.rct_signatures.ecdhInfo[output_idx].mask;
+
+                            r = decode_ringct(tx.rct_signatures,
+                                              txd.pk,
+                                              prv_view_key,
+                                              output_idx,
+                                              mask,
+                                              rct_amount);
+
+                            if (!r)
+                            {
+                                error_msg = "Cant decode ringct for tx: "
+                                                        + pod_to_hex(txd.hash);
+                                return false;
+                            }
+
+                            outp.second = rct_amount;
+                            money_transfered[output_idx] = rct_amount;
+
+                        } // if (!is_coinbase(tx))
+
+                    }  // if (mine_output && tx.version == 2)
+
+                    if (mine_output)
+                    {
+
+                        string payment_id;
+
+                        // decrypt encrypted payment id, as used in integreated addresses
+                        crypto::hash8 decrypted_payment_id8 = txd.payment_id8;
+
+                        if (decrypted_payment_id8 != null_hash8)
+                        {
+                            if (decrypt_payment_id(decrypted_payment_id8, txd.pk, prv_view_key))
+                            {
+                                payment_id = pod_to_hex(decrypted_payment_id8);
+                            }
+                        }
+                        else if(txd.payment_id != null_hash)
+                        {
+                            payment_id = pod_to_hex(txd.payment_id);
+                        }
+
+                        j_outptus.push_back(json {
+                                {"output_pubkey" , pod_to_hex(outp.first.key)},
+                                {"amount"        , outp.second},
+                                {"block_no"      , block_no},
+                                {"in_mempool"    , is_mempool},
+                                {"output_idx"    , output_idx},
+                                {"tx_hash"       , pod_to_hex(txd.hash)},
+                                {"payment_id"    , payment_id}
+                        });
+                    }
+
+                    ++output_idx;
+
+                } //  for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
+
+            } // for (auto it = blk_txs.begin(); it != blk_txs.end(); ++it)
+
+
+            return true;
+        }
 
         json
         get_tx_json(const transaction& tx, const tx_details& txd)

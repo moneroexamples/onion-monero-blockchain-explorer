@@ -561,6 +561,37 @@ main(int ac, const char* av[])
 
             return r;
         });
+
+        CROW_ROUTE(app, "/api/outputsblocks").methods("GET"_method)
+        ([&](const crow::request &req) {
+
+            string limit = regex_search(req.raw_url, regex {"limit=\\d+"}) ?
+                           req.url_params.get("limit") : "3";
+
+            string address = regex_search(req.raw_url, regex {"address=\\w+"}) ?
+                             req.url_params.get("address") : "";
+
+            string viewkey = regex_search(req.raw_url, regex {"viewkey=\\w+"}) ?
+                             req.url_params.get("viewkey") : "";
+
+            bool in_mempool_aswell {false};
+
+            try
+            {
+                in_mempool_aswell = regex_search(req.raw_url, regex {"mempool=[01]"}) ?
+                           boost::lexical_cast<bool>(req.url_params.get("mempool")) :
+                           false;
+            }
+            catch (const boost::bad_lexical_cast &e)
+            {
+                cerr << "Cant parse tx_prove as bool. Using default value" << endl;
+            }
+
+            myxmr::jsonresponse r{xmrblocks.json_outputsblocks(limit, address, viewkey, in_mempool_aswell)};
+
+            return r;
+        });
+
     }
 
     if (enable_autorefresh_option)
