@@ -4939,6 +4939,32 @@ namespace xmreg
 
     private:
 
+
+        string
+        get_payment_id_as_string(
+                tx_details const& txd,
+                secret_key const& prv_view_key)
+        {
+            string payment_id;
+
+            // decrypt encrypted payment id, as used in integreated addresses
+            crypto::hash8 decrypted_payment_id8 = txd.payment_id8;
+
+            if (decrypted_payment_id8 != null_hash8)
+            {
+                if (decrypt_payment_id(decrypted_payment_id8, txd.pk, prv_view_key))
+                {
+                    payment_id = pod_to_hex(decrypted_payment_id8);
+                }
+            }
+            else if(txd.payment_id != null_hash)
+            {
+                payment_id = pod_to_hex(txd.payment_id);
+            }
+
+            return payment_id;
+        }
+
         template <typename Iterator>
         bool
         find_our_outputs(
@@ -5031,23 +5057,7 @@ namespace xmreg
 
                     if (mine_output)
                     {
-
-                        string payment_id;
-
-                        // decrypt encrypted payment id, as used in integreated addresses
-                        crypto::hash8 decrypted_payment_id8 = txd.payment_id8;
-
-                        if (decrypted_payment_id8 != null_hash8)
-                        {
-                            if (decrypt_payment_id(decrypted_payment_id8, txd.pk, prv_view_key))
-                            {
-                                payment_id = pod_to_hex(decrypted_payment_id8);
-                            }
-                        }
-                        else if(txd.payment_id != null_hash)
-                        {
-                            payment_id = pod_to_hex(txd.payment_id);
-                        }
+                        string payment_id_str = get_payment_id_as_string(txd, prv_view_key);
 
                         j_outptus.push_back(json {
                                 {"output_pubkey" , pod_to_hex(outp.first.key)},
@@ -5056,7 +5066,7 @@ namespace xmreg
                                 {"in_mempool"    , is_mempool},
                                 {"output_idx"    , output_idx},
                                 {"tx_hash"       , pod_to_hex(txd.hash)},
-                                {"payment_id"    , payment_id}
+                                {"payment_id"    , payment_id_str}
                         });
                     }
 
@@ -5065,7 +5075,6 @@ namespace xmreg
                 } //  for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
 
             } // for (auto it = blk_txs.begin(); it != blk_txs.end(); ++it)
-
 
             return true;
         }
