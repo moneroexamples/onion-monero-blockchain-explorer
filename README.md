@@ -736,7 +736,14 @@ curl  -w "\n" -X GET "http://139.162.32.245:8081/api/version"
 }
 ```
 
-api number is store as `uint32_t`. 
+api number is store as `uint32_t`. In this case `65536` represents 
+major version 1 and minor version 0.
+In JavaScript to get these numbers, one can do as follows:
+
+```javascript
+var api_major = response.data.api >> 16;
+var api_minor = response.data.api & 0xffff;
+```
 
 #### api/rawblock/<block_number|block_hash>
 
