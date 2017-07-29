@@ -716,6 +716,27 @@ curl  -w "\n" -X GET "http://139.162.32.245:8081/api/emission"
 
 Emission only works when the emission monitoring thread is enabled.
 
+#### api/version
+
+```bash
+curl  -w "\n" -X GET "http://139.162.32.245:8081/api/version"
+```
+
+```json
+{
+  "data": {
+    "api": 65536, 
+    "blockchain_height": 1357031,
+    "git_branch_name": "update_to_current_monero",
+    "last_git_commit_date": "2017-07-25",
+    "last_git_commit_hash": "a549f25",
+    "monero_version_full": "0.10.3.1-ab594cfe"
+  },
+  "status": "success"
+}
+```
+
+api number is store as `uint32_t`. 
 
 #### api/rawblock/<block_number|block_hash>
 

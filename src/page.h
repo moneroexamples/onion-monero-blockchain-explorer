@@ -55,6 +55,11 @@
 #define TMPL_MY_CHECKRAWOUTPUTKEYS  TMPL_DIR "/checkrawoutputkeys.html"
 
 
+#define ONIONEXPLORER_RPC_VERSION_MAJOR 1
+#define ONIONEXPLORER_RPC_VERSION_MINOR 0
+#define MAKE_ONIONEXPLORER_RPC_VERSION(major,minor) (((major)<<16)|(minor))
+#define ONIONEXPLORER_RPC_VERSION \
+    MAKE_ONIONEXPLORER_RPC_VERSION(ONIONEXPLORER_RPC_VERSION_MAJOR, ONIONEXPLORER_RPC_VERSION_MINOR)
 
 
 // basic info about tx to be stored in cashe.
@@ -4937,6 +4942,35 @@ namespace xmreg
         }
 
 
+        /*
+              * Lets use this json api convention for success and error
+              * https://labs.omniti.com/labs/jsend
+              */
+        json
+        json_version()
+        {
+            json j_response {
+                    {"status", "fail"},
+                    {"data",   json {}}
+            };
+
+            json& j_data = j_response["data"];
+
+            j_data = json {
+                    {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
+                    {"last_git_commit_date", string {GIT_COMMIT_DATETIME}},
+                    {"git_branch_name"     , string {GIT_BRANCH_NAME}},
+                    {"monero_version_full" , string {MONERO_VERSION_FULL}},
+                    {"api"                 , ONIONEXPLORER_RPC_VERSION},
+                    {"blockchain_height"   , core_storage->get_current_blockchain_height()}
+            };
+
+            j_response["status"]  = "success";
+
+            return j_response;
+        }
+
+
     private:
 
 
@@ -5884,7 +5918,10 @@ namespace xmreg
                     {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
                     {"last_git_commit_date", string {GIT_COMMIT_DATETIME}},
                     {"git_branch_name"     , string {GIT_BRANCH_NAME}},
-                    {"monero_version_full" , string {MONERO_VERSION_FULL}}
+                    {"monero_version_full" , string {MONERO_VERSION_FULL}},
+                    {"api"                 , std::to_string(ONIONEXPLORER_RPC_VERSION_MAJOR)
+                                             + "."
+                                             + std::to_string(ONIONEXPLORER_RPC_VERSION_MINOR)},
             };
 
             string footer_html = mstch::render(xmreg::read(TMPL_FOOTER), footer_context);

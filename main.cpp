@@ -592,6 +592,14 @@ main(int ac, const char* av[])
             return r;
         });
 
+        CROW_ROUTE(app, "/api/version")
+        ([&](const crow::request &req) {
+
+            myxmr::jsonresponse r{xmrblocks.json_version()};
+
+            return r;
+        });
+
     }
 
     if (enable_autorefresh_option)
