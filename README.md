@@ -30,7 +30,6 @@ Tor users:
   
 Clearnet versions:
 
- - [http://139.162.32.245:8081/](http://139.162.32.245:8081/) - bleeding edge version, no https.
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
