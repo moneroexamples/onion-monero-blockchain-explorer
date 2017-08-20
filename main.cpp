@@ -431,10 +431,10 @@ main(int ac, const char* av[])
         return xmrblocks.mempool(true);
     });
 
-    CROW_ROUTE(app, "/altblocks")
-    ([&](const crow::request& req) {
-        return xmrblocks.altblocks();
-    });
+//    CROW_ROUTE(app, "/altblocks")
+//    ([&](const crow::request& req) {
+//        return xmrblocks.altblocks();
+//    });
 
     CROW_ROUTE(app, "/robots.txt")
     ([&]() {
