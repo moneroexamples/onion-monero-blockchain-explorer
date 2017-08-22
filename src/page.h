@@ -826,7 +826,8 @@ namespace xmreg
             // initalise page tempate map with basic info about mempool
             mstch::map context {
                     {"mempool_size"          , total_no_of_mempool_tx}, // total no of mempool txs
-                    {"show_cache_times"      , show_cache_times}
+                    {"show_cache_times"      , show_cache_times},
+                    {"mempool_refresh_time"  , MempoolStatus::mempool_refresh_time}
             };
 
             context.emplace("mempooltxs" , mstch::array());
