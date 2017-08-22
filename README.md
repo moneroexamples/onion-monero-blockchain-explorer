@@ -29,12 +29,11 @@ Tor users:
   
 Clearnet versions:
 
- - [http://139.162.32.245:8081/](http://139.162.32.245:8081/) - bleeding edge version, no https.
+ - [http://139.162.32.245:8081/](http://139.162.32.245:8081/) - down for now.
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
- - [https://MoneroExplorer.com/](https://moneroexplorer.com/) - nice looking one, https enabled.
- - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
+ - [https://MoneroExplorer.com/](https://moneroexplorer.com/) - nice looking one, https enabled. 
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.
  - [http://66.85.74.134:8081/](http://66.85.74.134:8081/) - fluffynet subnet explorer.
   
@@ -42,6 +41,7 @@ Clearnet testnet Monero version:
 
  - [http://139.162.32.245:8082/](http://139.162.32.245:8082/) - bleeding edge version, no https. 
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
+ - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
  - [https://testnet.MoneroExplorer.com/](https://testnet.moneroexplorer.com/) - https enabled.
 
 
