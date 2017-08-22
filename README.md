@@ -45,9 +45,9 @@ Clearnet testnet Monero version:
  - [https://testnet.MoneroExplorer.com/](https://testnet.moneroexplorer.com/) - https enabled.
 
 
-i2p users (main Monero network) - down for now:
+i2p users (main Monero network):
 
- - [http://monerotools.i2p](http://monerotools.i2p)
+ - [http://7o4gezpkye6ekibhgpkg7v626ze4idsirapufzrefkdysa6zxhha.b32.i2p/](http://7o4gezpkye6ekibhgpkg7v626ze4idsirapufzrefkdysa6zxhha.b32.i2p/)
 
 Alternative block explorers:
 
