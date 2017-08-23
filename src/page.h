@@ -728,7 +728,7 @@ namespace xmreg
 
             string block_size_limit = fmt::format("{:0.2f}",
                               static_cast<double>(
-                                      current_network_info.block_size_limit / 2)/1024.0);
+                                      current_network_info.block_size_limit / 2) / 1024.0);
 
             context["network_info"] = mstch::map {
                     {"difficulty"        , current_network_info.difficulty},
