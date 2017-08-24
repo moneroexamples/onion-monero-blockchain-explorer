@@ -58,15 +58,10 @@ foreach (l ${LIBS})
 endforeach()
 
 
-if (EXISTS ${MONERO_BUILD_DIR}/external/unbound/libunbound.a)
-	add_library(unbound STATIC IMPORTED)
-	set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/external/unbound/libunbound.a)
-endif()
-
-if (EXISTS ${MONERO_BUILD_DIR}/src/crypto/libcrypto.a)
+if (EXISTS ${MONERO_BUILD_DIR}/src/crypto/libcncrypto.a)
 	add_library(cryptoxmr STATIC IMPORTED)
 	set_property(TARGET cryptoxmr
-			PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/src/crypto/libcrypto.a)
+			PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/src/crypto/libcncrypto.a)
 endif()
 
 if (EXISTS ${MONERO_BUILD_DIR}/external/easylogging++/libeasylogging.a)
