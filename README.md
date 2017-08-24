@@ -26,6 +26,7 @@ Monero C++ libraries, but also demonstrates how to use:
 Tor users:
  
  - [http://dvwae436pd7nt4bc.onion](http://dvwae436pd7nt4bc.onion) (Front-end templates are [maintained by @suhz](https://github.com/suhz/onion-monero-blockchain-explorer/tree/moneroexplorer.com/src/templates)).
+ - [http://libwh5lvouddzei4.onion/] - bleading edge version.
   
 Clearnet versions:
 
@@ -33,9 +34,18 @@ Clearnet versions:
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
- - [https://MoneroExplorer.com/](https://moneroexplorer.com/) - nice looking one, https enabled. 
+ - [https://MoneroExplorer.com/](https://moneroexplorer.com/) - nice looking one, https enabled.   
+
+  
+Clearnet versions:
+
+ - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
+ - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
+ - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
+ - [https://MoneroExplorer.com/](https://moneroexplorer.com/) - nice looking one, https enabled.
+ - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.
- - [http://66.85.74.134:8081/](http://66.85.74.134:8081/) - fluffynet subnet explorer.
+
   
 Clearnet testnet Monero version:
 
@@ -43,7 +53,6 @@ Clearnet testnet Monero version:
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
  - [https://testnet.MoneroExplorer.com/](https://testnet.moneroexplorer.com/) - https enabled.
-
 
 i2p users (main Monero network):
 
