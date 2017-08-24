@@ -62,7 +62,7 @@ endif()
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR WIN32)
     add_library(unbound STATIC IMPORTED)
-    set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libunbound.a)
+    set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/external/unbound/libunbound.a)
 endif()
 
 # include boost headers
@@ -107,13 +107,19 @@ set(LIBRARIES
         common
         mnemonics
         epee
+        easylogging
         ${Boost_LIBRARIES}
         pthread
         unbound
         curl
         crypto
-        atomic
         ssl)
+
+if(APPLE)
+    set(LIBRARIES ${LIBRARIES} "-framework IOKit")
+else()
+    set(LIBRARIES ${LIBRARIES} atomic)
+endif()
 
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND NOT WIN32)
     set(LIBRARIES ${LIBRARIES} unwind)

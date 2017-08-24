@@ -4,6 +4,7 @@
 
 #include "tools.h"
 #include <codecvt>
+#include <thread>
 
 
 namespace xmreg

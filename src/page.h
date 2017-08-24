@@ -174,7 +174,7 @@ namespace xmreg
                     {"no_nonrct_inputs"  , num_nonrct_inputs},
                     {"mixin"             , mixin_str},
                     {"blk_height"        , blk_height},
-                    {"version"           , version},
+                    {"version"           , static_cast<uint64_t>(version)},
                     {"has_payment_id"    , payment_id  != null_hash},
                     {"has_payment_id8"   , payment_id8 != null_hash8},
                     {"payment_id"        , pod_to_hex(payment_id)},
@@ -902,7 +902,7 @@ namespace xmreg
 
             // initalise page tempate map with basic info about mempool
             mstch::map context {
-                    {"mempool_size"          , mempool_txs.size()},
+                    {"mempool_size"          , static_cast<uint64_t>(mempool_txs.size())},
                     {"show_cache_times"      , show_cache_times}
             };
 
@@ -1412,7 +1412,7 @@ namespace xmreg
 
             mstch::map tx_context;
 
-            if (enable_tx_cache && tx_context_cache.Contains({tx_hash, with_ring_signatures}))
+            if (enable_tx_cache && tx_context_cache.Contains({tx_hash, static_cast<bool>(with_ring_signatures)}))
             {
                 // with_ring_signatures == 0 means that cache is not used
                 // when obtaining detailed information about tx is requested.
@@ -1422,7 +1422,7 @@ namespace xmreg
                 auto start = std::chrono::steady_clock::now();
 
                 const tx_info_cache& tx_info_cashed
-                        = tx_context_cache.Get({tx_hash, with_ring_signatures});
+                        = tx_context_cache.Get({tx_hash, static_cast<bool>(with_ring_signatures)});
 
                 tx_context = tx_info_cashed.tx_map;
 
@@ -1476,10 +1476,10 @@ namespace xmreg
                         // its not in blockchain, but it was there when we cashed it.
                         // so we update it in cash, as it should be back in mempool
 
-                        tx_context = construct_tx_context(tx, with_ring_signatures);
+                        tx_context = construct_tx_context(tx, static_cast<bool>(with_ring_signatures));
 
                         tx_context_cache.Put(
-                                {tx_hash, with_ring_signatures},
+                                {tx_hash, static_cast<bool>(with_ring_signatures)},
                                 tx_info_cache {
                                         boost::get<uint64_t>(tx_context["tx_blk_height"]),
                                         boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
@@ -1498,10 +1498,10 @@ namespace xmreg
                         // checking if in blockchain already
                         // it was before in mempool, but now maybe already in blockchain
 
-                        tx_context = construct_tx_context(tx, with_ring_signatures);
+                        tx_context = construct_tx_context(tx, static_cast<bool>(with_ring_signatures));
 
                         tx_context_cache.Put(
-                                {tx_hash, with_ring_signatures},
+                                {tx_hash, static_cast<bool>(with_ring_signatures)},
                                 tx_info_cache {
                                         boost::get<uint64_t>(tx_context["tx_blk_height"]),
                                         boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
@@ -1535,7 +1535,7 @@ namespace xmreg
                 // tx context. just for fun, to see if cache is any faster.
                 auto start = std::chrono::steady_clock::now();
 
-                tx_context = construct_tx_context(tx, with_ring_signatures);
+                tx_context = construct_tx_context(tx, static_cast<bool>(with_ring_signatures));
 
                 auto duration = std::chrono::duration_cast<std::chrono::microseconds>
                         (std::chrono::steady_clock::now() - start);
@@ -1543,7 +1543,7 @@ namespace xmreg
                 if (enable_tx_cache)
                 {
                     tx_context_cache.Put(
-                            {tx_hash, with_ring_signatures},
+                            {tx_hash, static_cast<bool>(with_ring_signatures)},
                             tx_info_cache {
                                     boost::get<uint64_t>(tx_context["tx_blk_height"]),
                                     boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
@@ -5124,7 +5124,7 @@ namespace xmreg
                     {"tx_size"               , fmt::format("{:0.4f}",
                                                            static_cast<double>(txd.size) / 1024.0)},
                     {"tx_fee"                , xmreg::xmr_amount_to_str(txd.fee)},
-                    {"tx_version"            , txd.version},
+                    {"tx_version"            , static_cast<uint64_t>(txd.version)},
                     {"blk_timestamp"         , blk_timestamp},
                     {"blk_timestamp_uint"    , blk.timestamp},
                     {"delta_time"            , age.first},

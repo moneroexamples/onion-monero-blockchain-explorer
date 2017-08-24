@@ -91,17 +91,32 @@ class lambda_t {
   std::function<std::string(node_renderer<N> renderer, const std::string&)> fun;
 };
 
+template <class Key, class Value>
+struct map : public std::map<Key, Value>
+{
+  map() {}
+  map(const map<Key, Value>& rhs) : std::map<Key, Value>(rhs) {}
+  map(const std::initializer_list<typename std::map<Key, Value>::value_type>& args) : std::map<Key, Value>(args) {}
+  map& operator=(const map& rhs)
+  {
+    std::map<Key, Value>::clear();
+    for (auto& i : rhs)
+      std::map<Key, Value>::insert(i);
+    return *this;
+  }
+};
+
 }
 
 using node = boost::make_recursive_variant<
     std::nullptr_t, std::string, int, double, bool, uint64_t, int64_t, uint32_t,
     internal::lambda_t<boost::recursive_variant_>,
     std::shared_ptr<internal::object_t<boost::recursive_variant_>>,
-    std::map<const std::string, boost::recursive_variant_>,
+    internal::map<const std::string, boost::recursive_variant_>,
     std::vector<boost::recursive_variant_>>::type;
 using object = internal::object_t<node>;
 using lambda = internal::lambda_t<node>;
-using map = std::map<const std::string, node>;
+using map = internal::map<const std::string, node>;
 using array = std::vector<node>;
 
 std::string render(
