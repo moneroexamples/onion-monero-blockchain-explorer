@@ -679,11 +679,6 @@ namespace xmreg
 
             } // while (i <= end_height)
 
-            // calculate median size of the blocks shown
-            double blk_size_median = xmreg::calc_median(blk_sizes.begin(), blk_sizes.end());
-
-            context["blk_size_median"] = fmt::format("{:0.2f}", blk_size_median);
-
 
             // save computational times for disply in the frontend
 
