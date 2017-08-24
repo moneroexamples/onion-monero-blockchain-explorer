@@ -1,5 +1,5 @@
 <h2 style="margin-bottom: 0px">
-   Memory pool
+   Transaction pool
 </h2>
 <h4 style="font-size: 12px; margin-top: 0px">(no of txs: {{mempool_size}}, size: {{mempool_size_kB}} kB, updated every {{ mempool_refresh_time }} seconds)</h4>
 <div class="center">
@@ -30,7 +30,7 @@
     {{^mempool_fits_on_front_page}}
       {{#partial_mempool_shown}}
       <div class="center" style="text-align: center; margin-bottom: 10px">
-          <a href="/mempool">Only {{no_of_mempool_tx_of_frontpage}} txs shown. Click here to see all of them</a>
+          <a href="/txpool">Only {{no_of_mempool_tx_of_frontpage}} txs shown. Click here to see all of them</a>
       </div>
       {{/partial_mempool_shown}}
 
