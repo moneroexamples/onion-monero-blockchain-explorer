@@ -182,7 +182,7 @@ namespace xmreg
                     {"no_nonrct_inputs"  , num_nonrct_inputs},
                     {"mixin"             , mixin_str},
                     {"blk_height"        , blk_height},
-                    {"version"           , version},
+                    {"version"           , static_cast<uint64_t>(version)},
                     {"has_payment_id"    , payment_id  != null_hash},
                     {"has_payment_id8"   , payment_id8 != null_hash8},
                     {"payment_id"        , pod_to_hex(payment_id)},
@@ -824,7 +824,7 @@ namespace xmreg
 
             // initalise page tempate map with basic info about mempool
             mstch::map context {
-                    {"mempool_size"          , total_no_of_mempool_tx}, // total no of mempool txs
+                    {"mempool_size"          , static_cast<uint64_t>(total_no_of_mempool_tx)}, // total no of mempool txs
                     {"show_cache_times"      , show_cache_times},
                     {"mempool_refresh_time"  , MempoolStatus::mempool_refresh_time}
             };
@@ -1238,7 +1238,7 @@ namespace xmreg
 
             mstch::map tx_context;
 
-            if (enable_tx_cache && tx_context_cache.Contains({tx_hash, with_ring_signatures}))
+            if (enable_tx_cache && tx_context_cache.Contains({tx_hash, static_cast<bool>(with_ring_signatures)}))
             {
                 // with_ring_signatures == 0 means that cache is not used
                 // when obtaining detailed information about tx is requested.
@@ -1248,7 +1248,7 @@ namespace xmreg
                 auto start = std::chrono::steady_clock::now();
 
                 const tx_info_cache& tx_info_cashed
-                        = tx_context_cache.Get({tx_hash, with_ring_signatures});
+                        = tx_context_cache.Get({tx_hash, static_cast<bool>(with_ring_signatures)});
 
                 tx_context = tx_info_cashed.tx_map;
 
@@ -1302,10 +1302,10 @@ namespace xmreg
                         // its not in blockchain, but it was there when we cashed it.
                         // so we update it in cash, as it should be back in mempool
 
-                        tx_context = construct_tx_context(tx, with_ring_signatures);
+                        tx_context = construct_tx_context(tx, static_cast<bool>(with_ring_signatures));
 
                         tx_context_cache.Put(
-                                {tx_hash, with_ring_signatures},
+                                {tx_hash, static_cast<bool>(with_ring_signatures)},
                                 tx_info_cache {
                                         boost::get<uint64_t>(tx_context["tx_blk_height"]),
                                         boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
@@ -1324,10 +1324,10 @@ namespace xmreg
                         // checking if in blockchain already
                         // it was before in mempool, but now maybe already in blockchain
 
-                        tx_context = construct_tx_context(tx, with_ring_signatures);
+                        tx_context = construct_tx_context(tx, static_cast<bool>(with_ring_signatures));
 
                         tx_context_cache.Put(
-                                {tx_hash, with_ring_signatures},
+                                {tx_hash, static_cast<bool>(with_ring_signatures)},
                                 tx_info_cache {
                                         boost::get<uint64_t>(tx_context["tx_blk_height"]),
                                         boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
@@ -1361,7 +1361,7 @@ namespace xmreg
                 // tx context. just for fun, to see if cache is any faster.
                 auto start = std::chrono::steady_clock::now();
 
-                tx_context = construct_tx_context(tx, with_ring_signatures);
+                tx_context = construct_tx_context(tx, static_cast<bool>(with_ring_signatures));
 
                 auto duration = std::chrono::duration_cast<std::chrono::microseconds>
                         (std::chrono::steady_clock::now() - start);
@@ -1369,7 +1369,7 @@ namespace xmreg
                 if (enable_tx_cache)
                 {
                     tx_context_cache.Put(
-                            {tx_hash, with_ring_signatures},
+                            {tx_hash, static_cast<bool>(with_ring_signatures)},
                             tx_info_cache {
                                     boost::get<uint64_t>(tx_context["tx_blk_height"]),
                                     boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
@@ -5124,7 +5124,7 @@ namespace xmreg
                     {"tx_size"     , txd.size},
                     {"xmr_outputs" , txd.xmr_outputs},
                     {"xmr_inputs"  , txd.xmr_inputs},
-                    {"tx_version"  , txd.version},
+                    {"tx_version"  , static_cast<uint64_t>(txd.version)},
                     {"rct_type"    , tx.rct_signatures.type},
                     {"coinbase"    , is_coinbase(tx)},
                     {"mixin"       , txd.mixin_no},

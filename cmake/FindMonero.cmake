@@ -57,12 +57,6 @@ foreach (l ${LIBS})
 
 endforeach()
 
-
-if (EXISTS ${MONERO_BUILD_DIR}/external/unbound/libunbound.a)
-	add_library(unbound STATIC IMPORTED)
-	set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/external/unbound/libunbound.a)
-endif()
-
 if (EXISTS ${MONERO_BUILD_DIR}/external/easylogging++/libeasylogging.a)
 	add_library(easylogging STATIC IMPORTED)
 	set_property(TARGET easylogging
