@@ -2,9 +2,9 @@
 <div class="center">
      <h3 style="font-size: 12px; margin-top: 20px">
 
-        Server time: {{server_timestamp}}  | <a href="/mempool">Memory pool</a>
+        Server time: {{server_timestamp}}  | <a href="/txpool">Transaction pool</a>
          {{#enable_pusher}}
-            | <a href="/rawtx">Tx pusher </a>
+            | <a href="/rawtx">Transaction pusher </a>
          {{/enable_pusher}}
          {{#enable_key_image_checker}}
             | <a href="/rawkeyimgs">Key images checker</a>
@@ -39,7 +39,7 @@
             Network difficulty: {{difficulty}}
             | Hash rate: {{hash_rate}}
             | Fee per kb: {{fee_per_kb}}
-            | Alternative blocks no: {{alt_blocks_no}}
+            | Median block size limit: {{block_size_limit}} kB
             {{^is_current_info}}
             | Data from {{age}} {{age_format}} ago
             {{/is_current_info}}
@@ -65,8 +65,6 @@
     {{/is_page_zero}}
 
     <h4 style="font-size: 14px; margin-top: 0px">(Median size of these blocks: {{blk_size_median}} kB)</h4>
-
-
 
     <div class="center">
 

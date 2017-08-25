@@ -18,6 +18,7 @@
 #include "rpccalls.h"
 
 #include "CurrentBlockchainStatus.h"
+#include "MempoolStatus.h"
 
 #include "../ext/crow/http_request.h"
 
@@ -28,6 +29,7 @@
 #include <algorithm>
 #include <limits>
 #include <ctime>
+#include <future>
 
 #define TMPL_DIR                    "./templates"
 #define TMPL_PARIALS_DIR            TMPL_DIR "/partials"
@@ -35,6 +37,7 @@
 #define TMPL_INDEX                  TMPL_DIR "/index.html"
 #define TMPL_INDEX2                 TMPL_DIR "/index2.html"
 #define TMPL_MEMPOOL                TMPL_DIR "/mempool.html"
+#define TMPL_ALTBLOCKS              TMPL_DIR "/altblocks.html"
 #define TMPL_MEMPOOL_ERROR          TMPL_DIR "/mempool_error.html"
 #define TMPL_HEADER                 TMPL_DIR "/header.html"
 #define TMPL_FOOTER                 TMPL_DIR "/footer.html"
@@ -52,6 +55,11 @@
 #define TMPL_MY_CHECKRAWOUTPUTKEYS  TMPL_DIR "/checkrawoutputkeys.html"
 
 
+#define ONIONEXPLORER_RPC_VERSION_MAJOR 1
+#define ONIONEXPLORER_RPC_VERSION_MINOR 0
+#define MAKE_ONIONEXPLORER_RPC_VERSION(major,minor) (((major)<<16)|(minor))
+#define ONIONEXPLORER_RPC_VERSION \
+    MAKE_ONIONEXPLORER_RPC_VERSION(ONIONEXPLORER_RPC_VERSION_MAJOR, ONIONEXPLORER_RPC_VERSION_MINOR)
 
 
 // basic info about tx to be stored in cashe.
@@ -251,7 +259,6 @@ namespace xmreg
         bool enable_key_image_checker;
         bool enable_output_key_checker;
         bool enable_mixins_details;
-        bool enable_mempool_cache;
         bool enable_tx_cache;
         bool enable_block_cache;
         bool show_cache_times;
@@ -262,7 +269,6 @@ namespace xmreg
 
         uint64_t no_of_mempool_tx_of_frontpage;
         uint64_t no_blocks_on_index;
-        uint64_t network_info_timeout;
         uint64_t mempool_info_timeout;
 
         string testnet_url;
@@ -281,53 +287,9 @@ namespace xmreg
         using lru_cache_t = caches::fixed_sized_cache<Key, Value, caches::LRUCachePolicy<Key>>;
 
 
-
         // alias for easy class typing
         template <typename Key, typename Value>
         using fifo_cache_t = caches::fixed_sized_cache<Key, Value, caches::FIFOCachePolicy<Key>>;
-
-
-        // this struct is used to keep info about mempool
-        // txs in FIFO cache. Should speed up processing
-        // mempool txs for each request
-        struct mempool_tx_info
-        {
-            uint64_t sum_inputs;
-            uint64_t sum_outputs;
-            uint64_t no_inputs;
-            uint64_t no_outputs;
-
-            uint64_t num_nonrct_inputs;
-
-            uint64_t mixin_no;
-
-            string hash;
-            string fee;
-            string xmr_inputs_str;
-            string xmr_outputs_str;
-            string timestamp;
-
-            string txsize;
-        };
-
-        // cache of txs in mempool, so that we dont
-        // parse their json for each request
-        fifo_cache_t<string, mempool_tx_info> mempool_tx_json_cache;
-
-        // to keep network_info in cache
-        // and to show previous info in case current querry for
-        // the current info timesout.
-        struct network_info
-        {
-            uint64_t difficulty;
-            uint64_t hash_rate;
-            uint64_t fee_per_kb;
-            uint64_t alt_blocks_no;
-            uint64_t tx_pool_size;
-            uint64_t info_timestamp;
-        };
-
-        atomic<network_info> previous_network_info;
 
         // cache of txs_map of txs in blocks. this is useful for
         // index2 page, so that we dont parse txs in each block
@@ -348,12 +310,10 @@ namespace xmreg
              bool _enable_output_key_checker,
              bool _enable_autorefresh_option,
              bool _enable_mixins_details,
-             bool _enable_mempool_cache,
              bool _enable_tx_cache,
              bool _enable_block_cache,
              bool _show_cache_times,
              uint64_t _no_blocks_on_index,
-             uint64_t _network_info_timeout,
              uint64_t _mempool_info_timeout,
              string _testnet_url,
              string _mainnet_url)
@@ -367,24 +327,18 @@ namespace xmreg
                   enable_output_key_checker {_enable_output_key_checker},
                   enable_autorefresh_option {_enable_autorefresh_option},
                   enable_mixins_details {_enable_mixins_details},
-                  enable_mempool_cache {_enable_mempool_cache},
                   enable_tx_cache {_enable_tx_cache},
                   enable_block_cache {_enable_block_cache},
                   show_cache_times {_show_cache_times},
                   no_blocks_on_index {_no_blocks_on_index},
-                  network_info_timeout {_network_info_timeout},
                   mempool_info_timeout {_mempool_info_timeout},
                   testnet_url {_testnet_url},
                   mainnet_url {_mainnet_url},
-                  mempool_tx_json_cache(1000),
                   block_tx_cache(200),
                   tx_context_cache(1000)
         {
 
             no_of_mempool_tx_of_frontpage = 25;
-
-            // initialized stored network info atomic
-            previous_network_info = network_info {0, 0, 0, 0, 0, 0};
 
             // read template files for all the pages
             // into template_file map
@@ -394,6 +348,7 @@ namespace xmreg
             template_file["footer"]          = get_footer();
             template_file["index2"]          = get_full_page(xmreg::read(TMPL_INDEX2));
             template_file["mempool"]         = xmreg::read(TMPL_MEMPOOL);
+            template_file["altblocks"]       = get_full_page(xmreg::read(TMPL_ALTBLOCKS));
             template_file["mempool_error"]   = xmreg::read(TMPL_MEMPOOL_ERROR);
             template_file["mempool_full"]    = get_full_page(template_file["mempool"]);
             template_file["block"]           = get_full_page(xmreg::read(TMPL_BLOCK));
@@ -409,16 +364,16 @@ namespace xmreg
             template_file["address"]         = get_full_page(xmreg::read(TMPL_ADDRESS));
             template_file["search_results"]  = get_full_page(xmreg::read(TMPL_SEARCH_RESULTS));
             template_file["tx_details"]      = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html");
-            template_file["tx_table_header"]   = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html");
+            template_file["tx_table_header"] = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html");
             template_file["tx_table_row"]    = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html");
         }
 
         /**
-     * @brief show recent transactions and mempool
-     * @param page_no block page to show
-     * @param refresh_page enable autorefresh
-     * @return rendered index page
-     */
+         * @brief show recent transactions and mempool
+         * @param page_no block page to show
+         * @param refresh_page enable autorefresh
+         * @return rendered index page
+         */
         string
         index2(uint64_t page_no = 0, bool refresh_page = false)
         {
@@ -431,20 +386,7 @@ namespace xmreg
             {
                 json j_info;
 
-                if (!get_monero_network_info(j_info))
-                {
-                    return json{};
-                }
-
-                uint64_t fee_estimated {0};
-
-                // get dynamic fee estimate from last 10 blocks
-                if (!get_dynamic_per_kb_fee_estimate(fee_estimated))
-                {
-                    return json{};
-                }
-
-                j_info["fee_per_kb"] = fee_estimated;
+                get_monero_network_info(j_info);
 
                 return j_info;
             });
@@ -489,16 +431,6 @@ namespace xmreg
                     {"enable_autorefresh_option", enable_autorefresh_option},
                     {"show_cache_times"         , show_cache_times}
             };
-
-//            std::list<block> atl_blks;
-//
-//            if (core_storage->get_alternative_blocks(atl_blks))
-//            {
-//                for (const block& alt_blk: atl_blks)
-//                {
-//                    //cout << "alt_blk: " << get_block_height(alt_blk) << endl;
-//                }
-//            }
 
             context.emplace("txs", mstch::array()); // will keep tx to show
 
@@ -752,7 +684,6 @@ namespace xmreg
 
             context["blk_size_median"] = fmt::format("{:0.2f}", blk_size_median);
 
-
             // save computational times for disply in the frontend
 
             context["construction_time_cached"] = fmt::format(
@@ -767,43 +698,12 @@ namespace xmreg
             context["cache_hits"]   = cache_hits;
             context["cache_misses"] = cache_misses;
 
-            // now time to check if we have our networkinfo from network_info future
-            // wait a bit (300 millisecond max) if not, just in case, but we dont wait more.
-            // if its not ready by now, forget about it.
 
-            std::future_status ftr_status = network_info_ftr.wait_for(
-                    std::chrono::milliseconds(network_info_timeout));
-
-            network_info current_network_info {0, 0, 0, 0, 0, 0};
-
-            bool is_network_info_current {false};
-
-            if (ftr_status == std::future_status::ready)
-            {
-                json j_network_info = network_info_ftr.get();
-
-                if (!j_network_info.empty())
-                {
-                    current_network_info.difficulty     = j_network_info["difficulty"];
-                    current_network_info.hash_rate      = j_network_info["hash_rate"];
-                    current_network_info.fee_per_kb     = j_network_info["fee_per_kb"];
-                    current_network_info.tx_pool_size   = j_network_info["tx_pool_size"];
-                    current_network_info.alt_blocks_no  = j_network_info["alt_blocks_count"];
-                    current_network_info.info_timestamp = local_copy_server_timestamp;
-
-                    previous_network_info = current_network_info;
-
-                    is_network_info_current = true;
-                }
-            }
-            else
-            {
-                current_network_info = previous_network_info;
-                cerr  << "network_info future not ready yet, use the previous_network_info." << endl;
-            }
+            // get current network info from MemoryStatus thread.
+            MempoolStatus::network_info current_network_info
+                = MempoolStatus::current_network_info;
 
             // perapre network info mstch::map for the front page
-
             string hash_rate;
 
             if (testnet)
@@ -820,19 +720,24 @@ namespace xmreg
 
             // if network info is younger than 2 minute, assume its current. No sense
             // showing that it is not current if its less then block time.
-
             if (local_copy_server_timestamp - current_network_info.info_timestamp < 120)
             {
-                is_network_info_current = true;
+                current_network_info.current = true;
             }
+
+            string block_size_limit = fmt::format("{:0.2f}",
+                              static_cast<double>(
+                                      current_network_info.block_size_limit) / 2.0 / 1024.0);
 
             context["network_info"] = mstch::map {
                     {"difficulty"        , current_network_info.difficulty},
                     {"hash_rate"         , hash_rate},
                     {"fee_per_kb"        , print_money(current_network_info.fee_per_kb)},
-                    {"alt_blocks_no"     , current_network_info.alt_blocks_no},
+                    {"alt_blocks_no"     , current_network_info.alt_blocks_count},
+                    {"have_alt_block"    , (current_network_info.alt_blocks_count > 0)},
                     {"tx_pool_size"      , current_network_info.tx_pool_size},
-                    {"is_current_info"   , is_network_info_current},
+                    {"block_size_limit"  , block_size_limit},
+                    {"is_current_info"   , current_network_info.current},
                     {"is_pool_size_zero" , (current_network_info.tx_pool_size == 0)},
                     {"age"               , network_info_age.first},
                     {"age_format"        , network_info_age.second},
@@ -893,44 +798,41 @@ namespace xmreg
         string
         mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
         {
-            std::vector<tx_info> mempool_txs;
+            std::vector<MempoolStatus::mempool_tx> mempool_txs;
 
-            if (!rpc.get_mempool(mempool_txs))
+            if (add_header_and_footer)
             {
-                return "Getting mempool failed";
+                // get all memmpool txs
+                mempool_txs = MempoolStatus::get_mempool_txs();
+                no_of_mempool_tx = mempool_txs.size();
             }
+            else
+            {
+                // get only first no_of_mempool_tx txs
+                mempool_txs = MempoolStatus::get_mempool_txs(no_of_mempool_tx);
+                no_of_mempool_tx = std::min(no_of_mempool_tx, mempool_txs.size());
+            }
+
+            // total size of mempool in bytes
+            uint64_t mempool_size_bytes = MempoolStatus::mempool_size;
+
+            // reasign this number, in case no of txs in mempool is smaller
+            // than what we requested or we want all txs.
+
+
+            uint64_t total_no_of_mempool_tx = MempoolStatus::mempool_no;
 
             // initalise page tempate map with basic info about mempool
             mstch::map context {
-                    {"mempool_size"          , static_cast<uint64_t>(mempool_txs.size())},
-                    {"show_cache_times"      , show_cache_times}
+                    {"mempool_size"          , static_cast<uint64_t>(total_no_of_mempool_tx)}, // total no of mempool txs
+                    {"show_cache_times"      , show_cache_times},
+                    {"mempool_refresh_time"  , MempoolStatus::mempool_refresh_time}
             };
 
             context.emplace("mempooltxs" , mstch::array());
 
             // get reference to blocks template map to be field below
             mstch::array& txs = boost::get<mstch::array>(context["mempooltxs"]);
-
-            // process only up to no_of_mempool_tx txs of mempool.
-            // this is useful from the front page were we show by default
-            // only 25 mempool txs. this way, we just parse 25 txs, rather
-            // than potentially hundrets just to ditch most of them later.
-
-            if (add_header_and_footer == false)
-            {
-                // this is to show limited number of txs in mempool
-                // for example, in the front page
-                no_of_mempool_tx = mempool_txs.size() > no_of_mempool_tx
-                                   ? no_of_mempool_tx
-                                   : mempool_txs.size();
-            }
-            else
-            {
-                // if we are adding footers and headers, means we
-                // disply mempool on its own page, thus show all mempoool txs.
-                no_of_mempool_tx = mempool_txs.size();
-            }
-
 
             double duration_cached     {0.0};
             double duration_non_cached {0.0};
@@ -943,12 +845,12 @@ namespace xmreg
             for (size_t i = 0; i < no_of_mempool_tx; ++i)
             {
                 // get transaction info of the tx in the mempool
-                tx_info _tx_info = mempool_txs.at(i);
+                const MempoolStatus::mempool_tx& mempool_tx = mempool_txs.at(i);
 
                 // calculate difference between tx in mempool and server timestamps
                 array<size_t, 5> delta_time = timestamp_difference(
                         local_copy_server_timestamp,
-                        _tx_info.receive_time);
+                        mempool_tx.receive_time);
 
                 // use only hours, so if we have days, add
                 // it to hours
@@ -967,165 +869,28 @@ namespace xmreg
                                           delta_time[3], delta_time[4]);
                 }
 
-                // sum xmr in inputs and ouputs in the given tx
-                uint64_t sum_inputs {0};
-                uint64_t sum_outputs {0};
-                uint64_t no_inputs {0};
-                uint64_t no_outputs {0};
-                uint64_t num_nonrct_inputs {0};
-                uint64_t mixin_no {0};
-
-                string hash_str;
-                string fee_str;
-                string xmr_inputs_str;
-                string xmr_outputs_str;
-                string timestamp_str;
-
-                string txsize;
-
-                try
-                {
-                    // get the above incormation from json of that tx
-
-                    json j_tx;
-
-                    if (enable_mempool_cache && mempool_tx_json_cache.Contains(_tx_info.id_hash))
-                    {
-                        // maybe its already in cashe, so we can save some time
-                        // by using this, rather then making parsing json
-                        // and calculating it from json
-
-                        // start measure time here
-                        auto start = std::chrono::steady_clock::now();
-
-                        const mempool_tx_info& cached_tx_info = mempool_tx_json_cache.Get(_tx_info.id_hash);
-
-                        sum_inputs        = cached_tx_info.sum_inputs;
-                        sum_outputs       = cached_tx_info.sum_outputs;
-                        no_inputs         = cached_tx_info.no_inputs;
-                        no_outputs        = cached_tx_info.no_outputs;
-                        num_nonrct_inputs = cached_tx_info.num_nonrct_inputs;
-                        mixin_no          = cached_tx_info.mixin_no;
-                        hash_str          = cached_tx_info.hash;
-                        fee_str           = cached_tx_info.fee;
-                        xmr_inputs_str    = cached_tx_info.xmr_inputs_str;
-                        xmr_outputs_str   = cached_tx_info.xmr_outputs_str;
-                        timestamp_str     = cached_tx_info.timestamp;
-                        txsize            = cached_tx_info.txsize;
-
-                        auto duration = std::chrono::duration_cast<std::chrono::microseconds>
-                                (std::chrono::steady_clock::now() - start);
-
-                        // cout << "block_tx_json_cache from cache" << endl;
-
-                        duration_cached += duration.count();
-
-                        ++cache_hits;
-
-                        //cout << "getting json from cash for: " << _tx_info.id_hash << endl;
-                    }
-                    else
-                    {
-                        // its not in cash. Its new tx in mempool, so
-                        // construct this data and save into cash for later use
-
-                        // start measure time here
-                        auto start = std::chrono::steady_clock::now();
-
-                        j_tx = json::parse(_tx_info.tx_json);
-
-                        // sum xmr in inputs and ouputs in the given tx
-                        const array<uint64_t, 6>& sum_data = summary_of_in_out_rct(j_tx);
-
-                        sum_outputs       = sum_data[0];
-                        sum_inputs        = sum_data[1];
-                        no_outputs        = sum_data[2];
-                        no_inputs         = sum_data[3];
-                        mixin_no          = sum_data[4];
-                        num_nonrct_inputs = sum_data[5];
-
-                        hash_str        = _tx_info.id_hash;
-                        fee_str         = xmreg::xmr_amount_to_str(_tx_info.fee, "{:0.3f}");
-                        xmr_inputs_str  = xmreg::xmr_amount_to_str(sum_inputs , "{:0.3f}");
-                        xmr_outputs_str = xmreg::xmr_amount_to_str(sum_outputs, "{:0.3f}");
-                        timestamp_str   = xmreg::timestamp_to_str_gm(_tx_info.receive_time);
-
-                        txsize          = fmt::format("{:0.2f}",
-                                                      static_cast<double>(_tx_info.blob_size)/1024.0);
-
-                        auto duration = std::chrono::duration_cast<std::chrono::microseconds>
-                                (std::chrono::steady_clock::now() - start);
-
-                        // cout << "block_tx_json_cache from cache" << endl;
-
-                        duration_non_cached += duration.count();
-
-                        ++cache_misses;
-
-                        if (enable_mempool_cache)
-                        {
-                            // save in mempool cache
-                            mempool_tx_json_cache.Put(
-                                    _tx_info.id_hash,
-                                    mempool_tx_info {
-                                            sum_inputs, sum_outputs,
-                                            no_inputs, no_outputs,
-                                            num_nonrct_inputs, mixin_no,
-                                            hash_str, fee_str,
-                                            xmr_inputs_str, xmr_outputs_str,
-                                            timestamp_str, txsize
-                                    });
-                        }
-                    } // else if (mempool_tx_json_cache.Contains(_tx_info.id_hash))
-
-                }
-                catch (std::invalid_argument& e)
-                {
-                    cerr << " j_tx = json::parse(_tx_info.tx_json): " << e.what() << endl;
-                }
+                // cout << "block_tx_json_cache from cache" << endl;
 
                 // set output page template map
                 txs.push_back(mstch::map {
-                        {"timestamp_no"    , _tx_info.receive_time},
-                        {"timestamp"       , timestamp_str},
+                        {"timestamp_no"    , mempool_tx.receive_time},
+                        {"timestamp"       , mempool_tx.timestamp_str},
                         {"age"             , age_str},
-                        {"hash"            , hash_str},
-                        {"fee"             , fee_str},
-                        {"xmr_inputs"      , xmr_inputs_str},
-                        {"xmr_outputs"     , xmr_outputs_str},
-                        {"no_inputs"       , no_inputs},
-                        {"no_outputs"      , no_outputs},
-                        {"no_nonrct_inputs", num_nonrct_inputs},
-                        {"mixin"           , mixin_no+1},
-                        {"txsize"          , txsize}
+                        {"hash"            , pod_to_hex(mempool_tx.tx_hash)},
+                        {"fee"             , mempool_tx.fee_str},
+                        {"xmr_inputs"      , mempool_tx.xmr_inputs_str},
+                        {"xmr_outputs"     , mempool_tx.xmr_outputs_str},
+                        {"no_inputs"       , mempool_tx.no_inputs},
+                        {"no_outputs"      , mempool_tx.no_outputs},
+                        {"no_nonrct_inputs", mempool_tx.num_nonrct_inputs},
+                        {"mixin"           , mempool_tx.mixin_no},
+                        {"txsize"          , mempool_tx.txsize}
                 });
-
-            }
-
-            // calculate mempool size using all txs in mempool.
-            // not only those shown on the front page
-            uint64_t mempool_size_bytes {0};
-
-            for (const tx_info& _tx_info: mempool_txs)
-            {
-                mempool_size_bytes += _tx_info.blob_size;
             }
 
             context.insert({"mempool_size_kB",
                             fmt::format("{:0.2f}",
                                         static_cast<double>(mempool_size_bytes)/1024.0)});
-
-            context["construction_time_cached"] = fmt::format(
-                    "{:0.4f}", duration_cached/1.0e6);
-
-            context["construction_time_non_cached"] = fmt::format(
-                    "{:0.4f}", duration_non_cached/1.0e6);
-
-            context["construction_time_total"] = fmt::format(
-                    "{:0.4f}", (duration_non_cached+duration_cached)/1.0e6);
-
-            context["cache_hits"]   = cache_hits;
-            context["cache_misses"] = cache_misses;
 
             if (add_header_and_footer)
             {
@@ -1140,13 +905,74 @@ namespace xmreg
 
             // this is for partial disply on front page.
 
-            context["mempool_fits_on_front_page"]    = (mempool_txs.size() <= no_of_mempool_tx);
+            context["mempool_fits_on_front_page"]    = (total_no_of_mempool_tx <= mempool_txs.size());
             context["no_of_mempool_tx_of_frontpage"] = no_of_mempool_tx;
 
             context["partial_mempool_shown"] = true;
 
             // render the page
             return mstch::render(template_file["mempool"], context);
+        }
+
+
+        string
+        altblocks()
+        {
+
+            // initalise page tempate map with basic info about blockchain
+            mstch::map context {
+                    {"testnet"              , testnet},
+                    {"blocks"               , mstch::array()}
+            };
+
+            uint64_t local_copy_server_timestamp = server_timestamp;
+
+            // get reference to alt blocks template map to be field below
+            mstch::array& blocks = boost::get<mstch::array>(context["blocks"]);
+
+            vector<string> atl_blks_hashes;
+
+            if (!rpc.get_alt_blocks(atl_blks_hashes))
+            {
+                cerr << "rpc.get_alt_blocks(atl_blks_hashes) failed" << endl;
+            }
+
+            context.emplace("no_alt_blocks", atl_blks_hashes.size());
+
+            for (const string& alt_blk_hash: atl_blks_hashes)
+            {
+                block alt_blk;
+                string error_msg;
+
+                int64_t no_of_txs {-1};
+                int64_t blk_height {-1};
+
+                // get block age
+                pair<string, string> age {"-1", "-1"};
+
+
+                if (rpc.get_block(alt_blk_hash, alt_blk, error_msg))
+                {
+                    no_of_txs  = alt_blk.tx_hashes.size();
+
+                    blk_height = get_block_height(alt_blk);
+
+                    age = get_age(local_copy_server_timestamp, alt_blk.timestamp);
+                }
+
+                blocks.push_back(mstch::map {
+                        {"height"   , blk_height},
+                        {"age"      , age.first},
+                        {"hash"     , alt_blk_hash},
+                        {"no_of_txs", no_of_txs}
+                });
+
+            }
+
+            add_css_style(context);
+
+            // render the page
+            return mstch::render(template_file["altblocks"], context);
         }
 
 
@@ -1345,7 +1171,7 @@ namespace xmreg
             else
             {
                 cerr << "Cant get block: " << blk_hash << endl;
-                return fmt::format("Cant get block {:s} for some uknown reason", blk_hash);
+                return fmt::format("Cant get block {:s}", blk_hash);
             }
 
             return show_block(blk_height);
@@ -1379,20 +1205,20 @@ namespace xmreg
                 cerr << "Cant get tx in blockchain: " << tx_hash
                      << ". \n Check mempool now" << endl;
 
-                vector<pair<tx_info, transaction>> found_txs;
+                vector<MempoolStatus::mempool_tx> found_txs;
 
                 search_mempool(tx_hash, found_txs);
 
                 if (!found_txs.empty())
                 {
                     // there should be only one tx found
-                    tx = found_txs.at(0).second;
+                    tx = found_txs.at(0).tx;
 
                     // since its tx in mempool, it has no blk yet
                     // so use its recive_time as timestamp to show
 
                     uint64_t tx_recieve_timestamp
-                            = found_txs.at(0).first.receive_time;
+                            = found_txs.at(0).receive_time;
 
                     blk_timestamp = xmreg::timestamp_to_str_gm(tx_recieve_timestamp);
 
@@ -1700,20 +1526,20 @@ namespace xmreg
                 cerr << "Cant get tx in blockchain: " << tx_hash
                      << ". \n Check mempool now" << endl;
 
-                vector<pair<tx_info, transaction>> found_txs;
+                vector<MempoolStatus::mempool_tx> found_txs;
 
                 search_mempool(tx_hash, found_txs);
 
                 if (!found_txs.empty())
                 {
                     // there should be only one tx found
-                    tx = found_txs.at(0).second;
+                    tx = found_txs.at(0).tx;
 
                     // since its tx in mempool, it has no blk yet
                     // so use its recive_time as timestamp to show
 
                     uint64_t tx_recieve_timestamp
-                            = found_txs.at(0).first.receive_time;
+                            = found_txs.at(0).receive_time;
 
                     blk_timestamp = xmreg::timestamp_to_str_gm(tx_recieve_timestamp);
 
@@ -3017,7 +2843,7 @@ namespace xmreg
                 };
 
                 // check in mempool already contains tx to be submited
-                vector<pair<tx_info, transaction>> found_mempool_txs;
+                vector<MempoolStatus::mempool_tx> found_mempool_txs;
 
                 search_mempool(txd.hash, found_mempool_txs);
 
@@ -3805,14 +3631,14 @@ namespace xmreg
                         {
                             // check in mempool if tx_hash not found in the
                             // blockchain
-                            vector<pair<tx_info, transaction>> found_txs;
+                            vector<MempoolStatus::mempool_tx> found_txs;
 
                             search_mempool(tx_hash_pod, found_txs);
 
                             if (!found_txs.empty())
                             {
                                 // there should be only one tx found
-                                tx = found_txs.at(0).second;
+                                tx = found_txs.at(0).tx;
                             }
                             else
                             {
@@ -3821,7 +3647,7 @@ namespace xmreg
 
                             // tx in mempool have no blk_timestamp
                             // but can use their recive time
-                            blk_timestamp = found_txs.at(0).first.receive_time;
+                            blk_timestamp = found_txs.at(0).receive_time;
 
                         }
 
@@ -4510,19 +4336,9 @@ namespace xmreg
 
             uint64_t height = core_storage->get_current_blockchain_height();
 
-            vector<pair<tx_info, transaction>> mempool_data;
-
-            crypto::hash tx_hash_dummy = null_hash;
-
-            if (!search_mempool(tx_hash_dummy, mempool_data))
-            {
-                j_response["status"]  = "error";
-                j_response["message"] = fmt::format("Cant connect to the mempool");
-
-                return j_response;
-            }
-
-            (void) tx_hash_dummy;
+            // get mempool tx from mempoolstatus thread
+            vector<MempoolStatus::mempool_tx> mempool_data
+                    = MempoolStatus::get_mempool_txs();
 
             uint64_t no_mempool_txs = mempool_data.size();
 
@@ -4546,11 +4362,11 @@ namespace xmreg
             // for each transaction in the memory pool in current page
             while (i < end_height)
             {
-                const pair<tx_info, transaction>* a_pair {nullptr};
+                const MempoolStatus::mempool_tx* mempool_tx {nullptr};
 
                 try
                 {
-                    a_pair = &(mempool_data.at(i));
+                    mempool_tx = &(mempool_data.at(i));
                 }
                 catch (const std::out_of_range& e)
                 {
@@ -4560,14 +4376,14 @@ namespace xmreg
                     return j_response;
                 }
 
-                const tx_details& txd = get_tx_details(a_pair->second, false, 1, height); // 1 is dummy here
+                const tx_details& txd = get_tx_details(mempool_tx->tx, false, 1, height); // 1 is dummy here
 
                 // get basic tx info
-                json j_tx = get_tx_json(a_pair->second, txd);
+                json j_tx = get_tx_json(mempool_tx->tx, txd);
 
                 // we add some extra data, for mempool txs, such as recieve timestamp
-                j_tx["timestamp"]     = a_pair->first.receive_time;
-                j_tx["timestamp_utc"] = xmreg::timestamp_to_str_gm(a_pair->first.receive_time);
+                j_tx["timestamp"]     = mempool_tx->receive_time;
+                j_tx["timestamp_utc"] = mempool_tx->timestamp_str;
 
                 j_txs.push_back(j_tx);
 
@@ -4851,6 +4667,190 @@ namespace xmreg
             return j_response;
         }
 
+
+
+        json
+        json_outputsblocks(string _limit,
+                           string address_str,
+                           string viewkey_str,
+                           bool in_mempool_aswell = false)
+        {
+            boost::trim(_limit);
+            boost::trim(address_str);
+            boost::trim(viewkey_str);
+
+            json j_response {
+                    {"status", "fail"},
+                    {"data",   json {}}
+            };
+
+            json& j_data = j_response["data"];
+
+            uint64_t no_of_last_blocks {3};
+
+            try
+            {
+                no_of_last_blocks = boost::lexical_cast<uint64_t>(_limit);
+            }
+            catch (const boost::bad_lexical_cast& e)
+            {
+                j_data["title"] = fmt::format(
+                        "Cant parse page and/or limit numbers: {:s}", _limit);
+                return j_response;
+            }
+
+            // maxium five last blocks
+            no_of_last_blocks = std::min(no_of_last_blocks, 5ul);
+
+            if (address_str.empty())
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Monero address not provided";
+                return j_response;
+            }
+
+            if (viewkey_str.empty())
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Viewkey not provided";
+                return j_response;
+            }
+
+            // parse string representing given monero address
+            cryptonote::account_public_address address;
+
+            if (!xmreg::parse_str_address(address_str, address, testnet))
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Cant parse monero address: " + address_str;
+                return j_response;
+
+            }
+
+            // parse string representing given private key
+            crypto::secret_key prv_view_key;
+
+            if (!xmreg::parse_str_secret_key(viewkey_str, prv_view_key))
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Cant parse view key: "
+                                        + viewkey_str;
+                return j_response;
+            }
+
+            string error_msg;
+
+            j_data["outputs"] = json::array();
+            json& j_outptus   = j_data["outputs"];
+
+
+            if (in_mempool_aswell)
+            {
+                // first check if there is something for us in the mempool
+                // get mempool tx from mempoolstatus thread
+                vector<MempoolStatus::mempool_tx> mempool_txs
+                        = MempoolStatus::get_mempool_txs();
+
+                uint64_t no_mempool_txs = mempool_txs.size();
+
+                // need to use vector<transactions>,
+                // not vector<MempoolStatus::mempool_tx>
+                vector<transaction> tmp_vector;
+                tmp_vector.reserve(no_mempool_txs);
+
+                for (size_t i = 0; i < no_mempool_txs; ++i)
+                {
+                    // get transaction info of the tx in the mempool
+                    tmp_vector.push_back(std::move(mempool_txs.at(i).tx));
+                }
+
+                if (!find_our_outputs(
+                        address, prv_view_key,
+                        0 /* block_no */, true /*is mempool*/,
+                        tmp_vector.cbegin(), tmp_vector.cend(),
+                        j_outptus /* found outputs are pushed to this*/,
+                        error_msg))
+                {
+                    j_response["status"] = "error";
+                    j_response["message"] = error_msg;
+                    return j_response;
+                }
+
+            } // if (in_mempool_aswell)
+
+
+            // and now serach for outputs in last few blocks in the blockchain
+
+            uint64_t height = core_storage->get_current_blockchain_height();
+
+            // calculate starting and ending block numbers to show
+            int64_t start_height = height - no_of_last_blocks;
+
+            // check if start height is not below range
+            start_height = start_height < 0 ? 0 : start_height;
+
+            int64_t end_height = start_height + no_of_last_blocks - 1;
+
+            // loop index
+            int64_t block_no = end_height;
+
+
+            // iterate over last no_of_last_blocks of blocks
+            while (block_no >= start_height)
+            {
+                // get block at the given height block_no
+                block blk;
+
+                if (!mcore->get_block_by_height(block_no, blk))
+                {
+                    j_response["status"] = "error";
+                    j_response["message"] = fmt::format("Cant get block: {:d}", block_no);
+                    return j_response;
+                }
+
+                // get transactions in the given block
+                list <cryptonote::transaction> blk_txs{blk.miner_tx};
+                list <crypto::hash> missed_txs;
+
+                if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs))
+                {
+                    j_response["status"] = "error";
+                    j_response["message"] = fmt::format("Cant get transactions in block: {:d}", block_no);
+                    return j_response;
+                }
+
+                (void) missed_txs;
+
+                if (!find_our_outputs(
+                        address, prv_view_key,
+                        block_no, false /*is mempool*/,
+                        blk_txs.cbegin(), blk_txs.cend(),
+                        j_outptus /* found outputs are pushed to this*/,
+                        error_msg))
+                {
+                    j_response["status"] = "error";
+                    j_response["message"] = error_msg;
+                    return j_response;
+                }
+
+                --block_no;
+
+            }  //  while (block_no >= start_height)
+
+            // return parsed values. can be use to double
+            // check if submited data in the request
+            // matches to what was used to produce response.
+            j_data["address"]  = pod_to_hex(address);
+            j_data["viewkey"]  = pod_to_hex(prv_view_key);
+            j_data["limit"]    = _limit;
+            j_data["height"]   = height;
+            j_data["mempool"]  = in_mempool_aswell;
+
+            j_response["status"] = "success";
+
+            return j_response;
+        }
+
         /*
          * Lets use this json api convention for success and error
          * https://labs.omniti.com/labs/jsend
@@ -4887,25 +4887,8 @@ namespace xmreg
 
             j_info["fee_per_kb"] = fee_estimated;
 
-//            // get mempool size in kB.
-//            std::vector<tx_info> mempool_txs;
-//
-//            if (!rpc.get_mempool(mempool_txs))
-//            {
-//                j_response["status"]  = "error";
-//                j_response["message"] = "Cant get mempool transactions";
-//                return j_response;
-//            }
-//
-//            uint64_t tx_pool_size_kbytes {0};
-//
-//            for (const tx_info& tx_i: mempool_txs)
-//            {
-//                tx_pool_size_kbytes += tx_i.blob_size;
-//            }
-//
-//            j_info["tx_pool_size"]        = mempool_txs.size();
-//            j_info["tx_pool_size_kbytes"] = tx_pool_size_kbytes;
+            j_info["tx_pool_size"]        = MempoolStatus::mempool_no.load();
+            j_info["tx_pool_size_kbytes"] = MempoolStatus::mempool_size.load();
 
             j_data = j_info;
 
@@ -4959,7 +4942,176 @@ namespace xmreg
         }
 
 
+        /*
+              * Lets use this json api convention for success and error
+              * https://labs.omniti.com/labs/jsend
+              */
+        json
+        json_version()
+        {
+            json j_response {
+                    {"status", "fail"},
+                    {"data",   json {}}
+            };
+
+            json& j_data = j_response["data"];
+
+            j_data = json {
+                    {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
+                    {"last_git_commit_date", string {GIT_COMMIT_DATETIME}},
+                    {"git_branch_name"     , string {GIT_BRANCH_NAME}},
+                    {"monero_version_full" , string {MONERO_VERSION_FULL}},
+                    {"api"                 , ONIONEXPLORER_RPC_VERSION},
+                    {"blockchain_height"   , core_storage->get_current_blockchain_height()}
+            };
+
+            j_response["status"]  = "success";
+
+            return j_response;
+        }
+
+
     private:
+
+
+        string
+        get_payment_id_as_string(
+                tx_details const& txd,
+                secret_key const& prv_view_key)
+        {
+            string payment_id;
+
+            // decrypt encrypted payment id, as used in integreated addresses
+            crypto::hash8 decrypted_payment_id8 = txd.payment_id8;
+
+            if (decrypted_payment_id8 != null_hash8)
+            {
+                if (decrypt_payment_id(decrypted_payment_id8, txd.pk, prv_view_key))
+                {
+                    payment_id = pod_to_hex(decrypted_payment_id8);
+                }
+            }
+            else if(txd.payment_id != null_hash)
+            {
+                payment_id = pod_to_hex(txd.payment_id);
+            }
+
+            return payment_id;
+        }
+
+        template <typename Iterator>
+        bool
+        find_our_outputs(
+                account_public_address const& address,
+                secret_key const& prv_view_key,
+                uint64_t const& block_no,
+                bool const& is_mempool,
+                Iterator const& txs_begin,
+                Iterator const& txs_end,
+                json& j_outptus,
+                string& error_msg)
+        {
+
+            // for each tx, perform output search using provided
+            // address and viewkey
+            for (auto it = txs_begin; it != txs_end; ++it)
+            {
+                cryptonote::transaction const& tx = *it;
+
+                tx_details txd = get_tx_details(tx);
+
+                // public transaction key is combined with our viewkey
+                // to create, so called, derived key.
+                key_derivation derivation;
+
+                if (!generate_key_derivation(txd.pk, prv_view_key, derivation))
+                {
+                    error_msg = "Cant calculate key_derivation";
+                    return false;
+                }
+
+                uint64_t output_idx{0};
+
+                std::vector<uint64_t> money_transfered(tx.vout.size(), 0);
+
+                //j_data["outputs"] = json::array();
+                //json& j_outptus   = j_data["outputs"];
+
+                for (pair<txout_to_key, uint64_t> &outp: txd.output_pub_keys)
+                {
+
+                    // get the tx output public key
+                    // that normally would be generated for us,
+                    // if someone had sent us some xmr.
+                    public_key tx_pubkey;
+
+                    derive_public_key(derivation,
+                                      output_idx,
+                                      address.m_spend_public_key,
+                                      tx_pubkey);
+
+                    // check if generated public key matches the current output's key
+                    bool mine_output = (outp.first.key == tx_pubkey);
+
+                    // if mine output has RingCT, i.e., tx version is 2
+                    if (mine_output && tx.version == 2)
+                    {
+                        // cointbase txs have amounts in plain sight.
+                        // so use amount from ringct, only for non-coinbase txs
+                        if (!is_coinbase(tx))
+                        {
+
+                            // initialize with regular amount
+                            uint64_t rct_amount = money_transfered[output_idx];
+
+                            bool r {false};
+
+                            rct::key mask = tx.rct_signatures.ecdhInfo[output_idx].mask;
+
+                            r = decode_ringct(tx.rct_signatures,
+                                              txd.pk,
+                                              prv_view_key,
+                                              output_idx,
+                                              mask,
+                                              rct_amount);
+
+                            if (!r)
+                            {
+                                error_msg = "Cant decode ringct for tx: "
+                                                        + pod_to_hex(txd.hash);
+                                return false;
+                            }
+
+                            outp.second = rct_amount;
+                            money_transfered[output_idx] = rct_amount;
+
+                        } // if (!is_coinbase(tx))
+
+                    }  // if (mine_output && tx.version == 2)
+
+                    if (mine_output)
+                    {
+                        string payment_id_str = get_payment_id_as_string(txd, prv_view_key);
+
+                        j_outptus.push_back(json {
+                                {"output_pubkey" , pod_to_hex(outp.first.key)},
+                                {"amount"        , outp.second},
+                                {"block_no"      , block_no},
+                                {"in_mempool"    , is_mempool},
+                                {"output_idx"    , output_idx},
+                                {"tx_hash"       , pod_to_hex(txd.hash)},
+                                {"payment_id"    , payment_id_str}
+                        });
+                    }
+
+                    ++output_idx;
+
+                } //  for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
+
+            } // for (auto it = blk_txs.begin(); it != blk_txs.end(); ++it)
+
+            return true;
+        }
 
         json
         get_tx_json(const transaction& tx, const tx_details& txd)
@@ -4972,7 +5124,7 @@ namespace xmreg
                     {"tx_size"     , txd.size},
                     {"xmr_outputs" , txd.xmr_outputs},
                     {"xmr_inputs"  , txd.xmr_inputs},
-                    {"tx_version"  , txd.version},
+                    {"tx_version"  , static_cast<uint64_t>(txd.version)},
                     {"rct_type"    , tx.rct_signatures.type},
                     {"coinbase"    , is_coinbase(tx)},
                     {"mixin"       , txd.mixin_no},
@@ -4999,16 +5151,16 @@ namespace xmreg
                 cerr << "Cant get tx in blockchain: " << tx_hash
                      << ". \n Check mempool now" << endl;
 
-                vector<pair<tx_info, transaction>> found_txs;
+                vector<MempoolStatus::mempool_tx> found_txs;
 
                 search_mempool(tx_hash, found_txs);
 
                 if (!found_txs.empty())
                 {
                     // there should be only one tx found
-                    tx = found_txs.at(0).second;
+                    tx = found_txs.at(0).tx;
                     found_in_mempool = true;
-                    tx_timestamp = found_txs.at(0).first.receive_time;
+                    tx_timestamp = found_txs.at(0).receive_time;
                 }
                 else
                 {
@@ -5623,20 +5775,17 @@ namespace xmreg
 
         bool
         search_mempool(crypto::hash tx_hash,
-                       vector<pair<tx_info, transaction>>& found_txs)
+                       vector<MempoolStatus::mempool_tx>& found_txs)
         {
             // if tx_hash == null_hash then this method
             // will just return the vector containing all
             // txs in mempool
 
-            // get txs in the mempool
-            std::vector<tx_info> mempool_txs;
 
-            if (!rpc.get_mempool(mempool_txs))
-            {
-                cerr << "Getting mempool failed " << endl;
-                return false;
-            }
+
+            // get mempool tx from mempoolstatus thread
+            vector<MempoolStatus::mempool_tx> mempool_txs
+                    = MempoolStatus::get_mempool_txs();
 
             // if dont have tx_blob member, construct tx
             // from json obtained from the rpc call
@@ -5644,40 +5793,17 @@ namespace xmreg
             for (size_t i = 0; i < mempool_txs.size(); ++i)
             {
                 // get transaction info of the tx in the mempool
-                tx_info _tx_info = mempool_txs.at(i);
+                const MempoolStatus::mempool_tx& mempool_tx = mempool_txs.at(i);
 
-                crypto::hash mem_tx_hash = null_hash;
-
-                if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
+                if (tx_hash == mempool_tx.tx_hash || tx_hash == null_hash)
                 {
-                    transaction tx;
+                    found_txs.push_back(mempool_tx);
 
-                    if (!xmreg::make_tx_from_json(_tx_info.tx_json, tx))
-                    {
-                        cerr << "Cant make tx from _tx_info.tx_json" << endl;
-                        continue;
-                    }
-
-                    if (mem_tx_hash != get_transaction_hash(tx))
-                    {
-                        cerr << "Hash of reconstructed tx from json does not match "
-                                "what we should get!"
-                             << endl;
-                        continue;
-                    }
-
-                    if (tx_hash == mem_tx_hash || tx_hash == null_hash)
-                    {
-                        found_txs.push_back(make_pair(_tx_info, tx));
-
-                        if (tx_hash != null_hash)
-                            break;
-                    }
-
-                } //  if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
+                    if (tx_hash != null_hash)
+                        break;
+                }
 
             } // for (size_t i = 0; i < mempool_txs.size(); ++i)
-
 
             return true;
         }
@@ -5735,35 +5861,33 @@ namespace xmreg
         bool
         get_monero_network_info(json& j_info)
         {
-            COMMAND_RPC_GET_INFO::response network_info;
-
-            if (!rpc.get_network_info(network_info))
-            {
-                return false;
-            }
+            MempoolStatus::network_info local_copy_network_info
+                = MempoolStatus::current_network_info;
 
             j_info = json {
-               {"status"                    , network_info.status},
-               {"height"                    , network_info.height},
-               {"target_height"             , network_info.target_height},
-               {"difficulty"                , network_info.difficulty},
-               {"target"                    , network_info.target},
-               {"hash_rate"                 , (network_info.difficulty/network_info.target)},
-               {"tx_count"                  , network_info.tx_count},
-               {"tx_pool_size"              , network_info.tx_pool_size},
-               {"alt_blocks_count"          , network_info.alt_blocks_count},
-               {"outgoing_connections_count", network_info.outgoing_connections_count},
-               {"incoming_connections_count", network_info.incoming_connections_count},
-               {"white_peerlist_size"       , network_info.white_peerlist_size},
-               {"grey_peerlist_size"        , network_info.grey_peerlist_size},
-               {"testnet"                   , network_info.testnet},
-               {"top_block_hash"            , network_info.top_block_hash},
-               {"cumulative_difficulty"     , network_info.cumulative_difficulty},
-               {"block_size_limit"          , network_info.block_size_limit},
-               {"start_time"                , network_info.start_time}
+               {"status"                    , local_copy_network_info.current},
+               {"current"                   , local_copy_network_info.current},
+               {"height"                    , local_copy_network_info.height},
+               {"target_height"             , local_copy_network_info.target_height},
+               {"difficulty"                , local_copy_network_info.difficulty},
+               {"target"                    , local_copy_network_info.target},
+               {"hash_rate"                 , local_copy_network_info.hash_rate},
+               {"tx_count"                  , local_copy_network_info.tx_count},
+               {"tx_pool_size"              , local_copy_network_info.tx_pool_size},
+               {"alt_blocks_count"          , local_copy_network_info.alt_blocks_count},
+               {"outgoing_connections_count", local_copy_network_info.outgoing_connections_count},
+               {"incoming_connections_count", local_copy_network_info.incoming_connections_count},
+               {"white_peerlist_size"       , local_copy_network_info.white_peerlist_size},
+               {"grey_peerlist_size"        , local_copy_network_info.grey_peerlist_size},
+               {"testnet"                   , local_copy_network_info.testnet},
+               {"top_block_hash"            , pod_to_hex(local_copy_network_info.top_block_hash)},
+               {"cumulative_difficulty"     , local_copy_network_info.cumulative_difficulty},
+               {"block_size_limit"          , local_copy_network_info.block_size_limit},
+               {"start_time"                , local_copy_network_info.start_time},
+               {"fee_per_kb"                , local_copy_network_info.fee_per_kb}
             };
 
-            return true;
+            return local_copy_network_info.current;
         }
 
         bool
@@ -5794,7 +5918,10 @@ namespace xmreg
                     {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
                     {"last_git_commit_date", string {GIT_COMMIT_DATETIME}},
                     {"git_branch_name"     , string {GIT_BRANCH_NAME}},
-                    {"monero_version_full" , string {MONERO_VERSION_FULL}}
+                    {"monero_version_full" , string {MONERO_VERSION_FULL}},
+                    {"api"                 , std::to_string(ONIONEXPLORER_RPC_VERSION_MAJOR)
+                                             + "."
+                                             + std::to_string(ONIONEXPLORER_RPC_VERSION_MINOR)},
             };
 
             string footer_html = mstch::render(xmreg::read(TMPL_FOOTER), footer_context);

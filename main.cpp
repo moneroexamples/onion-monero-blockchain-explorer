@@ -1,10 +1,11 @@
 #define CROW_ENABLE_SSL
 
-#include "ext/crow/crow.h"
 
+#include "src/page.h"
+
+#include "ext/crow/crow.h"
 #include "src/CmdLineOptions.h"
 #include "src/MicroCore.h"
-#include "src/page.h"
 
 #include <fstream>
 #include <regex>
@@ -49,15 +50,14 @@ main(int ac, const char* av[])
     auto no_blocks_on_index_opt        = opts.get_option<string>("no-blocks-on-index");
     auto testnet_url                   = opts.get_option<string>("testnet-url");
     auto mainnet_url                   = opts.get_option<string>("mainnet-url");
-    auto network_info_timeout_opt      = opts.get_option<string>("network-info-timeout");
     auto mempool_info_timeout_opt      = opts.get_option<string>("mempool-info-timeout");
+    auto mempool_refresh_time_opt      = opts.get_option<string>("mempool-refresh-time");
     auto testnet_opt                   = opts.get_option<bool>("testnet");
     auto enable_key_image_checker_opt  = opts.get_option<bool>("enable-key-image-checker");
     auto enable_output_key_checker_opt = opts.get_option<bool>("enable-output-key-checker");
     auto enable_autorefresh_option_opt = opts.get_option<bool>("enable-autorefresh-option");
     auto enable_pusher_opt             = opts.get_option<bool>("enable-pusher");
     auto enable_mixin_details_opt      = opts.get_option<bool>("enable-mixin-details");
-    auto enable_mempool_cache_opt      = opts.get_option<bool>("enable-mempool-cache");
     auto enable_json_api_opt           = opts.get_option<bool>("enable-json-api");
     auto enable_tx_cache_opt           = opts.get_option<bool>("enable-tx-cache");
     auto enable_block_cache_opt        = opts.get_option<bool>("enable-block-cache");
@@ -72,7 +72,6 @@ main(int ac, const char* av[])
     bool enable_autorefresh_option    {*enable_autorefresh_option_opt};
     bool enable_output_key_checker    {*enable_output_key_checker_opt};
     bool enable_mixin_details         {*enable_mixin_details_opt};
-    bool enable_mempool_cache         {*enable_mempool_cache_opt};
     bool enable_json_api              {*enable_json_api_opt};
     bool enable_tx_cache              {*enable_tx_cache_opt};
     bool enable_block_cache           {*enable_block_cache_opt};
@@ -155,22 +154,20 @@ main(int ac, const char* av[])
         deamon_url = "http:://127.0.0.1:28081";
     }
 
-    uint64_t network_info_timeout {1000};
     uint64_t mempool_info_timeout {5000};
+
     try
     {
-        network_info_timeout = boost::lexical_cast<uint64_t>(*network_info_timeout_opt);
         mempool_info_timeout = boost::lexical_cast<uint64_t>(*mempool_info_timeout_opt);
 
     }
     catch (boost::bad_lexical_cast &e)
     {
-        cout << "Cant cast " << (*network_info_timeout_opt)
-             << " or/and "   << (*mempool_info_timeout_opt) <<" into numbers. Using default values."
+        cout << "Cant cast " << (*mempool_info_timeout_opt) <<" into numbers. Using default values."
              << endl;
-
     }
 
+    uint64_t mempool_refresh_time {10};
 
 
     if (enable_emission_monitor == true)
@@ -204,6 +201,36 @@ main(int ac, const char* av[])
         xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
     }
 
+
+    xmreg::MempoolStatus::blockchain_path
+            = blockchain_path;
+    xmreg::MempoolStatus::testnet
+            = testnet;
+    xmreg::MempoolStatus::deamon_url
+            = deamon_url;
+    xmreg::MempoolStatus::set_blockchain_variables(
+            &mcore, core_storage);
+
+
+    try
+    {
+        mempool_refresh_time = boost::lexical_cast<uint64_t>(*mempool_refresh_time_opt);
+
+    }
+    catch (boost::bad_lexical_cast &e)
+    {
+        cout << "Cant cast " << (*mempool_refresh_time_opt)
+             <<" into number. Using default value."
+             << endl;
+    }
+
+    // launch the status monitoring thread so that it keeps track of blockchain
+    // info, e.g., current height. Information from this thread is used
+    // by tx searching threads that are launched for each user independently,
+    // when they log back or create new account.
+    xmreg::MempoolStatus::mempool_refresh_time = mempool_refresh_time;
+    xmreg::MempoolStatus::start_mempool_status_thread();
+
     // create instance of page class which
     // contains logic for the website
     xmreg::page xmrblocks(&mcore,
@@ -215,12 +242,10 @@ main(int ac, const char* av[])
                           enable_output_key_checker,
                           enable_autorefresh_option,
                           enable_mixin_details,
-                          enable_mempool_cache,
                           enable_tx_cache,
                           enable_block_cache,
                           show_cache_times,
                           no_blocks_on_index,
-                          network_info_timeout,
                           mempool_info_timeout,
                           *testnet_url,
                           *mainnet_url);
@@ -406,6 +431,17 @@ main(int ac, const char* av[])
         return xmrblocks.mempool(true);
     });
 
+    // alias to  "/mempool"
+    CROW_ROUTE(app, "/txpool")
+    ([&](const crow::request& req) {
+        return xmrblocks.mempool(true);
+    });
+
+//    CROW_ROUTE(app, "/altblocks")
+//    ([&](const crow::request& req) {
+//        return xmrblocks.altblocks();
+//    });
+
     CROW_ROUTE(app, "/robots.txt")
     ([&]() {
         string text = "User-agent: *\n"
@@ -531,6 +567,45 @@ main(int ac, const char* av[])
 
             return r;
         });
+
+        CROW_ROUTE(app, "/api/outputsblocks").methods("GET"_method)
+        ([&](const crow::request &req) {
+
+            string limit = regex_search(req.raw_url, regex {"limit=\\d+"}) ?
+                           req.url_params.get("limit") : "3";
+
+            string address = regex_search(req.raw_url, regex {"address=\\w+"}) ?
+                             req.url_params.get("address") : "";
+
+            string viewkey = regex_search(req.raw_url, regex {"viewkey=\\w+"}) ?
+                             req.url_params.get("viewkey") : "";
+
+            bool in_mempool_aswell {false};
+
+            try
+            {
+                in_mempool_aswell = regex_search(req.raw_url, regex {"mempool=[01]"}) ?
+                           boost::lexical_cast<bool>(req.url_params.get("mempool")) :
+                           false;
+            }
+            catch (const boost::bad_lexical_cast &e)
+            {
+                cerr << "Cant parse tx_prove as bool. Using default value" << endl;
+            }
+
+            myxmr::jsonresponse r{xmrblocks.json_outputsblocks(limit, address, viewkey, in_mempool_aswell)};
+
+            return r;
+        });
+
+        CROW_ROUTE(app, "/api/version")
+        ([&](const crow::request &req) {
+
+            myxmr::jsonresponse r{xmrblocks.json_version()};
+
+            return r;
+        });
+
     }
 
     if (enable_autorefresh_option)
@@ -561,11 +636,23 @@ main(int ac, const char* av[])
     if (enable_emission_monitor == true)
     {
         // finish Emission monitoring thread in a cotrolled manner.
+
+        cout << "Waiting for emission monitoring thread to finish." << endl;
+
         xmreg::CurrentBlockchainStatus::m_thread.interrupt();
         xmreg::CurrentBlockchainStatus::m_thread.join();
 
-        cout << "Emission monitoring thread joined." << endl;
+        cout << "Emission monitoring thread finished." << endl;
     }
+
+    // finish mempool thread
+
+    cout << "Waiting for mempool monitoring thread to finish." << endl;
+
+    xmreg::MempoolStatus::m_thread.interrupt();
+    xmreg::MempoolStatus::m_thread.join();
+
+    cout << "Mempool monitoring thread finished." << endl;
 
     cout << "The explorer is terminating." << endl;
 

@@ -14,7 +14,7 @@ set(SOURCE_FILES
 		CmdLineOptions.cpp
 		page.h
 		rpccalls.cpp rpccalls.h
-		version.h.in CurrentBlockchainStatus.cpp)
+		version.h.in CurrentBlockchainStatus.cpp MempoolStatus.cpp MempoolStatus.h)
 
 # make static library called libmyxrm
 # that we are going to link to

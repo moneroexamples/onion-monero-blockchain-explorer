@@ -156,7 +156,7 @@ namespace crow
             struct Wrapped
             {
                 template <typename ... Args>
-                void set(Func f, typename std::enable_if<
+                void set2(Func f, typename std::enable_if<
                     !std::is_same<typename std::tuple_element<0, std::tuple<Args..., void>>::type, const request&>::value
                 , int>::type = 0)
                 {
@@ -190,7 +190,7 @@ namespace crow
                 };
 
                 template <typename ... Args>
-                void set(Func f, typename std::enable_if<
+                void set2(Func f, typename std::enable_if<
                         std::is_same<typename std::tuple_element<0, std::tuple<Args..., void>>::type, const request&>::value &&
                         !std::is_same<typename std::tuple_element<1, std::tuple<Args..., void, void>>::type, response&>::value
                         , int>::type = 0)
@@ -205,7 +205,7 @@ namespace crow
                 }
 
                 template <typename ... Args>
-                void set(Func f, typename std::enable_if<
+                void set2(Func f, typename std::enable_if<
                         std::is_same<typename std::tuple_element<0, std::tuple<Args..., void>>::type, const request&>::value &&
                         std::is_same<typename std::tuple_element<1, std::tuple<Args..., void, void>>::type, response&>::value
                         , int>::type = 0)
@@ -394,7 +394,7 @@ namespace crow
 #else
         template <typename Func, unsigned ... Indices>
 #endif
-        std::function<void(const request&, response&, const routing_params&)> 
+        std::function<void(const request&, response&, const routing_params&)>
         wrap(Func f, black_magic::seq<Indices...>)
         {
 #ifdef CROW_MSVC_WORKAROUND
@@ -403,16 +403,14 @@ namespace crow
             using function_t = utility::function_traits<Func>;
 #endif
             if (!black_magic::is_parameter_tag_compatible(
-                black_magic::get_parameter_tag_runtime(rule_.c_str()), 
+                black_magic::get_parameter_tag_runtime(rule_.c_str()),
                 black_magic::compute_parameter_tag_from_args_list<
                     typename function_t::template arg<Indices>...>::value))
             {
                 throw std::runtime_error("route_dynamic: Handler type is mismatched with URL parameters: " + rule_);
             }
             auto ret = detail::routing_handler_call_helper::Wrapped<Func, typename function_t::template arg<Indices>...>();
-            ret.template set<
-                typename function_t::template arg<Indices>...
-            >(std::move(f));
+            ret.template set2<typename function_t::template arg<Indices>...>(std::move(f));
             return ret;
         }
 

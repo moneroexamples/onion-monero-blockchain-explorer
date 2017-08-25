@@ -13,9 +13,10 @@
 #define REMOVE_HASH_BRAKETS(a_hash) \
     a_hash.substr(1, a_hash.size()-2)
 
+
+
 #include "monero_headers.h"
 
-#include "../ext/infix_iterator.h"
 #include "../ext/fmt/ostream.h"
 #include "../ext/fmt/format.h"
 #include "../ext/json.hpp"
@@ -23,14 +24,14 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 
 #include <string>
 #include <vector>
-#include <array>
 #include <iterator>
 #include <algorithm>
+#include <type_traits>
+
 
 /**
  * Some helper functions used in the example.
@@ -45,9 +46,6 @@ namespace xmreg
     using namespace std;
 
     namespace bf = boost::filesystem;
-    namespace pt = boost::posix_time;
-    namespace gt = boost::gregorian;
-    namespace lt = boost::local_time;
 
     using json = nlohmann::json;
 
@@ -139,7 +137,7 @@ namespace xmreg
             vector<pair<txout_to_key, uint64_t>>& output_pub_keys,
             vector<txin_to_key>& input_key_imgs);
 
-// this version for mempool txs from json
+    // this version for mempool txs from json
     array<uint64_t, 6>
     summary_of_in_out_rct(const json& _json);
 
@@ -216,29 +214,10 @@ namespace xmreg
     read(string filename);
 
 
-
-/**
- * prints an iterable such as vector
- */
-    template<typename T>
-    void print_iterable(const T & elems) {
-
-        infix_ostream_iterator<typename T::value_type>
-                oiter(std::cout, ",");
-
-        std::cout << "[";
-        std::copy(elems.begin(), elems.end(),oiter);
-        std::cout << "]" << std::endl;
-    }
-
     pair<string, double>
     timestamps_time_scale(const vector<uint64_t>& timestamps,
                           uint64_t timeN, uint64_t resolution = 80,
                           uint64_t time0 = 1397818193 /* timestamp of the second block */);
-
-
-    time_t
-    ptime_to_time_t(const pt::ptime& in_ptime);
 
     bool
     decode_ringct(const rct::rctSig & rv,
