@@ -115,7 +115,6 @@ set(LIBRARIES
         crypto
         ssl)
 
-
 if(APPLE)
     set(LIBRARIES ${LIBRARIES} "-framework IOKit")
 else()

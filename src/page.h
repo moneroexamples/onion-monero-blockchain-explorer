@@ -5276,7 +5276,7 @@ namespace xmreg
                     {"tx_size"               , fmt::format("{:0.4f}",
                                                            static_cast<double>(txd.size) / 1024.0)},
                     {"tx_fee"                , xmreg::xmr_amount_to_str(txd.fee)},
-                    {"tx_version"            , txd.version},
+                    {"tx_version"            , static_cast<uint64_t>(txd.version)},
                     {"blk_timestamp"         , blk_timestamp},
                     {"blk_timestamp_uint"    , blk.timestamp},
                     {"delta_time"            , age.first},
