@@ -71,19 +71,20 @@ The key features of the Onion Monero Blockchain Explorer are:
  - no javascript, no cookies, no web analytics trackers, no images,
  - open sourced,
  - made fully in C++,
- - the only explorer showing encrypted payments ID,
- - the only explorer showing ring signatures,
- - the only explorer showing transaction extra field,
- - the only explorer showing public components of Monero addresses,
- - the only explorer that can show which outputs and mixins belong to the given Monero address and viewkey,
- - the only explorer that can be used to prove that you send Monero to someone,
- - the only explorer showing detailed information about mixins, such as, mixins'
+ - showing encrypted payments ID,
+ - showing ring signatures,
+ - showing transaction extra field,
+ - showing public components of Monero addresses,
+ - decoding which outputs and mixins belong to the given Monero address and viewkey,
+ - can prove that you send Monero to someone,
+ - detailed information about mixins, such as, mixins'
  age, timescale, mixin of mixins,
- - the only explorer showing number of amount output indices,
- - the only explorer supporting Monero testnet network,
- - the only explorer providing tx checker and pusher for online pushing of transactions,
- - the only explorer able to estimate possible spendings based on address and viewkey,
- - the only explorer that can provide total amount of all miner fees.
+ - showing number of amount output indices,
+ - support Monero testnet network,
+ - tx checker and pusher for online pushing of transactions,
+ - estimate possible spendings based on address and viewkey,
+ - can provide total amount of all miner fees.
+ - decoding encrypted payment id.
 
 
 ## Compilation on Ubuntu 16.04
@@ -196,7 +197,7 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         for network info availability
   --mempool-info-timeout arg (=5000)    maximum time, in milliseconds, to wait 
                                         for mempool data for the front page
-  --mempool-refresh-time arg (=10)      time, in seconds, for each refresh of 
+  --mempool-refresh-time arg (=5)       time, in seconds, for each refresh of 
                                         mempool state
   -b [ --bc-path ] arg                  path to lmdb folder of the blockchain, 
                                         e.g., ~/.bitmonero/lmdb
@@ -289,7 +290,7 @@ The explorer has JSON api. For the API, it uses conventions defined by [JSend](h
 #### api/transaction/<tx_hash>
 
 ```bash
-curl  -w "\n" -X GET "http://139.162.32.245:8081/api/transaction/6093260dbe79fd6277694d14789dc8718f1bd54457df8bab338c2efa3bb0f03d"
+curl  -w "\n" -X GET "http://127.0.0.1:8081/api/transaction/6093260dbe79fd6277694d14789dc8718f1bd54457df8bab338c2efa3bb0f03d"
 ```
 
 Partial results shown:
@@ -351,7 +352,7 @@ Transactions in last 25 blocks
 
 
 ```bash
-curl  -w "\n" -X GET "http://139.162.32.245:8081/api/transactions"
+curl  -w "\n" -X GET "http://127.0.0.1:8081/api/transactions"
 ```
 
 Partial results shown:
@@ -401,7 +402,7 @@ Partial results shown:
 
 
 ```bash
-curl  -w "\n" -X GET "http://139.162.32.245:8081/api/transactions?page=2&limit=10"
+curl  -w "\n" -X GET "http://127.0.0.1:8081/api/transactions?page=2&limit=10"
 ```
 
 Result analogical to the one above.
@@ -451,7 +452,7 @@ Partial results shown:
 Return all txs in the mempool.
 
 ```bash
-curl  -w "\n" -X GET "http://139.162.32.245:8081/api/mempool"
+curl  -w "\n" -X GET "http://127.0.0.1:8081/api/mempool"
 ```
 
 Partial results shown:
@@ -494,7 +495,7 @@ if no specific limit given.
 Return number of newest mempool txs, e.g., only 10.
 
 ```bash
-curl  -w "\n" -X GET "http://139.162.32.245:8081/api/mempool?limit=10"
+curl  -w "\n" -X GET "http://127.0.0.1:8081/api/mempool?limit=10"
 ```
 
 Result analogical to the one above.
@@ -502,7 +503,7 @@ Result analogical to the one above.
 #### api/search/<block_number|tx_hash|block_hash>
 
 ```bash
-curl  -w "\n" -X GET "http://139.162.32.245:8081/api/search/1293669"
+curl  -w "\n" -X GET "http://127.0.0.1:8081/api/search/1293669"
 ```
 
 Partial results shown:
@@ -550,7 +551,7 @@ Checking outputs:
 
 ```bash
 # we use here official Monero project's donation address as an example
-curl  -w "\n" -X GET "http://139.162.32.245:8081/api/outputs?txhash=17049bc5f2d9fbca1ce8dae443bbbbed2fc02f1ee003ffdd0571996905faa831&address=44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGv7SqSsaBYBb98uNbr2VBBEt7f2wfn3RVGQBEP3A&viewkey=f359631075708155cc3d92a32b75a7d02a5dcf27756707b47a2b31b21c389501&txprove=0"
+curl  -w "\n" -X GET "http://127.0.0.1:8081/api/outputs?txhash=17049bc5f2d9fbca1ce8dae443bbbbed2fc02f1ee003ffdd0571996905faa831&address=44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGv7SqSsaBYBb98uNbr2VBBEt7f2wfn3RVGQBEP3A&viewkey=f359631075708155cc3d92a32b75a7d02a5dcf27756707b47a2b31b21c389501&txprove=0"
 ```
 
 ```json
@@ -586,7 +587,7 @@ For the viewkey, we use `tx_private_key` (although the GET variable is still cal
 
 ```bash
 # this is for testnet transaction 
-curl  -w "\n" -X GET "http://139.162.32.245:8082/api/outputs?txhash=94782a8c0aa8d8768afa0c040ef0544b63eb5148ca971a024ac402cad313d3b3&address=9wUf8UcPUtb2huK7RphBw5PFCyKosKxqtGxbcKBDnzTCPrdNfJjLjtuht87zhTgsffCB21qmjxjj18Pw7cBnRctcKHrUB7N&viewkey=e94b5bfc599d2f741d6f07e3ab2a83f915e96fb374dfb2cd3dbe730e34ecb40b&txprove=1"
+curl  -w "\n" -X GET "http://127.0.0.1:8082/api/outputs?txhash=94782a8c0aa8d8768afa0c040ef0544b63eb5148ca971a024ac402cad313d3b3&address=9wUf8UcPUtb2huK7RphBw5PFCyKosKxqtGxbcKBDnzTCPrdNfJjLjtuht87zhTgsffCB21qmjxjj18Pw7cBnRctcKHrUB7N&viewkey=e94b5bfc599d2f741d6f07e3ab2a83f915e96fb374dfb2cd3dbe730e34ecb40b&txprove=1"
 ```
 
 ```json
@@ -621,7 +622,7 @@ Result analogical to the one above.
 #### api/networkinfo
 
 ```bash
-curl  -w "\n" -X GET "http://139.162.32.245:8081/api/networkinfo"
+curl  -w "\n" -X GET "http://127.0.0.1:8081/api/networkinfo"
 ```
 
 ```json
@@ -709,7 +710,7 @@ Example result:
 #### api/emission
 
 ```bash
-curl  -w "\n" -X GET "http://139.162.32.245:8081/api/emission"
+curl  -w "\n" -X GET "http://127.0.0.1:8081/api/emission"
 ```
 
 ```json
@@ -728,7 +729,7 @@ Emission only works when the emission monitoring thread is enabled.
 #### api/version
 
 ```bash
-curl  -w "\n" -X GET "http://139.162.32.245:8081/api/version"
+curl  -w "\n" -X GET "http://127.0.0.1:8081/api/version"
 ```
 
 ```json
