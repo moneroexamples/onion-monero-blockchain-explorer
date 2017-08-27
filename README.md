@@ -26,7 +26,7 @@ Monero C++ libraries, but also demonstrates how to use:
 Tor users:
  
  - [http://dvwae436pd7nt4bc.onion](http://dvwae436pd7nt4bc.onion) (Front-end templates are [maintained by @suhz](https://github.com/suhz/onion-monero-blockchain-explorer/tree/moneroexplorer.com/src/templates)).
- - [http://libwh5lvouddzei4.onion/] - bleading edge version.
+ - [http://libwh5lvouddzei4.onion/](http://libwh5lvouddzei4.onion/) - bleeding edge version.
   
 Clearnet versions:
 
@@ -193,8 +193,6 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         page to mainnet explorer
   --no-blocks-on-index arg (=10)        number of last blocks to be shown on 
                                         index page
-  --network-info-timeout arg (=1000)    maximum time, in milliseconds, to wait 
-                                        for network info availability
   --mempool-info-timeout arg (=5000)    maximum time, in milliseconds, to wait 
                                         for mempool data for the front page
   --mempool-refresh-time arg (=5)       time, in seconds, for each refresh of 
@@ -213,10 +211,10 @@ Example usage, defined as bash aliases.
 
 ```bash
 # for mainnet explorer
-alias xmrblocksmainnet='~/onion-monero-blockchain-explorer/build/xmrblocks    --port 8081 --no-blocks-on-index 24 --testnet-url "http://139.162.32.245:8082" --enable-pusher --enable-emission-monitor'
+alias xmrblocksmainnet='~/onion-monero-blockchain-explorer/build/xmrblocks    --port 8081 --testnet-url "http://139.162.32.245:8082" --enable-pusher --enable-emission-monitor'
 
 # for testnet explorer
-alias xmrblockstestnet='~/onion-monero-blockchain-explorer/build/xmrblocks -t --port 8082 --no-blocks-on-index 24 --mainnet-url "http://139.162.32.245:8081" --enable-pusher --enable-emission-monitor'
+alias xmrblockstestnet='~/onion-monero-blockchain-explorer/build/xmrblocks -t --port 8082 --mainnet-url "http://139.162.32.245:8081" --enable-pusher --enable-emission-monitor'
 ```
 
 These are aliases similar to those used for http://139.162.32.245:8081/ and http://139.162.32.245:8082/, respectively.
