@@ -253,6 +253,12 @@ main(int ac, const char* av[])
     // crow instance
     crow::SimpleApp app;
 
+    // get domian url based on the request
+    auto get_domain = [&use_ssl](crow::request const& req) {
+        return (use_ssl ? "https://" : "http://")
+               + req.get_header_value("Host");
+    };
+
     CROW_ROUTE(app, "/")
     ([&](const crow::request& req) {
         return crow::response(xmrblocks.index2());
@@ -304,8 +310,22 @@ main(int ac, const char* av[])
         // using tx pusher
         string raw_tx_data = post_body["raw_tx_data"];
 
+        string domain      =  get_domain(req);
+
         return xmrblocks.show_my_outputs(tx_hash, xmr_address,
-                                         viewkey, raw_tx_data);
+                                         viewkey, raw_tx_data,
+                                         domain);
+    });
+
+    CROW_ROUTE(app, "/myoutputs/<string>/<string>/<string>")
+    ([&](const crow::request& req, string tx_hash,
+         string xmr_address, string viewkey) {
+
+        string domain = get_domain(req);
+
+        return xmrblocks.show_my_outputs(tx_hash, xmr_address,
+                                         viewkey, string {},
+                                         domain);
     });
 
     CROW_ROUTE(app, "/prove").methods("POST"_method)
@@ -326,7 +346,21 @@ main(int ac, const char* av[])
             string tx_prv_key  = post_body["txprvkey"];;
             string xmr_address = post_body["xmraddress"];;
 
-            return xmrblocks.show_prove(tx_hash, xmr_address, tx_prv_key);
+            string domain      = get_domain(req);
+
+            return xmrblocks.show_prove(tx_hash, xmr_address,
+                                        tx_prv_key, domain);
+    });
+
+
+    CROW_ROUTE(app, "/prove/<string>/<string>/<string>")
+    ([&](const crow::request& req, string tx_hash,
+         string xmr_address, string tx_prv_key) {
+
+        string domain = get_domain(req);
+
+        return xmrblocks.show_prove(tx_hash, xmr_address,
+                                    tx_prv_key, domain);
     });
 
     if (enable_pusher)
