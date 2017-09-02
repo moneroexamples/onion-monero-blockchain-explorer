@@ -1412,6 +1412,7 @@ namespace xmreg
                         string xmr_address_str,
                         string viewkey_str, /* or tx_prv_key_str when tx_prove == true */
                         string raw_tx_data,
+                        string domain,
                         bool tx_prove = false)
         {
 
@@ -1595,6 +1596,11 @@ namespace xmreg
             string pid_str   = pod_to_hex(txd.payment_id);
             string pid8_str  = pod_to_hex(txd.payment_id8);
 
+            string shortcut_url = domain
+                                  + (tx_prove ? "/prove" : "/myoutputs")
+                                  + "/" + tx_hash_str
+                                  + "/" + xmr_address_str
+                                  + "/" + viewkey_str;
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
@@ -1616,7 +1622,8 @@ namespace xmreg
                     {"payment_id"           , pid_str},
                     {"payment_id8"          , pid8_str},
                     {"decrypted_payment_id8", string{}},
-                    {"tx_prove"             , tx_prove}
+                    {"tx_prove"             , tx_prove},
+                    {"shortcut_url"         , shortcut_url}
             };
 
             string server_time_str = xmreg::timestamp_to_str_gm(server_timestamp, "%F");
@@ -2096,12 +2103,14 @@ namespace xmreg
         string
         show_prove(string tx_hash_str,
                    string xmr_address_str,
-                   string tx_prv_key_str)
+                   string tx_prv_key_str,
+                   string domain)
         {
             string raw_tx_data {""}; // not using it in prove tx. only for outputs
 
             return show_my_outputs(tx_hash_str, xmr_address_str,
-                                   tx_prv_key_str, raw_tx_data, true);
+                                   tx_prv_key_str, raw_tx_data,
+                                   domain, true);
         }
 
         string
