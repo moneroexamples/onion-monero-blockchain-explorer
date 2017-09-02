@@ -32,20 +32,12 @@ Clearnet versions:
 
  - [http://139.162.32.245:8081/](http://139.162.32.245:8081/) - down for now.
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
- - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
- - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
- - [https://MoneroExplorer.com/](https://moneroexplorer.com/) - nice looking one, https enabled.   
-
-  
-Clearnet versions:
-
- - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
- - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
- - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
  - [https://MoneroExplorer.com/](https://moneroexplorer.com/) - nice looking one, https enabled.
+ - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
+ - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one. 
+ - [https://moneroexplorer.pro/](https://moneroexplorer.pro/) - nice looking one, https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
- - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.
-
+ - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
   
 Clearnet testnet Monero version:
 
