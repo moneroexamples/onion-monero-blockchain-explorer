@@ -81,7 +81,7 @@ The key features of the Onion Monero Blockchain Explorer are:
 
 ## Compilation on Ubuntu 16.04
 
-##### Compile latest Monero
+##### Compile latest Monero release v0.11
 
 Download and compile recent Monero into your home folder:
 
@@ -98,10 +98,14 @@ git clone https://github.com/monero-project/monero
 
 cd monero/
 
+# checkout last monero version
+git checkout -b last_release v0.11.0.0
+
 make
 ```
 
 ##### Compile and run the explorer
+
 Once the Monero is compiles, the explorer can be downloaded and compiled
 as follows:
 
