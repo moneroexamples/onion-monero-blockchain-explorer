@@ -1605,13 +1605,20 @@ namespace xmreg
                                   + "/" + xmr_address_str
                                   + "/" + viewkey_str;
 
+
+            string viewkey_str_partial = viewkey_str;
+
+            // dont show full private keys. Only file first and last letters
+            for (size_t i = 3; i < viewkey_str_partial.length() - 2; ++i)
+                viewkey_str_partial[i] = '*';
+
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"testnet"              , testnet},
                     {"tx_hash"              , tx_hash_str},
                     {"tx_prefix_hash"       , pod_to_hex(txd.prefix_hash)},
                     {"xmr_address"          , xmr_address_str},
-                    {"viewkey"              , viewkey_str},
+                    {"viewkey"              , viewkey_str_partial},
                     {"tx_pub_key"           , pod_to_hex(txd.pk)},
                     {"blk_height"           , tx_blk_height_str},
                     {"tx_size"              , fmt::format("{:0.4f}",
