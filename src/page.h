@@ -30,6 +30,7 @@
 #include <limits>
 #include <ctime>
 #include <future>
+#include <regex>
 
 #define TMPL_DIR                    "./templates"
 #define TMPL_PARIALS_DIR            TMPL_DIR "/partials"
@@ -139,6 +140,8 @@ namespace xmreg
 
         crypto::hash  payment_id  = null_hash; // normal
         crypto::hash8 payment_id8 = null_hash8; // encrypted
+
+        string payment_id_as_ascii;
 
         std::vector<std::vector<crypto::signature>> signatures;
 
@@ -5274,6 +5277,9 @@ namespace xmreg
 
             string tx_json = obj_to_json_str(tx);
 
+            // use this regex to remove all non friendly characters in payment_id_as_ascii string
+            static std::regex e {"[^a-zA-Z0-9 ./\\\\!]"};
+
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"testnet"               , testnet},
@@ -5296,6 +5302,7 @@ namespace xmreg
                     {"has_payment_id8"       , txd.payment_id8 != null_hash8},
                     {"confirmations"         , txd.no_confirmations},
                     {"payment_id"            , pid_str},
+                    {"payment_id_as_ascii"   , std::regex_replace(txd.payment_id_as_ascii, e, " ")},
                     {"payment_id8"           , pid8_str},
                     {"extra"                 , txd.get_extra_str()},
                     {"with_ring_signatures"  , static_cast<bool>(
@@ -5731,6 +5738,11 @@ namespace xmreg
             txd.size = get_object_blobsize(tx);
 
             txd.extra = tx.extra;
+
+            if (txd.payment_id != null_hash)
+            {
+                txd.payment_id_as_ascii = std::string(txd.payment_id.data, crypto::HASH_SIZE);
+            }
 
             // get tx signatures for each input
             txd.signatures = tx.signatures;
