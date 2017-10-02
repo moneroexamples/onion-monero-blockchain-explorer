@@ -101,6 +101,7 @@ set(LIBRARIES
         cryptonote_basic
         daemonizer
         cncrypto
+
         blocks
         lmdb
         ringct
@@ -108,6 +109,8 @@ set(LIBRARIES
         mnemonics
         epee
         easylogging
+        checkpoints
+        version
         ${Boost_LIBRARIES}
         pthread
         unbound
