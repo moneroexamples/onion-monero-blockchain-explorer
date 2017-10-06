@@ -182,6 +182,18 @@ MempoolStatus::read_mempool()
             last_tx.txsize          = fmt::format("{:0.2f}",
                                           static_cast<double>(_tx_info.blob_size)/1024.0);
 
+            last_tx.pID             = '-';
+
+            crypto::hash payment_id;
+            crypto::hash8 payment_id8;
+
+            get_payment_id(tx, payment_id, payment_id8);
+
+            if (payment_id != null_hash)
+                last_tx.pID = 'l'; // legacy payment id
+            else if (payment_id8 != null_hash8)
+                last_tx.pID = 'e'; // encrypted payment id
+
         } // if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
 
     } // for (size_t i = 0; i < mempool_tx_info.size(); ++i)

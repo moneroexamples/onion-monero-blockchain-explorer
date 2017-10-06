@@ -134,6 +134,9 @@ namespace xmreg
         uint64_t size;
         uint64_t blk_height;
         size_t   version;
+        char     pID; // '-' - no payment ID,
+                      // 'l' - legacy, long 64 character payment id,
+                      // 'e' - encrypted, short, from integrated addresses
         uint64_t unlock_time;
         uint64_t no_confirmations;
         vector<uint8_t> extra;
@@ -188,6 +191,7 @@ namespace xmreg
                     {"version"           , static_cast<uint64_t>(version)},
                     {"has_payment_id"    , payment_id  != null_hash},
                     {"has_payment_id8"   , payment_id8 != null_hash8},
+                    {"pID"               , string {pID}},
                     {"payment_id"        , pod_to_hex(payment_id)},
                     {"confirmations"     , no_confirmations},
                     {"extra"             , get_extra_str()},
@@ -885,6 +889,7 @@ namespace xmreg
                         {"xmr_outputs"     , mempool_tx.xmr_outputs_str},
                         {"no_inputs"       , mempool_tx.no_inputs},
                         {"no_outputs"      , mempool_tx.no_outputs},
+                        {"pID"             , string {mempool_tx.pID}},
                         {"no_nonrct_inputs", mempool_tx.num_nonrct_inputs},
                         {"mixin"           , mempool_tx.mixin_no},
                         {"txsize"          , mempool_tx.txsize}
@@ -5756,6 +5761,8 @@ namespace xmreg
                 }
             }
 
+            txd.pID = '-'; // no payment ID
+
             get_payment_id(tx, txd.payment_id, txd.payment_id8);
 
             // get tx size in bytes
@@ -5766,6 +5773,11 @@ namespace xmreg
             if (txd.payment_id != null_hash)
             {
                 txd.payment_id_as_ascii = std::string(txd.payment_id.data, crypto::HASH_SIZE);
+                txd.pID = 'l'; // legacy payment id
+            }
+            else if (txd.payment_id8 != null_hash8)
+            {
+                txd.pID = 'e'; // encrypted payment id
             }
 
             // get tx signatures for each input
