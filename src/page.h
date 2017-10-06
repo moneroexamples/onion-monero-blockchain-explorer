@@ -817,7 +817,7 @@ namespace xmreg
             {
                 // get only first no_of_mempool_tx txs
                 mempool_txs = MempoolStatus::get_mempool_txs(no_of_mempool_tx);
-                no_of_mempool_tx = std::min(no_of_mempool_tx, mempool_txs.size());
+                no_of_mempool_tx = std::min<uint64_t>(no_of_mempool_tx, mempool_txs.size());
             }
 
             // total size of mempool in bytes
@@ -945,7 +945,7 @@ namespace xmreg
                 cerr << "rpc.get_alt_blocks(atl_blks_hashes) failed" << endl;
             }
 
-            context.emplace("no_alt_blocks", atl_blks_hashes.size());
+            context.emplace("no_alt_blocks", (uint64_t)atl_blks_hashes.size());
 
             for (const string& alt_blk_hash: atl_blks_hashes)
             {
@@ -2774,84 +2774,101 @@ namespace xmreg
         {
             clean_post_data(raw_tx_data);
 
-            string decoded_raw_tx_data = epee::string_encoding::base64_decode(raw_tx_data);
-
-            const size_t magiclen = strlen(SIGNED_TX_PREFIX);
-
-            string data_prefix = xmreg::make_printable(decoded_raw_tx_data.substr(0, magiclen));
-
             // initalize page template context map
             mstch::map context {
                     {"testnet"              , testnet},
                     {"have_raw_tx"          , true},
                     {"has_error"            , false},
                     {"error_msg"            , string {}},
-                    {"data_prefix"          , data_prefix},
             };
-            context.emplace("txs", mstch::array{});
 
             // add header and footer
             string full_page = template_file["pushrawtx"];
 
             add_css_style(context);
 
-            if (strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
+            std::vector<tools::wallet2::pending_tx> ptx_vector;
+
+            // first try reading raw_tx_data as a raw hex string
+            std::string tx_blob;
+            cryptonote::transaction parsed_tx;
+            crypto::hash parsed_tx_hash, parsed_tx_prefixt_hash;
+            if (epee::string_tools::parse_hexstr_to_binbuff(raw_tx_data, tx_blob) && parse_and_validate_tx_from_blob(tx_blob, parsed_tx, parsed_tx_hash, parsed_tx_prefixt_hash))
             {
-                string error_msg = fmt::format("The data does not appear to be signed raw tx! Data prefix: {:s}",
-                                               data_prefix);
+                ptx_vector.push_back({});
+                ptx_vector.back().tx = parsed_tx;
+            }
+            // if failed, treat raw_tx_data as base64 encoding of signed_monero_tx
+            else
+            {
+                string decoded_raw_tx_data = epee::string_encoding::base64_decode(raw_tx_data);
 
-                context["has_error"] = true;
-                context["error_msg"] = error_msg;
+                const size_t magiclen = strlen(SIGNED_TX_PREFIX);
 
-                return mstch::render(full_page, context);
+                string data_prefix = xmreg::make_printable(decoded_raw_tx_data.substr(0, magiclen));
+
+                context["data_prefix"] = data_prefix;
+
+                if (strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
+                {
+                    string error_msg = fmt::format("The data does not appear to be signed raw tx! Data prefix: {:s}",
+                                                   data_prefix);
+
+                    context["has_error"] = true;
+                    context["error_msg"] = error_msg;
+
+                    return mstch::render(full_page, context);
+                }
+
+                if (this->enable_pusher == false)
+                {
+                    string error_msg = fmt::format(
+                            "Pushing disabled!\n "
+                                    "Run explorer with --enable-pusher flag to enable it.");
+
+                    context["has_error"] = true;
+                    context["error_msg"] = error_msg;
+
+                    return mstch::render(full_page, context);
+                }
+
+                bool r {false};
+
+                string s = decoded_raw_tx_data.substr(magiclen);
+
+                ::tools::wallet2::signed_tx_set signed_txs;
+
+                try
+                {
+                    std::istringstream iss(s);
+                    boost::archive::portable_binary_iarchive ar(iss);
+                    ar >> signed_txs;
+
+                    r = true;
+                }
+                catch (...)
+                {
+                    cerr << "Failed to parse signed tx data " << endl;
+                }
+
+
+                if (!r)
+                {
+                    string error_msg = fmt::format("Deserialization of signed tx data NOT successful! "
+                                                           "Maybe its not base64 encoded?");
+
+                    context["has_error"] = true;
+                    context["error_msg"] = error_msg;
+
+                    return mstch::render(full_page, context);
+                }
+
+                ptx_vector = signed_txs.ptx;
             }
 
-            if (this->enable_pusher == false)
-            {
-                string error_msg = fmt::format(
-                        "Pushing disabled!\n "
-                                "Run explorer with --enable-pusher flag to enable it.");
-
-                context["has_error"] = true;
-                context["error_msg"] = error_msg;
-
-                return mstch::render(full_page, context);
-            }
-
-            bool r {false};
-
-            string s = decoded_raw_tx_data.substr(magiclen);
-
-            ::tools::wallet2::signed_tx_set signed_txs;
-
-            try
-            {
-                std::istringstream iss(s);
-                boost::archive::portable_binary_iarchive ar(iss);
-                ar >> signed_txs;
-
-                r = true;
-            }
-            catch (...)
-            {
-                cerr << "Failed to parse signed tx data " << endl;
-            }
-
-
-            if (!r)
-            {
-                string error_msg = fmt::format("Deserialization of signed tx data NOT successful! "
-                                                       "Maybe its not base64 encoded?");
-
-                context["has_error"] = true;
-                context["error_msg"] = error_msg;
-
-                return mstch::render(full_page, context);
-            }
+            context.emplace("txs", mstch::array{});
 
             mstch::array& txs = boost::get<mstch::array>(context["txs"]);
-
-            std::vector<tools::wallet2::pending_tx> ptx_vector = signed_txs.ptx;
 
             // actually commit the transactions
             while (!ptx_vector.empty())
@@ -4724,7 +4741,7 @@ namespace xmreg
             }
 
             // maxium five last blocks
-            no_of_last_blocks = std::min(no_of_last_blocks, 5ul);
+            no_of_last_blocks = std::min<uint64_t>(no_of_last_blocks, 5ul);
 
             if (address_str.empty())
             {
