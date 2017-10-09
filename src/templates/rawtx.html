@@ -8,12 +8,15 @@
 
     <div class="center">
         <form action="/checkandpush" method="post" style="width:100%; margin-top:15px" class="style-1">
-            Paste base64 encoded, unsigned or signed transaction data here<br/>
+            Paste here either a hex string of raw transaction (the <tt>tx_blob</tt> response in the wallet RPC, or the <tt>raw_monero_tx</tt> file saved by the wallet CLI with <tt>--do-not-relay</tt> option specified),<br/>
+            or base64 encoded, unsigned or signed transaction data<br/>
             (In Linux, can get base64 signed raw tx data: <i>base64 signed_monero_tx | xclip -selection clipboard</i>)<br/>
             (In Windows, can get base64 signed raw tx data: <i>certutil.exe -encode -f signed_monero_tx encoded.txt & type "encoded.txt" | clip</i>)<br/>
             <textarea name="rawtxdata" rows="20" cols="80"></textarea>
             <br/>
             Note: data is sent to the server, as the calculations are done on the server side
+            <br/>
+            Note: "check" does not work for the hex string of raw transaction
             <br/>
             <input type="submit" name="action" value="check">
             &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp;
