@@ -80,14 +80,14 @@ namespace xmreg
 
     bool
     parse_str_address(const string& address_str,
-                      account_public_address& address,
+                      address_parse_info& address_info,
                       bool testnet = false);
 
     inline bool
     is_separator(char c);
 
     string
-    print_address(const account_public_address& address,
+    print_address(const address_parse_info& address,
                   bool testnet = false);
 
     string
@@ -103,7 +103,7 @@ namespace xmreg
     timestamp_to_str_gm(time_t timestamp, const char* format = "%F %T");
 
     ostream&
-    operator<< (ostream& os, const account_public_address& addr);
+    operator<< (ostream& os, const address_parse_info& addr_info);
 
 
     string

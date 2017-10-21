@@ -77,11 +77,11 @@ namespace xmreg
  */
     bool
     parse_str_address(const string& address_str,
-                      account_public_address& address,
+                      address_parse_info& address_info,
                       bool testnet)
     {
 
-        if (!get_account_address_from_str(address, testnet, address_str))
+        if (!get_account_address_from_str(address_info, testnet, address_str))
         {
             cerr << "Error getting address: " << address_str << endl;
             return false;
@@ -95,9 +95,11 @@ namespace xmreg
  * Return string representation of monero address
  */
     string
-    print_address(const account_public_address& address, bool testnet)
+    print_address(const address_parse_info& address_info, bool testnet)
     {
-        return "<" + get_account_address_as_str(testnet, address) + ">";
+        return "<" + get_account_address_as_str(
+                testnet, address_info.is_subaddress, address_info.address)
+               + ">";
     }
 
     string
@@ -176,9 +178,9 @@ namespace xmreg
     }
 
     ostream&
-    operator<< (ostream& os, const account_public_address& addr)
+    operator<< (ostream& os, const address_parse_info& addr_info)
     {
-        os << get_account_address_as_str(false, addr);
+        os << get_account_address_as_str(false, addr_info.is_subaddress, addr_info.address);
         return os;
     }
 
