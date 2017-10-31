@@ -38,6 +38,7 @@ Clearnet versions:
  - [https://moneroexplorer.pro/](https://moneroexplorer.pro/) - nice looking one, https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
+ - [http://atesti.mooo.com:8081/](http://atesti.mooo.com:8081/) - Proof of Existence built with Monero and IPFS. 
   
 Clearnet testnet Monero version:
 
