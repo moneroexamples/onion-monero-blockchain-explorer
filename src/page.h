@@ -3454,7 +3454,7 @@ namespace xmreg
 
                 bool testnet_addr {false};
 
-                if (search_text[0] == '9' || search_text[0] == 'A')
+                if (search_text[0] == '9' || search_text[0] == 'A' || search_text[0] == 'B')
                     testnet_addr = true;
 
                 if (!xmreg::parse_str_address(search_text, address_info, testnet_addr))
@@ -3467,31 +3467,26 @@ namespace xmreg
                 return show_address_details(address_info, testnet_addr);
             }
 
-//            // check if integrated monero address is given based on its length
-//            // if yes, then show its public components search tx based on encrypted id
-//            @todo does not work with integrated address for now
-//            if (search_str_length == 106)
-//            {
-//
-//                cryptonote::account_public_address address;
-//
-//                bool has_payment_id;
-//
-//                crypto::hash8 encrypted_payment_id;
-//
-//                if (!get_account_integrated_address_from_str(address_info.address,
-//                                                             has_payment_id,
-//                                                             encrypted_payment_id,
-//                                                             testnet,
-//                                                             search_text))
-//                {
-//                    cerr << "Cant parse string integerated address: " << search_text << endl;
-//                    return string("Cant parse address (probably incorrect format): ")
-//                           + search_text;
-//                }
-//
-//                return show_integrated_address_details(address_info.address, encrypted_payment_id, testnet);
-//            }
+            // check if integrated monero address is given based on its length
+            // if yes, then show its public components search tx based on encrypted id
+            if (search_str_length == 106)
+            {
+
+                cryptonote::account_public_address address;
+
+                address_parse_info address_info;
+
+                if (!get_account_address_from_str(address_info, testnet, search_text))
+                {
+                    cerr << "Cant parse string integerated address: " << search_text << endl;
+                    return string("Cant parse address (probably incorrect format): ")
+                           + search_text;
+                }
+
+                return show_integrated_address_details(address_info,
+                                                       address_info.payment_id,
+                                                       testnet);
+            }
 
             // all_possible_tx_hashes was field using custom lmdb database
             // it was dropped, so all_possible_tx_hashes will be alwasy empty
