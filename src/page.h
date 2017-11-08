@@ -1146,7 +1146,7 @@ namespace xmreg
 
             // add total fees in the block to the context
             context["sum_fees"]
-                    = xmreg::xmr_amount_to_str(sum_fees, "{:0.6f}");
+                    = xmreg::xmr_amount_to_str(sum_fees, "{:0.6f}", "0");
 
             // get xmr in the block reward
             context["blk_reward"]
@@ -1628,7 +1628,7 @@ namespace xmreg
                     {"blk_height"           , tx_blk_height_str},
                     {"tx_size"              , fmt::format("{:0.4f}",
                                                           static_cast<double>(txd.size) / 1024.0)},
-                    {"tx_fee"               , xmreg::xmr_amount_to_str(txd.fee)},
+                    {"tx_fee"               , xmreg::xmr_amount_to_str(txd.fee, "{:0.12f}", true)},
                     {"blk_timestamp"        , blk_timestamp},
                     {"delta_time"           , age.first},
                     {"outputs_no"           , static_cast<uint64_t>(txd.output_pub_keys.size())},
@@ -4978,7 +4978,7 @@ namespace xmreg
 
                 string emission_blk_no   = std::to_string(current_values.blk_no - 1);
                 string emission_coinbase = xmr_amount_to_str(current_values.coinbase, "{:0.3f}");
-                string emission_fee      = xmr_amount_to_str(current_values.fee, "{:0.3f}");
+                string emission_fee      = xmr_amount_to_str(current_values.fee, "{:0.3f}", false);
 
                 j_data = json {
                         {"blk_no"  , current_values.blk_no - 1},
@@ -5329,7 +5329,7 @@ namespace xmreg
                     {"tx_blk_height"         , tx_blk_height},
                     {"tx_size"               , fmt::format("{:0.4f}",
                                                            static_cast<double>(txd.size) / 1024.0)},
-                    {"tx_fee"                , xmreg::xmr_amount_to_str(txd.fee)},
+                    {"tx_fee"                , xmreg::xmr_amount_to_str(txd.fee, "{:0.12f}", false)},
                     {"tx_version"            , static_cast<uint64_t>(txd.version)},
                     {"blk_timestamp"         , blk_timestamp},
                     {"blk_timestamp_uint"    , blk.timestamp},
