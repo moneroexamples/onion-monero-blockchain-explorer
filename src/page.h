@@ -126,6 +126,7 @@ namespace xmreg
         crypto::hash hash;
         crypto::hash prefix_hash;
         crypto::public_key pk;
+        std::vector<crypto::public_key> additional_pks;
         uint64_t xmr_inputs;
         uint64_t xmr_outputs;
         uint64_t num_nonrct_inputs;
@@ -1469,10 +1470,21 @@ namespace xmreg
             // parse string representing given private key
             crypto::secret_key prv_view_key;
 
-            if (!xmreg::parse_str_secret_key(viewkey_str, prv_view_key))
+            std::vector<crypto::secret_key> multiple_tx_secret_keys;
+
+            if (!xmreg::parse_str_secret_key(viewkey_str, multiple_tx_secret_keys))
             {
                 cerr << "Cant parse the private key: " << viewkey_str << endl;
                 return string("Cant parse private key: " + viewkey_str);
+            }
+            if (multiple_tx_secret_keys.size() == 1)
+            {
+                prv_view_key = multiple_tx_secret_keys[0];
+            }
+            else if (!tx_prove)
+            {
+                cerr << "Concatenated secret keys are only for tx proving!" << endl;
+                return string("Concatenated secret keys are only for tx proving!");
             }
 
 
@@ -1648,18 +1660,37 @@ namespace xmreg
             // public transaction key is combined with our viewkey
             // to create, so called, derived key.
             key_derivation derivation;
+            std::vector<key_derivation> additional_derivations(txd.additional_pks.size());
+
+            //cout << multiple_tx_secret_keys.size() << " " <<  txd.additional_pks.size() + 1 << '\n';
+
+            if (tx_prove && multiple_tx_secret_keys.size() != txd.additional_pks.size() + 1)
+            {
+                return string("This transaction includes additional tx pubkeys whose size doesn't match with the provided tx secret keys");
+            }
 
             public_key pub_key = tx_prove ? address_info.address.m_view_public_key : txd.pk;
 
             //cout << "txd.pk: " << pod_to_hex(txd.pk) << endl;
 
-            if (!generate_key_derivation(pub_key, prv_view_key, derivation))
+            if (!generate_key_derivation(pub_key, tx_prove ? multiple_tx_secret_keys[0] : prv_view_key, derivation))
             {
                 cerr << "Cant get derived key for: "  << "\n"
                      << "pub_tx_key: " << pub_key << " and "
                      << "prv_view_key" << prv_view_key << endl;
 
                 return string("Cant get key_derivation");
+            }
+            for (size_t i = 0; i < txd.additional_pks.size(); ++i)
+            {
+                if (!generate_key_derivation(tx_prove ? pub_key : txd.additional_pks[i], tx_prove ? multiple_tx_secret_keys[i + 1] : prv_view_key, additional_derivations[i]))
+                {
+                    cerr << "Cant get derived key for: "  << "\n"
+                         << "pub_tx_key: " << txd.additional_pks[i] << " and "
+                         << "prv_view_key" << prv_view_key << endl;
+
+                    return string("Cant get key_derivation");
+                }
             }
 
             // decrypt encrypted payment id, as used in integreated addresses
@@ -1701,6 +1732,16 @@ namespace xmreg
 
                 // check if generated public key matches the current output's key
                 bool mine_output = (outp.first.key == tx_pubkey);
+                bool with_additional = false;
+                if (!mine_output && txd.additional_pks.size() == txd.output_pub_keys.size())
+                {
+                    derive_public_key(additional_derivations[output_idx],
+                                      output_idx,
+                                      address_info.address.m_spend_public_key,
+                                      tx_pubkey);
+                    mine_output = (outp.first.key == tx_pubkey);
+                    with_additional = true;
+                }
 
                 // if mine output has RingCT, i.e., tx version is 2
                 if (mine_output && tx.version == 2)
@@ -1716,8 +1757,7 @@ namespace xmreg
                         bool r;
 
                         r = decode_ringct(tx.rct_signatures,
-                                          pub_key,
-                                          prv_view_key,
+                                          with_additional ? additional_derivations[output_idx] : derivation,
                                           output_idx,
                                           tx.rct_signatures.ecdhInfo[output_idx].mask,
                                           rct_amount);
@@ -1888,12 +1928,14 @@ namespace xmreg
 
                     public_key mixin_tx_pub_key
                             = xmreg::get_tx_pub_key_from_received_outs(mixin_tx);
+                    std::vector<public_key> mixin_additional_tx_pub_keys = cryptonote::get_additional_tx_pub_keys_from_extra(mixin_tx);
 
                     string mixin_tx_pub_key_str = pod_to_hex(mixin_tx_pub_key);
 
                     // public transaction key is combined with our viewkey
                     // to create, so called, derived key.
                     key_derivation derivation;
+                    std::vector<key_derivation> additional_derivations(mixin_additional_tx_pub_keys.size());
 
                     if (!generate_key_derivation(mixin_tx_pub_key, prv_view_key, derivation))
                     {
@@ -1902,6 +1944,17 @@ namespace xmreg
                              << "prv_view_key" << prv_view_key << endl;
 
                         continue;
+                    }
+                    for (size_t i = 0; i < mixin_additional_tx_pub_keys.size(); ++i)
+                    {
+                        if (!generate_key_derivation(mixin_additional_tx_pub_keys[i], prv_view_key, additional_derivations[i]))
+                        {
+                            cerr << "Cant get derived key for: "  << "\n"
+                                 << "pub_tx_key: " << mixin_additional_tx_pub_keys[i] << " and "
+                                 << "prv_view_key" << prv_view_key << endl;
+        
+                            continue;
+                        }
                     }
 
                     //          <public_key  , amount  , out idx>
@@ -1953,6 +2006,16 @@ namespace xmreg
 
                         // check if generated public key matches the current output's key
                         bool mine_output = (txout_k.key == tx_pubkey_generated);
+                        bool with_additional = false;
+                        if (!mine_output && mixin_additional_tx_pub_keys.size() == output_pub_keys.size())
+                        {
+                            derive_public_key(additional_derivations[output_idx_in_tx],
+                                              output_idx_in_tx,
+                                              address_info.address.m_spend_public_key,
+                                              tx_pubkey_generated);
+                            mine_output = (txout_k.key == tx_pubkey_generated);
+                            with_additional = true;
+                        }
 
 
                         if (mine_output && mixin_tx.version == 2)
@@ -1967,8 +2030,7 @@ namespace xmreg
                                 bool r;
 
                                 r = decode_ringct(mixin_tx.rct_signatures,
-                                                  mixin_tx_pub_key,
-                                                  prv_view_key,
+                                                  with_additional ? additional_derivations[output_idx_in_tx] : derivation,
                                                   output_idx_in_tx,
                                                   mixin_tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask,
                                                   rct_amount);
@@ -3308,6 +3370,7 @@ namespace xmreg
                     }
 
                     public_key tx_pub_key = xmreg::get_tx_pub_key_from_received_outs(tx);
+                    std::vector<public_key> additional_tx_pub_keys = cryptonote::get_additional_tx_pub_keys_from_extra(tx);
 
                     // cointbase txs have amounts in plain sight.
                     // so use amount from ringct, only for non-coinbase txs
@@ -3316,6 +3379,12 @@ namespace xmreg
 
                         bool r = decode_ringct(tx.rct_signatures,
                                                tx_pub_key,
+                                               prv_view_key,
+                                               td.m_internal_output_index,
+                                               tx.rct_signatures.ecdhInfo[td.m_internal_output_index].mask,
+                                               xmr_amount);
+                        r = r || decode_ringct(tx.rct_signatures,
+                                               additional_tx_pub_keys[td.m_internal_output_index],
                                                prv_view_key,
                                                td.m_internal_output_index,
                                                tx.rct_signatures.ecdhInfo[td.m_internal_output_index].mask,
@@ -4627,6 +4696,7 @@ namespace xmreg
             // public transaction key is combined with our viewkey
             // to create, so called, derived key.
             key_derivation derivation;
+            std::vector<key_derivation> additional_derivations(txd.additional_pks.size());
 
             public_key pub_key = tx_prove ? address_info.address.m_view_public_key : txd.pk;
 
@@ -4637,6 +4707,15 @@ namespace xmreg
                 j_response["status"]  = "error";
                 j_response["message"] = "Cant calculate key_derivation";
                 return j_response;
+            }
+            for (size_t i = 0; i < txd.additional_pks.size(); ++i)
+            {
+                if (!generate_key_derivation(txd.additional_pks[i], prv_view_key, additional_derivations[i]))
+                {
+                    j_response["status"]  = "error";
+                    j_response["message"] = "Cant calculate key_derivation";
+                    return j_response;
+                }
             }
 
             uint64_t output_idx {0};
@@ -4661,6 +4740,16 @@ namespace xmreg
 
                 // check if generated public key matches the current output's key
                 bool mine_output = (outp.first.key == tx_pubkey);
+                bool with_additional = false;
+                if (!mine_output && txd.additional_pks.size() == txd.output_pub_keys.size())
+                {
+                    derive_public_key(additional_derivations[output_idx],
+                                      output_idx,
+                                      address_info.address.m_spend_public_key,
+                                      tx_pubkey);
+                    mine_output = (outp.first.key == tx_pubkey);
+                    with_additional = true;
+                }
 
                 // if mine output has RingCT, i.e., tx version is 2
                 if (mine_output && tx.version == 2)
@@ -4676,8 +4765,7 @@ namespace xmreg
                         bool r;
 
                         r = decode_ringct(tx.rct_signatures,
-                                          pub_key,
-                                          prv_view_key,
+                                          with_additional ? additional_derivations[output_idx] : derivation,
                                           output_idx,
                                           tx.rct_signatures.ecdhInfo[output_idx].mask,
                                           rct_amount);
@@ -5081,6 +5169,16 @@ namespace xmreg
                     return false;
                 }
 
+                std::vector<key_derivation> additional_derivations(txd.additional_pks.size());
+                for (size_t i = 0; i < txd.additional_pks.size(); ++i)
+                {
+                    if (!generate_key_derivation(txd.additional_pks[i], prv_view_key, additional_derivations[i]))
+                    {
+                        error_msg = "Cant calculate key_derivation";
+                        return false;
+                    }
+                }
+
                 uint64_t output_idx{0};
 
                 std::vector<uint64_t> money_transfered(tx.vout.size(), 0);
@@ -5103,6 +5201,16 @@ namespace xmreg
 
                     // check if generated public key matches the current output's key
                     bool mine_output = (outp.first.key == tx_pubkey);
+                    bool with_additional = false;
+                    if (!mine_output && txd.additional_pks.size() == txd.output_pub_keys.size())
+                    {
+                        derive_public_key(additional_derivations[output_idx],
+                                          output_idx,
+                                          address.m_spend_public_key,
+                                          tx_pubkey);
+                        mine_output = (outp.first.key == tx_pubkey);
+                        with_additional = true;
+                    }
 
                     // if mine output has RingCT, i.e., tx version is 2
                     if (mine_output && tx.version == 2)
@@ -5120,8 +5228,7 @@ namespace xmreg
                             rct::key mask = tx.rct_signatures.ecdhInfo[output_idx].mask;
 
                             r = decode_ringct(tx.rct_signatures,
-                                              txd.pk,
-                                              prv_view_key,
+                                              with_additional ? additional_derivations[output_idx] : derivation,
                                               output_idx,
                                               mask,
                                               rct_amount);
@@ -5747,6 +5854,7 @@ namespace xmreg
             // due to previous bug with sining txs:
             // https://github.com/monero-project/monero/pull/1358/commits/7abfc5474c0f86e16c405f154570310468b635c2
             txd.pk = xmreg::get_tx_pub_key_from_received_outs(tx);
+            txd.additional_pks = cryptonote::get_additional_tx_pub_keys_from_extra(tx);
 
 
             // sum xmr in inputs and ouputs in the given tx
