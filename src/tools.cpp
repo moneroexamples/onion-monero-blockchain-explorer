@@ -904,18 +904,28 @@ namespace xmreg
                   rct::key & mask,
                   uint64_t & amount)
     {
+        crypto::key_derivation derivation;
+
+        bool r = crypto::generate_key_derivation(pub, sec, derivation);
+
+        if (!r)
+        {
+            cerr <<"Failed to generate key derivation to decode rct output " << i << endl;
+            return false;
+        }
+
+        return decode_ringct(rv, derivation, i, mask, amount);
+    }
+
+    bool
+    decode_ringct(const rct::rctSig& rv,
+                  const crypto::key_derivation &derivation,
+                  unsigned int i,
+                  rct::key & mask,
+                  uint64_t & amount)
+    {
         try
         {
-            crypto::key_derivation derivation;
-
-            bool r = crypto::generate_key_derivation(pub, sec, derivation);
-
-            if (!r)
-            {
-                cerr <<"Failed to generate key derivation to decode rct output " << i << endl;
-                return false;
-            }
-
             crypto::secret_key scalar1;
 
             crypto::derivation_to_scalar(derivation, i, scalar1);
