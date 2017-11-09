@@ -1666,14 +1666,17 @@ namespace xmreg
 
             if (tx_prove && multiple_tx_secret_keys.size() != txd.additional_pks.size() + 1)
             {
-                return string("This transaction includes additional tx pubkeys whose size doesn't match with the provided tx secret keys");
+                return string("This transaction includes additional tx pubkeys whose "
+                               "size doesn't match with the provided tx secret keys");
             }
 
             public_key pub_key = tx_prove ? address_info.address.m_view_public_key : txd.pk;
 
             //cout << "txd.pk: " << pod_to_hex(txd.pk) << endl;
 
-            if (!generate_key_derivation(pub_key, tx_prove ? multiple_tx_secret_keys[0] : prv_view_key, derivation))
+            if (!generate_key_derivation(pub_key,
+                                         tx_prove ? multiple_tx_secret_keys[0] : prv_view_key,
+                                         derivation))
             {
                 cerr << "Cant get derived key for: "  << "\n"
                      << "pub_tx_key: " << pub_key << " and "
@@ -1681,9 +1684,12 @@ namespace xmreg
 
                 return string("Cant get key_derivation");
             }
+
             for (size_t i = 0; i < txd.additional_pks.size(); ++i)
             {
-                if (!generate_key_derivation(tx_prove ? pub_key : txd.additional_pks[i], tx_prove ? multiple_tx_secret_keys[i + 1] : prv_view_key, additional_derivations[i]))
+                if (!generate_key_derivation(tx_prove ? pub_key : txd.additional_pks[i],
+                                             tx_prove ? multiple_tx_secret_keys[i + 1] : prv_view_key,
+                                             additional_derivations[i]))
                 {
                     cerr << "Cant get derived key for: "  << "\n"
                          << "pub_tx_key: " << txd.additional_pks[i] << " and "
@@ -1732,14 +1738,18 @@ namespace xmreg
 
                 // check if generated public key matches the current output's key
                 bool mine_output = (outp.first.key == tx_pubkey);
+
                 bool with_additional = false;
+
                 if (!mine_output && txd.additional_pks.size() == txd.output_pub_keys.size())
                 {
                     derive_public_key(additional_derivations[output_idx],
                                       output_idx,
                                       address_info.address.m_spend_public_key,
                                       tx_pubkey);
+
                     mine_output = (outp.first.key == tx_pubkey);
+
                     with_additional = true;
                 }
 
