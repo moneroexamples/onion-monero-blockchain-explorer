@@ -9,6 +9,7 @@
 #include "monero_headers.h"
 
 #include <mutex>
+#include <utility>
 
 
 
@@ -23,7 +24,7 @@ struct has_destructor
 {
     // has destructor
     template <typename A>
-    static std::true_type test(decltype(declval<A>().~A()) *)
+    static std::true_type test(decltype(std::declval<A>().~A()) *)
     {
         return std::true_type();
     }
