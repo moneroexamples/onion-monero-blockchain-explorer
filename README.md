@@ -80,6 +80,14 @@ The key features of the Onion Monero Blockchain Explorer are:
  - decoding encrypted payment id.
 
 
+## Development branch
+
+Current development branch, which includes support for sub-addresses is:
+
+ - https://github.com/moneroexamples/onion-monero-blockchain-explorer/tree/devel
+ 
+ 
+
 ## Compilation on Ubuntu 16.04
 
 ##### Compile latest Monero release v0.11
