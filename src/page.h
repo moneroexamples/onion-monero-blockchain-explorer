@@ -2191,9 +2191,9 @@ namespace xmreg
         show_prove(string tx_hash_str,
                    string xmr_address_str,
                    string tx_prv_key_str,
+                   string const& raw_tx_data,
                    string domain)
         {
-            string raw_tx_data {""}; // not using it in prove tx. only for outputs
 
             return show_my_outputs(tx_hash_str, xmr_address_str,
                                    tx_prv_key_str, raw_tx_data,

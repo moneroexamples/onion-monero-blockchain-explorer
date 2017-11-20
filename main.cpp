@@ -342,14 +342,18 @@ main(int ac, const char* av[])
                                       "tx hash not provided");
             }
 
-            string tx_hash     = post_body["txhash"];;
-            string tx_prv_key  = post_body["txprvkey"];;
-            string xmr_address = post_body["xmraddress"];;
+            string tx_hash     = post_body["txhash"];
+            string tx_prv_key  = post_body["txprvkey"];
+            string xmr_address = post_body["xmraddress"];
+
+            // this will be only not empty when checking raw tx data
+            // using tx pusher
+            string raw_tx_data = post_body["raw_tx_data"];
 
             string domain      = get_domain(req);
 
             return xmrblocks.show_prove(tx_hash, xmr_address,
-                                        tx_prv_key, domain);
+                                        tx_prv_key, raw_tx_data, domain);
     });
 
 
@@ -360,7 +364,7 @@ main(int ac, const char* av[])
         string domain = get_domain(req);
 
         return xmrblocks.show_prove(tx_hash, xmr_address,
-                                    tx_prv_key, domain);
+                                    tx_prv_key, string {}, domain);
     });
 
     if (enable_pusher)
