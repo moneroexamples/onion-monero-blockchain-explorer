@@ -78,6 +78,7 @@ The key features of the Onion Monero Blockchain Explorer are:
  - estimate possible spendings based on address and viewkey,
  - can provide total amount of all miner fees.
  - decoding encrypted payment id.
+ - decoding outputs and proving txs sent to sub-address.
 
 
 ## Compilation on Ubuntu 16.04
@@ -98,9 +99,6 @@ cd ~
 git clone https://github.com/monero-project/monero
 
 cd monero/
-
-# checkout last monero version
-git checkout -b last_release v0.11.1.0
 
 make
 ```
