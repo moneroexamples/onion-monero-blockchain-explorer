@@ -83,7 +83,7 @@ The key features of the Onion Monero Blockchain Explorer are:
 
 ## Compilation on Ubuntu 16.04
 
-##### Compile latest Monero release v0.11
+##### Compile latest Monero development version
 
 Download and compile recent Monero into your home folder:
 
