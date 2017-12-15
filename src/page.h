@@ -3129,7 +3129,7 @@ namespace xmreg
 
             context["data_prefix"] = data_prefix;
 
-            if (!strncmp(decoded_raw_data.c_str(), KEY_IMAGE_EXPORT_FILE_MAGIC, magiclen) == 0)
+            if (strncmp(decoded_raw_data.c_str(), KEY_IMAGE_EXPORT_FILE_MAGIC, magiclen) != 0)
             {
                 string error_msg = fmt::format("This does not seem to be key image export data.");
 
@@ -3274,7 +3274,7 @@ namespace xmreg
 
             context["data_prefix"] = data_prefix;
 
-            if (!strncmp(decoded_raw_data.c_str(), OUTPUT_EXPORT_FILE_MAGIC, magiclen) == 0)
+            if (strncmp(decoded_raw_data.c_str(), OUTPUT_EXPORT_FILE_MAGIC, magiclen) != 0)
             {
                 string error_msg = fmt::format("This does not seem to be output keys export data.");
 
