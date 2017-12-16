@@ -918,11 +918,11 @@ namespace xmreg
     }
 
     bool
-    decode_ringct(const rct::rctSig& rv,
-                  const crypto::key_derivation &derivation,
+    decode_ringct(rct::rctSig const& rv,
+                  crypto::key_derivation const& derivation,
                   unsigned int i,
-                  rct::key & mask,
-                  uint64_t & amount)
+                  rct::key& mask,
+                  uint64_t& amount)
     {
         try
         {
@@ -933,25 +933,27 @@ namespace xmreg
             switch (rv.type)
             {
                 case rct::RCTTypeSimple:
+                case rct::RCTTypeSimpleBulletproof:
                     amount = rct::decodeRctSimple(rv,
                                                   rct::sk2rct(scalar1),
                                                   i,
                                                   mask);
                     break;
                 case rct::RCTTypeFull:
+                case rct::RCTTypeFullBulletproof:
                     amount = rct::decodeRct(rv,
                                             rct::sk2rct(scalar1),
                                             i,
                                             mask);
                     break;
                 default:
-                    cerr << "Unsupported rct type: " << rv.type << endl;
+                    cerr << "Unsupported rct type: " << rv.type << '\n';
                     return false;
             }
         }
         catch (...)
         {
-            cerr << "Failed to decode input " << i << endl;
+            cerr << "Failed to decode input " << i << '\n';
             return false;
         }
 
