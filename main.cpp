@@ -392,6 +392,7 @@ main(int ac, const char* av[])
                 return xmrblocks.show_checkrawtx(raw_tx_data, action);
             else if (action == "push")
                 return xmrblocks.show_pushrawtx(raw_tx_data, action);
+            return string("Provided action is neither check nor push");
 
         });
     }
