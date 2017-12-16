@@ -1203,7 +1203,7 @@ namespace xmreg
         }
 
 
-        // cout << "\n\n  j.dump()" << j.dump(4) << endl;
+         cout << "\n\n  j.dump()" << j.dump(4) << '\n';
 
         // get version and unlock time from json
         tx.version     = j["version"].get<size_t>();
@@ -1401,7 +1401,8 @@ namespace xmreg
                 last_range_sig.asig = asig;
 
                 memcpy(&(last_range_sig.Ci), &(key64_contained.Ci), sizeof(rct::key64));
-            }
+
+            } // for (json& range_s: j["rctsig_prunable"]["rangeSigs"])
 
             vector<rct::mgSig>& mg_sigs = rctsig_prunable.MGs;
 
@@ -1441,7 +1442,11 @@ namespace xmreg
                 }
 
                 mg_sigs.push_back(new_mg_sig);
-            }
+            } // for (json& a_mgs: j["rctsig_prunable"]["MGs"])
+
+            //std::vector<Bulletproof>& bulletproof = rctsig_prunable.bulletproofs;
+
+
 
         } // j.find("rctsig_prunable") != j.end()
 
