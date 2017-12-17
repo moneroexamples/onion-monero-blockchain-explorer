@@ -35,48 +35,48 @@ MempoolStatus::start_mempool_status_thread()
          {
              uint64_t loop_index {0};
 
-             // so that network status is checked every minute
-             uint64_t loop_index_divider = std::max<uint64_t>(1, 60 / mempool_refresh_time);
+            // so that network status is checked every minute
+            uint64_t loop_index_divider = std::max<uint64_t>(1, 60 / mempool_refresh_time);
 
-             while (true)
+            while (true)
+            {
+
+             // we just query network status every minute. No sense
+             // to do it as frequently as getting mempool data.
+             if (loop_index % loop_index_divider == 0)
              {
-
-                 // we just query network status every minute. No sense
-                 // to do it as frequently as getting mempool data.
-                 if (loop_index % loop_index_divider == 0)
+                 if (!MempoolStatus::read_network_info())
                  {
-                     if (!MempoolStatus::read_network_info())
-                     {
-                         network_info local_copy = current_network_info;
+                     network_info local_copy = current_network_info;
 
-                         cerr << " Cant read network info "<< endl;
+                     cerr << " Cant read network info "<< endl;
 
-                         local_copy.current = false;
+                     local_copy.current = false;
 
-                         current_network_info = local_copy;
-                     }
-                     else
-                     {
-                         cout << "Current network info read, ";
-                         loop_index = 0;
-                     }
+                     current_network_info = local_copy;
                  }
-
-                 if (MempoolStatus::read_mempool())
+                 else
                  {
-                     vector<mempool_tx> current_mempool_txs = get_mempool_txs();
-
-                     cout << "mempool status txs: "
-                          << current_mempool_txs.size()
-                          << endl;
+                     cout << "Current network info read, ";
+                     loop_index = 0;
                  }
+             }
 
-                 // when we reach top of the blockchain, update
-                 // the emission amount every minute.
-                 boost::this_thread::sleep_for(
-                         boost::chrono::seconds(mempool_refresh_time));
+             if (MempoolStatus::read_mempool())
+             {
+                 vector<mempool_tx> current_mempool_txs = get_mempool_txs();
 
-                 ++loop_index;
+                 cout << "mempool status txs: "
+                      << current_mempool_txs.size()
+                      << endl;
+             }
+
+             // when we reach top of the blockchain, update
+             // the emission amount every minute.
+             boost::this_thread::sleep_for(
+                     boost::chrono::seconds(mempool_refresh_time));
+
+             ++loop_index;
 
              } // while (true)
          }
@@ -84,7 +84,7 @@ MempoolStatus::start_mempool_status_thread()
          {
              cout << "Mempool status thread interrupted." << endl;
              return;
-         }
+        }
 
         }}; //  m_thread = boost::thread{[]()
 
@@ -136,7 +136,6 @@ MempoolStatus::read_mempool()
             cerr << "Cant make tx from _tx_info.tx_blob" << endl;
             return false;
         }
-
 
         mempool_size_kB += _tx_info.blob_size;
 
