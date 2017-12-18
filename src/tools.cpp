@@ -1010,18 +1010,18 @@ parse_crow_post_data(const string& req_body)
     bool result = url_decode(req_body, tmp);
     if (result)
     {
-        boost::algorithm::split(vec, tmp, [](char x) {return x == '&'; });
+        boost::algorithm::split(vec, tmp,
+            [](char x) {return x == '&';
+        });
+
         for(auto &it : vec)
         {
             auto pos = it.find("=");
+
             if (pos != string::npos)
-            {
                 body[it.substr(0, pos)] = it.substr(pos + 1);
-            }
             else
-            {
                 break;
-            }
         }
     }
     return body;
