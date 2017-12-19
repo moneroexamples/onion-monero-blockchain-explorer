@@ -20,7 +20,7 @@
 #include "CurrentBlockchainStatus.h"
 #include "MempoolStatus.h"
 
-#include "../ext/crow/http_request.h"
+#include "../ext/crow/crow.h"
 
 #include "../ext/vpetrigocaches/cache.hpp"
 #include "../ext/vpetrigocaches/lru_cache_policy.hpp"

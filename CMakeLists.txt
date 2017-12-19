@@ -68,6 +68,7 @@ endif()
 # include boost headers
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories("ext/mstch/include")
+include_directories("ext/crow")
 
 # add ext/ subfolder
 add_subdirectory(ext/)

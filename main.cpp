@@ -285,12 +285,14 @@ main(int ac, const char* av[])
     });
 
     CROW_ROUTE(app, "/tx/<string>/<uint>")
-    ([&](string tx_hash, uint16_t with_ring_signatures) {
+    ([&](string tx_hash, uint16_t with_ring_signatures)
+     {
         return xmrblocks.show_tx(tx_hash, with_ring_signatures);
     });
 
     CROW_ROUTE(app, "/myoutputs").methods("POST"_method)
-    ([&](const crow::request& req) {
+    ([&](const crow::request& req)
+     {
 
         map<std::string, std::string> post_body
                 = xmreg::parse_crow_post_data(req.body);
@@ -319,7 +321,8 @@ main(int ac, const char* av[])
 
     CROW_ROUTE(app, "/myoutputs/<string>/<string>/<string>")
     ([&](const crow::request& req, string tx_hash,
-         string xmr_address, string viewkey) {
+        string xmr_address, string viewkey)
+     {
 
         string domain = get_domain(req);
 
