@@ -7,15 +7,15 @@
 #include <chrono>
 #include <vector>
 
-#include "http_parser_merged.h"
+#include "crow/http_parser_merged.h"
 
-#include "parser.h"
-#include "http_response.h"
-#include "logging.h"
-#include "settings.h"
-#include "dumb_timer_queue.h"
-#include "middleware_context.h"
-#include "socket_adaptors.h"
+#include "crow/parser.h"
+#include "crow/http_response.h"
+#include "crow/logging.h"
+#include "crow/settings.h"
+#include "crow/dumb_timer_queue.h"
+#include "crow/middleware_context.h"
+#include "crow/socket_adaptors.h"
 
 namespace crow
 {
@@ -176,7 +176,7 @@ namespace crow
     }
 
 #ifdef CROW_ENABLE_DEBUG
-    static int connectionCount;
+    static std::atomic<int> connectionCount;
 #endif
     template <typename Adaptor, typename Handler, typename ... Middlewares>
     class Connection
@@ -374,6 +374,9 @@ namespace crow
                 {401, "HTTP/1.1 401 Unauthorized\r\n"},
                 {403, "HTTP/1.1 403 Forbidden\r\n"},
                 {404, "HTTP/1.1 404 Not Found\r\n"},
+                {413, "HTTP/1.1 413 Payload Too Large\r\n"},
+                {422, "HTTP/1.1 422 Unprocessable Entity\r\n"},
+                {429, "HTTP/1.1 429 Too Many Requests\r\n"},
 
                 {500, "HTTP/1.1 500 Internal Server Error\r\n"},
                 {501, "HTTP/1.1 501 Not Implemented\r\n"},
@@ -467,7 +470,7 @@ namespace crow
                     if (!ec)
                     {
                         bool ret = parser_.feed(buffer_.data(), bytes_transferred);
-                        if (ret && adaptor_.is_open() && !close_connection_)
+                        if (ret && adaptor_.is_open())
                         {
                             error_while_reading = false;
                         }
@@ -481,6 +484,14 @@ namespace crow
                         is_reading = false;
                         CROW_LOG_DEBUG << this << " from read(1)";
                         check_destroy();
+                    }
+                    else if (close_connection_)
+                    {
+                        cancel_deadline_timer();
+                        parser_.done();
+                        is_reading = false;
+                        check_destroy();
+                        // adaptor will close after write
                     }
                     else if (!need_to_call_after_handlers_)
                     {
