@@ -5458,7 +5458,7 @@ namespace xmreg
                     {"has_payment_id8"       , txd.payment_id8 != null_hash8},
                     {"confirmations"         , txd.no_confirmations},
                     {"payment_id"            , pid_str},
-                    {"payment_id_as_ascii"   , std::regex_replace(txd.payment_id_as_ascii, e, " ")},
+                    {"payment_id_as_ascii"   , remove_bad_chars(txd.payment_id_as_ascii)},
                     {"payment_id8"           , pid8_str},
                     {"extra"                 , txd.get_extra_str()},
                     {"with_ring_signatures"  , static_cast<bool>(

@@ -7,7 +7,12 @@ set(PROJECT_NAME
 project(${PROJECT_NAME})
 
 set(CMAKE_CXX_FLAGS
-        "${CMAKE_CXX_FLAGS} -std=c++14")
+        "${CMAKE_CXX_FLAGS} -std=c++14 -fsanitize=address -fno-omit-frame-pointer")
+
+set(CMAKE_C_FLAGS
+        "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer -DLEAK_SANITIZER")
+
+#
 
 if (WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wa,-mbig-obj -O3")
@@ -102,16 +107,15 @@ set(LIBRARIES
         cryptonote_basic
         daemonizer
         cncrypto
-
         blocks
         lmdb
         ringct
         common
         mnemonics
-        epee
         easylogging
         checkpoints
         version
+        epee
         ${Boost_LIBRARIES}
         pthread
         unbound
