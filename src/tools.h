@@ -31,7 +31,7 @@
 #include <iterator>
 #include <algorithm>
 #include <type_traits>
-
+#include <regex>
 
 /**
  * Some helper functions used in the example.
@@ -333,7 +333,7 @@ void chunks(Iterator begin,
  * regular expression
  */
 inline string
-remove_bad_chars(string const& in_str, std::regex const& rgx = std::regex {"[^a-zA-Z0-9]"})
+remove_bad_chars(string const& in_str, std::regex const& rgx = std::regex ("[^a-zA-Z0-9]"))
 {
     return std::regex_replace(in_str, rgx, "");
 }

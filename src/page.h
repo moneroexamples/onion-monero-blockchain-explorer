@@ -30,7 +30,7 @@
 #include <limits>
 #include <ctime>
 #include <future>
-#include <regex>
+
 
 #define TMPL_DIR                    "./templates"
 #define TMPL_PARIALS_DIR            TMPL_DIR "/partials"
