@@ -7,12 +7,8 @@ set(PROJECT_NAME
 project(${PROJECT_NAME})
 
 set(CMAKE_CXX_FLAGS
-        "${CMAKE_CXX_FLAGS} -std=c++14 -fsanitize=address -fno-omit-frame-pointer")
+        "${CMAKE_CXX_FLAGS} -std=c++14")
 
-set(CMAKE_C_FLAGS
-        "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer -DLEAK_SANITIZER")
-
-#
 
 if (WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wa,-mbig-obj -O3")
@@ -57,7 +53,8 @@ find_package(Boost COMPONENTS
         date_time
         REQUIRED)
 
-
+#info https://github.com/arsenm/sanitizers-cmake
+find_package(Sanitizers)
 
 if(APPLE)
     include_directories(/usr/local/opt/openssl/include)
@@ -89,6 +86,8 @@ set(SOURCE_FILES
 
 add_executable(${PROJECT_NAME}
         ${SOURCE_FILES})
+
+add_sanitizers(${PROJECT_NAME})
 
 create_git_version()
 
