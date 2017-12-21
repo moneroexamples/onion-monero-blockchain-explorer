@@ -126,6 +126,9 @@ cmake ..
 
 # altearnatively can use: cmake -DMONERO_DIR=/path/to/monero_folder .. 
 # if monero is not in ~/monero
+#
+# also can build with ASAN (sanitizers), for example
+# cmake -DSANITIZE_ADDRESS=On ..
 
 # compile
 make
