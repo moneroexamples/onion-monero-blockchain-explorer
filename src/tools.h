@@ -332,10 +332,11 @@ void chunks(Iterator begin,
  * Remove all characters in in_str that match the given
  * regular expression
  */
+template <typename T>
 inline string
-remove_bad_chars(string const& in_str, std::regex const& rgx = std::regex ("[^a-zA-Z0-9]"))
+remove_bad_chars(T&& in_str, std::regex const& rgx = std::regex ("[^a-zA-Z0-9]"))
 {
-    return std::regex_replace(in_str, rgx, "");
+    return std::regex_replace(std::forward<T>(in_str), rgx, "");
 }
 
 
