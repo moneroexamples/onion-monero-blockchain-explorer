@@ -249,9 +249,12 @@ MempoolStatus::read_network_info()
     local_copy.block_size_limit           = rpc_network_info.block_size_limit;
     local_copy.start_time                 = rpc_network_info.start_time;
 
+
     epee::string_tools::hex_to_pod(rpc_network_info.top_block_hash, local_copy.top_block_hash);
     local_copy.fee_per_kb                 = fee_estimated;
     local_copy.info_timestamp             = static_cast<uint64_t>(std::time(nullptr));
+
+    local_copy.current_hf_version         = core_storage->get_current_hard_fork_version();
 
     local_copy.current                    = true;
 

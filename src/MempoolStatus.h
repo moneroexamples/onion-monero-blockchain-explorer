@@ -71,6 +71,7 @@ struct MempoolStatus
         uint64_t cumulative_difficulty  {0};
         uint64_t block_size_limit  {0};
         uint64_t start_time  {0};
+        uint64_t current_hf_version {0};
 
         uint64_t hash_rate  {0};
         uint64_t fee_per_kb  {0};

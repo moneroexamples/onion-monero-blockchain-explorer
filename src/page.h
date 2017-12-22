@@ -747,6 +747,7 @@ namespace xmreg
                     {"block_size_limit"  , block_size_limit},
                     {"is_current_info"   , current_network_info.current},
                     {"is_pool_size_zero" , (current_network_info.tx_pool_size == 0)},
+                    {"current_hf_version", current_network_info.current_hf_version},
                     {"age"               , network_info_age.first},
                     {"age_format"        , network_info_age.second},
             };
@@ -6069,7 +6070,8 @@ namespace xmreg
                {"cumulative_difficulty"     , local_copy_network_info.cumulative_difficulty},
                {"block_size_limit"          , local_copy_network_info.block_size_limit},
                {"start_time"                , local_copy_network_info.start_time},
-               {"fee_per_kb"                , local_copy_network_info.fee_per_kb}
+               {"fee_per_kb"                , local_copy_network_info.fee_per_kb},
+               {"current_hf_version"        , local_copy_network_info.current_hf_version}
             };
 
             return local_copy_network_info.current;
