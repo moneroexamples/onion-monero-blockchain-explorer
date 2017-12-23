@@ -4,8 +4,11 @@
 #include "src/page.h"
 
 #include "ext/crow/crow.h"
+#include "ext/BasicAuth.h"
 #include "src/CmdLineOptions.h"
 #include "src/MicroCore.h"
+
+
 
 #include <fstream>
 #include <regex>
@@ -28,6 +31,36 @@ struct jsonresponse: crow::response
     }
 };
 }
+
+struct ExampleMiddleware
+{
+    std::string message;
+
+    ExampleMiddleware()
+    {
+        message = "foo";
+    }
+
+    void setMessage(std::string newMsg)
+    {
+        message = newMsg;
+    }
+
+    struct context
+    {
+    };
+
+    void before_handle(crow::request& req, crow::response& res, context& ctx)
+    {
+        cout << " - MESSAGE: " << message << '\n';
+    }
+
+    void after_handle(crow::request& req, crow::response& res, context& ctx)
+    {
+        // no-op
+    }
+};
+
 
 int
 main(int ac, const char* av[])
@@ -252,7 +285,11 @@ main(int ac, const char* av[])
                           *mainnet_url);
 
     // crow instance
-    crow::SimpleApp app;
+    //crow::SimpleApp app;
+    //crow::App<ExampleMiddleware> app;
+    //app.get_middleware<ExampleMiddleware>().setMessage("middle wear");
+    crow::App<crow_contrib::BasicAuth> app;
+    app.get_middleware<crow_contrib::BasicAuth>().set("uname", "upassword");
 
     // get domian url based on the request
     auto get_domain = [&use_ssl](crow::request const& req) {
