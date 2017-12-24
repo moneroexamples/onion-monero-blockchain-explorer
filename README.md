@@ -29,6 +29,7 @@ Tor users:
   
 Clearnet versions:
 
+ - [https://oculus.serveo.net/](https://oculus.serveo.net/) - bleeding edge version. 
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
  - [https://MoneroExplorer.com/](https://moneroexplorer.com/) - nice looking one, https enabled.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
