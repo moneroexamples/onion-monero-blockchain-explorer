@@ -3160,7 +3160,7 @@ namespace xmreg
             const size_t header_lenght = 2 * sizeof(crypto::public_key);
             const size_t key_img_size  = sizeof(crypto::key_image);
             const size_t record_lenght = key_img_size + sizeof(crypto::signature);
-            const size_t chacha_length = sizeof(crypto::chacha8_key);
+            const size_t chacha_length = sizeof(crypto::chacha_key);
 
             if (decoded_raw_data.size() < header_lenght)
             {
