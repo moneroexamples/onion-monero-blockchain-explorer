@@ -211,9 +211,7 @@ MempoolStatus::read_network_info()
     COMMAND_RPC_GET_INFO::response rpc_network_info;
 
     if (!rpc.get_network_info(rpc_network_info))
-    {
         return false;
-    }
 
     uint64_t fee_estimated;
 
@@ -228,6 +226,11 @@ MempoolStatus::read_network_info()
     }
 
     (void) error_msg;
+
+    COMMAND_RPC_HARD_FORK_INFO::response rpc_hardfork_info;
+
+    if (!rpc.get_hardfork_info(rpc_hardfork_info))
+        return false;
 
 
     network_info local_copy;
@@ -254,7 +257,7 @@ MempoolStatus::read_network_info()
     local_copy.fee_per_kb                 = fee_estimated;
     local_copy.info_timestamp             = static_cast<uint64_t>(std::time(nullptr));
 
-    local_copy.current_hf_version         = core_storage->get_current_hard_fork_version();
+    local_copy.current_hf_version         = rpc_hardfork_info.version;
 
     local_copy.current                    = true;
 
