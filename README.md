@@ -30,7 +30,7 @@ Tor users:
   
 Clearnet versions:
 
- - [http://139.162.32.245:8081/](http://139.162.32.245:8081/) - down for now.
+ - [https://oculus.serveo.net/](https://oculus.serveo.net/) - bleeding edge version. 
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
  - [https://MoneroExplorer.com/](https://moneroexplorer.com/) - nice looking one, https enabled.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
@@ -43,7 +43,7 @@ Clearnet versions:
   
 Clearnet testnet Monero version:
 
- - [http://139.162.32.245:8082/](http://139.162.32.245:8082/) - bleeding edge version, no https. 
+  - [http://nimis.serveo.net/](http://nimis.serveo.net/) - bleeding edge version. 
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
  - [https://testnet.MoneroExplorer.com/](https://testnet.moneroexplorer.com/) - https enabled.
