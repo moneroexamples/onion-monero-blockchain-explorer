@@ -39,11 +39,11 @@ Clearnet versions:
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
  - [http://atesti.mooo.com:8081/](http://atesti.mooo.com:8081/) - Proof of Existence built with Monero and IPFS. 
--  [https://anunknownamount.com](https://anunknownamount.com/) - looks nice, https enabled.
+ - [https://anunknownamount.com](https://anunknownamount.com/) - looks nice, https enabled.
   
 Clearnet testnet Monero version:
 
-  - [http://nimis.serveo.net/](http://nimis.serveo.net/) - bleeding edge version. 
+ - [http://nimis.serveo.net/](http://nimis.serveo.net/) - bleeding edge version. 
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
  - [https://testnet.MoneroExplorer.com/](https://testnet.moneroexplorer.com/) - https enabled.
@@ -71,8 +71,7 @@ The key features of the Onion Monero Blockchain Explorer are:
  - showing public components of Monero addresses,
  - decoding which outputs and mixins belong to the given Monero address and viewkey,
  - can prove that you send Monero to someone,
- - detailed information about mixins, such as, mixins'
- age, timescale, mixin of mixins,
+ - detailed information about mixins, such as, mixins' age, timescale, mixin of mixins,
  - showing number of amount output indices,
  - support Monero testnet network,
  - tx checker and pusher for online pushing of transactions,
