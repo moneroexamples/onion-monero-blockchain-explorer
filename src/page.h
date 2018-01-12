@@ -55,6 +55,12 @@
 #define TMPL_MY_RAWOUTPUTKEYS       TMPL_DIR "/rawoutputkeys.html"
 #define TMPL_MY_CHECKRAWOUTPUTKEYS  TMPL_DIR "/checkrawoutputkeys.html"
 
+#define JS_JQUERY   TMPL_DIR "/js/jquery.min.js"
+#define JS_CRC32    TMPL_DIR "/js/crc32.js"
+#define JS_BASE58   TMPL_DIR "/js/base58.js"
+#define JS_CRYPTO   TMPL_DIR "/js/crypto.js"
+#define JS_CNUTILS  TMPL_DIR "/js/cn_utils.js"
+#define JS_NACLFAST TMPL_DIR "/js/nacl-fast-cn.js"
 
 #define ONIONEXPLORER_RPC_VERSION_MAJOR 1
 #define ONIONEXPLORER_RPC_VERSION_MINOR 0
@@ -262,6 +268,8 @@ namespace xmreg
 
         bool testnet;
 
+        bool enable_js;
+
         bool enable_pusher;
 
         bool enable_key_image_checker;
@@ -314,6 +322,7 @@ namespace xmreg
              string _deamon_url,
              bool _testnet,
              bool _enable_pusher,
+             bool _enable_js,
              bool _enable_key_image_checker,
              bool _enable_output_key_checker,
              bool _enable_autorefresh_option,
@@ -331,6 +340,7 @@ namespace xmreg
                   server_timestamp {std::time(nullptr)},
                   testnet {_testnet},
                   enable_pusher {_enable_pusher},
+                  enable_js {_enable_js},
                   enable_key_image_checker {_enable_key_image_checker},
                   enable_output_key_checker {_enable_output_key_checker},
                   enable_autorefresh_option {_enable_autorefresh_option},
@@ -374,6 +384,15 @@ namespace xmreg
             template_file["tx_details"]      = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html");
             template_file["tx_table_header"] = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html");
             template_file["tx_table_row"]    = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html");
+
+            // JavaScript files
+            template_file["jquery.min.js"]   = xmreg::read(JS_JQUERY);
+            template_file["crc32.js"]        = xmreg::read(JS_CRC32);
+            template_file["crypto.js"]       = xmreg::read(JS_CRYPTO);
+            template_file["cn_utils.js"]     = xmreg::read(JS_CNUTILS);
+            template_file["base58.js"]       = xmreg::read(JS_BASE58);
+            template_file["nacl-fast-cn.js"] = xmreg::read(JS_NACLFAST);
+
         }
 
         /**
@@ -1412,6 +1431,9 @@ namespace xmreg
             };
 
             add_css_style(context);
+
+            if (enable_js)
+                add_js_files(context);
 
             // render the page
             return mstch::render(template_file["tx"], context, partials);
@@ -3822,6 +3844,15 @@ namespace xmreg
             return  mstch::render(full_page, context, partials);
         }
 
+        string
+        get_js_file(string const& fname)
+        {
+            if (template_file.count(fname))
+                return template_file[fname];
+
+            return string{};
+        }
+
 
         /*
          * Lets use this json api convention for success and error
@@ -6121,6 +6152,20 @@ namespace xmreg
         {
             context["css_styles"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
                 return template_file["css_styles"];
+            }};
+        }
+
+        void
+        add_js_files(mstch::map& context)
+        {
+            context["js_files"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
+
+                string js;
+
+                js += "<script src=\"/js/jquery.min.js\"></script>";
+                js += "<script src=\"/js/crc32.js\"></script>";
+
+                return js;
             }};
         }
 
