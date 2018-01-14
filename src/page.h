@@ -57,10 +57,13 @@
 
 #define JS_JQUERY   TMPL_DIR "/js/jquery.min.js"
 #define JS_CRC32    TMPL_DIR "/js/crc32.js"
+#define JS_BIGINT   TMPL_DIR "/js/biginteger.js"
+#define JS_CONFIG   TMPL_DIR "/js/config.js"
 #define JS_BASE58   TMPL_DIR "/js/base58.js"
 #define JS_CRYPTO   TMPL_DIR "/js/crypto.js"
-#define JS_CNUTILS  TMPL_DIR "/js/cn_utils.js"
+#define JS_CNUTIL   TMPL_DIR "/js/cn_util.js"
 #define JS_NACLFAST TMPL_DIR "/js/nacl-fast-cn.js"
+#define JS_SHA3     TMPL_DIR "/js/sha3.js"
 
 #define ONIONEXPLORER_RPC_VERSION_MAJOR 1
 #define ONIONEXPLORER_RPC_VERSION_MINOR 0
@@ -290,6 +293,9 @@ namespace xmreg
         string testnet_url;
         string mainnet_url;
 
+        string js_html_files;
+
+
         // instead of constatnly reading template files
         // from hard drive for each request, we can read
         // them only once, when the explorer starts into this map
@@ -385,13 +391,28 @@ namespace xmreg
             template_file["tx_table_header"] = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html");
             template_file["tx_table_row"]    = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html");
 
-            // JavaScript files
-            template_file["jquery.min.js"]   = xmreg::read(JS_JQUERY);
-            template_file["crc32.js"]        = xmreg::read(JS_CRC32);
-            template_file["crypto.js"]       = xmreg::read(JS_CRYPTO);
-            template_file["cn_utils.js"]     = xmreg::read(JS_CNUTILS);
-            template_file["base58.js"]       = xmreg::read(JS_BASE58);
-            template_file["nacl-fast-cn.js"] = xmreg::read(JS_NACLFAST);
+            if (enable_js)
+            {
+                // JavaScript files
+                template_file["jquery.min.js"]   = xmreg::read(JS_JQUERY);
+                template_file["crc32.js"]        = xmreg::read(JS_CRC32);
+                template_file["crypto.js"]       = xmreg::read(JS_CRYPTO);
+                template_file["cn_util.js"]      = xmreg::read(JS_CNUTIL);
+                template_file["base58.js"]       = xmreg::read(JS_BASE58);
+                template_file["nacl-fast-cn.js"] = xmreg::read(JS_NACLFAST);
+                template_file["sha3.js"]         = xmreg::read(JS_SHA3);
+                template_file["config.js"]       = xmreg::read(JS_CONFIG);
+                template_file["biginteger.js"]   = xmreg::read(JS_BIGINT);
+
+                js_html_files += "<script src=\"/js/jquery.min.js\"></script>";
+                js_html_files += "<script src=\"/js/crc32.js\"></script>";
+                js_html_files += "<script src=\"/js/biginteger.js\"></script>";
+                js_html_files += "<script src=\"/js/config.js\"></script>";
+                js_html_files += "<script src=\"/js/crypto.js\"></script>";
+                js_html_files += "<script src=\"/js/base58.js\"></script>";
+                js_html_files += "<script src=\"/js/cn_util.js\"></script>";
+                js_html_files += "<script src=\"/js/sha3.js\"></script>";
+            }
 
         }
 
@@ -6150,6 +6171,10 @@ namespace xmreg
         void
         add_css_style(mstch::map& context)
         {
+            // add_css_style goes to every subpage so here we mark
+            // if js is anabled or not.
+            context["enable_js"] = enable_js;
+
             context["css_styles"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
                 return template_file["css_styles"];
             }};
@@ -6160,12 +6185,7 @@ namespace xmreg
         {
             context["js_files"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
 
-                string js;
-
-                js += "<script src=\"/js/jquery.min.js\"></script>";
-                js += "<script src=\"/js/crc32.js\"></script>";
-
-                return js;
+                return this->js_html_files;
             }};
         }
 

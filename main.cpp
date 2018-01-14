@@ -514,14 +514,19 @@ main(int ac, const char* av[])
             return xmrblocks.get_js_file("crc32.js");
         });
 
+        CROW_ROUTE(app, "/js/biginteger.js")
+        ([&](const crow::request& req) {
+            return xmrblocks.get_js_file("biginteger.js");
+        });
+
         CROW_ROUTE(app, "/js/crypto.js")
         ([&](const crow::request& req) {
             return xmrblocks.get_js_file("crypto.js");
         });
 
-        CROW_ROUTE(app, "/js/cryptjjo.js")
+        CROW_ROUTE(app, "/js/config.js")
         ([&](const crow::request& req) {
-            return xmrblocks.get_js_file("crypto.js");
+            return xmrblocks.get_js_file("config.js");
         });
 
         CROW_ROUTE(app, "/js/nacl-fast-cn.js.js")
@@ -537,6 +542,11 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/js/cn_util.js")
         ([&](const crow::request& req) {
             return xmrblocks.get_js_file("cn_util.js");
+        });
+
+        CROW_ROUTE(app, "/js/sha3.js")
+        ([&](const crow::request& req) {
+            return xmrblocks.get_js_file("sha3.js");
         });
 
     }
