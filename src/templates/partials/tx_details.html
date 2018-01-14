@@ -5,7 +5,7 @@
     {{#enable_mixins_details}}
         <H5 style="margin:5px">Tx prefix hash: {{tx_prefix_hash}}</H5>
     {{/enable_mixins_details}}
-    <H5 style="margin:5px">Tx public key: {{tx_pub_key}}</H5>
+    <H5 style="margin:5px">Tx public key: <span id="tx_pub_key">{{tx_pub_key}}</span></H5>
 
     {{#has_payment_id}}
         <H5 style="margin:5px">Payment id: {{payment_id}}</H5>
@@ -44,6 +44,15 @@
             <td>Tx version: {{tx_version}}</td>
             <td>No of confirmations: {{confirmations}}</td>
             <td>RingCT/type:  {{#is_ringct}}yes/{{rct_type}}{{/is_ringct}}{{^is_ringct}}no{{/is_ringct}}</td>
+
+
+            {{#enable_js}}
+                <!-- the hidden filed is used in JavaScriped based decoding and proving txs -->
+                <input type="hidden" id="is_ringct" value="{{#is_ringct}}yes{{/is_ringct}}{{^is_ringct}}no{{/is_ringct}}"/>
+                <input type="hidden" id="ringct_type" value="{{rct_type}}"/>
+            {{/enable_js}}
+
+
         </tr>
 
 
@@ -70,6 +79,13 @@
               <td>{{amount_idx}} of {{num_outputs}}</td>
           </tr>
           {{/outputs}}
+
+          {{#enable_js}}
+            <!-- the hidden filed is used in JavaScriped based decoding and proving txs -->
+            <input type="hidden" id="tx_outputs" value="{{#outputs}}{{unformated_output_idx}},{{out_pub_key}},{{amount}};{{/outputs}}"/>
+          {{/enable_js}}
+
+
       </table>
   </div>
 
@@ -143,27 +159,147 @@
 
     {{#enable_js}}
 
-    <!-- to disply results from deconding and proving txs using js -->
-    <div id="decode-prove-results" class="center" style="width: 80%; margin-top:10px">
+        <!-- to disply results from deconding and proving txs using js -->
+        <div id="decode-prove-results" class="center" style="width: 80%; margin-top:10px">
 
-    </div>
+        </div>
 
-    <script>
-        //  here we handle button presses from the above forms
-        //  to decode and prove txs.
-        $(document).ready(function() {
+        <script>
+            //  here we handle button presses from the above forms
+            //  to decode and prove txs.
+            $(document).ready(function() {
 
-            $("#decode_btn").click(function() {
-                $("#decode-prove-results").html("Decode button pressed");
+
+                // we need output pubplic keys, their indexes and amounts.
+                // all this is already avaliable on the html, but we can use
+                // musch frramework to produce js array for this
+
+                var is_rct = ($("#is_ringct").val() === "yes");
+                var rct_type = parseInt($("#ringct_type").val());
+
+                var tx_public_key = $("#tx_pub_key").text();
+
+                // get the tx publick key outputs from the hidden field
+                var tx_outputs_tmp = $("#tx_outputs").val().split(';');
+
+                var tx_outputs = [];
+
+                for (var i = 0; i < tx_outputs_tmp.length - 1; i++) {
+                    tx_outputs.push(tx_outputs_tmp[i].split(','));
+                }
+
+                console.log(is_rct, rct_type, tx_outputs);
+
+                $("#decode_btn").click(function() {
+
+
+                    var address = $("input[name=xmr_address]").val();
+                    var viewkey = $("input[name=viewkey]").val();
+
+                    var address_decoded = decode_address(address);
+
+                    var key_derivation = generate_key_derivation(tx_public_key, viewkey);
+
+                    console.log(tx_public_key, address, viewkey, key_derivation);
+
+                    console.log(address_decoded);
+
+                    // go over each tx output, and check if it is ours or not
+                    var decoding_results_str = '<h4>Output decoding results</h4>';
+
+                    decoding_results_str += '<table class="center">';
+
+                    tx_outputs.forEach(function(output) {
+
+                        var output_idx     = parseInt(output[0]);
+                        var output_pub_key = output[1];
+                        var amount         = output[2];
+
+                        var pubkey_generated = derive_public_key(key_derivation, output_idx, address_decoded.spend);
+
+                        var mine_output = (output_pub_key == pubkey_generated);
+
+                        var mine_output_str = "false";
+
+                        if (mine_output) {
+                            mine_output_str = '<span style="color: #008009;font-weight: bold">true</span>';
+                        }
+
+                        decoding_results_str += "<tr>"
+                                                +"<td>" + output_idx +  "</td>"
+                                                +"<td>" + output_pub_key +  "</td>"
+                                                +"<td>" + mine_output_str +  "</td>"
+                                                +"<td>" + amount +  "</td>"
+                                                +"</tr>";
+
+                        console.log(output[1], pubkey_generated);
+                    });
+
+                    decoding_results_str += "</table>"
+
+                    $("#decode-prove-results").html(decoding_results_str);
+
+
+                });
+
+                $("#prove_btn").click(function() {
+                    $("#decode-prove-results").html("Prove button pressed");
+
+                    var address  = $("input[name=xmraddress]").val();
+                    var txprvkey = $("input[name=txprvkey]").val();
+
+                    var address_decoded = decode_address(address);
+
+                    console.log(address, txprvkey);
+
+                });
+
+
+                //decode amount and mask and check against commitment
+                // from https://xmr.llcoins.net/js/site.js
+                function decodeRct(rv, i, der){
+                    var key = derivation_to_scalar(der, i);
+                    var ecdh = decode_rct_ecdh(rv.ecdhInfo[i], key);
+                    console.log(ecdh);
+                    var Ctmp = commit(ecdh.amount, ecdh.mask);
+                    console.log(Ctmp);
+                    if (Ctmp !== rv.outPk[i]){
+                        throw "mismatched commitments!";
+                    }
+                    ecdh.amount = s2d(ecdh.amount);
+                    return ecdh;
+                }
+
+                //creates a Pedersen commitment from an amount (in scalar form) and a mask
+                //C = bG + aH where b = mask, a = amount
+                // from https://xmr.llcoins.net/js/site.js
+                function commit(amount, mask){
+                    if (!valid_hex(mask) || mask.length !== 64 || !valid_hex(amount) || amount.length !== 64){
+                        throw "invalid amount or mask!";
+                    }
+                    var C = ge_double_scalarmult_base_vartime(amount, H, mask);
+                    return C;
+                }
+
+                // // from https://xmr.llcoins.net/js/site.js
+                function s2d(scalar){
+                    return JSBigInt.parse(swapEndian(scalar), 16).toString();
+                }
+
+                //switch byte order for hex string
+                // from https://xmr.llcoins.net/js/site.js
+                function swapEndian(hex){
+                    if (hex.length % 2 !== 0){return "length must be a multiple of 2!";}
+                    var data = "";
+                    for (var i=1; i <= hex.length / 2; i++){
+                        data += hex.substr(0 - 2 * i, 2);
+                    }
+                    return data;
+                }
+
             });
 
-            $("#prove_btn").click(function() {
-                $("#decode-prove-results").html("Prove button pressed");
-            });
-
-        });
-
-    </script>
+        </script>
 
     {{/enable_js}}
 

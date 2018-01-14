@@ -529,7 +529,7 @@ main(int ac, const char* av[])
             return xmrblocks.get_js_file("config.js");
         });
 
-        CROW_ROUTE(app, "/js/nacl-fast-cn.js.js")
+        CROW_ROUTE(app, "/js/nacl-fast-cn.js")
         ([&](const crow::request& req) {
             return xmrblocks.get_js_file("nacl-fast-cn.js");
         });

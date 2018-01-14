@@ -408,6 +408,7 @@ namespace xmreg
                 js_html_files += "<script src=\"/js/crc32.js\"></script>";
                 js_html_files += "<script src=\"/js/biginteger.js\"></script>";
                 js_html_files += "<script src=\"/js/config.js\"></script>";
+                js_html_files += "<script src=\"/js/nacl-fast-cn.js\"></script>";
                 js_html_files += "<script src=\"/js/crypto.js\"></script>";
                 js_html_files += "<script src=\"/js/base58.js\"></script>";
                 js_html_files += "<script src=\"/js/cn_util.js\"></script>";
@@ -1833,10 +1834,10 @@ namespace xmreg
                 }
 
                 outputs.push_back(mstch::map {
-                        {"out_pub_key"   , pod_to_hex(outp.first.key)},
-                        {"amount"        , xmreg::xmr_amount_to_str(outp.second)},
-                        {"mine_output"   , mine_output},
-                        {"output_idx"    , fmt::format("{:02d}", output_idx)}
+                        {"out_pub_key"           , pod_to_hex(outp.first.key)},
+                        {"amount"                , xmreg::xmr_amount_to_str(outp.second)},
+                        {"mine_output"           , mine_output},
+                        {"output_idx"            , fmt::format("{:02d}", output_idx)}
                 });
 
                 ++output_idx;
@@ -5829,11 +5830,12 @@ namespace xmreg
                 outputs_xmr_sum += outp.second;
 
                 outputs.push_back(mstch::map {
-                        {"out_pub_key"   , pod_to_hex(outp.first.key)},
-                        {"amount"        , xmreg::xmr_amount_to_str(outp.second)},
-                        {"amount_idx"    , out_amount_index_str},
-                        {"num_outputs"   , num_outputs_amount},
-                        {"output_idx"    , fmt::format("{:02d}", output_idx++)}
+                        {"out_pub_key"           , pod_to_hex(outp.first.key)},
+                        {"amount"                , xmreg::xmr_amount_to_str(outp.second)},
+                        {"amount_idx"            , out_amount_index_str},
+                        {"num_outputs"           , num_outputs_amount},
+                        {"unformated_output_idx" , output_idx},
+                        {"output_idx"            , fmt::format("{:02d}", output_idx++)}
                 });
             }
 
