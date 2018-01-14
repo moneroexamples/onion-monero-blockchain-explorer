@@ -93,7 +93,15 @@
                         <input type="text" name="viewkey" size="90" placeholder="Private viewkey" style="margin-top:5px"><br/>
                         <input type="hidden" name="raw_tx_data" value="{{raw_tx_data}}">
                         <!--above raw_tx_data field only used when checking raw tx data through tx pusher-->
-                        <input type="submit" value="Decode outputs" style="margin-top:5px" >
+
+                        {{#enable_js}}
+                        <!-- if have js, DONOT submit the form to server.
+                             change submit button, to just a button -->
+                            <button type="button" style="margin-top:5px" id="decode_btn" >Decode outputs</button>
+                        {{/enable_js}}
+                        {{^enable_js}}
+                            <input type="submit" value="Decode outputs" style="margin-top:5px" >
+                        {{/enable_js}}
                     </form>
                 </div>
             </div>
@@ -116,13 +124,48 @@
                         <input type="hidden" name="raw_tx_data" value="{{raw_tx_data}}">
                         <!--above raw_tx_data field only used when checking raw tx data through tx pusher-->
                        <input type="text" name="xmraddress" size="90" placeholder="Recipient's monero address/subaddress" style="margin-top:5px"><br/>
-                       <input type="submit" value="Prove sending" style="margin-top:5px">
+
+                        {{#enable_js}}
+                            <!-- if have js, DONOT submit the form to server.
+                                 change submit button, to just a button -->
+                            <button type="button" style="margin-top:5px" id="prove_btn">Prove sending</button>
+                        {{/enable_js}}
+                        {{^enable_js}}
+                           <input type="submit" value="Prove sending" style="margin-top:5px">
+                        {{/enable_js}}
+
                     </form>
                 </div>
             </div>
         </div>
     </div>
     {{/have_raw_tx}}
+
+    {{#enable_js}}
+
+    <!-- to disply results from deconding and proving txs using js -->
+    <div id="decode-prove-results" class="center" style="width: 80%; margin-top:10px">
+
+    </div>
+
+    <script>
+        //  here we handle button presses from the above forms
+        //  to decode and prove txs.
+        $(document).ready(function() {
+
+            $("#decode_btn").click(function() {
+                $("#decode-prove-results").html("Decode button pressed");
+            });
+
+            $("#prove_btn").click(function() {
+                $("#decode-prove-results").html("Prove button pressed");
+            });
+
+        });
+
+    </script>
+
+    {{/enable_js}}
 
 
 
