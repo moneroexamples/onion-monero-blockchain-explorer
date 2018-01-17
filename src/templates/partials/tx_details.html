@@ -165,99 +165,12 @@
         </div>
 
         <script>
+
             //  here we handle button presses from the above forms
             //  to decode and prove txs.
             $(document).ready(function() {
 
-
-                // we need output pubplic keys, their indexes and amounts.
-                // all this is already avaliable on the html, but we can use
-                // musch framework to produce js array for this
-
-                var tx_json = {{#tx_json_raw}}{{/tx_json_raw}};
-
-                console.log(tx_json);
-
-                var is_rct = ($("#is_ringct").val() === "yes");
-                var rct_type = parseInt($("#ringct_type").val());
-
-                var tx_public_key = $("#tx_pub_key").text();
-
-                // get the tx publick key outputs from the hidden field
-                var tx_outputs_tmp = $("#tx_outputs").val().split(';');
-
-                var tx_outputs = [];
-
-                for (var i = 0; i < tx_outputs_tmp.length - 1; i++) {
-                    tx_outputs.push(tx_outputs_tmp[i].split(','));
-                }
-
-                console.log(is_rct, rct_type, tx_outputs);
-
-                $("#decode_btn").click(function() {
-
-
-                    var address = $("input[name=xmr_address]").val();
-                    var viewkey = $("input[name=viewkey]").val();
-
-                    var address_decoded = decode_address(address);
-
-                    var key_derivation = generate_key_derivation(tx_public_key, viewkey);
-
-                    console.log(tx_public_key, address, viewkey, key_derivation);
-
-                    console.log(address_decoded);
-
-                    // go over each tx output, and check if it is ours or not
-                    var decoding_results_str = '<h4>Output decoding results</h4>';
-
-                    decoding_results_str += '<table class="center">';
-
-                    tx_outputs.forEach(function(output) {
-
-                        var output_idx     = parseInt(output[0]);
-                        var output_pub_key = output[1];
-                        var amount         = output[2];
-
-                        var pubkey_generated = derive_public_key(key_derivation, output_idx, address_decoded.spend);
-
-                        var mine_output = (output_pub_key == pubkey_generated);
-
-                        var mine_output_str = "false";
-
-                        if (mine_output) {
-                            mine_output_str = '<span style="color: #008009;font-weight: bold">true</span>';
-                        }
-
-                        decoding_results_str += "<tr>"
-                                                +"<td>" + output_idx +  "</td>"
-                                                +"<td>" + output_pub_key +  "</td>"
-                                                +"<td>" + mine_output_str +  "</td>"
-                                                +"<td>" + amount +  "</td>"
-                                                +"</tr>";
-
-                        console.log(output[1], pubkey_generated);
-                    });
-
-                    decoding_results_str += "</table>"
-
-                    $("#decode-prove-results").html(decoding_results_str);
-
-
-                });
-
-                $("#prove_btn").click(function() {
-                    $("#decode-prove-results").html("Prove button pressed");
-
-                    var address  = $("input[name=xmraddress]").val();
-                    var txprvkey = $("input[name=txprvkey]").val();
-
-                    var address_decoded = decode_address(address);
-
-                    console.log(address, txprvkey);
-
-                });
-
+                var H = "8b655970153799af2aeadc9ff1add0ea6c7251d54154cfa92c173a0dd39c1f94";
 
                 //decode amount and mask and check against commitment
                 // from https://xmr.llcoins.net/js/site.js
@@ -300,6 +213,107 @@
                     }
                     return data;
                 }
+
+                // we need output pubplic keys, their indexes and amounts.
+                // all this is already avaliable on the html, but we can use
+                // musch framework to produce js array for this
+
+                var tx_json = {{#tx_json_raw}}{{/tx_json_raw}};
+
+                //console.log(tx_json);
+
+                var is_rct = ($("#is_ringct").val() === "yes");
+                var rct_type = parseInt($("#ringct_type").val());
+
+                var tx_public_key = $("#tx_pub_key").text();
+
+                // get the tx publick key outputs from the hidden field
+                var tx_outputs_tmp = $("#tx_outputs").val().split(';');
+
+                var tx_outputs = [];
+
+                for (var i = 0; i < tx_outputs_tmp.length - 1; i++) {
+                    tx_outputs.push(tx_outputs_tmp[i].split(','));
+                }
+
+                console.log(is_rct, rct_type, tx_outputs);
+
+                $("#decode_btn").click(function() {
+
+
+                    var address = $("input[name=xmr_address]").val();
+                    var viewkey = $("input[name=viewkey]").val();
+
+                    var address_decoded = decode_address(address);
+
+                    var key_derivation = generate_key_derivation(tx_public_key, viewkey);
+
+                    console.log(tx_public_key, address, viewkey, key_derivation);
+
+                    console.log(address_decoded);
+
+                    // go over each tx output, and check if it is ours or not
+                    var decoding_results_str = '<h4>Output decoding results</h4>';
+
+                    decoding_results_str += '<table class="center">';
+
+                    tx_outputs.forEach(function(output) {
+
+                        var output_idx     = parseInt(output[0]);
+                        var output_pub_key = output[1];
+                        var amount         = parseInt(output[2]);
+
+                        var pubkey_generated = derive_public_key(key_derivation, output_idx, address_decoded.spend);
+
+                        var mine_output = (output_pub_key == pubkey_generated);
+
+                        var mine_output_str = "false";
+
+                        if (mine_output) {
+
+                            mine_output_str = '<span style="color: #008009;font-weight: bold">true</span>';
+
+                            if (is_rct) {
+                                try {
+                                    var ecdh = decodeRct(tx_json.rct_signatures, output_idx, key_derivation);
+                                    amount = ecdh.amount / 1e12;
+                                } catch (err) {
+                                    decoding_results_str += "<span class='validNo'>RingCT amount for output " + i + " with pubkey: " + output_pub_key + " decoded incorrectly! It will not be spendable." + "</span>" + "<br>"; //rct commitment != computed
+                                    //throw "invalid rct amount";
+                                }
+                            }
+                        }
+
+                        decoding_results_str += "<tr>"
+                                                +"<td>" + output_idx +  "</td>"
+                                                +"<td>" + output_pub_key +  "</td>"
+                                                +"<td>" + mine_output_str +  "</td>"
+                                                +"<td>" + amount +  "</td>"
+                                                +"</tr>";
+
+                        console.log(output[1], pubkey_generated);
+                    });
+
+                    decoding_results_str += "</table>"
+
+                    $("#decode-prove-results").html(decoding_results_str);
+
+
+                });
+
+                $("#prove_btn").click(function() {
+                    $("#decode-prove-results").html("Prove button pressed");
+
+                    var address  = $("input[name=xmraddress]").val();
+                    var txprvkey = $("input[name=txprvkey]").val();
+
+                    var address_decoded = decode_address(address);
+
+                    console.log(address, txprvkey);
+
+                });
+
+
 
             });
 
