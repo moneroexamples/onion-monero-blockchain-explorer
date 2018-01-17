@@ -5528,6 +5528,10 @@ namespace xmreg
                     {"construction_time"     , string {}},
             };
 
+            context["tx_json_raw"] = mstch::lambda{[=](const std::string& text) -> mstch::node {
+                return tx_json;
+            }};
+
             string server_time_str = xmreg::timestamp_to_str_gm(server_timestamp, "%F");
 
             mstch::array inputs = mstch::array{};
@@ -6186,7 +6190,6 @@ namespace xmreg
         add_js_files(mstch::map& context)
         {
             context["js_files"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
-
                 return this->js_html_files;
             }};
         }

@@ -172,7 +172,11 @@
 
                 // we need output pubplic keys, their indexes and amounts.
                 // all this is already avaliable on the html, but we can use
-                // musch frramework to produce js array for this
+                // musch framework to produce js array for this
+
+                var tx_json = {{#tx_json_raw}}{{/tx_json_raw}};
+
+                console.log(tx_json);
 
                 var is_rct = ($("#is_ringct").val() === "yes");
                 var rct_type = parseInt($("#ringct_type").val());
