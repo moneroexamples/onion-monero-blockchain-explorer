@@ -44,15 +44,6 @@
             <td>Tx version: {{tx_version}}</td>
             <td>No of confirmations: {{confirmations}}</td>
             <td>RingCT/type:  {{#is_ringct}}yes/{{rct_type}}{{/is_ringct}}{{^is_ringct}}no{{/is_ringct}}</td>
-
-
-            {{#enable_js}}
-                <!-- the hidden filed is used in JavaScriped based decoding and proving txs -->
-                <input type="hidden" id="is_ringct" value="{{#is_ringct}}yes{{/is_ringct}}{{^is_ringct}}no{{/is_ringct}}"/>
-                <input type="hidden" id="ringct_type" value="{{rct_type}}"/>
-            {{/enable_js}}
-
-
         </tr>
 
 
@@ -79,13 +70,6 @@
               <td>{{amount_idx}} of {{num_outputs}}</td>
           </tr>
           {{/outputs}}
-
-          {{#enable_js}}
-            <!-- the hidden filed is used in JavaScriped based decoding and proving txs -->
-            <input type="hidden" id="tx_outputs" value="{{#outputs}}{{unformated_output_idx}},{{out_pub_key}},{{amount}};{{/outputs}}"/>
-          {{/enable_js}}
-
-
       </table>
   </div>
 
@@ -170,60 +154,12 @@
             //  to decode and prove txs.
             $(document).ready(function() {
 
-                var H = "8b655970153799af2aeadc9ff1add0ea6c7251d54154cfa92c173a0dd39c1f94";
-
-                //decode amount and mask and check against commitment
-                // from https://xmr.llcoins.net/js/site.js
-                function decodeRct(rv, i, der){
-                    var key = derivation_to_scalar(der, i);
-                    var ecdh = decode_rct_ecdh(rv.ecdhInfo[i], key);
-                    console.log(ecdh);
-                    var Ctmp = commit(ecdh.amount, ecdh.mask);
-                    console.log(Ctmp);
-                    if (Ctmp !== rv.outPk[i]){
-                        throw "mismatched commitments!";
-                    }
-                    ecdh.amount = s2d(ecdh.amount);
-                    return ecdh;
-                }
-
-                //creates a Pedersen commitment from an amount (in scalar form) and a mask
-                //C = bG + aH where b = mask, a = amount
-                // from https://xmr.llcoins.net/js/site.js
-                function commit(amount, mask){
-                    if (!valid_hex(mask) || mask.length !== 64 || !valid_hex(amount) || amount.length !== 64){
-                        throw "invalid amount or mask!";
-                    }
-                    var C = ge_double_scalarmult_base_vartime(amount, H, mask);
-                    return C;
-                }
-
-                // // from https://xmr.llcoins.net/js/site.js
-                function s2d(scalar){
-                    return JSBigInt.parse(swapEndian(scalar), 16).toString();
-                }
-
-                //switch byte order for hex string
-                // from https://xmr.llcoins.net/js/site.js
-                function swapEndian(hex){
-                    if (hex.length % 2 !== 0){return "length must be a multiple of 2!";}
-                    var data = "";
-                    for (var i=1; i <= hex.length / 2; i++){
-                        data += hex.substr(0 - 2 * i, 2);
-                    }
-                    return data;
-                }
 
                 // we need output pubplic keys, their indexes and amounts.
                 // all this is already avaliable on the html, but we can use
                 // musch framework to produce js array for this
 
                 var tx_json = {{#tx_json_raw}}{{/tx_json_raw}};
-
-                //console.log(tx_json);
-
-                var is_rct = ($("#is_ringct").val() === "yes");
-                var rct_type = parseInt($("#ringct_type").val());
 
                 var tx_public_key = $("#tx_pub_key").text();
 
@@ -236,86 +172,140 @@
                     tx_outputs.push(tx_outputs_tmp[i].split(','));
                 }
 
-                console.log(is_rct, rct_type, tx_outputs);
+                //console.log(is_rct, rct_type, tx_outputs);
+
+
 
                 $("#decode_btn").click(function() {
-
 
                     var address = $("input[name=xmr_address]").val();
                     var viewkey = $("input[name=viewkey]").val();
 
                     var address_decoded = decode_address(address);
 
-                    var key_derivation = generate_key_derivation(tx_public_key, viewkey);
-
-                    console.log(tx_public_key, address, viewkey, key_derivation);
-
-                    console.log(address_decoded);
-
-                    // go over each tx output, and check if it is ours or not
-                    var decoding_results_str = '<h4>Output decoding results</h4>';
-
-                    decoding_results_str += '<table class="center">';
-
-                    tx_outputs.forEach(function(output) {
-
-                        var output_idx     = parseInt(output[0]);
-                        var output_pub_key = output[1];
-                        var amount         = parseInt(output[2]);
-
-                        var pubkey_generated = derive_public_key(key_derivation, output_idx, address_decoded.spend);
-
-                        var mine_output = (output_pub_key == pubkey_generated);
-
-                        var mine_output_str = "false";
-
-                        if (mine_output) {
-
-                            mine_output_str = '<span style="color: #008009;font-weight: bold">true</span>';
-
-                            if (is_rct) {
-                                try {
-                                    var ecdh = decodeRct(tx_json.rct_signatures, output_idx, key_derivation);
-                                    amount = ecdh.amount / 1e12;
-                                } catch (err) {
-                                    decoding_results_str += "<span class='validNo'>RingCT amount for output " + i + " with pubkey: " + output_pub_key + " decoded incorrectly! It will not be spendable." + "</span>" + "<br>"; //rct commitment != computed
-                                    //throw "invalid rct amount";
-                                }
-                            }
-                        }
-
-                        decoding_results_str += "<tr>"
-                                                +"<td>" + output_idx +  "</td>"
-                                                +"<td>" + output_pub_key +  "</td>"
-                                                +"<td>" + mine_output_str +  "</td>"
-                                                +"<td>" + amount +  "</td>"
-                                                +"</tr>";
-
-                        console.log(output[1], pubkey_generated);
-                    });
-
-                    decoding_results_str += "</table>"
-
-                    $("#decode-prove-results").html(decoding_results_str);
-
+                    decodeOutputs(tx_json, tx_public_key, viewkey, address_decoded.spend);
 
                 });
 
                 $("#prove_btn").click(function() {
                     $("#decode-prove-results").html("Prove button pressed");
 
-                    var address  = $("input[name=xmraddress]").val();
-                    var txprvkey = $("input[name=txprvkey]").val();
+                    var address    = $("input[name=xmraddress]").val();
+                    var tx_prv_key = $("input[name=txprvkey]").val();
 
                     var address_decoded = decode_address(address);
 
-                    console.log(address, txprvkey);
+                    decodeOutputs(tx_json, address_decoded.view, tx_prv_key, address_decoded.spend);
 
                 });
 
-
-
             });
+
+            function decodeOutputs(tx_json, pub_key, sec_key, address_pub_key) {
+                //console.log(tx_json);
+
+                var is_rct = (tx_json.version === 2);
+                var rct_type = (is_rct ? tx_json.rct_signatures.type : -1);
+
+                var key_derivation = generate_key_derivation(pub_key, sec_key);
+
+                // console.log(pub_key, address_pub_key, sec_key, key_derivation);
+
+
+                // go over each tx output, and check if it is ours or not
+                var decoding_results_str = '<h4>Output decoding results</h4>';
+
+                decoding_results_str += '<table class="center">';
+
+                var output_idx = 0;
+
+                tx_json.vout.forEach(function(output) {
+
+                    var output_pub_key = output.target.key;
+                    var amount         = output.amount;
+
+                    var pubkey_generated = derive_public_key(key_derivation, output_idx, address_pub_key);
+
+                    var mine_output = (output_pub_key == pubkey_generated);
+
+                    var mine_output_str = "false";
+
+                    if (mine_output) {
+
+                        mine_output_str = '<span style="color: #008009;font-weight: bold">true</span>';
+
+                        if (is_rct) {
+                            try {
+                                var ecdh = decodeRct(tx_json.rct_signatures, output_idx, key_derivation);
+                                amount = ecdh.amount / 1e12;
+                            } catch (err) {
+                                decoding_results_str += "<span class='validNo'>RingCT amount for output " + i + " with pubkey: " + output_pub_key + "</span>" + "<br>"; //rct commitment != computed
+                                throw "invalid rct amount";
+                            }
+                        }
+                    }
+
+                    decoding_results_str += "<tr>"
+                        +"<td>" + output_idx +  "</td>"
+                        +"<td>" + output_pub_key +  "</td>"
+                        +"<td>" + mine_output_str +  "</td>"
+                        +"<td>" + amount +  "</td>"
+                        +"</tr>";
+
+                    //console.log(output[1], pubkey_generated);
+
+                    output_idx++;
+                });
+
+                decoding_results_str += "</table>"
+
+                $("#decode-prove-results").html(decoding_results_str);
+            }
+
+            //decode amount and mask and check against commitment
+            // from https://xmr.llcoins.net/js/site.js
+
+            var H = "8b655970153799af2aeadc9ff1add0ea6c7251d54154cfa92c173a0dd39c1f94";
+
+            function decodeRct(rv, i, der){
+                var key = derivation_to_scalar(der, i);
+                var ecdh = decode_rct_ecdh(rv.ecdhInfo[i], key);
+                console.log(ecdh);
+                var Ctmp = commit(ecdh.amount, ecdh.mask);
+                console.log(Ctmp);
+                if (Ctmp !== rv.outPk[i]){
+                    throw "mismatched commitments!";
+                }
+                ecdh.amount = s2d(ecdh.amount);
+                return ecdh;
+            }
+
+            //creates a Pedersen commitment from an amount (in scalar form) and a mask
+            //C = bG + aH where b = mask, a = amount
+            // from https://xmr.llcoins.net/js/site.js
+            function commit(amount, mask){
+                if (!valid_hex(mask) || mask.length !== 64 || !valid_hex(amount) || amount.length !== 64){
+                    throw "invalid amount or mask!";
+                }
+                var C = ge_double_scalarmult_base_vartime(amount, H, mask);
+                return C;
+            }
+
+            // // from https://xmr.llcoins.net/js/site.js
+            function s2d(scalar){
+                return JSBigInt.parse(swapEndian(scalar), 16).toString();
+            }
+
+            //switch byte order for hex string
+            // from https://xmr.llcoins.net/js/site.js
+            function swapEndian(hex){
+                if (hex.length % 2 !== 0){return "length must be a multiple of 2!";}
+                var data = "";
+                for (var i=1; i <= hex.length / 2; i++){
+                    data += hex.substr(0 - 2 * i, 2);
+                }
+                return data;
+            }
 
         </script>
 
