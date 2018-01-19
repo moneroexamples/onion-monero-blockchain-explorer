@@ -154,7 +154,6 @@
             //  to decode and prove txs.
             $(document).ready(function() {
 
-
                 // we need output pubplic keys, their indexes and amounts.
                 // all this is already avaliable on the html, but we can use
                 // musch framework to produce js array for this
@@ -162,18 +161,6 @@
                 var tx_json = {{#tx_json_raw}}{{/tx_json_raw}};
 
                 var tx_public_key = $("#tx_pub_key").text();
-
-                // get the tx publick key outputs from the hidden field
-                var tx_outputs_tmp = $("#tx_outputs").val().split(';');
-
-                var tx_outputs = [];
-
-                for (var i = 0; i < tx_outputs_tmp.length - 1; i++) {
-                    tx_outputs.push(tx_outputs_tmp[i].split(','));
-                }
-
-                //console.log(is_rct, rct_type, tx_outputs);
-
 
 
                 $("#decode_btn").click(function() {
@@ -188,7 +175,6 @@
                 });
 
                 $("#prove_btn").click(function() {
-                    $("#decode-prove-results").html("Prove button pressed");
 
                     var address    = $("input[name=xmraddress]").val();
                     var tx_prv_key = $("input[name=txprvkey]").val();
@@ -219,6 +205,8 @@
 
                 var output_idx = 0;
 
+                var sum_outptus = 0;
+
                 tx_json.vout.forEach(function(output) {
 
                     var output_pub_key = output.target.key;
@@ -237,19 +225,21 @@
                         if (is_rct) {
                             try {
                                 var ecdh = decodeRct(tx_json.rct_signatures, output_idx, key_derivation);
-                                amount = ecdh.amount / 1e12;
+                                amount = ecdh.amount;
                             } catch (err) {
                                 decoding_results_str += "<span class='validNo'>RingCT amount for output " + i + " with pubkey: " + output_pub_key + "</span>" + "<br>"; //rct commitment != computed
                                 throw "invalid rct amount";
                             }
                         }
+
+                        sum_outptus += amount;
                     }
 
                     decoding_results_str += "<tr>"
                         +"<td>" + output_idx +  "</td>"
                         +"<td>" + output_pub_key +  "</td>"
                         +"<td>" + mine_output_str +  "</td>"
-                        +"<td>" + amount +  "</td>"
+                        +"<td>" + (amount / 1e12) +  "</td>"
                         +"</tr>";
 
                     //console.log(output[1], pubkey_generated);
@@ -259,6 +249,8 @@
 
                 decoding_results_str += "</table>"
 
+                decoding_results_str += "<h3>Sum XMR from matched outputs (i.e., incoming XMR): " + (sum_outptus / 1e12) + "</h3>"
+
                 $("#decode-prove-results").html(decoding_results_str);
             }
 
@@ -267,12 +259,13 @@
 
             var H = "8b655970153799af2aeadc9ff1add0ea6c7251d54154cfa92c173a0dd39c1f94";
 
+            // from https://xmr.llcoins.net/js/site.js
             function decodeRct(rv, i, der){
                 var key = derivation_to_scalar(der, i);
                 var ecdh = decode_rct_ecdh(rv.ecdhInfo[i], key);
-                console.log(ecdh);
+                //console.log(ecdh);
                 var Ctmp = commit(ecdh.amount, ecdh.mask);
-                console.log(Ctmp);
+                //console.log(Ctmp);
                 if (Ctmp !== rv.outPk[i]){
                     throw "mismatched commitments!";
                 }
