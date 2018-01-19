@@ -404,6 +404,16 @@ namespace xmreg
                 template_file["config.js"]       = xmreg::read(JS_CONFIG);
                 template_file["biginteger.js"]   = xmreg::read(JS_BIGINT);
 
+
+                // need to set  "testnet: false," flag to reflect
+                // if we are running testnet or mainnet explorer
+
+                if (testnet)
+                    template_file["config.js"] = std::regex_replace(
+                                                    template_file["config.js"],
+                                                    std::regex("testnet: false"),
+                                                    "testnet: true" );
+
                 js_html_files += "<script src=\"/js/jquery.min.js\"></script>";
                 js_html_files += "<script src=\"/js/crc32.js\"></script>";
                 js_html_files += "<script src=\"/js/biginteger.js\"></script>";

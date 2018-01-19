@@ -62,7 +62,8 @@ Alternative block explorers:
 
 The key features of the Onion Monero Blockchain Explorer are:
 
- - no javascript, no cookies, no web analytics trackers, no images,
+ - no cookies, no web analytics trackers, no images,
+ - by default no JavaScript, but can be enabled for client side decoding and proving transactions,
  - open sourced,
  - made fully in C++,
  - showing encrypted payments ID,
@@ -176,6 +177,8 @@ xmrblocks, Onion Monero Blockchain Explorer:
   --show-cache-times [=arg(=1)] (=0)    show times of getting data from cache 
                                         vs no cache
   --enable-block-cache [=arg(=1)] (=0)  enable caching of block details
+  --enable-js [=arg(=1)] (=0)           enable checking outputs and proving txs
+                                        using JavaScript on client side
   --enable-autorefresh-option [=arg(=1)] (=0)
                                         enable users to have the index page on 
                                         autorefresh
