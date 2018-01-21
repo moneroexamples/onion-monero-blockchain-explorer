@@ -2185,6 +2185,23 @@ var cnUtil = (function(initConfig) {
         }
     };
 
+
+    //decode amount and mask and check against commitment
+    // from https://xmr.llcoins.net/js/site.js
+    // from https://xmr.llcoins.net/js/site.js
+    this.decodeRct = function(rv, i, der){
+        var key = derivation_to_scalar(der, i);
+        var ecdh = decode_rct_ecdh(rv.ecdhInfo[i], key);
+        //console.log(ecdh);
+        var Ctmp = commit(ecdh.amount, ecdh.mask);
+        //console.log(Ctmp);
+        if (Ctmp !== rv.outPk[i]){
+            throw "mismatched commitments!";
+        }
+        ecdh.amount = s2d(ecdh.amount);
+        return ecdh;
+    };
+
     function assert(stmt, val) {
         if (!stmt) {
             throw "assert failed" + (val !== undefined ? ': ' + val : '');

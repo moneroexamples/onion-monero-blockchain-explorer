@@ -8,12 +8,12 @@
     <H5 style="margin:5px">Tx public key: <span id="tx_pub_key">{{tx_pub_key}}</span></H5>
 
     {{#has_payment_id}}
-        <H5 style="margin:5px">Payment id: {{payment_id}}</H5>
+        <H5 style="margin:5px">Payment id: <span id="payment_id">{{payment_id}}</span></H5>
         <H5 style="margin:5px">Payment id as ascii: {{payment_id_as_ascii}}</H5>
     {{/has_payment_id}}
 
     {{#has_payment_id8}}
-        <H5 style="margin:5px">Payment id (encrypted): {{payment_id8}}</H5>
+        <H5 style="margin:5px">Payment id (encrypted): <span id="payment_id">{{payment_id8}}</span></H5>
     {{/has_payment_id8}}
 
 
@@ -154,7 +154,7 @@
     {{#enable_js}}
 
         <!-- to disply results from deconding and proving txs using js -->
-        <div id="decode-prove-results" class="center" style="width: 80%; margin-top:10px">
+        <div id="decode-prove-results" class="center" style="width: 80%; margin-top:10px;border-style: dotted">
 
         </div>
 
@@ -172,15 +172,22 @@
 
                 var tx_public_key = $("#tx_pub_key").text();
 
+                var payment_id = $("#payment_id").text();
+
 
                 $("#decode_btn").click(function() {
 
                     var address = $("input[name=xmr_address]").val();
                     var viewkey = $("input[name=viewkey]").val();
 
+                    if (!address || !viewkey) {
+                        $("#decode-prove-results").html("<h4>Address or viewkey key not provided!</h4>");
+                        return;
+                    }
+
                     var address_decoded = decode_address(address);
 
-                    decodeOutputs(tx_json, tx_public_key, viewkey, address_decoded.spend);
+                    decodeOutputs(tx_json, tx_public_key, viewkey, address_decoded.spend, payment_id);
 
                 });
 
@@ -189,15 +196,20 @@
                     var address    = $("input[name=xmraddress]").val();
                     var tx_prv_key = $("input[name=txprvkey]").val();
 
+                    if (!address || !tx_prv_key) {
+                        $("#decode-prove-results").html("<h4>Address or tx private key not provided!</h4>");
+                        return;
+                    }
+
                     var address_decoded = decode_address(address);
 
-                    decodeOutputs(tx_json, address_decoded.view, tx_prv_key, address_decoded.spend);
+                    decodeOutputs(tx_json, address_decoded.view, tx_prv_key, address_decoded.spend, payment_id);
 
                 });
 
             });
 
-            function decodeOutputs(tx_json, pub_key, sec_key, address_pub_key) {
+            function decodeOutputs(tx_json, pub_key, sec_key, address_pub_key, payment_id) {
                 //console.log(tx_json);
 
                 var is_rct = (tx_json.version === 2);
@@ -209,9 +221,16 @@
 
 
                 // go over each tx output, and check if it is ours or not
-                var decoding_results_str = '<h4>Output decoding results</h4>';
+                var decoding_results_str = '<h3>Output decoding results</h3>';
 
                 decoding_results_str += '<table class="center">';
+
+                decoding_results_str += '<tr>' +
+                    '<td></td>' +
+                    '<td>output public key</td>' +
+                    '<td>amount</td>' +
+                    '<td>output match?</td>' +
+                    '</tr>';
 
                 var output_idx = 0;
 
@@ -257,57 +276,24 @@
                     output_idx++;
                 });
 
-                decoding_results_str += "</table>"
+                decoding_results_str += "</table>";
 
                 decoding_results_str += "<h3>Sum XMR from matched outputs (i.e., incoming XMR): " + (sum_outptus / 1e12) + "</h3>"
 
+
+                // decrypt payment_id8 which results in using
+                // integrated address
+                if (payment_id.length == 16) {
+                    if (pub_key) {
+                        var decrypted_payment_id8
+                            = decrypt_payment_id(payment_id, pub_key, sec_key);
+                        console.log("decrypted_payment_id8: " + decrypted_payment_id8);
+                        decoding_results_str += "<h5>Decrypted payment id: " + decrypted_payment_id8 + "</h5>"
+                    }
+                }
+
+
                 $("#decode-prove-results").html(decoding_results_str);
-            }
-
-            //decode amount and mask and check against commitment
-            // from https://xmr.llcoins.net/js/site.js
-
-            var H = "8b655970153799af2aeadc9ff1add0ea6c7251d54154cfa92c173a0dd39c1f94";
-
-            // from https://xmr.llcoins.net/js/site.js
-            function decodeRct(rv, i, der){
-                var key = derivation_to_scalar(der, i);
-                var ecdh = decode_rct_ecdh(rv.ecdhInfo[i], key);
-                //console.log(ecdh);
-                var Ctmp = commit(ecdh.amount, ecdh.mask);
-                //console.log(Ctmp);
-                if (Ctmp !== rv.outPk[i]){
-                    throw "mismatched commitments!";
-                }
-                ecdh.amount = s2d(ecdh.amount);
-                return ecdh;
-            }
-
-            //creates a Pedersen commitment from an amount (in scalar form) and a mask
-            //C = bG + aH where b = mask, a = amount
-            // from https://xmr.llcoins.net/js/site.js
-            function commit(amount, mask){
-                if (!valid_hex(mask) || mask.length !== 64 || !valid_hex(amount) || amount.length !== 64){
-                    throw "invalid amount or mask!";
-                }
-                var C = ge_double_scalarmult_base_vartime(amount, H, mask);
-                return C;
-            }
-
-            // // from https://xmr.llcoins.net/js/site.js
-            function s2d(scalar){
-                return JSBigInt.parse(swapEndian(scalar), 16).toString();
-            }
-
-            //switch byte order for hex string
-            // from https://xmr.llcoins.net/js/site.js
-            function swapEndian(hex){
-                if (hex.length % 2 !== 0){return "length must be a multiple of 2!";}
-                var data = "";
-                for (var i=1; i <= hex.length / 2; i++){
-                    data += hex.substr(0 - 2 * i, 2);
-                }
-                return data;
             }
 
         </script>
