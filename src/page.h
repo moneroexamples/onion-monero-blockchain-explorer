@@ -5538,9 +5538,19 @@ namespace xmreg
                     {"construction_time"     , string {}},
             };
 
+            // append tx_json as in raw format to html
             context["tx_json_raw"] = mstch::lambda{[=](const std::string& text) -> mstch::node {
                 return tx_json;
             }};
+
+            // append additional public tx keys, if there are any, to the html context
+
+            string add_tx_pub_keys;
+
+            for (auto const& apk: txd.additional_pks)
+                add_tx_pub_keys += pod_to_hex(apk) + ";";
+
+            context["add_tx_pub_keys"] = add_tx_pub_keys;
 
             string server_time_str = xmreg::timestamp_to_str_gm(server_timestamp, "%F");
 

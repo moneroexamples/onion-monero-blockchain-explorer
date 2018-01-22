@@ -6,6 +6,7 @@
         <H5 style="margin:5px">Tx prefix hash: {{tx_prefix_hash}}</H5>
     {{/enable_mixins_details}}
     <H5 style="margin:5px">Tx public key: <span id="tx_pub_key">{{tx_pub_key}}</span></H5>
+    <span id="add_tx_pub_keys" style="display: none;">{{add_tx_pub_keys}}</span>
 
     {{#has_payment_id}}
         <H5 style="margin:5px">Payment id: <span id="payment_id">{{payment_id}}</span></H5>
@@ -172,6 +173,10 @@
 
                 var tx_public_key = $("#tx_pub_key").text();
 
+                var add_tx_pub_keys = $("#add_tx_pub_keys").text().split(';');
+
+                console.log("add_tx_pub_keys: " + add_tx_pub_keys);
+
                 var payment_id = $("#payment_id").text();
 
 
@@ -185,10 +190,13 @@
                         return;
                     }
 
-                    var address_decoded = decode_address(address);
-
-                    decodeOutputs(tx_json, tx_public_key, viewkey, address_decoded.spend, payment_id);
-
+                    try {
+                        var address_decoded = decode_address(address);
+                        decodeOutputs(tx_json, tx_public_key, viewkey, address_decoded.spend, payment_id);
+                    } catch(err){
+                        console.log(err);
+                        $("#decode-prove-results").html('<h4>Error:' + err.message + '</h4>' );
+                    }
                 });
 
                 $("#prove_btn").click(function() {
@@ -201,10 +209,13 @@
                         return;
                     }
 
-                    var address_decoded = decode_address(address);
-
-                    decodeOutputs(tx_json, address_decoded.view, tx_prv_key, address_decoded.spend, payment_id);
-
+                    try {
+                        var address_decoded = decode_address(address);
+                        decodeOutputs(tx_json, address_decoded.view, tx_prv_key, address_decoded.spend, payment_id);
+                    } catch(err){
+                        console.log(err);
+                        $("#decode-prove-results").html('<h4>Error:' + err.message + '</h4>' );
+                    }
                 });
 
             });
