@@ -173,9 +173,9 @@
 
                 var tx_public_key = $("#tx_pub_key").text();
 
-                var add_tx_pub_keys = $("#add_tx_pub_keys").text().split(';');
+                var add_tx_pub_keys = $("#add_tx_pub_keys").text().split(';').slice(0, -1);
 
-                console.log("add_tx_pub_keys: " + add_tx_pub_keys);
+                console.log("add_tx_pub_keys: ", add_tx_pub_keys);
 
                 var payment_id = $("#payment_id").text();
 
@@ -192,7 +192,9 @@
 
                     try {
                         var address_decoded = decode_address(address);
-                        decodeOutputs(tx_json, tx_public_key, viewkey, address_decoded.spend, payment_id);
+                        decodeOutputs(tx_json, tx_public_key, viewkey,
+                                      address_decoded.spend, payment_id,
+                                      add_tx_pub_keys);
                     } catch(err){
                         console.log(err);
                         $("#decode-prove-results").html('<h4>Error:' + err.message + '</h4>' );
@@ -211,7 +213,9 @@
 
                     try {
                         var address_decoded = decode_address(address);
-                        decodeOutputs(tx_json, address_decoded.view, tx_prv_key, address_decoded.spend, payment_id);
+                        decodeOutputs(tx_json, address_decoded.view, tx_prv_key,
+                                      address_decoded.spend, payment_id,
+                                      add_tx_pub_keys);
                     } catch(err){
                         console.log(err);
                         $("#decode-prove-results").html('<h4>Error:' + err.message + '</h4>' );
@@ -220,7 +224,8 @@
 
             });
 
-            function decodeOutputs(tx_json, pub_key, sec_key, address_pub_key, payment_id) {
+            function decodeOutputs(tx_json, pub_key, sec_key,
+                                   address_pub_key, payment_id, add_tx_pub_keys) {
                 //console.log(tx_json);
 
                 var is_rct = (tx_json.version === 2);
@@ -228,7 +233,16 @@
 
                 var key_derivation = generate_key_derivation(pub_key, sec_key);
 
-                // console.log(pub_key, address_pub_key, sec_key, key_derivation);
+                var add_key_derivation = [];
+
+                if (add_tx_pub_keys) {
+                    for (var i = 0; i < add_tx_pub_keys.length; i++)
+                    {
+                        add_key_derivation.push(generate_key_derivation(add_tx_pub_keys[i], sec_key));
+                    }
+                }
+
+                console.log("add_key_derivation: ", add_key_derivation);
 
 
                 // go over each tx output, and check if it is ours or not
@@ -252,7 +266,12 @@
                     var output_pub_key = output.target.key;
                     var amount         = output.amount;
 
-                    var pubkey_generated = derive_public_key(key_derivation, output_idx, address_pub_key);
+                    var pubkey_generated = (add_tx_pub_keys
+                                           ? derive_public_key(add_key_derivation[output_idx],
+                                                               output_idx, address_pub_key)
+                                           : derive_public_key(key_derivation, output_idx, address_pub_key));
+
+                    console.log(pubkey_generated);
 
                     var mine_output = (output_pub_key == pubkey_generated);
 
@@ -264,7 +283,12 @@
 
                         if (is_rct) {
                             try {
-                                var ecdh = decodeRct(tx_json.rct_signatures, output_idx, key_derivation);
+                                //var ecdh = decodeRct(tx_json.rct_signatures, output_idx, key_derivation);
+
+                                var ecdh = (add_tx_pub_keys
+                                           ? decodeRct(tx_json.rct_signatures, output_idx, add_key_derivation[output_idx])
+                                           : decodeRct(tx_json.rct_signatures, output_idx, key_derivation));
+
                                 amount = ecdh.amount;
                             } catch (err) {
                                 decoding_results_str += "<span class='validNo'>RingCT amount for output " + i + " with pubkey: " + output_pub_key + "</span>" + "<br>"; //rct commitment != computed
