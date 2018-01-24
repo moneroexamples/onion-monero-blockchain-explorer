@@ -211,11 +211,17 @@
                         return;
                     }
 
+                    // when using subaddress, there can be more than one tx_prv_key
+                    var multiple_tx_prv_keys = parse_str_secret_key(tx_prv_key);
+
+                    console.log("multiple_tx_prv_keys: ", multiple_tx_prv_keys);
+
+
                     try {
                         var address_decoded = decode_address(address);
                         decodeOutputs(tx_json, address_decoded.view, tx_prv_key,
                                       address_decoded.spend, payment_id,
-                                      add_tx_pub_keys);
+                                      multiple_tx_prv_keys);
                     } catch(err){
                         console.log(err);
                         $("#decode-prove-results").html('<h4>Error:' + err.message + '</h4>' );
@@ -223,6 +229,25 @@
                 });
 
             });
+
+            // based on C++ by stoffu
+            function parse_str_secret_key(key_str) {
+
+                var multiple_tx_secret_keys = [];
+
+                var num_keys = Math.floor(key_str.length / 64);
+
+                if (num_keys * 64 !=  key_str.length)
+                    throw "num_keys * 64 !=  key_str.length for " +  num_keys +  " and " + key_str;
+
+                for (var i = 0; i < num_keys; i++)
+                {
+                    multiple_tx_secret_keys.push(key_str.slice(64*i, 64*i + 64));
+                }
+
+                return multiple_tx_secret_keys;
+            }
+
 
             function decodeOutputs(tx_json, pub_key, sec_key,
                                    address_pub_key, payment_id, add_tx_pub_keys) {

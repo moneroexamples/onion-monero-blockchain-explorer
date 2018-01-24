@@ -77,14 +77,18 @@ bool
 parse_str_secret_key(const string& key_str, std::vector<T>& secret_keys)
 {
     const size_t num_keys = key_str.size() / 64;
+
     if (num_keys * 64 != key_str.size())
         return false;
+
     secret_keys.resize(num_keys);
+
     for (size_t i = 0; i < num_keys; ++i)
     {
         if (!parse_str_secret_key(key_str.substr(64*i, 64), secret_keys[i]))
             return false;
     }
+
     return true;
 }
 
