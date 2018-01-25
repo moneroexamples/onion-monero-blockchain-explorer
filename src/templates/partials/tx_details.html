@@ -190,11 +190,13 @@
                         return;
                     }
 
+                    multiple_tx_secret_keys = [];
+
                     try {
                         var address_decoded = decode_address(address);
                         decodeOutputs(tx_json, tx_public_key, viewkey,
                                       address_decoded.spend, payment_id,
-                                      add_tx_pub_keys);
+                                      add_tx_pub_keys, multiple_tx_secret_keys, false);
                     } catch(err){
                         console.log(err);
                         $("#decode-prove-results").html('<h4>Error:' + err.message + '</h4>' );
@@ -221,7 +223,7 @@
                         var address_decoded = decode_address(address);
                         decodeOutputs(tx_json, address_decoded.view, tx_prv_key,
                                       address_decoded.spend, payment_id,
-                                      multiple_tx_prv_keys);
+                                      add_tx_pub_keys, multiple_tx_prv_keys, true);
                     } catch(err){
                         console.log(err);
                         $("#decode-prove-results").html('<h4>Error:' + err.message + '</h4>' );
@@ -250,24 +252,34 @@
 
 
             function decodeOutputs(tx_json, pub_key, sec_key,
-                                   address_pub_key, payment_id, add_tx_pub_keys) {
+                                   address_pub_key, payment_id,
+                                   add_tx_pub_keys,  multiple_tx_prv_keys, tx_prove) {
                 //console.log(tx_json);
 
                 var is_rct = (tx_json.version === 2);
                 var rct_type = (is_rct ? tx_json.rct_signatures.type : -1);
 
-                var key_derivation = generate_key_derivation(pub_key, sec_key);
+                var key_derivation = "";
+
+                if (tx_prove)
+                    key_derivation = generate_key_derivation(pub_key, multiple_tx_prv_keys[0]);
+                else
+                    key_derivation = generate_key_derivation(pub_key, sec_key);
+
 
                 var add_key_derivation = [];
 
                 if (add_tx_pub_keys) {
                     for (var i = 0; i < add_tx_pub_keys.length; i++)
                     {
-                        add_key_derivation.push(generate_key_derivation(add_tx_pub_keys[i], sec_key));
+                        if (!tx_prove)
+                            add_key_derivation.push(generate_key_derivation(add_tx_pub_keys[i], sec_key));
+                        else
+                            add_key_derivation.push(generate_key_derivation(pub_key, multiple_tx_prv_keys[i+1]));
                     }
                 }
 
-                console.log("add_key_derivation: ", add_key_derivation);
+                //console.log("add_key_derivation: ", add_key_derivation);
 
 
                 // go over each tx output, and check if it is ours or not
@@ -291,16 +303,31 @@
                     var output_pub_key = output.target.key;
                     var amount         = output.amount;
 
-                    var pubkey_generated = (add_tx_pub_keys
-                                           ? derive_public_key(add_key_derivation[output_idx],
-                                                               output_idx, address_pub_key)
-                                           : derive_public_key(key_derivation, output_idx, address_pub_key));
+                    // var pubkey_generated = (add_tx_pub_keys
+                    //                        ? derive_public_key(add_key_derivation[output_idx],
+                    //                                            output_idx, address_pub_key)
+                    //                        : derive_public_key(key_derivation, output_idx, address_pub_key));
 
-                    console.log(pubkey_generated);
+
+                    var pubkey_generated = derive_public_key(key_derivation, output_idx, address_pub_key);
+
+
+                    //console.log(pubkey_generated);
 
                     var mine_output = (output_pub_key == pubkey_generated);
 
+                    var with_additional = false;
+
                     var mine_output_str = "false";
+
+                    if (!mine_output && add_tx_pub_keys.length == tx_json.vout.length) {
+
+                        pubkey_generated = derive_public_key(add_key_derivation[output_idx],
+                                                             output_idx, address_pub_key);
+
+                        mine_output = (output_pub_key == pubkey_generated);
+                        with_additional = true;
+                    }
 
                     if (mine_output) {
 
@@ -309,12 +336,11 @@
                         if (is_rct) {
                             try {
                                 //var ecdh = decodeRct(tx_json.rct_signatures, output_idx, key_derivation);
+                                var ecdh = decodeRct(tx_json.rct_signatures, output_idx,
+                                                     (with_additional ? add_key_derivation[output_idx] : key_derivation));
 
-                                var ecdh = (add_tx_pub_keys
-                                           ? decodeRct(tx_json.rct_signatures, output_idx, add_key_derivation[output_idx])
-                                           : decodeRct(tx_json.rct_signatures, output_idx, key_derivation));
 
-                                amount = ecdh.amount;
+                                amount = parseInt(ecdh.amount);
                             } catch (err) {
                                 decoding_results_str += "<span class='validNo'>RingCT amount for output " + i + " with pubkey: " + output_pub_key + "</span>" + "<br>"; //rct commitment != computed
                                 throw "invalid rct amount";
@@ -327,8 +353,8 @@
                     decoding_results_str += "<tr>"
                         +"<td>" + output_idx +  "</td>"
                         +"<td>" + output_pub_key +  "</td>"
-                        +"<td>" + mine_output_str +  "</td>"
                         +"<td>" + (amount / 1e12) +  "</td>"
+                        +"<td>" + mine_output_str +  "</td>"
                         +"</tr>";
 
                     //console.log(output[1], pubkey_generated);
