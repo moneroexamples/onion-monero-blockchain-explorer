@@ -173,6 +173,8 @@
 
                 var tx_public_key = $("#tx_pub_key").text();
 
+                // when we process multi-ouput tx, it can have extra public keys
+                // due to sub-addresses
                 var add_tx_pub_keys = $("#add_tx_pub_keys").text().split(';').slice(0, -1);
 
                 console.log("add_tx_pub_keys: ", add_tx_pub_keys);
@@ -190,6 +192,8 @@
                         return;
                     }
 
+                    // not used when decoding, but used when proving.
+                    // so we just use array here
                     multiple_tx_secret_keys = [];
 
                     try {
@@ -199,7 +203,7 @@
                                       add_tx_pub_keys, multiple_tx_secret_keys, false);
                     } catch(err){
                         console.log(err);
-                        $("#decode-prove-results").html('<h4>Error:' + err.message + '</h4>' );
+                        $("#decode-prove-results").html('<h4>Error: ' + err + '</h4>' );
                     }
                 });
 
@@ -216,7 +220,7 @@
                     // when using subaddress, there can be more than one tx_prv_key
                     var multiple_tx_prv_keys = parse_str_secret_key(tx_prv_key);
 
-                    console.log("multiple_tx_prv_keys: ", multiple_tx_prv_keys);
+                    //console.log("multiple_tx_prv_keys: ", multiple_tx_prv_keys);
 
 
                     try {
@@ -226,13 +230,13 @@
                                       add_tx_pub_keys, multiple_tx_prv_keys, true);
                     } catch(err){
                         console.log(err);
-                        $("#decode-prove-results").html('<h4>Error:' + err.message + '</h4>' );
+                        $("#decode-prove-results").html('<h4>Error: ' + err + '</h4>' );
                     }
                 });
 
             });
 
-            // based on C++ by stoffu
+            // based on C++ code by stoffu
             function parse_str_secret_key(key_str) {
 
                 var multiple_tx_secret_keys = [];
@@ -303,16 +307,7 @@
                     var output_pub_key = output.target.key;
                     var amount         = output.amount;
 
-                    // var pubkey_generated = (add_tx_pub_keys
-                    //                        ? derive_public_key(add_key_derivation[output_idx],
-                    //                                            output_idx, address_pub_key)
-                    //                        : derive_public_key(key_derivation, output_idx, address_pub_key));
-
-
                     var pubkey_generated = derive_public_key(key_derivation, output_idx, address_pub_key);
-
-
-                    //console.log(pubkey_generated);
 
                     var mine_output = (output_pub_key == pubkey_generated);
 

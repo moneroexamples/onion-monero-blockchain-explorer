@@ -291,7 +291,7 @@ var cnUtil = (function(initConfig) {
     this.sc_reduce = function(hex) {
         var input = hextobin(hex);
         if (input.length !== 64) {
-            throw "Invalid input length";
+            throw "sc_reduce: Invalid hextobin(hex) input length";
         }
         var mem = Module._malloc(64);
         Module.HEAPU8.set(input, mem);
@@ -304,7 +304,7 @@ var cnUtil = (function(initConfig) {
     this.sc_reduce32 = function(hex) {
         var input = hextobin(hex);
         if (input.length !== 32) {
-            throw "Invalid input length";
+            throw "sc_reduce32: Invalid hextobin(hex) input length";
         }
         var mem = Module._malloc(32);
         Module.HEAPU8.set(input, mem);
@@ -319,7 +319,7 @@ var cnUtil = (function(initConfig) {
             inlen = Math.floor(input.length / 2);
         }*/
         if (input.length % 2 !== 0 || !this.valid_hex(input)) {
-            throw "Input invalid";
+            throw "cn_fast_hash: Input invalid";
         }
         //update to use new keccak impl (approx 45x faster)
         //var state = this.keccak(input, inlen, HASH_STATE_BYTES);
@@ -349,7 +349,7 @@ var cnUtil = (function(initConfig) {
 
     this.sec_key_to_pub = function(sec) {
         if (sec.length !== 64) {
-            throw "Invalid sec length";
+            throw "sec_key_to_pub: Invalid sec length";
         }
         return bintohex(nacl.ll.ge_scalarmult_base(hextobin(sec)));
     };
@@ -388,7 +388,7 @@ var cnUtil = (function(initConfig) {
     };*/
     this.ge_scalarmult = function(pub, sec) {
         if (pub.length !== 64 || sec.length !== 64) {
-            throw "Invalid input length";
+            throw "ge_scalarmult: Invalid pub or sec input lengths";
         }
         return bintohex(nacl.ll.ge_scalarmult(hextobin(pub), hextobin(sec)));
     };
@@ -413,7 +413,7 @@ var cnUtil = (function(initConfig) {
 
 
     this.decrypt_payment_id = function(payment_id8, tx_public_key, acc_prv_view_key) {
-        if (payment_id8.length !== 16) throw "Invalid input length!";  
+        if (payment_id8.length !== 16) throw "decrypt_payment_id: Invalid payment_id8 length!";
 
         var key_derivation = this.generate_key_derivation(tx_public_key, acc_prv_view_key);    
 
@@ -438,7 +438,7 @@ var cnUtil = (function(initConfig) {
     // Generate keypair from seed 2
     // as in simplewallet
     this.generate_keys = function(seed) {
-        if (seed.length !== 64) throw "Invalid input length!";
+        if (seed.length !== 64) throw "generate_keys: Invalid seed input length!";
         var sec = this.sc_reduce32(seed);
         var pub = this.sec_key_to_pub(sec);
         return {
@@ -605,7 +605,7 @@ var cnUtil = (function(initConfig) {
 
     this.generate_key_derivation = function(pub, sec) {
         if (pub.length !== 64 || sec.length !== 64) {
-            throw "Invalid input length";
+            throw "generate_key_derivation: Invalid pub or sec keys lengths";
         }
         var P = this.ge_scalarmult(pub, sec);
         return this.ge_scalarmult(P, d2s(8)); //mul8 to ensure group
@@ -614,7 +614,7 @@ var cnUtil = (function(initConfig) {
     this.derivation_to_scalar = function(derivation, output_index) {
         var buf = "";
         if (derivation.length !== (STRUCT_SIZES.EC_POINT * 2)) {
-            throw "Invalid derivation length!";
+            throw "derivation_to_scalar: Invalid derivation length!";
         }
         buf += derivation;
         var enc = encode_varint(output_index);
@@ -627,7 +627,7 @@ var cnUtil = (function(initConfig) {
 
     this.derive_secret_key = function(derivation, out_index, sec) {
         if (derivation.length !== 64 || sec.length !== 64) {
-            throw "Invalid input length!";
+            throw "derive_secret_key: Invalid derivation or sec input length!";
         }
         var scalar_m = Module._malloc(STRUCT_SIZES.EC_SCALAR);
         var scalar_b = hextobin(this.derivation_to_scalar(derivation, out_index));
@@ -685,7 +685,7 @@ var cnUtil = (function(initConfig) {
 
     this.derive_public_key = function(derivation, out_index, pub) {
         if (derivation.length !== 64 || pub.length !== 64) {
-            throw "Invalid input length!";
+            throw "derive_public_key: Invalid derivation or pub key input lengths!";
         }
         var s = this.derivation_to_scalar(derivation, out_index);
         return bintohex(nacl.ll.ge_add(hextobin(pub), hextobin(this.ge_scalarmult_base(s))));
@@ -693,7 +693,7 @@ var cnUtil = (function(initConfig) {
 
     this.hash_to_ec = function(key) {
         if (key.length !== (KEY_SIZE * 2)) {
-            throw "Invalid input length";
+            throw "hash_to_ec: Invalid key input length";
         }
         var h_m = Module._malloc(HASH_SIZE);
         var point_m = Module._malloc(STRUCT_SIZES.GE_P2);
@@ -715,7 +715,7 @@ var cnUtil = (function(initConfig) {
     //returns a 32 byte point via "ge_p3_tobytes" rather than a 160 byte "p3", otherwise same as above;
     this.hash_to_ec_2 = function(key) {
         if (key.length !== (KEY_SIZE * 2)) {
-            throw "Invalid input length";
+            throw "hash_to_ec_2: Invalid key input length";
         }
         var h_m = Module._malloc(HASH_SIZE);
         var point_m = Module._malloc(STRUCT_SIZES.GE_P2);
@@ -739,7 +739,7 @@ var cnUtil = (function(initConfig) {
 
     this.generate_key_image_2 = function(pub, sec) {
         if (!pub || !sec || pub.length !== 64 || sec.length !== 64) {
-            throw "Invalid input length";
+            throw "generate_key_image_2: Invalid pub or sec keys input length";
         }
         var pub_m = Module._malloc(KEY_SIZE);
         var sec_m = Module._malloc(KEY_SIZE);
@@ -863,7 +863,7 @@ var cnUtil = (function(initConfig) {
 
     this.ge_add = function(p1, p2) {
         if (p1.length !== 64 || p2.length !== 64) {
-            throw "Invalid input length!";
+            throw "ge_add: Invalid p1 or p2 input lengths!";
         }
         return bintohex(nacl.ll.ge_add(hextobin(p1), hextobin(p2)));
     };
@@ -877,7 +877,7 @@ var cnUtil = (function(initConfig) {
     //adds two scalars together
     this.sc_add = function(scalar1, scalar2) {
         if (scalar1.length !== 64 || scalar2.length !== 64) {
-            throw "Invalid input length!";
+            throw "sc_add: Invalid scalar1 or scalar2 input length!";
         }
         var scalar1_m = Module._malloc(STRUCT_SIZES.EC_SCALAR);
         var scalar2_m = Module._malloc(STRUCT_SIZES.EC_SCALAR);
@@ -895,7 +895,7 @@ var cnUtil = (function(initConfig) {
     //subtracts one scalar from another
     this.sc_sub = function(scalar1, scalar2) {
         if (scalar1.length !== 64 || scalar2.length !== 64) {
-            throw "Invalid input length!";
+            throw "sc_sub: Invalid scalar1 or scalar2 input lengths!";
         }
         var scalar1_m = Module._malloc(STRUCT_SIZES.EC_SCALAR);
         var scalar2_m = Module._malloc(STRUCT_SIZES.EC_SCALAR);
@@ -913,7 +913,7 @@ var cnUtil = (function(initConfig) {
     //fun mul function
     this.sc_mul = function(scalar1, scalar2) {
         if (scalar1.length !== 64 || scalar2.length !== 64) {
-            throw "Invalid input length!";
+            throw "sc_mul: Invalid scalar1 or scalar2 input lengths!";
         }
         return d2s(JSBigInt(s2d(scalar1)).multiply(JSBigInt(s2d(scalar2))).remainder(l).toString());
     };
@@ -971,7 +971,7 @@ var cnUtil = (function(initConfig) {
 
     this.ge_double_scalarmult_base_vartime = function(c, P, r) {
         if (c.length !== 64 || P.length !== 64 || r.length !== 64) {
-            throw "Invalid input length!";
+            throw "ge_double_scalarmult_base_vartime: Invalid c, P or r input lengths!";
         }
         return bintohex(nacl.ll.ge_double_scalarmult_base_vartime(hextobin(c), hextobin(P), hextobin(r)));
     };
@@ -1012,7 +1012,7 @@ var cnUtil = (function(initConfig) {
 
     this.ge_double_scalarmult_postcomp_vartime = function(r, P, c, I) {
         if (c.length !== 64 || P.length !== 64 || r.length !== 64 || I.length !== 64) {
-            throw "Invalid input length!";
+            throw "ge_double_scalarmult_postcomp_vartime: Invalid r, p, c or I input lengths!";
         }
         var Pb = this.hash_to_ec_2(P);
         return bintohex(nacl.ll.ge_double_scalarmult_postcomp_vartime(hextobin(r), hextobin(Pb), hextobin(c), hextobin(I)));
