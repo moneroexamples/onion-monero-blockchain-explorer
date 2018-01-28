@@ -217,13 +217,10 @@
                         return;
                     }
 
-                    // when using subaddress, there can be more than one tx_prv_key
-                    var multiple_tx_prv_keys = parse_str_secret_key(tx_prv_key);
-
-                    //console.log("multiple_tx_prv_keys: ", multiple_tx_prv_keys);
-
-
                     try {
+                        // when using subaddress, there can be more than one tx_prv_key
+                        var multiple_tx_prv_keys = parse_str_secret_key(tx_prv_key);
+
                         var address_decoded = decode_address(address);
                         decodeOutputs(tx_json, address_decoded.view, tx_prv_key,
                                       address_decoded.spend, payment_id,
@@ -244,7 +241,7 @@
                 var num_keys = Math.floor(key_str.length / 64);
 
                 if (num_keys * 64 !=  key_str.length)
-                    throw "num_keys * 64 !=  key_str.length for " +  num_keys +  " and " + key_str;
+                    throw "num_keys * 64 !=  key_str.length;
 
                 for (var i = 0; i < num_keys; i++)
                 {

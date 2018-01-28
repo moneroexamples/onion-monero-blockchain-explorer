@@ -258,6 +258,15 @@ The values given, can be checked using Monero daemon's  `print_coinbase_tx_sum` 
 For example, for the above example: `print_coinbase_tx_sum 0 1313449`.
  
 To disable the monitor, simply restart the explorer without `--enable-emission-monitor` flag. 
+
+## Enable JavaScript for decoding proving transactions
+
+By default, decoding and proving tx's outputs are done on the server side. To do this on the client side 
+(private view and tx keys are not send to the server) JavaScript-based decoding can be enabled:
+
+```
+xmrblocks --enable-js
+```
     
 ## Enable SSL (https)
 
