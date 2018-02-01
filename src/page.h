@@ -403,16 +403,6 @@ namespace xmreg
                 template_file["config.js"]       = xmreg::read(JS_CONFIG);
                 template_file["biginteger.js"]   = xmreg::read(JS_BIGINT);
 
-                template_file["all_in_one.js"] = template_file["jquery.min.js"] +
-                                                 template_file["crc32.js"] +
-                                                 template_file["biginteger.js"] +
-                                                 template_file["config.js"] +
-                                                 template_file["nacl-fast-cn.js"] +
-                                                 template_file["crypto.js"] +
-                                                 template_file["base58.js"] +
-                                                 template_file["cn_util.js"] +
-                                                 template_file["sha3.js"];
-
                 // need to set  "testnet: false," flag to reflect
                 // if we are running testnet or mainnet explorer
 
@@ -423,6 +413,16 @@ namespace xmreg
                             std::regex("testnet: false"),
                             "testnet: true");
                 }
+
+                template_file["all_in_one.js"] = template_file["jquery.min.js"] +
+                                                 template_file["crc32.js"] +
+                                                 template_file["biginteger.js"] +
+                                                 template_file["config.js"] +
+                                                 template_file["nacl-fast-cn.js"] +
+                                                 template_file["crypto.js"] +
+                                                 template_file["base58.js"] +
+                                                 template_file["cn_util.js"] +
+                                                 template_file["sha3.js"];
 
                 js_html_files += "<script src=\"/js/jquery.min.js\"></script>";
                 js_html_files += "<script src=\"/js/crc32.js\"></script>";
