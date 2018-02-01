@@ -393,16 +393,25 @@ namespace xmreg
 
             if (enable_js) {
                 // JavaScript files
-                template_file["jquery.min.js"] = xmreg::read(JS_JQUERY);
-                template_file["crc32.js"] = xmreg::read(JS_CRC32);
-                template_file["crypto.js"] = xmreg::read(JS_CRYPTO);
-                template_file["cn_util.js"] = xmreg::read(JS_CNUTIL);
-                template_file["base58.js"] = xmreg::read(JS_BASE58);
+                template_file["jquery.min.js"]   = xmreg::read(JS_JQUERY);
+                template_file["crc32.js"]        = xmreg::read(JS_CRC32);
+                template_file["crypto.js"]       = xmreg::read(JS_CRYPTO);
+                template_file["cn_util.js"]      = xmreg::read(JS_CNUTIL);
+                template_file["base58.js"]       = xmreg::read(JS_BASE58);
                 template_file["nacl-fast-cn.js"] = xmreg::read(JS_NACLFAST);
-                template_file["sha3.js"] = xmreg::read(JS_SHA3);
-                template_file["config.js"] = xmreg::read(JS_CONFIG);
-                template_file["biginteger.js"] = xmreg::read(JS_BIGINT);
+                template_file["sha3.js"]         = xmreg::read(JS_SHA3);
+                template_file["config.js"]       = xmreg::read(JS_CONFIG);
+                template_file["biginteger.js"]   = xmreg::read(JS_BIGINT);
 
+                template_file["all_in_one.js"] = template_file["jquery.min.js"] +
+                                                 template_file["crc32.js"] +
+                                                 template_file["biginteger.js"] +
+                                                 template_file["config.js"] +
+                                                 template_file["nacl-fast-cn.js"] +
+                                                 template_file["crypto.js"] +
+                                                 template_file["base58.js"] +
+                                                 template_file["cn_util.js"] +
+                                                 template_file["sha3.js"];
 
                 // need to set  "testnet: false," flag to reflect
                 // if we are running testnet or mainnet explorer
@@ -425,6 +434,8 @@ namespace xmreg
                 js_html_files += "<script src=\"/js/cn_util.js\"></script>";
                 js_html_files += "<script src=\"/js/sha3.js\"></script>";
 
+                // /js/all_in_one.js file does not exist. it is generated on the fly
+                // from the above real files.
                 js_html_files_all_in_one = "<script src=\"/js/all_in_one.js\"></script>";
             }
 

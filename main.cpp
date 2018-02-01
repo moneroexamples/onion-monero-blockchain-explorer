@@ -551,22 +551,12 @@ main(int ac, const char* av[])
 
         CROW_ROUTE(app, "/js/all_in_one.js")
         ([&](const crow::request& req) {
-
-            string all_in_one = xmrblocks.get_js_file("jquery.min.js") +
-                                xmrblocks.get_js_file("crc32.js") +
-                                xmrblocks.get_js_file("biginteger.js") +
-                                xmrblocks.get_js_file("config.js") +
-                                xmrblocks.get_js_file("nacl-fast-cn.js") +
-                                xmrblocks.get_js_file("crypto.js") +
-                                xmrblocks.get_js_file("base58.js") +
-                                xmrblocks.get_js_file("cn_util.js") +
-                                xmrblocks.get_js_file("sha3.js");
-
-            return all_in_one;
+            // /js/all_in_one.js file does not exist. it is generated on the fly
+            // from the above real files.
+            return xmrblocks.get_js_file("all_in_one.js");
         });
 
-    }
-
+    } // if (enable_js)
 
     if (enable_json_api)
     {
@@ -738,7 +728,7 @@ main(int ac, const char* av[])
             return r;
         });
 
-    }
+    } // if (enable_json_api)
 
     if (enable_autorefresh_option)
     {
