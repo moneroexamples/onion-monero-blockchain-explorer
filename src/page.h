@@ -294,7 +294,7 @@ namespace xmreg
         string mainnet_url;
 
         string js_html_files;
-
+        string js_html_files_all_in_one;
 
         // instead of constatnly reading template files
         // from hard drive for each request, we can read
@@ -391,28 +391,29 @@ namespace xmreg
             template_file["tx_table_header"] = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html");
             template_file["tx_table_row"]    = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html");
 
-            if (enable_js)
-            {
+            if (enable_js) {
                 // JavaScript files
-                template_file["jquery.min.js"]   = xmreg::read(JS_JQUERY);
-                template_file["crc32.js"]        = xmreg::read(JS_CRC32);
-                template_file["crypto.js"]       = xmreg::read(JS_CRYPTO);
-                template_file["cn_util.js"]      = xmreg::read(JS_CNUTIL);
-                template_file["base58.js"]       = xmreg::read(JS_BASE58);
+                template_file["jquery.min.js"] = xmreg::read(JS_JQUERY);
+                template_file["crc32.js"] = xmreg::read(JS_CRC32);
+                template_file["crypto.js"] = xmreg::read(JS_CRYPTO);
+                template_file["cn_util.js"] = xmreg::read(JS_CNUTIL);
+                template_file["base58.js"] = xmreg::read(JS_BASE58);
                 template_file["nacl-fast-cn.js"] = xmreg::read(JS_NACLFAST);
-                template_file["sha3.js"]         = xmreg::read(JS_SHA3);
-                template_file["config.js"]       = xmreg::read(JS_CONFIG);
-                template_file["biginteger.js"]   = xmreg::read(JS_BIGINT);
+                template_file["sha3.js"] = xmreg::read(JS_SHA3);
+                template_file["config.js"] = xmreg::read(JS_CONFIG);
+                template_file["biginteger.js"] = xmreg::read(JS_BIGINT);
 
 
                 // need to set  "testnet: false," flag to reflect
                 // if we are running testnet or mainnet explorer
 
                 if (testnet)
+                {
                     template_file["config.js"] = std::regex_replace(
-                                                    template_file["config.js"],
-                                                    std::regex("testnet: false"),
-                                                    "testnet: true" );
+                            template_file["config.js"],
+                            std::regex("testnet: false"),
+                            "testnet: true");
+                }
 
                 js_html_files += "<script src=\"/js/jquery.min.js\"></script>";
                 js_html_files += "<script src=\"/js/crc32.js\"></script>";
@@ -423,6 +424,8 @@ namespace xmreg
                 js_html_files += "<script src=\"/js/base58.js\"></script>";
                 js_html_files += "<script src=\"/js/cn_util.js\"></script>";
                 js_html_files += "<script src=\"/js/sha3.js\"></script>";
+
+                js_html_files_all_in_one = "<script src=\"/js/all_in_one.js\"></script>";
             }
 
         }
@@ -6210,7 +6213,8 @@ namespace xmreg
         add_js_files(mstch::map& context)
         {
             context["js_files"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
-                return this->js_html_files;
+                //return this->js_html_files;
+                return this->js_html_files_all_in_one;
             }};
         }
 

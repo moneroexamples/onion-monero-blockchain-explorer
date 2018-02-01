@@ -549,6 +549,22 @@ main(int ac, const char* av[])
             return xmrblocks.get_js_file("sha3.js");
         });
 
+        CROW_ROUTE(app, "/js/all_in_one.js")
+        ([&](const crow::request& req) {
+
+            string all_in_one = xmrblocks.get_js_file("jquery.min.js") +
+                                xmrblocks.get_js_file("crc32.js") +
+                                xmrblocks.get_js_file("biginteger.js") +
+                                xmrblocks.get_js_file("config.js") +
+                                xmrblocks.get_js_file("nacl-fast-cn.js") +
+                                xmrblocks.get_js_file("crypto.js") +
+                                xmrblocks.get_js_file("base58.js") +
+                                xmrblocks.get_js_file("cn_util.js") +
+                                xmrblocks.get_js_file("sha3.js");
+
+            return all_in_one;
+        });
+
     }
 
 
