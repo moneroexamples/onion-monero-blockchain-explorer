@@ -55,6 +55,15 @@
 #define TMPL_MY_RAWOUTPUTKEYS       TMPL_DIR "/rawoutputkeys.html"
 #define TMPL_MY_CHECKRAWOUTPUTKEYS  TMPL_DIR "/checkrawoutputkeys.html"
 
+#define JS_JQUERY   TMPL_DIR "/js/jquery.min.js"
+#define JS_CRC32    TMPL_DIR "/js/crc32.js"
+#define JS_BIGINT   TMPL_DIR "/js/biginteger.js"
+#define JS_CONFIG   TMPL_DIR "/js/config.js"
+#define JS_BASE58   TMPL_DIR "/js/base58.js"
+#define JS_CRYPTO   TMPL_DIR "/js/crypto.js"
+#define JS_CNUTIL   TMPL_DIR "/js/cn_util.js"
+#define JS_NACLFAST TMPL_DIR "/js/nacl-fast-cn.js"
+#define JS_SHA3     TMPL_DIR "/js/sha3.js"
 
 #define ONIONEXPLORER_RPC_VERSION_MAJOR 1
 #define ONIONEXPLORER_RPC_VERSION_MINOR 0
@@ -262,6 +271,8 @@ namespace xmreg
 
         bool testnet;
 
+        bool enable_js;
+
         bool enable_pusher;
 
         bool enable_key_image_checker;
@@ -281,6 +292,9 @@ namespace xmreg
 
         string testnet_url;
         string mainnet_url;
+
+        string js_html_files;
+        string js_html_files_all_in_one;
 
         // instead of constatnly reading template files
         // from hard drive for each request, we can read
@@ -314,6 +328,7 @@ namespace xmreg
              string _deamon_url,
              bool _testnet,
              bool _enable_pusher,
+             bool _enable_js,
              bool _enable_key_image_checker,
              bool _enable_output_key_checker,
              bool _enable_autorefresh_option,
@@ -331,6 +346,7 @@ namespace xmreg
                   server_timestamp {std::time(nullptr)},
                   testnet {_testnet},
                   enable_pusher {_enable_pusher},
+                  enable_js {_enable_js},
                   enable_key_image_checker {_enable_key_image_checker},
                   enable_output_key_checker {_enable_output_key_checker},
                   enable_autorefresh_option {_enable_autorefresh_option},
@@ -374,6 +390,55 @@ namespace xmreg
             template_file["tx_details"]      = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html");
             template_file["tx_table_header"] = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html");
             template_file["tx_table_row"]    = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html");
+
+            if (enable_js) {
+                // JavaScript files
+                template_file["jquery.min.js"]   = xmreg::read(JS_JQUERY);
+                template_file["crc32.js"]        = xmreg::read(JS_CRC32);
+                template_file["crypto.js"]       = xmreg::read(JS_CRYPTO);
+                template_file["cn_util.js"]      = xmreg::read(JS_CNUTIL);
+                template_file["base58.js"]       = xmreg::read(JS_BASE58);
+                template_file["nacl-fast-cn.js"] = xmreg::read(JS_NACLFAST);
+                template_file["sha3.js"]         = xmreg::read(JS_SHA3);
+                template_file["config.js"]       = xmreg::read(JS_CONFIG);
+                template_file["biginteger.js"]   = xmreg::read(JS_BIGINT);
+
+                template_file["all_in_one.js"] = template_file["jquery.min.js"] +
+                                                 template_file["crc32.js"] +
+                                                 template_file["biginteger.js"] +
+                                                 template_file["config.js"] +
+                                                 template_file["nacl-fast-cn.js"] +
+                                                 template_file["crypto.js"] +
+                                                 template_file["base58.js"] +
+                                                 template_file["cn_util.js"] +
+                                                 template_file["sha3.js"];
+
+                // need to set  "testnet: false," flag to reflect
+                // if we are running testnet or mainnet explorer
+
+                if (testnet)
+                {
+                    template_file["config.js"] = std::regex_replace(
+                            template_file["config.js"],
+                            std::regex("testnet: false"),
+                            "testnet: true");
+                }
+
+                js_html_files += "<script src=\"/js/jquery.min.js\"></script>";
+                js_html_files += "<script src=\"/js/crc32.js\"></script>";
+                js_html_files += "<script src=\"/js/biginteger.js\"></script>";
+                js_html_files += "<script src=\"/js/config.js\"></script>";
+                js_html_files += "<script src=\"/js/nacl-fast-cn.js\"></script>";
+                js_html_files += "<script src=\"/js/crypto.js\"></script>";
+                js_html_files += "<script src=\"/js/base58.js\"></script>";
+                js_html_files += "<script src=\"/js/cn_util.js\"></script>";
+                js_html_files += "<script src=\"/js/sha3.js\"></script>";
+
+                // /js/all_in_one.js file does not exist. it is generated on the fly
+                // from the above real files.
+                js_html_files_all_in_one = "<script src=\"/js/all_in_one.js\"></script>";
+            }
+
         }
 
         /**
@@ -1413,6 +1478,9 @@ namespace xmreg
 
             add_css_style(context);
 
+            if (enable_js)
+                add_js_files(context);
+
             // render the page
             return mstch::render(template_file["tx"], context, partials);
         }
@@ -1790,10 +1858,10 @@ namespace xmreg
                 }
 
                 outputs.push_back(mstch::map {
-                        {"out_pub_key"   , pod_to_hex(outp.first.key)},
-                        {"amount"        , xmreg::xmr_amount_to_str(outp.second)},
-                        {"mine_output"   , mine_output},
-                        {"output_idx"    , fmt::format("{:02d}", output_idx)}
+                        {"out_pub_key"           , pod_to_hex(outp.first.key)},
+                        {"amount"                , xmreg::xmr_amount_to_str(outp.second)},
+                        {"mine_output"           , mine_output},
+                        {"output_idx"            , fmt::format("{:02d}", output_idx)}
                 });
 
                 ++output_idx;
@@ -3822,6 +3890,15 @@ namespace xmreg
             return  mstch::render(full_page, context, partials);
         }
 
+        string
+        get_js_file(string const& fname)
+        {
+            if (template_file.count(fname))
+                return template_file[fname];
+
+            return string{};
+        }
+
 
         /*
          * Lets use this json api convention for success and error
@@ -5475,6 +5552,20 @@ namespace xmreg
                     {"construction_time"     , string {}},
             };
 
+            // append tx_json as in raw format to html
+            context["tx_json_raw"] = mstch::lambda{[=](const std::string& text) -> mstch::node {
+                return tx_json;
+            }};
+
+            // append additional public tx keys, if there are any, to the html context
+
+            string add_tx_pub_keys;
+
+            for (auto const& apk: txd.additional_pks)
+                add_tx_pub_keys += pod_to_hex(apk) + ";";
+
+            context["add_tx_pub_keys"] = add_tx_pub_keys;
+
             string server_time_str = xmreg::timestamp_to_str_gm(server_timestamp, "%F");
 
             mstch::array inputs = mstch::array{};
@@ -5777,11 +5868,12 @@ namespace xmreg
                 outputs_xmr_sum += outp.second;
 
                 outputs.push_back(mstch::map {
-                        {"out_pub_key"   , pod_to_hex(outp.first.key)},
-                        {"amount"        , xmreg::xmr_amount_to_str(outp.second)},
-                        {"amount_idx"    , out_amount_index_str},
-                        {"num_outputs"   , num_outputs_amount},
-                        {"output_idx"    , fmt::format("{:02d}", output_idx++)}
+                        {"out_pub_key"           , pod_to_hex(outp.first.key)},
+                        {"amount"                , xmreg::xmr_amount_to_str(outp.second)},
+                        {"amount_idx"            , out_amount_index_str},
+                        {"num_outputs"           , num_outputs_amount},
+                        {"unformated_output_idx" , output_idx},
+                        {"output_idx"            , fmt::format("{:02d}", output_idx++)}
                 });
             }
 
@@ -6119,8 +6211,21 @@ namespace xmreg
         void
         add_css_style(mstch::map& context)
         {
+            // add_css_style goes to every subpage so here we mark
+            // if js is anabled or not.
+            context["enable_js"] = enable_js;
+
             context["css_styles"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
                 return template_file["css_styles"];
+            }};
+        }
+
+        void
+        add_js_files(mstch::map& context)
+        {
+            context["js_files"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
+                //return this->js_html_files;
+                return this->js_html_files_all_in_one;
             }};
         }
 
