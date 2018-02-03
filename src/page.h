@@ -2320,6 +2320,9 @@ namespace xmreg
 
             add_css_style(context);
 
+            if (enable_js)
+                add_js_files(context);
+
             if (unsigned_tx_given)
             {
 
@@ -2660,6 +2663,9 @@ namespace xmreg
 
                     add_css_style(context);
 
+                    if (enable_js)
+                        add_js_files(context);
+
                     // render the page
                     return mstch::render(template_file["checkrawtx"], context, partials);
 
@@ -2905,6 +2911,7 @@ namespace xmreg
                 }
 
             }
+
 
             map<string, string> partials {
                     {"tx_details", template_file["tx_details"]},
