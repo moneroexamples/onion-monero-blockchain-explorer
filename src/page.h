@@ -144,9 +144,13 @@ namespace xmreg
         uint64_t size;
         uint64_t blk_height;
         size_t   version;
+
+        bool has_additional_tx_pub_keys {false};
+
         char     pID; // '-' - no payment ID,
                       // 'l' - legacy, long 64 character payment id,
                       // 'e' - encrypted, short, from integrated addresses
+                      // 's' - sub-address (avaliable only for multi-output txs)
         uint64_t unlock_time;
         uint64_t no_confirmations;
         vector<uint8_t> extra;
@@ -208,7 +212,8 @@ namespace xmreg
                     {"payment_id8"       , pod_to_hex(payment_id8)},
                     {"unlock_time"       , unlock_time},
                     {"tx_size"           , fmt::format("{:0.4f}", tx_size)},
-                    {"tx_size_short"     , fmt::format("{:0.2f}", tx_size)}
+                    {"tx_size_short"     , fmt::format("{:0.2f}", tx_size)},
+                    {"has_add_pks"       , !additional_pks.empty()}
             };
 
 
@@ -6006,6 +6011,13 @@ namespace xmreg
             else if (txd.payment_id8 != null_hash8)
             {
                 txd.pID = 'e'; // encrypted payment id
+            }
+            else if (txd.additional_pks.empty() == false)
+            {
+                // if multioutput tx have additional public keys,
+                // mark it so that it represents that it has at least
+                // one sub-address
+                txd.pID = 's';
             }
 
             // get tx signatures for each input
