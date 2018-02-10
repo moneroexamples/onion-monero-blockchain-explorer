@@ -1,4 +1,4 @@
-# Onion Monero Blockchain Explorer
+# Onion Aeon Blockchain Explorer
 
 Currently available Monero blockchain explorers have several limitations which are of 
 special importance to privacy-oriented users:
@@ -100,12 +100,12 @@ sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound
 # go to home folder 
 cd ~
 
-git clone https://github.com/monero-project/monero
+git clone --recursive https://github.com/aeonix/aeon
 
 cd monero/
 
-# checkout last monero version
-#git checkout -b last_release v0.12.0.0
+# checkout last aeon version
+git checkout -b last_release v0.12.0.0
 
 make
 ```
@@ -116,7 +116,7 @@ Once the Monero is compiles, the explorer can be downloaded and compiled
 as follows:
 
 ```bash
-# go to home folder if still in ~/monero
+# go to home folder if still in ~/aeon
 cd ~
 
 # download the source code
@@ -125,14 +125,17 @@ git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
 # enter the downloaded sourced code folder
 cd onion-monero-blockchain-explorer
 
+# checkout the aeon branch
+git checkout origin/aeon
+
 # make a build folder and enter it
 mkdir build && cd build
 
 # create the makefile
 cmake ..
 
-# altearnatively can use: cmake -DMONERO_DIR=/path/to/monero_folder .. 
-# if monero is not in ~/monero
+# altearnatively can use: cmake -DAEON_DIR=/path/to/aeon_folder ..
+# if monero is not in ~/aeon
 #
 # also can build with ASAN (sanitizers), for example
 # cmake -DSANITIZE_ADDRESS=On ..
@@ -141,14 +144,14 @@ cmake ..
 make
 ```
 
-When compilation finishes executable `xmrblocks` should be created. Before running
+When compilation finishes executable `aeonblocks` should be created. Before running
 please make sure that  `~/Downloads` folder exists and is writable. 
 Time zone library that explorer is using, puts there 
 its database of time zone offsets
 
 To run it:
 ```
-./xmrblocks
+./aeonblocks
 ```
 
 By default it will look for blockchain in its default location i.e., `~/.bitmonero/lmdb`.
@@ -156,7 +159,7 @@ You can use `--bc-path` option if its in different location.
 Example output:
 
 ```bash
-[mwo@arch onion-monero-blockchain-explorer]$ ./xmrblocks
+[mwo@arch onion-monero-blockchain-explorer]$ ./aeonblocks
 2016-May-28 10:04:49.160280 Blockchain initialized. last block: 1056761, d0.h0.m12.s47 time ago, current difficulty: 1517857750
 (2016-05-28 02:04:49) [INFO    ] Crow/0.1 server is running, local port 8081
 ```
@@ -166,7 +169,7 @@ Go to your browser: http://127.0.0.1:8081
 ## The explorer's command line options
 
 ```
-xmrblocks, Onion Monero Blockchain Explorer:
+aeonblocks, Onion Monero Blockchain Explorer:
   -h [ --help ] [=arg(=1)] (=0)         produce help message
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
   -s [ --stagenet ] [=arg(=1)] (=0)     use stagenet blockchain
@@ -214,7 +217,7 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         functionality
   --ssl-key-file arg                    path to key file for ssl (https) 
                                         functionality
-  -d [ --deamon-url ] arg (=http:://127.0.0.1:18081)
+  -d [ --deamon-url ] arg (=http:://127.0.0.1:11181)
                                         Monero deamon url
 ```
 
@@ -222,10 +225,10 @@ Example usage, defined as bash aliases.
 
 ```bash
 # for mainnet explorer
-alias xmrblocksmainnet='~/onion-monero-blockchain-explorer/build/xmrblocks    --port 8081 --testnet-url "http://139.162.32.245:8082" --enable-pusher --enable-emission-monitor'
+alias aeonblocksmainnet='~/onion-monero-blockchain-explorer/build/aeonblocks    --port 8081 --testnet-url "http://139.162.32.245:8082" --enable-pusher --enable-emission-monitor'
 
 # for testnet explorer
-alias xmrblockstestnet='~/onion-monero-blockchain-explorer/build/xmrblocks -t --port 8082 --mainnet-url "http://139.162.32.245:8081" --enable-pusher --enable-emission-monitor'
+alias aeonblockstestnet='~/onion-monero-blockchain-explorer/build/aeonblocks -t --port 8082 --mainnet-url "http://139.162.32.245:8081" --enable-pusher --enable-emission-monitor'
 ```
 
 These are aliases similar to those used for http://139.162.32.245:8081/ and http://139.162.32.245:8082/, respectively.
@@ -237,7 +240,7 @@ disabled. To enable it use `--enable-emission-monitor` flag, e.g.,
 
 
 ```bash
-xmrblocks --enable-emission-monitor 
+aeonblocks --enable-emission-monitor 
 ```
 
 This flag will enable emission monitoring thread. When started, the thread
@@ -275,7 +278,7 @@ By default, decoding and proving tx's outputs are done on the server side. To do
 (private view and tx keys are not send to the server) JavaScript-based decoding can be enabled:
 
 ```
-xmrblocks --enable-js
+aeonblocks --enable-js
 ```
     
 ## Enable SSL (https)
@@ -291,10 +294,10 @@ openssl req -new -key server.key -out server.csr
 openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt
 ```
 
-Having the `crt` and `key` files, run `xmrblocks` in the following way:
+Having the `crt` and `key` files, run `aeonblocks` in the following way:
 
 ```bash
-./xmrblocks --ssl-crt-file=/tmp/server.crt --ssl-key-file=/tmp/server.key 
+./aeonblocks --ssl-crt-file=/tmp/server.crt --ssl-key-file=/tmp/server.key 
 ```
 
 Note: Because we generated our own certificate, modern browsers will complain
