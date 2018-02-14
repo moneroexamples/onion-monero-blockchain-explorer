@@ -1753,7 +1753,7 @@ var cnUtil = (function(initConfig) {
             ins_order.push(i);
         }
 
-        // determine indexes whish we shuld sort.
+        // determine indexes which we should sort.
         ins_order.sort(function(i0, i1) {
             if (tx.vin[i0].k_image < tx.vin[i1].k_image) {
                 return 1;
