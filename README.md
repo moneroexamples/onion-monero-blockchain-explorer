@@ -42,7 +42,7 @@ Clearnet versions:
   
 Clearnet testnet Monero version:
 
- - [http://nimis.serveo.net/](http://nimis.serveo.net/) - bleeding edge version. 
+ - [https://retineo.serveo.net](https://retineo.serveo.net) - bleeding edge version (v8). 
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
  - [https://testnet.MoneroExplorer.com/](https://testnet.moneroexplorer.com/) - https enabled.
