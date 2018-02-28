@@ -366,7 +366,9 @@
                         var decrypted_payment_id8
                             = decrypt_payment_id(payment_id, pub_key, sec_key);
                         console.log("decrypted_payment_id8: " + decrypted_payment_id8);
-                        decoding_results_str += "<h5>Decrypted payment id: " + decrypted_payment_id8 + "</h5>"
+                        decoding_results_str += "<h5>Decrypted payment id: "
+                            + decrypted_payment_id8
+                            + " (value incorrect if you are not the recipient of the tx)</h5>"
                     }
                 }
 
