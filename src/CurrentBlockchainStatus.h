@@ -47,7 +47,7 @@ struct CurrentBlockchainStatus
 
     static bf::path blockchain_path;
 
-    static bool testnet;
+    static cryptonote::network_type nettype;
 
     static string output_file;
 

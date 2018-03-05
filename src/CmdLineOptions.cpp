@@ -25,6 +25,8 @@ namespace xmreg
                  "produce help message")
                 ("testnet,t", value<bool>()->default_value(false)->implicit_value(true),
                  "use testnet blockchain")
+                ("stagenet,s", value<bool>()->default_value(false)->implicit_value(true),
+                 "use stagenet blockchain")
                 ("enable-pusher", value<bool>()->default_value(false)->implicit_value(true),
                  "enable signed transaction pusher")
                 ("enable-mixin-details", value<bool>()->default_value(false)->implicit_value(true),
@@ -50,9 +52,11 @@ namespace xmreg
                 ("port,p", value<string>()->default_value("8081"),
                  "default explorer port")
                 ("testnet-url", value<string>()->default_value(""),
-                 "you can specify testnet url, if you run it on mainnet. link will show on front page to testnet explorer")
+                 "you can specify testnet url, if you run it on mainnet or stagenet. link will show on front page to testnet explorer")
+                ("stagenet-url", value<string>()->default_value(""),
+                 "you can specify stagenet url, if you run it on mainnet or testnet. link will show on front page to stagenet explorer")
                 ("mainnet-url", value<string>()->default_value(""),
-                 "you can specify mainnet url, if you run it on testnet. link will show on front page to mainnet explorer")
+                 "you can specify mainnet url, if you run it on testnet or stagenet. link will show on front page to mainnet explorer")
                 ("no-blocks-on-index", value<string>()->default_value("10"),
                  "number of last blocks to be shown on index page")
                 ("mempool-info-timeout", value<string>()->default_value("5000"),

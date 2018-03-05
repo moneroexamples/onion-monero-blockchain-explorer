@@ -274,7 +274,10 @@ namespace xmreg
         atomic<time_t> server_timestamp;
 
 
+        cryptonote::network_type nettype;
+        bool mainnet;
         bool testnet;
+        bool stagenet;
 
         bool enable_js;
 
@@ -296,6 +299,7 @@ namespace xmreg
         uint64_t mempool_info_timeout;
 
         string testnet_url;
+        string stagenet_url;
         string mainnet_url;
 
         string js_html_files;
@@ -331,7 +335,7 @@ namespace xmreg
         page(MicroCore* _mcore,
              Blockchain* _core_storage,
              string _deamon_url,
-             bool _testnet,
+             cryptonote::network_type _nettype,
              bool _enable_pusher,
              bool _enable_js,
              bool _enable_key_image_checker,
@@ -344,12 +348,13 @@ namespace xmreg
              uint64_t _no_blocks_on_index,
              uint64_t _mempool_info_timeout,
              string _testnet_url,
+             string _stagenet_url,
              string _mainnet_url)
                 : mcore {_mcore},
                   core_storage {_core_storage},
                   rpc {_deamon_url},
                   server_timestamp {std::time(nullptr)},
-                  testnet {_testnet},
+                  nettype {_nettype},
                   enable_pusher {_enable_pusher},
                   enable_js {_enable_js},
                   enable_key_image_checker {_enable_key_image_checker},
@@ -362,10 +367,15 @@ namespace xmreg
                   no_blocks_on_index {_no_blocks_on_index},
                   mempool_info_timeout {_mempool_info_timeout},
                   testnet_url {_testnet_url},
+                  stagenet_url {_stagenet_url},
                   mainnet_url {_mainnet_url},
                   block_tx_cache(200),
                   tx_context_cache(1000)
         {
+            mainnet = nettype == cryptonote::network_type::MAINNET;
+            testnet = nettype == cryptonote::network_type::TESTNET;
+            stagenet = nettype == cryptonote::network_type::STAGENET;
+
 
             no_of_mempool_tx_of_frontpage = 25;
 
@@ -417,6 +427,16 @@ namespace xmreg
                             template_file["config.js"],
                             std::regex("testnet: false"),
                             "testnet: true");
+                }
+
+                // the same idea as above for the stagenet
+
+                if (stagenet)
+                {
+                    template_file["config.js"] = std::regex_replace(
+                            template_file["config.js"],
+                            std::regex("stagenet: false"),
+                            "stagenet: true");
                 }
 
                 template_file["all_in_one.js"] = template_file["jquery.min.js"] +
@@ -491,7 +511,9 @@ namespace xmreg
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"testnet"                  , testnet},
+                    {"stagenet"                 , stagenet},
                     {"testnet_url"              , testnet_url},
+                    {"stagenet_url"             , stagenet_url},
                     {"mainnet_url"              , mainnet_url},
                     {"refresh"                  , refresh_page},
                     {"height"                   , height},
@@ -784,7 +806,7 @@ namespace xmreg
             // perapre network info mstch::map for the front page
             string hash_rate;
 
-            if (testnet)
+            if (testnet || stagenet)
             {
                 hash_rate = std::to_string(current_network_info.hash_rate) + " H/s";
             }
@@ -1002,6 +1024,7 @@ namespace xmreg
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"testnet"              , testnet},
+                    {"stagenet"             , stagenet},
                     {"blocks"               , mstch::array()}
             };
 
@@ -1145,6 +1168,7 @@ namespace xmreg
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"testnet"              , testnet},
+                    {"stagenet"             , stagenet},
                     {"blk_hash"             , blk_hash_str},
                     {"blk_height"           , _blk_height},
                     {"blk_timestamp"        , blk_timestamp},
@@ -1471,6 +1495,7 @@ namespace xmreg
 
             mstch::map context {
                     {"testnet"          , this->testnet},
+                    {"stagenet"         , this->stagenet},
                     {"show_cache_times" , show_cache_times},
                     {"txs"              , mstch::array{}}
             };
@@ -1535,7 +1560,7 @@ namespace xmreg
             // parse string representing given monero address
             cryptonote::address_parse_info address_info;
 
-            if (!xmreg::parse_str_address(xmr_address_str,  address_info, testnet))
+            if (!xmreg::parse_str_address(xmr_address_str,  address_info, nettype))
             {
                 cerr << "Cant parse string address: " << xmr_address_str << endl;
                 return string("Cant parse xmr address: " + xmr_address_str);
@@ -1706,6 +1731,7 @@ namespace xmreg
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"testnet"              , testnet},
+                    {"stagenet"             , stagenet},
                     {"tx_hash"              , tx_hash_str},
                     {"tx_prefix_hash"       , pod_to_hex(txd.prefix_hash)},
                     {"xmr_address"          , xmr_address_str},
@@ -2280,7 +2306,8 @@ namespace xmreg
 
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
-                    {"testnet"              , testnet}
+                    {"testnet"              , testnet},
+                    {"stagenet"             , stagenet}
             };
 
             add_css_style(context);
@@ -2312,6 +2339,7 @@ namespace xmreg
             // initalize page template context map
             mstch::map context {
                     {"testnet"              , testnet},
+                    {"stagenet"             , stagenet},
                     {"unsigned_tx_given"    , unsigned_tx_given},
                     {"have_raw_tx"          , true},
                     {"has_error"            , false},
@@ -2389,7 +2417,7 @@ namespace xmreg
                         {
                             mstch::map dest_info {
                                     {"dest_address"  , get_account_address_as_str(
-                                            testnet, a_dest.is_subaddress, a_dest.addr)},
+                                            nettype, a_dest.is_subaddress, a_dest.addr)},
                                     {"dest_amount"   , xmreg::xmr_amount_to_str(a_dest.amount)}
                             };
 
@@ -2733,7 +2761,7 @@ namespace xmreg
                         destination_addresses.push_back(
                                 mstch::map {
                                         {"dest_address"   , get_account_address_as_str(
-                                                testnet, a_dest.is_subaddress, a_dest.addr)},
+                                                nettype, a_dest.is_subaddress, a_dest.addr)},
                                         {"dest_amount"    , xmreg::xmr_amount_to_str(a_dest.amount)},
                                         {"is_this_change" , false}
                                 }
@@ -2750,7 +2778,7 @@ namespace xmreg
                         destination_addresses.push_back(
                                 mstch::map {
                                         {"dest_address"   , get_account_address_as_str(
-                                                testnet, ptx.construction_data.change_dts.is_subaddress, ptx.construction_data.change_dts.addr)},
+                                                nettype, ptx.construction_data.change_dts.is_subaddress, ptx.construction_data.change_dts.addr)},
                                         {"dest_amount"    ,
                                                 xmreg::xmr_amount_to_str(ptx.construction_data.change_dts.amount)},
                                         {"is_this_change" , true}
@@ -2934,6 +2962,7 @@ namespace xmreg
             // initalize page template context map
             mstch::map context {
                     {"testnet"              , testnet},
+                    {"stagenet"             , stagenet},
                     {"have_raw_tx"          , true},
                     {"has_error"            , false},
                     {"error_msg"            , string {}},
@@ -3137,6 +3166,7 @@ namespace xmreg
             // initalize page template context map
             mstch::map context {
                     {"testnet"            , testnet},
+                    {"stagenet"           , stagenet},
             };
 
             add_css_style(context);
@@ -3150,7 +3180,8 @@ namespace xmreg
         {
             // initalize page template context map
             mstch::map context {
-                    {"testnet"            , testnet}
+                    {"testnet"            , testnet},
+                    {"stagenet"           , stagenet}
             };
 
             add_css_style(context);
@@ -3174,6 +3205,7 @@ namespace xmreg
             // initalize page template context map
             mstch::map context{
                     {"testnet"         , testnet},
+                    {"stagenet"        , stagenet},
                     {"has_error"       , false},
                     {"error_msg"       , string{}},
             };
@@ -3262,7 +3294,7 @@ namespace xmreg
 
 
             context.insert({"address"        , REMOVE_HASH_BRAKETS(
-                    xmreg::print_address(address_info, testnet))});
+                    xmreg::print_address(address_info, nettype))});
             context.insert({"viewkey"        , REMOVE_HASH_BRAKETS(
                     fmt::format("{:s}", prv_view_key))});
             context.insert({"has_total_xmr"  , false});
@@ -3291,7 +3323,7 @@ namespace xmreg
                         {"key_image"           , pod_to_hex(key_image)},
                         {"signature"           , fmt::format("{:s}", signature)},
                         {"address"             , xmreg::print_address(
-                                                    address_info, testnet)},
+                                                    address_info, nettype)},
                         {"is_spent"            , core_storage->have_tx_keyimg_as_spent(key_image)},
                         {"tx_hash"             , string{}}
                 };
@@ -3319,6 +3351,7 @@ namespace xmreg
             // initalize page template context map
             mstch::map context{
                     {"testnet"         , testnet},
+                    {"stagenet"        , stagenet},
                     {"has_error"       , false},
                     {"error_msg"       , string{}}
             };
@@ -3395,7 +3428,7 @@ namespace xmreg
             address_parse_info address_info {*xmr_address, false};
 
             context.insert({"address"        , REMOVE_HASH_BRAKETS(
-                    xmreg::print_address(address_info, testnet))});
+                    xmreg::print_address(address_info, nettype))});
             context.insert({"viewkey"        , REMOVE_HASH_BRAKETS(
                     fmt::format("{:s}", prv_view_key))});
             context.insert({"has_total_xmr"  , false});
@@ -3612,19 +3645,21 @@ namespace xmreg
                 // parse string representing given monero address
                 address_parse_info address_info;
 
-                bool testnet_addr {false};
+                cryptonote::network_type nettype_addr {cryptonote::network_type::MAINNET};
 
                 if (search_text[0] == '9' || search_text[0] == 'A' || search_text[0] == 'B')
-                    testnet_addr = true;
+                    nettype_addr = cryptonote::network_type::TESTNET;
+                if (search_text[0] == '5' || search_text[0] == '7')
+                    nettype_addr = cryptonote::network_type::STAGENET;
 
-                if (!xmreg::parse_str_address(search_text, address_info, testnet_addr))
+                if (!xmreg::parse_str_address(search_text, address_info, nettype_addr))
                 {
                     cerr << "Cant parse string address: " << search_text << endl;
                     return string("Cant parse address (probably incorrect format): ")
                            + search_text;
                 }
 
-                return show_address_details(address_info, testnet_addr);
+                return show_address_details(address_info, nettype_addr);
             }
 
             // check if integrated monero address is given based on its length
@@ -3636,7 +3671,7 @@ namespace xmreg
 
                 address_parse_info address_info;
 
-                if (!get_account_address_from_str(address_info, testnet, search_text))
+                if (!get_account_address_from_str(address_info, nettype, search_text))
                 {
                     cerr << "Cant parse string integerated address: " << search_text << endl;
                     return string("Cant parse address (probably incorrect format): ")
@@ -3645,7 +3680,7 @@ namespace xmreg
 
                 return show_integrated_address_details(address_info,
                                                        address_info.payment_id,
-                                                       testnet);
+                                                       nettype);
             }
 
             // all_possible_tx_hashes was field using custom lmdb database
@@ -3659,10 +3694,10 @@ namespace xmreg
         }
 
         string
-        show_address_details(const address_parse_info& address_info, bool testnet = false)
+        show_address_details(const address_parse_info& address_info, cryptonote::network_type nettype = cryptonote::network_type::MAINNET)
         {
 
-            string address_str      = xmreg::print_address(address_info, testnet);
+            string address_str      = xmreg::print_address(address_info, nettype);
             string pub_viewkey_str  = fmt::format("{:s}", address_info.address.m_view_public_key);
             string pub_spendkey_str = fmt::format("{:s}", address_info.address.m_spend_public_key);
 
@@ -3671,7 +3706,8 @@ namespace xmreg
                     {"public_viewkey"     , REMOVE_HASH_BRAKETS(pub_viewkey_str)},
                     {"public_spendkey"    , REMOVE_HASH_BRAKETS(pub_spendkey_str)},
                     {"is_integrated_addr" , false},
-                    {"testnet"            , testnet}
+                    {"testnet"            , testnet},
+                    {"stagenet"           , stagenet},
             };
 
             add_css_style(context);
@@ -3684,10 +3720,10 @@ namespace xmreg
         string
         show_integrated_address_details(const address_parse_info& address_info,
                                         const crypto::hash8& encrypted_payment_id,
-                                        bool testnet = false)
+                                        cryptonote::network_type nettype = cryptonote::network_type::MAINNET)
         {
 
-            string address_str        = xmreg::print_address(address_info, testnet);
+            string address_str        = xmreg::print_address(address_info, nettype);
             string pub_viewkey_str    = fmt::format("{:s}", address_info.address.m_view_public_key);
             string pub_spendkey_str   = fmt::format("{:s}", address_info.address.m_spend_public_key);
             string enc_payment_id_str = fmt::format("{:s}", encrypted_payment_id);
@@ -3698,7 +3734,8 @@ namespace xmreg
                     {"public_spendkey"      , REMOVE_HASH_BRAKETS(pub_spendkey_str)},
                     {"encrypted_payment_id" , REMOVE_HASH_BRAKETS(enc_payment_id_str)},
                     {"is_integrated_addr"   , true},
-                    {"testnet"              , testnet}
+                    {"testnet"              , testnet},
+                    {"stagenet"             , stagenet},
             };
 
             add_css_style(context);
@@ -3789,6 +3826,7 @@ namespace xmreg
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"testnet"         , testnet},
+                    {"stagenet"        , stagenet},
                     {"search_text"     , search_text},
                     {"no_results"      , true},
                     {"to_many_results" , false}
@@ -4753,7 +4791,7 @@ namespace xmreg
             // parse string representing given monero address
             address_parse_info address_info;
 
-            if (!xmreg::parse_str_address(address_str,  address_info, testnet))
+            if (!xmreg::parse_str_address(address_str,  address_info, nettype))
             {
                 j_response["status"]  = "error";
                 j_response["message"] = "Cant parse monero address: " + address_str;
@@ -4958,7 +4996,7 @@ namespace xmreg
             // parse string representing given monero address
             address_parse_info address_info;
 
-            if (!xmreg::parse_str_address(address_str, address_info, testnet))
+            if (!xmreg::parse_str_address(address_str, address_info, nettype))
             {
                 j_response["status"]  = "error";
                 j_response["message"] = "Cant parse monero address: " + address_str;
@@ -5529,6 +5567,7 @@ namespace xmreg
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"testnet"               , testnet},
+                    {"stagenet"              , stagenet},
                     {"tx_hash"               , tx_hash_str},
                     {"tx_prefix_hash"        , string{}},
                     {"tx_pub_key"            , pod_to_hex(txd.pk)},
@@ -6176,7 +6215,8 @@ namespace xmreg
                {"incoming_connections_count", local_copy_network_info.incoming_connections_count},
                {"white_peerlist_size"       , local_copy_network_info.white_peerlist_size},
                {"grey_peerlist_size"        , local_copy_network_info.grey_peerlist_size},
-               {"testnet"                   , local_copy_network_info.testnet},
+               {"testnet"                   , local_copy_network_info.nettype == cryptonote::network_type::TESTNET},
+               {"stagenet"                  , local_copy_network_info.nettype == cryptonote::network_type::STAGENET},
                {"top_block_hash"            , pod_to_hex(local_copy_network_info.top_block_hash)},
                {"cumulative_difficulty"     , local_copy_network_info.cumulative_difficulty},
                {"block_size_limit"          , local_copy_network_info.block_size_limit},

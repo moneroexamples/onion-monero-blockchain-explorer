@@ -88,7 +88,7 @@ MicroCore::init(const string& _blockchain_path)
 
     // initialize Blockchain object to manage
     // the database.
-    return m_blockchain_storage.init(db, m_hardfork, false);
+    return m_blockchain_storage.init(db, m_hardfork, network_type::MAINNET);
 }
 
 /**

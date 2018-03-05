@@ -253,7 +253,8 @@ MempoolStatus::read_network_info()
     local_copy.outgoing_connections_count = rpc_network_info.outgoing_connections_count;
     local_copy.incoming_connections_count = rpc_network_info.incoming_connections_count;
     local_copy.white_peerlist_size        = rpc_network_info.white_peerlist_size;
-    local_copy.testnet                    = rpc_network_info.testnet;
+    local_copy.nettype                    = rpc_network_info.testnet ? cryptonote::network_type::TESTNET : 
+                                            rpc_network_info.stagenet ? cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
     local_copy.cumulative_difficulty      = rpc_network_info.cumulative_difficulty;
     local_copy.block_size_limit           = rpc_network_info.block_size_limit;
     local_copy.start_time                 = rpc_network_info.start_time;
@@ -297,7 +298,7 @@ MempoolStatus::is_thread_running()
 
 bf::path MempoolStatus::blockchain_path {"/home/mwo/.bitmonero/lmdb"};
 string MempoolStatus::deamon_url {"http:://127.0.0.1:18081"};
-bool   MempoolStatus::testnet {false};
+cryptonote::network_type MempoolStatus::nettype {cryptonote::network_type::MAINNET};
 atomic<bool>       MempoolStatus::is_running {false};
 boost::thread      MempoolStatus::m_thread;
 Blockchain*        MempoolStatus::core_storage {nullptr};
