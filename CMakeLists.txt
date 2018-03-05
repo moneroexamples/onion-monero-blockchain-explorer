@@ -110,12 +110,15 @@ set(LIBRARIES
         blocks
         lmdb
         ringct
+        device
         common
         mnemonics
         easylogging
         checkpoints
         version
+        epee_readline
         epee
+        readline
         ${Boost_LIBRARIES}
         pthread
         unbound
