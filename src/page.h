@@ -5573,6 +5573,10 @@ namespace xmreg
             // use this regex to remove all non friendly characters in payment_id_as_ascii string
             static std::regex e {"[^a-zA-Z0-9 ./\\\\!]"};
 
+            double tx_size = static_cast<double>(txd.size) / 1024.0;
+
+            double payed_for_kB = XMR_AMOUNT(txd.fee) / tx_size;
+
             // initalise page tempate map with basic info about blockchain
             mstch::map context {
                     {"testnet"               , testnet},
@@ -5582,9 +5586,9 @@ namespace xmreg
                     {"tx_pub_key"            , pod_to_hex(txd.pk)},
                     {"blk_height"            , tx_blk_height_str},
                     {"tx_blk_height"         , tx_blk_height},
-                    {"tx_size"               , fmt::format("{:0.4f}",
-                                                           static_cast<double>(txd.size) / 1024.0)},
+                    {"tx_size"               , fmt::format("{:0.4f}", tx_size)},
                     {"tx_fee"                , xmreg::xmr_amount_to_str(txd.fee, "{:0.12f}", false)},
+                    {"payed_for_kB"          , fmt::format("{:0.12f}", payed_for_kB)},
                     {"tx_version"            , static_cast<uint64_t>(txd.version)},
                     {"blk_timestamp"         , blk_timestamp},
                     {"blk_timestamp_uint"    , blk.timestamp},
