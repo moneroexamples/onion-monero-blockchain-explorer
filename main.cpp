@@ -50,10 +50,12 @@ main(int ac, const char* av[])
     auto ssl_key_file_opt              = opts.get_option<string>("ssl-key-file");
     auto no_blocks_on_index_opt        = opts.get_option<string>("no-blocks-on-index");
     auto testnet_url                   = opts.get_option<string>("testnet-url");
+    auto stagenet_url                  = opts.get_option<string>("stagenet-url");
     auto mainnet_url                   = opts.get_option<string>("mainnet-url");
     auto mempool_info_timeout_opt      = opts.get_option<string>("mempool-info-timeout");
     auto mempool_refresh_time_opt      = opts.get_option<string>("mempool-refresh-time");
     auto testnet_opt                   = opts.get_option<bool>("testnet");
+    auto stagenet_opt                  = opts.get_option<bool>("stagenet");
     auto enable_key_image_checker_opt  = opts.get_option<bool>("enable-key-image-checker");
     auto enable_output_key_checker_opt = opts.get_option<bool>("enable-output-key-checker");
     auto enable_autorefresh_option_opt = opts.get_option<bool>("enable-autorefresh-option");
@@ -69,6 +71,16 @@ main(int ac, const char* av[])
 
 
     bool testnet                      {*testnet_opt};
+    bool stagenet                     {*stagenet_opt};
+    if (testnet && stagenet)
+    {
+        cerr << "testnet and stagenet cannot be specified at the same time!" << endl;
+        return EXIT_FAILURE;
+    }
+    const cryptonote::network_type nettype = testnet ?
+        cryptonote::network_type::TESTNET : stagenet ?
+        cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
+
     bool enable_pusher                {*enable_pusher_opt};
     bool enable_js                    {*enable_js_opt};
     bool enable_key_image_checker     {*enable_key_image_checker_opt};
@@ -128,7 +140,7 @@ main(int ac, const char* av[])
     // get blockchain path
     path blockchain_path;
 
-    if (!xmreg::get_blockchain_path(bc_path_opt, blockchain_path, testnet))
+    if (!xmreg::get_blockchain_path(bc_path_opt, blockchain_path, nettype))
     {
         cerr << "Error getting blockchain path." << endl;
         return EXIT_FAILURE;
@@ -154,6 +166,8 @@ main(int ac, const char* av[])
 
     if (testnet && deamon_url == "http:://127.0.0.1:18081")
         deamon_url = "http:://127.0.0.1:28081";
+    if (stagenet && deamon_url == "http:://127.0.0.1:18081")
+        deamon_url = "http:://127.0.0.1:38081";
 
     uint64_t mempool_info_timeout {5000};
 
@@ -187,8 +201,8 @@ main(int ac, const char* av[])
 
         xmreg::CurrentBlockchainStatus::blockchain_path
                 = blockchain_path;
-        xmreg::CurrentBlockchainStatus::testnet
-                = testnet;
+        xmreg::CurrentBlockchainStatus::nettype
+                = nettype;
         xmreg::CurrentBlockchainStatus::deamon_url
                 = deamon_url;
         xmreg::CurrentBlockchainStatus::set_blockchain_variables(
@@ -204,8 +218,8 @@ main(int ac, const char* av[])
 
     xmreg::MempoolStatus::blockchain_path
             = blockchain_path;
-    xmreg::MempoolStatus::testnet
-            = testnet;
+    xmreg::MempoolStatus::nettype
+            = nettype;
     xmreg::MempoolStatus::deamon_url
             = deamon_url;
     xmreg::MempoolStatus::set_blockchain_variables(
@@ -236,7 +250,7 @@ main(int ac, const char* av[])
     xmreg::page xmrblocks(&mcore,
                           core_storage,
                           deamon_url,
-                          testnet,
+                          nettype,
                           enable_pusher,
                           enable_js,
                           enable_key_image_checker,
@@ -249,6 +263,7 @@ main(int ac, const char* av[])
                           no_blocks_on_index,
                           mempool_info_timeout,
                           *testnet_url,
+                          *stagenet_url,
                           *mainnet_url);
 
     // crow instance

@@ -153,6 +153,12 @@ MempoolStatus::read_mempool()
         const array<uint64_t, 4>& sum_data = summary_of_in_out_rct(
                tx, output_pub_keys, input_key_imgs);
 
+
+
+        double tx_size =  static_cast<double>(_tx_info.blob_size)/1024.0;
+
+        double payed_for_kB = XMR_AMOUNT(_tx_info.fee) / tx_size;
+
         last_tx.receive_time = _tx_info.receive_time;
 
         last_tx.sum_outputs       = sum_data[0];
@@ -162,15 +168,15 @@ MempoolStatus::read_mempool()
         last_tx.mixin_no          = sum_data[2];
         last_tx.num_nonrct_inputs = sum_data[3];
 
-        last_tx.fee_str         = xmreg::xmr_amount_to_str(_tx_info.fee, "{:0.3f}", false);
-        last_tx.xmr_inputs_str  = xmreg::xmr_amount_to_str(last_tx.sum_inputs , "{:0.3f}");
-        last_tx.xmr_outputs_str = xmreg::xmr_amount_to_str(last_tx.sum_outputs, "{:0.3f}");
-        last_tx.timestamp_str   = xmreg::timestamp_to_str_gm(_tx_info.receive_time);
+        last_tx.fee_str          = xmreg::xmr_amount_to_str(_tx_info.fee, "{:0.3f}", false);
+        last_tx.payed_for_kB_str = fmt::format("{:0.3f}", payed_for_kB);
+        last_tx.xmr_inputs_str   = xmreg::xmr_amount_to_str(last_tx.sum_inputs , "{:0.3f}");
+        last_tx.xmr_outputs_str  = xmreg::xmr_amount_to_str(last_tx.sum_outputs, "{:0.3f}");
+        last_tx.timestamp_str    = xmreg::timestamp_to_str_gm(_tx_info.receive_time);
 
-        last_tx.txsize          = fmt::format("{:0.2f}",
-                                      static_cast<double>(_tx_info.blob_size)/1024.0);
+        last_tx.txsize           = fmt::format("{:0.2f}", tx_size);
 
-        last_tx.pID             = '-';
+        last_tx.pID              = '-';
 
         crypto::hash payment_id;
         crypto::hash8 payment_id8;
@@ -253,7 +259,8 @@ MempoolStatus::read_network_info()
     local_copy.outgoing_connections_count = rpc_network_info.outgoing_connections_count;
     local_copy.incoming_connections_count = rpc_network_info.incoming_connections_count;
     local_copy.white_peerlist_size        = rpc_network_info.white_peerlist_size;
-    local_copy.testnet                    = rpc_network_info.testnet;
+    local_copy.nettype                    = rpc_network_info.testnet ? cryptonote::network_type::TESTNET : 
+                                            rpc_network_info.stagenet ? cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
     local_copy.cumulative_difficulty      = rpc_network_info.cumulative_difficulty;
     local_copy.block_size_limit           = rpc_network_info.block_size_limit;
     local_copy.start_time                 = rpc_network_info.start_time;
@@ -297,7 +304,7 @@ MempoolStatus::is_thread_running()
 
 bf::path MempoolStatus::blockchain_path {"/home/mwo/.bitmonero/lmdb"};
 string MempoolStatus::deamon_url {"http:://127.0.0.1:18081"};
-bool   MempoolStatus::testnet {false};
+cryptonote::network_type MempoolStatus::nettype {cryptonote::network_type::MAINNET};
 atomic<bool>       MempoolStatus::is_running {false};
 boost::thread      MempoolStatus::m_thread;
 Blockchain*        MempoolStatus::core_storage {nullptr};
