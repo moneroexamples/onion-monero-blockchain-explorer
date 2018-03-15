@@ -1813,7 +1813,7 @@ namespace xmreg
 
             if (decrypted_payment_id8 != null_hash8)
             {
-                if (decrypt_payment_id(decrypted_payment_id8, pub_key, prv_view_key))
+                if (mcore->get_device()->decrypt_payment_id(decrypted_payment_id8, pub_key, prv_view_key))
                 {
                     context["decrypted_payment_id8"] = pod_to_hex(decrypted_payment_id8);
                 }
@@ -5272,7 +5272,7 @@ namespace xmreg
 
             if (decrypted_payment_id8 != null_hash8)
             {
-                if (decrypt_payment_id(decrypted_payment_id8, txd.pk, prv_view_key))
+                if (mcore->get_device()->decrypt_payment_id(decrypted_payment_id8, txd.pk, prv_view_key))
                 {
                     payment_id = pod_to_hex(decrypted_payment_id8);
                 }
