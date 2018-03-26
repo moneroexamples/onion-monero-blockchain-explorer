@@ -1943,6 +1943,12 @@ public:
 
             try
             {
+                // before proceeding with geting the outputs based on the amount and absolute offset
+                // check how many outputs there are for that amount
+                // go to next input if a too large offset was found
+                if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
+                    continue;
+
                 core_storage->get_db().get_output_key(in_key.amount,
                                                       absolute_offsets,
                                                       mixin_outputs);
@@ -4063,6 +4069,12 @@ public:
 
             try
             {
+                // before proceeding with geting the outputs based on the amount and absolute offset
+                // check how many outputs there are for that amount
+                // go to next input if a too large offset was found
+                if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
+                    continue;
+
                 core_storage->get_db().get_output_key(in_key.amount,
                                                       absolute_offsets,
                                                       outputs);
@@ -5680,36 +5692,10 @@ private:
 
             try
             {
-
                 // before proceeding with geting the outputs based on the amount and absolute offset
                 // check how many outputs there are for that amount
-                uint64_t no_outputs = core_storage->get_db().get_num_outputs(in_key.amount);
-
-                bool offset_too_large {false};
-
-                int offset_idx {-1};
-
-                for (auto o: absolute_offsets)
-                {
-                    offset_idx++;
-
-                    if (o >= no_outputs)
-                    {
-                        offset_too_large = true;
-                        cerr << "Absolute offset (" << o << ") of an output in a key image "
-                             << pod_to_hex(in_key.k_image)
-                             << " (ring member no: " << offset_idx << ") "
-                             << "for amount "  << in_key.amount
-                             << " is too large. There are only "
-                             << no_outputs << " such outputs!\n";
-                        continue;
-                    }
-
-                    offset_too_large = false;
-                }
-
                 // go to next input if a too large offset was found
-                if (offset_too_large)
+                if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
                     continue;
 
                 // offsets seems good, so try to get the outputs for the amount and
@@ -6292,6 +6278,39 @@ private:
         (void) error_msg;
 
         return true;
+    }
+
+    bool
+    are_absolute_offsets_good(
+            std::vector<uint64_t> const& absolute_offsets,
+            txin_to_key const& in_key)
+    {
+        // before proceeding with geting the outputs based on the amount and absolute offset
+        // check how many outputs there are for that amount
+        uint64_t no_outputs = core_storage->get_db().get_num_outputs(in_key.amount);
+
+        bool offset_too_large {false};
+
+        int offset_idx {-1};
+
+        for (auto o: absolute_offsets)
+        {
+            offset_idx++;
+
+            if (o >= no_outputs)
+            {
+                offset_too_large = true;
+                cerr << "Absolute offset (" << o << ") of an output in a key image "
+                     << pod_to_hex(in_key.k_image)
+                     << " (ring member no: " << offset_idx << ") "
+                     << "for amount "  << in_key.amount
+                     << " is too large. There are only "
+                     << no_outputs << " such outputs!\n";
+                continue;
+            }
+        }
+
+        return !offset_too_large;
     }
 
     string
