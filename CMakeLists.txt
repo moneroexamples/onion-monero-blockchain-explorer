@@ -105,6 +105,7 @@ set(LIBRARIES
         cryptonote_core
         cryptonote_protocol
         cryptonote_basic
+        multisig
         daemonizer
         cncrypto
         blocks
