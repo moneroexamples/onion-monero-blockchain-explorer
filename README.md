@@ -8,7 +8,7 @@ special importance to privacy-oriented users:
  - track users activates through google analytics,
  - are closed sourced,
  - are not available as hidden services,
- - do not support Monero testnet,
+ - do not support Monero testnet nor stagenet networks,
  - have limited JSON API.
 
 
@@ -26,11 +26,10 @@ Monero C++ libraries, but also demonstrates how to use:
 Tor users:
  
  - [http://dvwae436pd7nt4bc.onion](http://dvwae436pd7nt4bc.onion) (Front-end templates are [maintained by @suhz](https://github.com/suhz/onion-monero-blockchain-explorer/tree/moneroexplorer.com/src/templates)).
- - [http://libwh5lvouddzei4.onion/](http://libwh5lvouddzei4.onion/) - bleeding edge version.
   
 Clearnet versions:
 
- - [https://oculus.serveo.net/](https://oculus.serveo.net/) - bleeding edge version. 
+ - [https://oculus.serveo.net/](https://oculus.serveo.net/) - bleeding edge version (down for now). 
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
  - [https://MoneroExplorer.com/](https://moneroexplorer.com/) - nice looking one, https enabled.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
@@ -38,15 +37,19 @@ Clearnet versions:
  - [https://moneroexplorer.pro/](https://moneroexplorer.pro/) - nice looking one, https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
- - [http://atesti.mooo.com:8081/](http://atesti.mooo.com:8081/) - Proof of Existence built with Monero and IPFS. 
- - [https://anunknownamount.com](https://anunknownamount.com/) - looks nice, https enabled.
+ - [http://atesti.mooo.com:8081/](http://atesti.mooo.com:8081/) - Proof of Existence built with Monero and IPFS (down currently). 
+ - [https://anunknownamount.com](https://anunknownamount.com/) - looks nice, https enabled (down currently).
   
 Clearnet testnet Monero version:
 
- - [http://nimis.serveo.net/](http://nimis.serveo.net/) - bleeding edge version. 
+ - [http://nimis.serveo.net/](http://nimis.serveo.net/) - bleeding edge version (down currently). 
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
- - [https://testnet.MoneroExplorer.com/](https://testnet.moneroexplorer.com/) - https enabled.
+ - [https://testnet.MoneroExplorer.com/](https://testnet.moneroexplorer.com/) - https enabled (down currently).
+ 
+Clearnet stagenet Monero version:
+
+ - [http://162.210.173.150:8083/](http://162.210.173.150:8083/) - recent version. 
 
 i2p users (main Monero network):
 
@@ -100,6 +103,9 @@ cd ~
 git clone https://github.com/monero-project/monero
 
 cd monero/
+
+# checkout last monero version
+#git checkout -b last_release v0.12.0.0
 
 make
 ```
@@ -163,6 +169,7 @@ Go to your browser: http://127.0.0.1:8081
 xmrblocks, Onion Monero Blockchain Explorer:
   -h [ --help ] [=arg(=1)] (=0)         produce help message
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
+  -s [ --stagenet ] [=arg(=1)] (=0)     use stagenet blockchain
   --enable-pusher [=arg(=1)] (=0)       enable signed transaction pusher
   --enable-mixin-details [=arg(=1)] (=0)
                                         enable mixin details for key images, 
@@ -172,7 +179,7 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         enable key images file checker
   --enable-output-key-checker [=arg(=1)] (=0)
                                         enable outputs key file checker
-  --enable-json-api arg (=1)            enable JSON REST api
+  --enable-json-api [=arg(=1)] (=1)     enable JSON REST api
   --enable-tx-cache [=arg(=1)] (=0)     enable caching of transaction details
   --show-cache-times [=arg(=1)] (=0)    show times of getting data from cache 
                                         vs no cache
@@ -187,11 +194,14 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         thread
   -p [ --port ] arg (=8081)             default explorer port
   --testnet-url arg                     you can specify testnet url, if you run
-                                        it on mainnet. link will show on front 
-                                        page to testnet explorer
+                                        it on mainnet or stagenet. link will 
+                                        show on front page to testnet explorer
+  --stagenet-url arg                    you can specify stagenet url, if you 
+                                        run it on mainnet or testnet. link will
+                                        show on front page to stagenet explorer
   --mainnet-url arg                     you can specify mainnet url, if you run
-                                        it on testnet. link will show on front 
-                                        page to mainnet explorer
+                                        it on testnet or stagenet. link will 
+                                        show on front page to mainnet explorer
   --no-blocks-on-index arg (=10)        number of last blocks to be shown on 
                                         index page
   --mempool-info-timeout arg (=5000)    maximum time, in milliseconds, to wait 
@@ -234,14 +244,14 @@ This flag will enable emission monitoring thread. When started, the thread
  will initially scan the entire blockchain, and calculate the cumulative emission based on each block.
 Since it is a separate thread, the explorer will work as usual during this time. 
 Every 10000 blocks, the thread will save current emission in a file, by default, 
- in `~/.bitmonero/lmdb/emission_amount.txt`. For testnet network, 
- it is `~/.bitmonero/testnet/lmdb/emission_amount.txt`. This file is used so that we don't
+ in `~/.bitmonero/lmdb/emission_amount.txt`. For testnet or stagenet networks, 
+ it is `~/.bitmonero/testnet/lmdb/emission_amount.txt` or `~/.bitmonero/stagenet/lmdb/emission_amount.txt`. This file is used so that we don't
  need to rescan entire blockchain whenever the explorer is restarted. When the 
  explorer restarts, the thread will first check if `~/.bitmonero/lmdb/emission_amount.txt`
  is present, read its values, and continue from there if possible. Subsequently, only the initial
  use of the tread is time consuming. Once the thread scans the entire blockchain, it updates
  the emission amount using new blocks as they come. Since the explorer writes this file, there can
- be only one instance of it running for mainnet and testnet. Thus, for example, you cant have 
+ be only one instance of it running for mainnet, testnet and stagenet. Thus, for example, you cant have 
  two explorers for mainnet
  running at the same time, as they will be trying to write and read the same file at the same time,
  leading to unexpected results. Off course having one instance for mainnet and one instance for testnet

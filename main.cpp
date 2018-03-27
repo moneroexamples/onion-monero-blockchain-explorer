@@ -72,11 +72,13 @@ main(int ac, const char* av[])
 
     bool testnet                      {*testnet_opt};
     bool stagenet                     {*stagenet_opt};
+
     if (testnet && stagenet)
     {
         cerr << "testnet and stagenet cannot be specified at the same time!" << endl;
         return EXIT_FAILURE;
     }
+
     const cryptonote::network_type nettype = testnet ?
         cryptonote::network_type::TESTNET : stagenet ?
         cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
