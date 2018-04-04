@@ -43,6 +43,7 @@ Clearnet versions:
 Clearnet testnet Monero version:
 
  - [http://nimis.serveo.net/](http://nimis.serveo.net/) - bleeding edge version (down currently). 
+
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
  - [https://testnet.MoneroExplorer.com/](https://testnet.moneroexplorer.com/) - https enabled (down currently).
@@ -60,6 +61,7 @@ Alternative block explorers:
 - [http://moneroblocks.info](http://moneroblocks.info/)
 - [https://monerobase.com](https://monerobase.com/)
 - [http://chainradar.com](http://chainradar.com/xmr/blocks)
+
  
 ## Onion Monero Blockchain Explorer features
 
@@ -84,6 +86,14 @@ The key features of the Onion Monero Blockchain Explorer are:
  - decoding encrypted payment id.
  - decoding outputs and proving txs sent to sub-address.
 
+
+## Development branch
+
+Current development branch, which includes support for sub-addresses is:
+
+ - https://github.com/moneroexamples/onion-monero-blockchain-explorer/tree/devel
+ 
+ 
 
 ## Compilation on Ubuntu 16.04
 
