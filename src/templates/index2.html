@@ -24,12 +24,18 @@
          {{#testnet_url}}
             | <a href="{{testnet_url}}">Go to testnet explorer</a>
          {{/testnet_url}}
+         {{#stagenet_url}}
+            | <a href="{{stagenet_url}}">Go to stagenet explorer</a>
+         {{/stagenet_url}}
          {{#mainnet_url}}
             | <a href="{{mainnet_url}}">Go to mainnet explorer</a>
          {{/mainnet_url}}
          {{#testnet}}
             | This is <span style="color:#ff6b62">testnet</span> blockchian
          {{/testnet}}
+         {{#stagenet}}
+            | This is <span style="color:#ff6b62">stagenet</span> blockchian
+         {{/stagenet}}
 
         </h3>
 
@@ -37,6 +43,7 @@
     {{#network_info}}
         <h3 style="font-size: 12px; margin-top: 5px; margin-bottom: 3">
             Network difficulty: {{difficulty}}
+            | Hard fork: v{{current_hf_version}}
             | Hash rate: {{hash_rate}}
             | Fee per kb: {{fee_per_kb}}
             | Median block size limit: {{block_size_limit}} kB
@@ -73,10 +80,10 @@
                     <td>height</td>
                     <td>age {{age_format}}<!--(Δm)--></td>
                     <td>size [kB]<!--(Δm)--></td>
-                    <td>tx hash</td>
-                    <td>fees</td>
+                    <td>transaction hash</td>
+                    <td>fee</td>
                     <td>outputs</td>
-                    <td>in(nonrct)/out</td>
+                    <td>in/out/pID</td>
                     <td>ring size</td>
                     <td>tx size [kB]</td>
                 </tr>
@@ -88,7 +95,7 @@
                     <td><a href="/tx/{{hash}}">{{hash}}</a></td>
                     <td>{{tx_fee_short}}</td>
                     <td>{{sum_outputs_short}}</td>
-                    <td>{{no_inputs}}({{no_nonrct_inputs}})/{{no_outputs}}</td>
+                    <td>{{no_inputs}}/{{no_outputs}}/{{pID}}</td>
                     <td>{{mixin}}</td>
                     <td>{{tx_size_short}}</td>
                 </tr>

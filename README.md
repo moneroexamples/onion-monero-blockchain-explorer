@@ -8,7 +8,7 @@ special importance to privacy-oriented users:
  - track users activates through google analytics,
  - are closed sourced,
  - are not available as hidden services,
- - do not support Monero testnet,
+ - do not support Monero testnet nor stagenet networks,
  - have limited JSON API.
 
 
@@ -29,7 +29,7 @@ Tor users:
   
 Clearnet versions:
 
- - [https://oculus.serveo.net/](https://oculus.serveo.net/) - bleeding edge version. 
+ - [https://oculus.serveo.net/](https://oculus.serveo.net/) - bleeding edge version (down for now). 
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
  - [https://MoneroExplorer.com/](https://moneroexplorer.com/) - nice looking one, https enabled.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
@@ -37,15 +37,20 @@ Clearnet versions:
  - [https://moneroexplorer.pro/](https://moneroexplorer.pro/) - nice looking one, https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
- - [http://atesti.mooo.com:8081/](http://atesti.mooo.com:8081/) - Proof of Existence built with Monero and IPFS. 
--  [https://anunknownamount.com](https://anunknownamount.com/) - looks nice, https enabled.
+ - [http://atesti.mooo.com:8081/](http://atesti.mooo.com:8081/) - Proof of Existence built with Monero and IPFS (down currently). 
+ - [https://anunknownamount.com](https://anunknownamount.com/) - looks nice, https enabled (down currently).
   
 Clearnet testnet Monero version:
 
- - [https://retineo.serveo.net](https://retineo.serveo.net) - bleeding edge version (v8). 
+ - [http://nimis.serveo.net/](http://nimis.serveo.net/) - bleeding edge version (down currently). 
+
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
- - [https://testnet.MoneroExplorer.com/](https://testnet.moneroexplorer.com/) - https enabled.
+ - [https://testnet.MoneroExplorer.com/](https://testnet.moneroexplorer.com/) - https enabled (down currently).
+ 
+Clearnet stagenet Monero version:
+
+ - [http://162.210.173.150:8083/](http://162.210.173.150:8083/) - recent version. 
 
 i2p users (main Monero network):
 
@@ -62,7 +67,8 @@ Alternative block explorers:
 
 The key features of the Onion Monero Blockchain Explorer are:
 
- - no javascript, no cookies, no web analytics trackers, no images,
+ - no cookies, no web analytics trackers, no images,
+ - by default no JavaScript, but can be enabled for client side decoding and proving transactions,
  - open sourced,
  - made fully in C++,
  - showing encrypted payments ID,
@@ -71,14 +77,14 @@ The key features of the Onion Monero Blockchain Explorer are:
  - showing public components of Monero addresses,
  - decoding which outputs and mixins belong to the given Monero address and viewkey,
  - can prove that you send Monero to someone,
- - detailed information about mixins, such as, mixins'
- age, timescale, mixin of mixins,
+ - detailed information about mixins, such as, mixins' age, timescale, mixin of mixins,
  - showing number of amount output indices,
  - support Monero testnet network,
  - tx checker and pusher for online pushing of transactions,
  - estimate possible spendings based on address and viewkey,
  - can provide total amount of all miner fees.
  - decoding encrypted payment id.
+ - decoding outputs and proving txs sent to sub-address.
 
 
 ## Development branch
@@ -91,7 +97,7 @@ Current development branch, which includes support for sub-addresses is:
 
 ## Compilation on Ubuntu 16.04
 
-##### Compile latest Monero release v0.11
+##### Compile latest Monero development version
 
 Download and compile recent Monero into your home folder:
 
@@ -99,17 +105,17 @@ Download and compile recent Monero into your home folder:
 # first install monero dependecines
 sudo apt update
 
-sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libcurl4-openssl-dev libgtest-dev libreadline-dev libzmq3-dev
+sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libcurl4-openssl-dev libgtest-dev libreadline-dev libzmq3-dev libsodium-dev
 
 # go to home folder 
 cd ~
 
-git clone https://github.com/monero-project/monero
+git clone --recursive https://github.com/monero-project/monero
 
 cd monero/
 
 # checkout last monero version
-git checkout -b last_release v0.11.1.0
+#git checkout -b last_release v0.12.0.0
 
 make
 ```
@@ -137,6 +143,9 @@ cmake ..
 
 # altearnatively can use: cmake -DMONERO_DIR=/path/to/monero_folder .. 
 # if monero is not in ~/monero
+#
+# also can build with ASAN (sanitizers), for example
+# cmake -DSANITIZE_ADDRESS=On ..
 
 # compile
 make
@@ -170,6 +179,7 @@ Go to your browser: http://127.0.0.1:8081
 xmrblocks, Onion Monero Blockchain Explorer:
   -h [ --help ] [=arg(=1)] (=0)         produce help message
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
+  -s [ --stagenet ] [=arg(=1)] (=0)     use stagenet blockchain
   --enable-pusher [=arg(=1)] (=0)       enable signed transaction pusher
   --enable-mixin-details [=arg(=1)] (=0)
                                         enable mixin details for key images, 
@@ -179,11 +189,13 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         enable key images file checker
   --enable-output-key-checker [=arg(=1)] (=0)
                                         enable outputs key file checker
-  --enable-json-api arg (=1)            enable JSON REST api
+  --enable-json-api [=arg(=1)] (=1)     enable JSON REST api
   --enable-tx-cache [=arg(=1)] (=0)     enable caching of transaction details
   --show-cache-times [=arg(=1)] (=0)    show times of getting data from cache 
                                         vs no cache
   --enable-block-cache [=arg(=1)] (=0)  enable caching of block details
+  --enable-js [=arg(=1)] (=0)           enable checking outputs and proving txs
+                                        using JavaScript on client side
   --enable-autorefresh-option [=arg(=1)] (=0)
                                         enable users to have the index page on 
                                         autorefresh
@@ -192,11 +204,14 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         thread
   -p [ --port ] arg (=8081)             default explorer port
   --testnet-url arg                     you can specify testnet url, if you run
-                                        it on mainnet. link will show on front 
-                                        page to testnet explorer
+                                        it on mainnet or stagenet. link will 
+                                        show on front page to testnet explorer
+  --stagenet-url arg                    you can specify stagenet url, if you 
+                                        run it on mainnet or testnet. link will
+                                        show on front page to stagenet explorer
   --mainnet-url arg                     you can specify mainnet url, if you run
-                                        it on testnet. link will show on front 
-                                        page to mainnet explorer
+                                        it on testnet or stagenet. link will 
+                                        show on front page to mainnet explorer
   --no-blocks-on-index arg (=10)        number of last blocks to be shown on 
                                         index page
   --mempool-info-timeout arg (=5000)    maximum time, in milliseconds, to wait 
@@ -239,14 +254,14 @@ This flag will enable emission monitoring thread. When started, the thread
  will initially scan the entire blockchain, and calculate the cumulative emission based on each block.
 Since it is a separate thread, the explorer will work as usual during this time. 
 Every 10000 blocks, the thread will save current emission in a file, by default, 
- in `~/.bitmonero/lmdb/emission_amount.txt`. For testnet network, 
- it is `~/.bitmonero/testnet/lmdb/emission_amount.txt`. This file is used so that we don't
+ in `~/.bitmonero/lmdb/emission_amount.txt`. For testnet or stagenet networks, 
+ it is `~/.bitmonero/testnet/lmdb/emission_amount.txt` or `~/.bitmonero/stagenet/lmdb/emission_amount.txt`. This file is used so that we don't
  need to rescan entire blockchain whenever the explorer is restarted. When the 
  explorer restarts, the thread will first check if `~/.bitmonero/lmdb/emission_amount.txt`
  is present, read its values, and continue from there if possible. Subsequently, only the initial
  use of the tread is time consuming. Once the thread scans the entire blockchain, it updates
  the emission amount using new blocks as they come. Since the explorer writes this file, there can
- be only one instance of it running for mainnet and testnet. Thus, for example, you cant have 
+ be only one instance of it running for mainnet, testnet and stagenet. Thus, for example, you cant have 
  two explorers for mainnet
  running at the same time, as they will be trying to write and read the same file at the same time,
  leading to unexpected results. Off course having one instance for mainnet and one instance for testnet
@@ -263,6 +278,15 @@ The values given, can be checked using Monero daemon's  `print_coinbase_tx_sum` 
 For example, for the above example: `print_coinbase_tx_sum 0 1313449`.
  
 To disable the monitor, simply restart the explorer without `--enable-emission-monitor` flag. 
+
+## Enable JavaScript for decoding proving transactions
+
+By default, decoding and proving tx's outputs are done on the server side. To do this on the client side 
+(private view and tx keys are not send to the server) JavaScript-based decoding can be enabled:
+
+```
+xmrblocks --enable-js
+```
     
 ## Enable SSL (https)
 
@@ -290,6 +314,11 @@ for any practical use need to have properly issued ssl certificates.
 ## JSON API
 
 The explorer has JSON api. For the API, it uses conventions defined by [JSend](https://labs.omniti.com/labs/jsend).
+By default the api is disabled. To enable it, use `--enable-json-api` flag, e.g.,
+
+```
+./xmrblocks --enable-json-api
+```
 
 #### api/transaction/<tx_hash>
 

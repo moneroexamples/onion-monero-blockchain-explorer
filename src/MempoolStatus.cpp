@@ -35,48 +35,48 @@ MempoolStatus::start_mempool_status_thread()
          {
              uint64_t loop_index {0};
 
-             // so that network status is checked every minute
-             uint64_t loop_index_divider = std::max<uint64_t>(1, 60 / mempool_refresh_time);
+            // so that network status is checked every minute
+            uint64_t loop_index_divider = std::max<uint64_t>(1, 60 / mempool_refresh_time);
 
-             while (true)
+            while (true)
+            {
+
+             // we just query network status every minute. No sense
+             // to do it as frequently as getting mempool data.
+             if (loop_index % loop_index_divider == 0)
              {
-
-                 // we just query network status every minute. No sense
-                 // to do it as frequently as getting mempool data.
-                 if (loop_index % loop_index_divider == 0)
+                 if (!MempoolStatus::read_network_info())
                  {
-                     if (!MempoolStatus::read_network_info())
-                     {
-                         network_info local_copy = current_network_info;
+                     network_info local_copy = current_network_info;
 
-                         cerr << " Cant read network info "<< endl;
+                     cerr << " Cant read network info "<< endl;
 
-                         local_copy.current = false;
+                     local_copy.current = false;
 
-                         current_network_info = local_copy;
-                     }
-                     else
-                     {
-                         cout << "Current network info read, ";
-                         loop_index == 0;
-                     }
+                     current_network_info = local_copy;
                  }
-
-                 if (MempoolStatus::read_mempool())
+                 else
                  {
-                     vector<mempool_tx> current_mempool_txs = get_mempool_txs();
-
-                     cout << "mempool status txs: "
-                          << current_mempool_txs.size()
-                          << endl;
+                     cout << "Current network info read, ";
+                     loop_index = 0;
                  }
+             }
 
-                 // when we reach top of the blockchain, update
-                 // the emission amount every minute.
-                 boost::this_thread::sleep_for(
-                         boost::chrono::seconds(mempool_refresh_time));
+             if (MempoolStatus::read_mempool())
+             {
+                 vector<mempool_tx> current_mempool_txs = get_mempool_txs();
 
-                 ++loop_index;
+                 cout << "mempool status txs: "
+                      << current_mempool_txs.size()
+                      << endl;
+             }
+
+             // when we reach top of the blockchain, update
+             // the emission amount every minute.
+             boost::this_thread::sleep_for(
+                     boost::chrono::seconds(mempool_refresh_time));
+
+             ++loop_index;
 
              } // while (true)
          }
@@ -84,7 +84,7 @@ MempoolStatus::start_mempool_status_thread()
          {
              cout << "Mempool status thread interrupted." << endl;
              return;
-         }
+        }
 
         }}; //  m_thread = boost::thread{[]()
 
@@ -126,63 +126,75 @@ MempoolStatus::read_mempool()
         // get transaction info of the tx in the mempool
         const tx_info& _tx_info = mempool_tx_info.at(i);
 
-        crypto::hash mem_tx_hash = null_hash;
+        transaction tx;
+        crypto::hash tx_hash;
+        crypto::hash tx_prefix_hash;
 
-        if (epee::string_tools::hex_to_pod(_tx_info.id_hash, mem_tx_hash))
+        if (!parse_and_validate_tx_from_blob(
+                _tx_info.tx_blob, tx, tx_hash, tx_prefix_hash))
         {
-            transaction tx;
+            cerr << "Cant make tx from _tx_info.tx_blob" << endl;
+            return false;
+        }
 
-            if (!xmreg::make_tx_from_json(_tx_info.tx_json, tx))
-            {
-                cerr << "Cant make tx from _tx_info.tx_json" << endl;
-                return false;
-            }
+        mempool_size_kB += _tx_info.blob_size;
 
-            crypto::hash tx_hash_reconstructed = get_transaction_hash(tx);
+        local_copy_of_mempool_txs.push_back(mempool_tx {tx_hash, tx});
 
-            if (mem_tx_hash != tx_hash_reconstructed)
-            {
-                cerr << "Hash of reconstructed tx from json does not match "
-                        "what we should get!"
-                     << endl;
+        mempool_tx& last_tx = local_copy_of_mempool_txs.back();
 
-                return false;
-            }
+        // key images of inputs
+        vector<txin_to_key> input_key_imgs;
 
-            mempool_size_kB += _tx_info.blob_size;
+        // public keys and xmr amount of outputs
+        vector<pair<txout_to_key, uint64_t>> output_pub_keys;
 
-            local_copy_of_mempool_txs.push_back(mempool_tx {tx_hash_reconstructed, tx});
+        // sum xmr in inputs and ouputs in the given tx
+        const array<uint64_t, 4>& sum_data = summary_of_in_out_rct(
+               tx, output_pub_keys, input_key_imgs);
 
-            mempool_tx& last_tx = local_copy_of_mempool_txs.back();
 
-            // key images of inputs
-            vector<txin_to_key> input_key_imgs;
 
-            // public keys and xmr amount of outputs
-            vector<pair<txout_to_key, uint64_t>> output_pub_keys;
+        double tx_size =  static_cast<double>(_tx_info.blob_size)/1024.0;
 
-            // sum xmr in inputs and ouputs in the given tx
-            const array<uint64_t, 4>& sum_data = summary_of_in_out_rct(
-                   tx, output_pub_keys, input_key_imgs);
+        double payed_for_kB = XMR_AMOUNT(_tx_info.fee) / tx_size;
 
-            last_tx.receive_time = _tx_info.receive_time;
+        last_tx.receive_time = _tx_info.receive_time;
 
-            last_tx.sum_outputs       = sum_data[0];
-            last_tx.sum_inputs        = sum_data[1];
-            last_tx.no_outputs        = output_pub_keys.size();
-            last_tx.no_inputs         = input_key_imgs.size();
-            last_tx.mixin_no          = sum_data[2];
-            last_tx.num_nonrct_inputs = sum_data[3];
+        last_tx.sum_outputs       = sum_data[0];
+        last_tx.sum_inputs        = sum_data[1];
+        last_tx.no_outputs        = output_pub_keys.size();
+        last_tx.no_inputs         = input_key_imgs.size();
+        last_tx.mixin_no          = sum_data[2];
+        last_tx.num_nonrct_inputs = sum_data[3];
 
-            last_tx.fee_str         = xmreg::xmr_amount_to_str(_tx_info.fee, "{:0.3f}", false);
-            last_tx.xmr_inputs_str  = xmreg::xmr_amount_to_str(last_tx.sum_inputs , "{:0.3f}");
-            last_tx.xmr_outputs_str = xmreg::xmr_amount_to_str(last_tx.sum_outputs, "{:0.3f}");
-            last_tx.timestamp_str   = xmreg::timestamp_to_str_gm(_tx_info.receive_time);
+        last_tx.fee_str          = xmreg::xmr_amount_to_str(_tx_info.fee, "{:0.3f}", false);
+        last_tx.payed_for_kB_str = fmt::format("{:0.4f}", payed_for_kB);
+        last_tx.xmr_inputs_str   = xmreg::xmr_amount_to_str(last_tx.sum_inputs , "{:0.3f}");
+        last_tx.xmr_outputs_str  = xmreg::xmr_amount_to_str(last_tx.sum_outputs, "{:0.3f}");
+        last_tx.timestamp_str    = xmreg::timestamp_to_str_gm(_tx_info.receive_time);
 
-            last_tx.txsize          = fmt::format("{:0.2f}",
-                                          static_cast<double>(_tx_info.blob_size)/1024.0);
+        last_tx.txsize           = fmt::format("{:0.2f}", tx_size);
 
-        } // if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
+        last_tx.pID              = '-';
+
+        crypto::hash payment_id;
+        crypto::hash8 payment_id8;
+
+        get_payment_id(tx, payment_id, payment_id8);
+
+        if (payment_id != null_hash)
+            last_tx.pID = 'l'; // legacy payment id
+        else if (payment_id8 != null_hash8)
+            last_tx.pID = 'e'; // encrypted payment id
+        else if (!get_additional_tx_pub_keys_from_extra(tx).empty())
+        {
+            // if multioutput tx have additional public keys,
+            // mark it so that it represents that it has at least
+            // one sub-address
+            last_tx.pID = 's';
+        }
+       // } // if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
 
     } // for (size_t i = 0; i < mempool_tx_info.size(); ++i)
 
@@ -211,9 +223,7 @@ MempoolStatus::read_network_info()
     COMMAND_RPC_GET_INFO::response rpc_network_info;
 
     if (!rpc.get_network_info(rpc_network_info))
-    {
         return false;
-    }
 
     uint64_t fee_estimated;
 
@@ -228,6 +238,11 @@ MempoolStatus::read_network_info()
     }
 
     (void) error_msg;
+
+    COMMAND_RPC_HARD_FORK_INFO::response rpc_hardfork_info;
+
+    if (!rpc.get_hardfork_info(rpc_hardfork_info))
+        return false;
 
 
     network_info local_copy;
@@ -244,14 +259,18 @@ MempoolStatus::read_network_info()
     local_copy.outgoing_connections_count = rpc_network_info.outgoing_connections_count;
     local_copy.incoming_connections_count = rpc_network_info.incoming_connections_count;
     local_copy.white_peerlist_size        = rpc_network_info.white_peerlist_size;
-    local_copy.testnet                    = rpc_network_info.testnet;
+    local_copy.nettype                    = rpc_network_info.testnet ? cryptonote::network_type::TESTNET : 
+                                            rpc_network_info.stagenet ? cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
     local_copy.cumulative_difficulty      = rpc_network_info.cumulative_difficulty;
     local_copy.block_size_limit           = rpc_network_info.block_size_limit;
     local_copy.start_time                 = rpc_network_info.start_time;
 
+
     epee::string_tools::hex_to_pod(rpc_network_info.top_block_hash, local_copy.top_block_hash);
     local_copy.fee_per_kb                 = fee_estimated;
     local_copy.info_timestamp             = static_cast<uint64_t>(std::time(nullptr));
+
+    local_copy.current_hf_version         = rpc_hardfork_info.version;
 
     local_copy.current                    = true;
 
@@ -285,7 +304,7 @@ MempoolStatus::is_thread_running()
 
 bf::path MempoolStatus::blockchain_path {"/home/mwo/.bitmonero/lmdb"};
 string MempoolStatus::deamon_url {"http:://127.0.0.1:18081"};
-bool   MempoolStatus::testnet {false};
+cryptonote::network_type MempoolStatus::nettype {cryptonote::network_type::MAINNET};
 atomic<bool>       MempoolStatus::is_running {false};
 boost::thread      MempoolStatus::m_thread;
 Blockchain*        MempoolStatus::core_storage {nullptr};

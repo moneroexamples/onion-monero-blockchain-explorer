@@ -8,9 +8,9 @@
             <tr>
                 <td>age [h:m:s]</td>
                 <td>transaction hash</td>
-                <td>fee</td>
-                <td>outputs</td>
-                <td>in(nonrct)/out</td>
+                <td>fee/per_kB</td>
+                <!--<td>outputs</td>-->
+                <td>in/out/pID</td>
                 <td>ring size</td>
                 <td>tx size [kB]</td>
             </tr>
@@ -18,9 +18,9 @@
             <tr>
                 <td>{{age}}</td>
                 <td><a href="/tx/{{hash}}">{{hash}}</a></td>
-                <td>{{fee}}</td>
-                <td>{{xmr_outputs}}</td>
-                <td>{{no_inputs}}({{no_nonrct_inputs}})/{{no_outputs}}</td>
+                <td>{{fee}}/{{payed_for_kB}}</td>
+                <!--<td>{{xmr_outputs}}</td>-->
+                <td>{{no_inputs}}/{{no_outputs}}/{{pID}}</td>
                 <td>{{mixin}}</td>
                 <td>{{txsize}}</td>
             </tr>

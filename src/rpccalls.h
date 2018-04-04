@@ -9,6 +9,7 @@
 #include "monero_headers.h"
 
 #include <mutex>
+#include <utility>
 
 
 
@@ -23,7 +24,7 @@ struct has_destructor
 {
     // has destructor
     template <typename A>
-    static std::true_type test(decltype(declval<A>().~A()) *)
+    static std::true_type test(decltype(std::declval<A>().~A()) *)
     {
         return std::true_type();
     }
@@ -97,6 +98,9 @@ public:
 
     bool
     get_network_info(COMMAND_RPC_GET_INFO::response& info);
+
+    bool
+    get_hardfork_info( COMMAND_RPC_HARD_FORK_INFO::response& res);
 
     bool
     get_dynamic_per_kb_fee_estimate(

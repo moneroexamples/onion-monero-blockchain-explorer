@@ -38,10 +38,15 @@ struct MempoolStatus
         uint64_t mixin_no {0};
 
         string fee_str;
+        string payed_for_kB_str;
         string xmr_inputs_str;
         string xmr_outputs_str;
         string timestamp_str;
         string txsize;
+
+        char     pID; // '-' - no payment ID,
+                      // 'l' - legacy, long 64 character payment id,
+                      // 'e' - encrypted, short, from integrated addresses
     };
 
 
@@ -62,11 +67,12 @@ struct MempoolStatus
         uint64_t incoming_connections_count  {0};
         uint64_t white_peerlist_size  {0};
         uint64_t grey_peerlist_size  {0};
-        bool testnet {false};
+        cryptonote::network_type nettype {cryptonote::network_type::MAINNET};
         crypto::hash top_block_hash;
         uint64_t cumulative_difficulty  {0};
         uint64_t block_size_limit  {0};
         uint64_t start_time  {0};
+        uint64_t current_hf_version {0};
 
         uint64_t hash_rate  {0};
         uint64_t fee_per_kb  {0};
@@ -114,7 +120,7 @@ struct MempoolStatus
 
     static bf::path blockchain_path;
     static string deamon_url;
-    static bool testnet;
+    static cryptonote::network_type nettype;
 
     // make object for accessing the blockchain here
     static MicroCore* mcore;
