@@ -35,7 +35,7 @@ namespace xmreg
                  "enable key images file checker")
                 ("enable-output-key-checker", value<bool>()->default_value(false)->implicit_value(true),
                  "enable outputs key file checker")
-                ("enable-json-api", value<bool>()->default_value(true)->implicit_value(true),
+                ("enable-json-api", value<bool>()->default_value(false)->implicit_value(true),
                  "enable JSON REST api")
                 ("enable-tx-cache", value<bool>()->default_value(false)->implicit_value(true),
                  "enable caching of transaction details")
