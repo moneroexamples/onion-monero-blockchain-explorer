@@ -304,6 +304,11 @@ for any practical use need to have properly issued ssl certificates.
 ## JSON API
 
 The explorer has JSON api. For the API, it uses conventions defined by [JSend](https://labs.omniti.com/labs/jsend).
+By default the api is disabled. To enable it, use `--enable-json-api` flag, e.g.,
+
+```
+./xmrblocks --enable-json-api
+```
 
 #### api/transaction/<tx_hash>
 
