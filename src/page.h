@@ -1253,7 +1253,7 @@ public:
 
         // add total fees in the block to the context
         context["sum_fees"]
-                = xmreg::xmr_amount_to_str(sum_fees, "{:0.6f}", "0");
+                = xmreg::xmr_amount_to_str(sum_fees, "{:0.6f}", false);
 
         // get xmr in the block reward
         context["blk_reward"]
