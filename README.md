@@ -29,17 +29,13 @@ Tor users:
   
 Clearnet versions:
 
- - [https://oculus.serveo.net/](https://oculus.serveo.net/) - bleeding edge version (down for now). 
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
  - [https://MoneroExplorer.com/](https://moneroexplorer.com/) - nice looking one, https enabled.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one. 
  - [https://moneroexplorer.pro/](https://moneroexplorer.pro/) - nice looking one, https enabled.
- - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
- - [http://atesti.mooo.com:8081/](http://atesti.mooo.com:8081/) - Proof of Existence built with Monero and IPFS (down currently). 
  - [https://blox.minexmr.com/](https://blox.minexmr.com/) - - https enabled.
- - [https://anunknownamount.com](https://anunknownamount.com/) - looks nice, https enabled (down currently).
   
 Clearnet testnet Monero version:
 
@@ -47,7 +43,6 @@ Clearnet testnet Monero version:
 
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
- - [https://testnet.MoneroExplorer.com/](https://testnet.moneroexplorer.com/) - https enabled (down currently).
  
 Clearnet stagenet Monero version:
 
