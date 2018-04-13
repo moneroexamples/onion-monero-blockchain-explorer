@@ -37,14 +37,13 @@ Clearnet versions:
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
  - [https://blox.minexmr.com/](https://blox.minexmr.com/) - - https enabled.
   
-Testnet Monero version:
+Testnet version:
 
- - [http://nimis.serveo.net/](http://nimis.serveo.net/) - bleeding edge version (down currently). 
-
+ - [http://nimis.serveo.net/](http://nimis.serveo.net/) - bleeding edge version (down currently).
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
  
-Stagenet Monero version:
+Stagenet version:
 
  - [http://162.210.173.150:8083/](http://162.210.173.150:8083/) - recent version. 
 
@@ -85,7 +84,7 @@ The key features of the Onion Monero Blockchain Explorer are:
 
 ## Development branch
 
-Current development branch, which includes support for sub-addresses is:
+Current development branch:
 
  - https://github.com/moneroexamples/onion-monero-blockchain-explorer/tree/devel
  
