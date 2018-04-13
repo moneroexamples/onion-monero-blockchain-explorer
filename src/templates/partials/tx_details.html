@@ -184,8 +184,8 @@
 
                 $("#decode_btn").click(function() {
 
-                    var address = $("input[name=xmr_address]").val();
-                    var viewkey = $("input[name=viewkey]").val();
+                    var address = $("input[name=xmr_address]").val().trim();
+                    var viewkey = $("input[name=viewkey]").val().trim();
 
                     if (!address || !viewkey) {
                         $("#decode-prove-results").html("<h4>Address or viewkey key not provided!</h4>");
@@ -209,8 +209,8 @@
 
                 $("#prove_btn").click(function() {
 
-                    var address    = $("input[name=xmraddress]").val();
-                    var tx_prv_key = $("input[name=txprvkey]").val();
+                    var address    = $("input[name=xmraddress]").val().trim();
+                    var tx_prv_key = $("input[name=txprvkey]").val().trim();
 
                     if (!address || !tx_prv_key) {
                         $("#decode-prove-results").html("<h4>Address or tx private key not provided!</h4>");
@@ -325,7 +325,7 @@
 
                         mine_output_str = '<span style="color: #008009;font-weight: bold">true</span>';
 
-                        if (is_rct) {
+                        if (is_rct && rct_type > 0 /* not coinbase*/) {
                             try {
                                 //var ecdh = decodeRct(tx_json.rct_signatures, output_idx, key_derivation);
                                 var ecdh = decodeRct(tx_json.rct_signatures, output_idx,

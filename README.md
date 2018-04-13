@@ -37,14 +37,14 @@ Clearnet versions:
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
  - [https://blox.minexmr.com/](https://blox.minexmr.com/) - - https enabled.
   
-Clearnet testnet Monero version:
+Testnet Monero version:
 
  - [http://nimis.serveo.net/](http://nimis.serveo.net/) - bleeding edge version (down currently). 
 
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
  
-Clearnet stagenet Monero version:
+Stagenet Monero version:
 
  - [http://162.210.173.150:8083/](http://162.210.173.150:8083/) - recent version. 
 
