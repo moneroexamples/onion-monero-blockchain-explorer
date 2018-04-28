@@ -263,10 +263,24 @@ MempoolStatus::read_network_info()
                                             rpc_network_info.stagenet ? cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
     local_copy.cumulative_difficulty      = rpc_network_info.cumulative_difficulty;
     local_copy.block_size_limit           = rpc_network_info.block_size_limit;
+    local_copy.block_size_median          = rpc_network_info.block_size_median;
     local_copy.start_time                 = rpc_network_info.start_time;
 
 
-    epee::string_tools::hex_to_pod(rpc_network_info.top_block_hash, local_copy.top_block_hash);
+    strncpy(local_copy.block_size_limit_str, fmt::format("{:0.2f}",
+                                             static_cast<double>(
+                                             local_copy.block_size_limit ) / 2.0 / 1024.0).c_str(),
+                                             sizeof(local_copy.block_size_limit_str));
+
+
+    strncpy(local_copy.block_size_median_str, fmt::format("{:0.2f}",
+                                              static_cast<double>(
+                                              local_copy.block_size_median) / 1024.0).c_str(),
+                                              sizeof(local_copy.block_size_median_str));
+
+    epee::string_tools::hex_to_pod(rpc_network_info.top_block_hash,
+                                   local_copy.top_block_hash);
+
     local_copy.fee_per_kb                 = fee_estimated;
     local_copy.info_timestamp             = static_cast<uint64_t>(std::time(nullptr));
 

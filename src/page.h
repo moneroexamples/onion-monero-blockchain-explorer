@@ -790,9 +790,7 @@ public:
         } // while (i <= end_height)
 
         // calculate median size of the blocks shown
-        double blk_size_median = xmreg::calc_median(blk_sizes.begin(), blk_sizes.end());
-
-        context["blk_size_median"] = fmt::format("{:0.2f}", blk_size_median);
+        //double blk_size_median = xmreg::calc_median(blk_sizes.begin(), blk_sizes.end());
 
         // save computational times for disply in the frontend
 
@@ -835,10 +833,6 @@ public:
             current_network_info.current = true;
         }
 
-        string block_size_limit = fmt::format("{:0.2f}",
-                          static_cast<double>(
-                                  current_network_info.block_size_limit) / 2.0 / 1024.0);
-
         context["network_info"] = mstch::map {
                 {"difficulty"        , current_network_info.difficulty},
                 {"hash_rate"         , hash_rate},
@@ -846,13 +840,17 @@ public:
                 {"alt_blocks_no"     , current_network_info.alt_blocks_count},
                 {"have_alt_block"    , (current_network_info.alt_blocks_count > 0)},
                 {"tx_pool_size"      , current_network_info.tx_pool_size},
-                {"block_size_limit"  , block_size_limit},
+                {"block_size_limit"  , string {current_network_info.block_size_limit_str}},
+                {"block_size_median" , string {current_network_info.block_size_median_str}},
                 {"is_current_info"   , current_network_info.current},
                 {"is_pool_size_zero" , (current_network_info.tx_pool_size == 0)},
                 {"current_hf_version", current_network_info.current_hf_version},
                 {"age"               , network_info_age.first},
                 {"age_format"        , network_info_age.second},
         };
+
+        // median size of 100 blocks
+        context["blk_size_median"] = string {current_network_info.block_size_median_str};
 
         string mempool_html {"Cant get mempool_pool"};
 
@@ -6253,6 +6251,7 @@ private:
            {"top_block_hash"            , pod_to_hex(local_copy_network_info.top_block_hash)},
            {"cumulative_difficulty"     , local_copy_network_info.cumulative_difficulty},
            {"block_size_limit"          , local_copy_network_info.block_size_limit},
+           {"block_size_median"         , local_copy_network_info.block_size_median},
            {"start_time"                , local_copy_network_info.start_time},
            {"fee_per_kb"                , local_copy_network_info.fee_per_kb},
            {"current_hf_version"        , local_copy_network_info.current_hf_version}
