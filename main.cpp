@@ -227,8 +227,10 @@ main(int ac, const char* av[])
     xmreg::MempoolStatus::set_blockchain_variables(
             &mcore, core_storage);
 
-    strcpy(xmreg::MempoolStatus::current_network_info.block_size_limit_str, "0.0");
-    strcpy(xmreg::MempoolStatus::current_network_info.block_size_median_str, "0.0");
+    xmreg::MempoolStatus::network_info initial_info;
+    strcpy(initial_info.block_size_limit_str, "0.0");
+    strcpy(initial_info.block_size_median_str, "0.0");
+    xmreg::MempoolStatus::current_network_info = initial_info;
 
     try
     {
