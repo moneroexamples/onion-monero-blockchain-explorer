@@ -72,8 +72,8 @@ struct MempoolStatus
         uint64_t cumulative_difficulty  {0};
         uint64_t block_size_limit  {0};
         uint64_t block_size_median  {0};
-        char block_size_limit_str[10] {"0.0"};   // needs to be trivially copyable
-        char block_size_median_str[10] {"0.0"} ;  // std::string is not trivially copyable
+        char block_size_limit_str[10];   // needs to be trivially copyable
+        char block_size_median_str[10];  // std::string is not trivially copyable
         uint64_t start_time  {0};
         uint64_t current_hf_version {0};
 
