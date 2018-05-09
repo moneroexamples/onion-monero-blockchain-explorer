@@ -338,7 +338,7 @@ void chunks(Iterator begin,
  */
 template <typename T>
 inline string
-remove_bad_chars(T&& in_str, std::regex const& rgx = std::regex ("[^a-zA-Z0-9]"))
+remove_bad_chars(T&& in_str, std::regex const& rgx = std::regex ("[^a-zA-Z0-9+/=]"))
 {
     return std::regex_replace(std::forward<T>(in_str), rgx, "");
 }
