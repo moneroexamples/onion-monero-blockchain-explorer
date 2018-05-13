@@ -3440,12 +3440,11 @@ public:
                 reinterpret_cast<const account_public_address*>(
                         decoded_raw_data.data());
 
-        address_parse_info address_info {*xmr_address, false};
+        address_parse_info address_info {*xmr_address, false, false, crypto::null_hash8};
 
         context.insert({"address"        , REMOVE_HASH_BRAKETS(
                 xmreg::print_address(address_info, nettype))});
-        context.insert({"viewkey"        , REMOVE_HASH_BRAKETS(
-                fmt::format("{:s}", prv_view_key))});
+        context.insert({"viewkey"        , pod_to_hex(prv_view_key)});
         context.insert({"has_total_xmr"  , false});
         context.insert({"total_xmr"      , string{}});
         context.insert({"output_keys"    , mstch::array{}});
@@ -3461,6 +3460,7 @@ public:
             std::stringstream iss;
             iss << body;
             boost::archive::portable_binary_iarchive ar(iss);
+            //boost::archive::binary_iarchive ar(iss);
 
             ar >> outputs;
 
