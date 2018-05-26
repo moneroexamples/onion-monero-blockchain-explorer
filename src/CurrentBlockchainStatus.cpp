@@ -303,7 +303,7 @@ cryptonote::network_type CurrentBlockchainStatus::nettype {cryptonote::network_t
 
 string CurrentBlockchainStatus::output_file {"emission_amount.txt"};
 
-string CurrentBlockchainStatus::deamon_url {"http:://127.0.0.1:18081"};
+string CurrentBlockchainStatus::deamon_url {"http:://127.0.0.1:11181"};
 
 uint64_t  CurrentBlockchainStatus::blockchain_chunk_size {10000};
 
