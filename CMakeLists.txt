@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(PROJECT_NAME
-        xmrblocks)
+        aeonblocks)
 
 
 project(${PROJECT_NAME})
@@ -15,13 +15,13 @@ if (WIN32)
 endif()
 
 
-if (NOT MONERO_DIR)
-    set(MONERO_DIR ~/monero)
+if (NOT AEON_DIR)
+    set(AEON_DIR ~/aeon)
 endif()
 
-message(STATUS MONERO_DIR ": ${MONERO_DIR}")
+message(STATUS AEON_DIR ": ${AEON_DIR}")
 
-set(MONERO_SOURCE_DIR ${MONERO_DIR}
+set(MONERO_SOURCE_DIR ${AEON_DIR}
         CACHE PATH "Path to the root directory for Monero")
 
 # set location of monero build tree

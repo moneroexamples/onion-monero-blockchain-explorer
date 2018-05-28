@@ -1578,7 +1578,7 @@ public:
         if (!xmreg::parse_str_address(xmr_address_str,  address_info, nettype))
         {
             cerr << "Cant parse string address: " << xmr_address_str << endl;
-            return string("Cant parse xmr address: " + xmr_address_str);
+            return string("Cant parse AEON address: " + xmr_address_str);
         }
 
         // parse string representing given private key
