@@ -1,28 +1,12 @@
 # Onion Aeon Blockchain Explorer
 
-Currently available Monero blockchain explorers have several limitations which are of
-special importance to privacy-oriented users:
+The Onion Monero Blockchain Explorer was ported to Aeon. The port was
+conducted by [stoffu](https://github.com/moneroexamples/onion-monero-blockchain-explorer/pull/118).
 
- - they use JavaScript,
- - have images which might be used for [cookieless tracking](http://lucb1e.com/rp/cookielesscookies/),
- - track users activates through google analytics,
- - are closed sourced,
- - are not available as hidden services,
- - do not support Monero testnet nor stagenet networks,
- - have limited JSON API.
-
-
-In this example, these limitations are addressed by development of
-an Onion Monero Blockchain Explorer. The example not only shows how to use
-Monero C++ libraries, but also demonstrates how to use:
-
- - [crow](https://github.com/ipkn/crow) - C++ micro web framework
- - [mstch](https://github.com/no1msd/mstch) - C++ {{mustache}} templates
- - [json](https://github.com/nlohmann/json) - JSON for Modern C++
- - [fmt](https://github.com/fmtlib/fmt) - Small, safe and fast string formatting library
 
 ## Explorer hosts
 
+<<<<<<< HEAD
 Tor users:
 
  - [http://dvwae436pd7nt4bc.onion](http://dvwae436pd7nt4bc.onion) (Front-end templates are [maintained by @suhz](https://github.com/suhz/onion-monero-blockchain-explorer/tree/moneroexplorer.com/src/templates)).
@@ -90,16 +74,22 @@ Current development branch:
 
  - https://github.com/moneroexamples/onion-monero-blockchain-explorer/tree/devel
 
+=======
+
+Alternative block explorers:
+
+- [https://chainradar.com/aeon/blocks](https://chainradar.com/aeon/blocks)
+>>>>>>> Aeon readme updated
 
 
 ## Compilation on Ubuntu 16.04/18.04
 
-##### Compile latest Monero development version
+##### Compile latest Aeon development version
 
-Download and compile recent Monero into your home folder:
+Download and compile recent Aeon into your home folder:
 
 ```bash
-# first install monero dependecines
+# first install Aeon dependecines
 sudo apt update
 
 sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libcurl4-openssl-dev libgtest-dev libreadline-dev libzmq3-dev libsodium-dev libpcsclite-dev
@@ -119,7 +109,7 @@ make
 
 ##### Compile and run the explorer
 
-Once the Monero is compiles, the explorer can be downloaded and compiled
+Once the Aeon is compiles, the explorer can be downloaded and compiled
 as follows:
 
 ```bash
@@ -142,7 +132,7 @@ mkdir build && cd build
 cmake ..
 
 # altearnatively can use: cmake -DAEON_DIR=/path/to/aeon_folder ..
-# if monero is not in ~/aeon
+# if Aeon is not in ~/aeon
 #
 # also can build with ASAN (sanitizers), for example
 # cmake -DSANITIZE_ADDRESS=On ..
@@ -157,13 +147,13 @@ To run it:
 ./aeonblocks
 ```
 
-By default it will look for blockchain in its default location i.e., `~/.bitmonero/lmdb`.
+By default it will look for blockchain in its default location i.e., `~/.aeon/lmdb`.
 You can use `-b` option if its in different location.
 
 For example:
 
 ```bash
-./xmrblocks -b /home/mwo/non-defult-monero-location/lmdb/
+./xmrblocks -b /home/mwo/non-defult-aeon-location/lmdb/
 ```
 
 Example output:
@@ -179,7 +169,7 @@ Go to your browser: http://127.0.0.1:8081
 ## The explorer's command line options
 
 ```
-aeonblocks, Onion Monero Blockchain Explorer:
+aeonblocks, Onion Aeon Blockchain Explorer:
   -h [ --help ] [=arg(=1)] (=0)         produce help message
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
   -s [ --stagenet ] [=arg(=1)] (=0)     use stagenet blockchain
@@ -203,7 +193,7 @@ aeonblocks, Onion Monero Blockchain Explorer:
                                         enable users to have the index page on
                                         autorefresh
   --enable-emission-monitor [=arg(=1)] (=0)
-                                        enable Monero total emission monitoring
+                                        enable Aeon total emission monitoring
                                         thread
   -p [ --port ] arg (=8081)             default explorer port
   --testnet-url arg                     you can specify testnet url, if you run
@@ -222,13 +212,13 @@ aeonblocks, Onion Monero Blockchain Explorer:
   --mempool-refresh-time arg (=5)       time, in seconds, for each refresh of
                                         mempool state
   -b [ --bc-path ] arg                  path to lmdb folder of the blockchain,
-                                        e.g., ~/.bitmonero/lmdb
+                                        e.g., ~/.aeon/lmdb
   --ssl-crt-file arg                    path to crt file for ssl (https)
                                         functionality
   --ssl-key-file arg                    path to key file for ssl (https)
                                         functionality
   -d [ --deamon-url ] arg (=http:://127.0.0.1:11181)
-                                        Monero deamon url
+                                        Aeon deamon url
 ```
 
 Example usage, defined as bash aliases.
@@ -243,9 +233,9 @@ alias aeonblockstestnet='~/onion-monero-blockchain-explorer/build/aeonblocks -t 
 
 These are aliases similar to those used for http://139.162.32.245:8081/ and http://139.162.32.245:8082/, respectively.
 
-## Enable Monero emission
+## Enable Aeon emission
 
-Obtaining current Monero emission amount is not straight forward. Thus, by default it is
+Obtaining current Aeon emission amount is not straight forward. Thus, by default it is
 disabled. To enable it use `--enable-emission-monitor` flag, e.g.,
 
 
@@ -257,10 +247,10 @@ This flag will enable emission monitoring thread. When started, the thread
  will initially scan the entire blockchain, and calculate the cumulative emission based on each block.
 Since it is a separate thread, the explorer will work as usual during this time.
 Every 10000 blocks, the thread will save current emission in a file, by default,
- in `~/.bitmonero/lmdb/emission_amount.txt`. For testnet or stagenet networks,
- it is `~/.bitmonero/testnet/lmdb/emission_amount.txt` or `~/.bitmonero/stagenet/lmdb/emission_amount.txt`. This file is used so that we don't
+ in `~/.aeon/lmdb/emission_amount.txt`. For testnet or stagenet networks,
+ it is `~/.aeon/testnet/lmdb/emission_amount.txt` or `~/.aeon/stagenet/lmdb/emission_amount.txt`. This file is used so that we don't
  need to rescan entire blockchain whenever the explorer is restarted. When the
- explorer restarts, the thread will first check if `~/.bitmonero/lmdb/emission_amount.txt`
+ explorer restarts, the thread will first check if `~/.aeon/lmdb/emission_amount.txt`
  is present, read its values, and continue from there if possible. Subsequently, only the initial
  use of the tread is time consuming. Once the thread scans the entire blockchain, it updates
  the emission amount using new blocks as they come. Since the explorer writes this file, there can
