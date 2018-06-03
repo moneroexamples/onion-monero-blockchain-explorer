@@ -21,7 +21,7 @@ Monero C++ libraries, but also demonstrates how to use:
  - [json](https://github.com/nlohmann/json) - JSON for Modern C++
  - [fmt](https://github.com/fmtlib/fmt) - Small, safe and fast string formatting library
 
-## Addresses
+## Explorer hosts
 
 Tor users:
 
@@ -73,7 +73,7 @@ The key features of the Onion Monero Blockchain Explorer are:
  - showing public components of Monero addresses,
  - decoding which outputs and mixins belong to the given Monero address and viewkey,
  - can prove that you send Monero to someone,
- - detailed information about mixins, such as, mixins' age, timescale, mixin of mixins,
+ - detailed information about ring members, such as, their age, timescale and their ring sizes,
  - showing number of amount output indices,
  - support Monero testnet and stagnet networks,
  - tx checker and pusher for online pushing of transactions,
@@ -91,7 +91,7 @@ Current development branch:
 
 
 
-## Compilation on Ubuntu 16.04
+## Compilation on Ubuntu 16.04/18.04
 
 ##### Compile latest Monero development version
 
