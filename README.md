@@ -28,6 +28,7 @@ Tor users:
  - [http://dvwae436pd7nt4bc.onion](http://dvwae436pd7nt4bc.onion) (Front-end templates are [maintained by @suhz](https://github.com/suhz/onion-monero-blockchain-explorer/tree/moneroexplorer.com/src/templates)).
 
 Clearnet versions:
+ - [http://172.104.45.209:8081/](http://172.104.45.209:8081/) - devel version, javascript enabled.
  - [https://labor.serveo.net/](https://labor.serveo.net/) - temprorary link (slow), bleading edge version.
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
  - [https://MoneroExplorer.com/](https://moneroexplorer.com/) - nice looking one, https enabled.
