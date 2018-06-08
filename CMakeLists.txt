@@ -119,7 +119,6 @@ set(LIBRARIES
         checkpoints
         version
         epee
-        pcsclite
         ${Boost_LIBRARIES}
         pthread
         unbound
@@ -130,7 +129,7 @@ set(LIBRARIES
 if(APPLE)
     set(LIBRARIES ${LIBRARIES} "-framework IOKit -framework PCSC")
 else()
-    set(LIBRARIES ${LIBRARIES} atomic)
+    set(LIBRARIES ${LIBRARIES} atomic pcsclite)
 endif()
 
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND NOT WIN32)
