@@ -4,20 +4,22 @@ The Onion Monero Blockchain Explorer was ported to Aeon. The port was
 conducted by [stoffu](https://github.com/moneroexamples/onion-monero-blockchain-explorer/pull/118).
 
 
-## Explorer hosts
+## Addresses
+
 
 Alternative block explorers:
 
 - [https://chainradar.com/aeon/blocks](https://chainradar.com/aeon/blocks)
 
-## Compilation on Ubuntu 16.04/18.04
+
+## Compilation on Ubuntu 16.04
 
 ##### Compile latest Aeon development version
 
 Download and compile recent Aeon into your home folder:
 
 ```bash
-# first install Aeon dependecines
+# first install monero dependecines
 sudo apt update
 
 sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libcurl4-openssl-dev libgtest-dev libreadline-dev libzmq3-dev libsodium-dev libpcsclite-dev
@@ -25,23 +27,23 @@ sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound
 # go to home folder
 cd ~
 
-git clone --recursive https://github.com/aeonix/aeon
+git clone --recursive https://github.com/monero-project/monero
 
-cd aeon/
+cd monero/
 
 # checkout last monero version
-git checkout -b last_release v0.12.1.0
+git checkout -b last_release v0.12.0.0
 
 make
 ```
 
 ##### Compile and run the explorer
 
-Once the Aeon is compiles, the explorer can be downloaded and compiled
+Once the Monero is compiles, the explorer can be downloaded and compiled
 as follows:
 
 ```bash
-# go to home folder if still in ~/aeon
+# go to home folder if still in ~/monero
 cd ~
 
 # download the source code
@@ -50,17 +52,14 @@ git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
 # enter the downloaded sourced code folder
 cd onion-monero-blockchain-explorer
 
-# checkout the aeon branch
-git checkout origin/aeon
-
 # make a build folder and enter it
 mkdir build && cd build
 
 # create the makefile
 cmake ..
 
-# altearnatively can use: cmake -DAEON_DIR=/path/to/aeon_folder ..
-# if Aeon is not in ~/aeon
+# altearnatively can use: cmake -DMONERO_DIR=/path/to/monero_folder ..
+# if monero is not in ~/monero
 #
 # also can build with ASAN (sanitizers), for example
 # cmake -DSANITIZE_ADDRESS=On ..
@@ -72,22 +71,22 @@ make
 
 To run it:
 ```
-./aeonblocks
+./xmrblocks
 ```
 
-By default it will look for blockchain in its default location i.e., `~/.aeon/lmdb`.
+By default it will look for blockchain in its default location i.e., `~/.bitmonero/lmdb`.
 You can use `-b` option if its in different location.
 
 For example:
 
 ```bash
-./xmrblocks -b /home/mwo/non-defult-aeon-location/lmdb/
+./xmrblocks -b /home/mwo/non-defult-monero-location/lmdb/
 ```
 
 Example output:
 
 ```bash
-[mwo@arch onion-monero-blockchain-explorer]$ ./aeonblocks
+[mwo@arch onion-monero-blockchain-explorer]$ ./xmrblocks
 2016-May-28 10:04:49.160280 Blockchain initialized. last block: 1056761, d0.h0.m12.s47 time ago, current difficulty: 1517857750
 (2016-05-28 02:04:49) [INFO    ] Crow/0.1 server is running, local port 8081
 ```
@@ -97,7 +96,7 @@ Go to your browser: http://127.0.0.1:8081
 ## The explorer's command line options
 
 ```
-aeonblocks, Onion Aeon Blockchain Explorer:
+xmrblocks, Onion Monero Blockchain Explorer:
   -h [ --help ] [=arg(=1)] (=0)         produce help message
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
   -s [ --stagenet ] [=arg(=1)] (=0)     use stagenet blockchain
@@ -121,7 +120,7 @@ aeonblocks, Onion Aeon Blockchain Explorer:
                                         enable users to have the index page on
                                         autorefresh
   --enable-emission-monitor [=arg(=1)] (=0)
-                                        enable Aeon total emission monitoring
+                                        enable Monero total emission monitoring
                                         thread
   -p [ --port ] arg (=8081)             default explorer port
   --testnet-url arg                     you can specify testnet url, if you run
@@ -140,45 +139,45 @@ aeonblocks, Onion Aeon Blockchain Explorer:
   --mempool-refresh-time arg (=5)       time, in seconds, for each refresh of
                                         mempool state
   -b [ --bc-path ] arg                  path to lmdb folder of the blockchain,
-                                        e.g., ~/.aeon/lmdb
+                                        e.g., ~/.bitmonero/lmdb
   --ssl-crt-file arg                    path to crt file for ssl (https)
                                         functionality
   --ssl-key-file arg                    path to key file for ssl (https)
                                         functionality
-  -d [ --deamon-url ] arg (=http:://127.0.0.1:11181)
-                                        Aeon deamon url
+  -d [ --deamon-url ] arg (=http:://127.0.0.1:18081)
+                                        Monero deamon url
 ```
 
 Example usage, defined as bash aliases.
 
 ```bash
 # for mainnet explorer
-alias aeonblocksmainnet='~/onion-monero-blockchain-explorer/build/aeonblocks    --port 8081 --testnet-url "http://139.162.32.245:8082" --enable-pusher --enable-emission-monitor'
+alias xmrblocksmainnet='~/onion-monero-blockchain-explorer/build/xmrblocks    --port 8081 --testnet-url "http://139.162.32.245:8082" --enable-pusher --enable-emission-monitor'
 
 # for testnet explorer
-alias aeonblockstestnet='~/onion-monero-blockchain-explorer/build/aeonblocks -t --port 8082 --mainnet-url "http://139.162.32.245:8081" --enable-pusher --enable-emission-monitor'
+alias xmrblockstestnet='~/onion-monero-blockchain-explorer/build/xmrblocks -t --port 8082 --mainnet-url "http://139.162.32.245:8081" --enable-pusher --enable-emission-monitor'
 ```
 
 These are aliases similar to those used for http://139.162.32.245:8081/ and http://139.162.32.245:8082/, respectively.
 
-## Enable Aeon emission
+## Enable Monero emission
 
-Obtaining current Aeon emission amount is not straight forward. Thus, by default it is
+Obtaining current Monero emission amount is not straight forward. Thus, by default it is
 disabled. To enable it use `--enable-emission-monitor` flag, e.g.,
 
 
 ```bash
-aeonblocks --enable-emission-monitor
+xmrblocks --enable-emission-monitor
 ```
 
 This flag will enable emission monitoring thread. When started, the thread
  will initially scan the entire blockchain, and calculate the cumulative emission based on each block.
 Since it is a separate thread, the explorer will work as usual during this time.
 Every 10000 blocks, the thread will save current emission in a file, by default,
- in `~/.aeon/lmdb/emission_amount.txt`. For testnet or stagenet networks,
- it is `~/.aeon/testnet/lmdb/emission_amount.txt` or `~/.aeon/stagenet/lmdb/emission_amount.txt`. This file is used so that we don't
+ in `~/.bitmonero/lmdb/emission_amount.txt`. For testnet or stagenet networks,
+ it is `~/.bitmonero/testnet/lmdb/emission_amount.txt` or `~/.bitmonero/stagenet/lmdb/emission_amount.txt`. This file is used so that we don't
  need to rescan entire blockchain whenever the explorer is restarted. When the
- explorer restarts, the thread will first check if `~/.aeon/lmdb/emission_amount.txt`
+ explorer restarts, the thread will first check if `~/.bitmonero/lmdb/emission_amount.txt`
  is present, read its values, and continue from there if possible. Subsequently, only the initial
  use of the tread is time consuming. Once the thread scans the entire blockchain, it updates
  the emission amount using new blocks as they come. Since the explorer writes this file, there can
@@ -206,7 +205,7 @@ By default, decoding and proving tx's outputs are done on the server side. To do
 (private view and tx keys are not send to the server) JavaScript-based decoding can be enabled:
 
 ```
-aeonblocks --enable-js
+xmrblocks --enable-js
 ```
 
 ## Enable SSL (https)
@@ -222,10 +221,10 @@ openssl req -new -key server.key -out server.csr
 openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt
 ```
 
-Having the `crt` and `key` files, run `aeonblocks` in the following way:
+Having the `crt` and `key` files, run `xmrblocks` in the following way:
 
 ```bash
-./aeonblocks --ssl-crt-file=/tmp/server.crt --ssl-key-file=/tmp/server.key
+./xmrblocks --ssl-crt-file=/tmp/server.crt --ssl-key-file=/tmp/server.key
 ```
 
 Note: Because we generated our own certificate, modern browsers will complain
