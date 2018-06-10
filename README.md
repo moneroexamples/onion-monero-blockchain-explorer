@@ -6,81 +6,9 @@ conducted by [stoffu](https://github.com/moneroexamples/onion-monero-blockchain-
 
 ## Explorer hosts
 
-<<<<<<< HEAD
-Tor users:
-
- - [http://dvwae436pd7nt4bc.onion](http://dvwae436pd7nt4bc.onion) (Front-end templates are [maintained by @suhz](https://github.com/suhz/onion-monero-blockchain-explorer/tree/moneroexplorer.com/src/templates)).
-
-Clearnet versions:
- - [http://172.104.45.209:8081/](http://172.104.45.209:8081/) - devel version, javascript enabled.
- - [https://labor.serveo.net/](https://labor.serveo.net/) - temprorary link (slow), bleading edge version.
- - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
- - [https://MoneroExplorer.com/](https://moneroexplorer.com/) - nice looking one, https enabled.
- - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
- - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
- - [https://moneroexplorer.pro/](https://moneroexplorer.pro/) - nice looking one, https enabled.
- - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
- - [https://blox.minexmr.com/](https://blox.minexmr.com/) - - https enabled.
-
-Testnet version:
-
- - [http://nimis.serveo.net/](http://nimis.serveo.net/) - bleeding edge version (down currently).
- - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
- - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
-
-Stagenet version:
-
- - [http://162.210.173.150:8083/](http://162.210.173.150:8083/) - recent version.
-
-i2p users (main Monero network):
-
- - [http://7o4gezpkye6ekibhgpkg7v626ze4idsirapufzrefkdysa6zxhha.b32.i2p/](http://7o4gezpkye6ekibhgpkg7v626ze4idsirapufzrefkdysa6zxhha.b32.i2p/)
-
-Alternative block explorers:
-
-- [http://moneroblocks.info](http://moneroblocks.info/)
-- [https://monerobase.com](https://monerobase.com/)
-- [https://monerovision.com](https://monerovision.com)
-- [http://chainradar.com](http://chainradar.com/xmr/blocks)
-
-
-## Onion Monero Blockchain Explorer features
-
-The key features of the Onion Monero Blockchain Explorer are:
-
- - no cookies, no web analytics trackers, no images,
- - by default no JavaScript, but can be enabled for client side decoding and proving transactions,
- - open sourced,
- - made fully in C++,
- - showing encrypted payments ID,
- - showing ring signatures,
- - showing transaction extra field,
- - showing public components of Monero addresses,
- - decoding which outputs and mixins belong to the given Monero address and viewkey,
- - can prove that you send Monero to someone,
- - detailed information about ring members, such as, their age, timescale and their ring sizes,
- - showing number of amount output indices,
- - support Monero testnet and stagnet networks,
- - tx checker and pusher for online pushing of transactions,
- - estimate possible spendings based on address and viewkey,
- - can provide total amount of all miner fees,
- - decoding encrypted payment id,
- - decoding outputs and proving txs sent to sub-address.
-
-
-## Development branch
-
-Current development branch:
-
- - https://github.com/moneroexamples/onion-monero-blockchain-explorer/tree/devel
-
-=======
-
 Alternative block explorers:
 
 - [https://chainradar.com/aeon/blocks](https://chainradar.com/aeon/blocks)
->>>>>>> Aeon readme updated
-
 
 ## Compilation on Ubuntu 16.04/18.04
 
