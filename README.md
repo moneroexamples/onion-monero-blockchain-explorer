@@ -6,6 +6,9 @@ conducted by [stoffu](https://github.com/moneroexamples/onion-monero-blockchain-
 
 ## Addresses
 
+Mainnet
+
+ - [https://aeonblocks.com/](https://aeonblocks.com/)
 
 Alternative block explorers:
 
