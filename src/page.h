@@ -30,6 +30,7 @@
 #include <limits>
 #include <ctime>
 #include <future>
+#include <visitor/render_node.hpp>
 
 
 #define TMPL_DIR                    "./templates"
@@ -3971,6 +3972,8 @@ public:
     }
 
 
+
+
     /*
      * Lets use this json api convention for success and error
      * https://labs.omniti.com/labs/jsend
@@ -4213,6 +4216,55 @@ public:
             j_response["status"]  = "error";
             j_response["message"] = "Faild parsing raw tx data into json";
             return j_response;
+        }
+
+        j_response["status"] = "success";
+
+        return j_response;
+    }
+
+
+    json
+    json_detailedtransaction(string tx_hash_str)
+    {
+        json j_response {
+                {"status", "fail"},
+                {"data"  , json {}}
+        };
+
+        json& j_data = j_response["data"];
+
+        transaction tx;
+
+        bool found_in_mempool {false};
+        uint64_t tx_timestamp {0};
+        string error_message;
+
+        if (!find_tx_for_json(tx_hash_str, tx, found_in_mempool, tx_timestamp, error_message))
+        {
+            j_data["title"] = error_message;
+            return j_response;
+        }
+
+        mstch::map tx_context = construct_tx_context(tx, 1 /*full detailed */);
+
+        std::string view{"{{#bold}}{{yay}} :){{/bold}}"};
+
+
+
+
+        for (auto const& kv: tx_context)
+        {
+            //j_data[kv.first] = boost::apply_visitor(render_node2(), kv.second);
+
+            mstch::map context{
+                    {"yay", kv.second},
+                    {"bold", mstch::lambda{[](const std::string& text) -> mstch::node {
+                        return "<b>" + text + "</b>";
+                    }}}
+            };
+
+            cout << mstch::render(view, context)  << endl;
         }
 
         j_response["status"] = "success";
@@ -6145,6 +6197,32 @@ private:
         boost::erase_all(raw_tx_data, "-----END CERTIFICATE-----");
     }
 
+
+    bool
+    find_tx_for_json(
+            string const& tx_hash_str,
+            transaction& tx,
+            bool& found_in_mempool,
+            uint64_t& tx_timestamp,
+            string& error_message)
+    {
+        // parse tx hash string to hash object
+        crypto::hash tx_hash;
+
+        if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+        {
+            error_message = fmt::format("Cant parse tx hash: {:s}", tx_hash_str);
+            return false;
+        }
+
+        if (!find_tx(tx_hash, tx, found_in_mempool, tx_timestamp))
+        {
+            error_message = fmt::format("Cant find tx hash: {:s}", tx_hash_str);
+            return false;
+        }
+
+        return true;
+    }
 
     bool
     search_mempool(crypto::hash tx_hash,

@@ -603,6 +603,14 @@ main(int ac, const char* av[])
             return r;
         });
 
+        CROW_ROUTE(app, "/api/detailedtransaction/<string>")
+        ([&](const crow::request &req, string tx_hash) {
+
+            myxmr::jsonresponse r{xmrblocks.json_detailedtransaction(remove_bad_chars(tx_hash))};
+
+            return r;
+        });
+
         CROW_ROUTE(app, "/api/block/<string>")
         ([&](const crow::request &req, string block_no_or_hash) {
 
