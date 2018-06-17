@@ -273,6 +273,85 @@ struct tx_details
 };
 
 
+class my_render_node: public boost::static_visitor<std::string> {
+public:
+
+    std::string operator()(const int& value) const {
+        return std::to_string(value);
+    }
+
+    std::string operator()(const double& value) const {
+        std::stringstream ss;
+        ss << value;
+        return ss.str();
+    }
+
+    std::string operator()(const uint64_t& value) const {
+        std::stringstream ss;
+        ss << value;
+        return ss.str();
+    }
+
+    std::string operator()(const int64_t& value) const {
+        std::stringstream ss;
+        ss << value;
+        return ss.str();
+    }
+
+    std::string operator()(const uint32_t& value) const {
+        std::stringstream ss;
+        ss << value;
+        return ss.str();
+    }
+
+    std::string operator()(const bool& value) const {
+        return value ? "true" : "false";
+    }
+
+    std::string operator()(const string& value) const {
+        return value;
+    }
+
+    std::string operator()(const mstch::map& n_map) const
+    {
+        std::stringstream ss;
+
+        for (auto const& kv: n_map)
+        {
+            ss << "k:" << kv.first
+               << ", v: " << boost::apply_visitor(my_render_node(), kv.second)
+               << " ";
+        }
+
+        return ss.str();
+    }
+
+    std::string operator()(const mstch::array& n_array) const
+    {
+        std::stringstream ss;
+        for (auto const& v: n_array)
+        {
+            string s = boost::apply_visitor(my_render_node(), v);
+            ss << " a: " << s << " ";
+        }
+
+        return ss.str();
+
+    }
+
+    std::string operator()(const mstch::lambda& value) const {
+        return "lambda";
+    }
+
+    template<class T>
+    std::string operator()(const T&) const {
+        return "unknown type";
+    }
+
+};
+
+
+
 class page
 {
 
@@ -4257,14 +4336,9 @@ public:
         {
             //j_data[kv.first] = boost::apply_visitor(render_node2(), kv.second);
 
-            mstch::map context{
-                    {"yay", kv.second},
-                    {"bold", mstch::lambda{[](const std::string& text) -> mstch::node {
-                        return "<b>" + text + "</b>";
-                    }}}
-            };
+            string a = boost::apply_visitor(my_render_node(), kv.second);
 
-            cout << mstch::render(view, context)  << endl;
+            cout << kv.first << " = " << a << endl;
         }
 
         j_response["status"] = "success";
