@@ -273,81 +273,76 @@ struct tx_details
 };
 
 
-class my_render_node: public boost::static_visitor<std::string> {
+class my_render_node: public boost::static_visitor<json> {
 public:
 
-    std::string operator()(const int& value) const {
-        return std::to_string(value);
+//    my_render_node(json& _j) : j {_j}
+//    {}
+
+    json operator()(const int& value) const {
+        //return std::to_string(value);
+        return json {value};
     }
 
-    std::string operator()(const double& value) const {
-        std::stringstream ss;
-        ss << value;
-        return ss.str();
+    json operator()(const double& value) const {
+        return json {value};
     }
 
-    std::string operator()(const uint64_t& value) const {
-        std::stringstream ss;
-        ss << value;
-        return ss.str();
+    json operator()(const uint64_t& value) const {
+        return json {value};
     }
 
-    std::string operator()(const int64_t& value) const {
-        std::stringstream ss;
-        ss << value;
-        return ss.str();
+    json operator()(const int64_t& value) const {
+        return json {value};
     }
 
-    std::string operator()(const uint32_t& value) const {
-        std::stringstream ss;
-        ss << value;
-        return ss.str();
+    json operator()(const uint32_t& value) const {
+        return json {value};
     }
 
-    std::string operator()(const bool& value) const {
-        return value ? "true" : "false";
+    json operator()(const bool& value) const {
+        return json {value};
     }
 
-    std::string operator()(const string& value) const {
-        return value;
+    json operator()(const string& value) const {
+        return json {value};
     }
 
-    std::string operator()(const mstch::map& n_map) const
+    json operator()(const mstch::map& n_map) const
     {
-        std::stringstream ss;
+        json j;
 
         for (auto const& kv: n_map)
         {
-            ss << "k:" << kv.first
-               << ", v: " << boost::apply_visitor(my_render_node(), kv.second)
-               << " ";
+            j[kv.first] = boost::apply_visitor(my_render_node(), kv.second);
         }
 
-        return ss.str();
+        return j;
+
     }
 
-    std::string operator()(const mstch::array& n_array) const
+    json operator()(const mstch::array& n_array) const
     {
-        std::stringstream ss;
-        for (auto const& v: n_array)
-        {
-            string s = boost::apply_visitor(my_render_node(), v);
-            ss << " a: " << s << " ";
-        }
+        json j;
 
-        return ss.str();
+        for (auto const& v:  n_array)
+            j.push_back(boost::apply_visitor(my_render_node(), v));
+
+        return j;
 
     }
 
-    std::string operator()(const mstch::lambda& value) const {
-        return "lambda";
+    json operator()(const mstch::lambda& value) const {
+       return json {"lambda"};
     }
 
     template<class T>
-    std::string operator()(const T&) const {
-        return "unknown type";
+    json operator()(const T&) const {
+       return json {};
     }
 
+//private:
+//    json &j;
 };
 
 
@@ -4329,17 +4324,20 @@ public:
 
         std::string view{"{{#bold}}{{yay}} :){{/bold}}"};
 
-
-
+        json j;
+       //% boost::apply_visitor(my_render_node(j), kv.second);
 
         for (auto const& kv: tx_context)
         {
             //j_data[kv.first] = boost::apply_visitor(render_node2(), kv.second);
 
-            string a = boost::apply_visitor(my_render_node(), kv.second);
+            //string a = boost::apply_visitor(my_render_node(), kv.second);
+            j[kv.first] = boost::apply_visitor(my_render_node(), kv.second);
 
-            cout << kv.first << " = " << a << endl;
+            //cout << kv.first << " = " << a << endl;
         }
+
+        cout << j.dump() << '\n';
 
         j_response["status"] = "success";
 
