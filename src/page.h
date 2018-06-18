@@ -116,35 +116,12 @@ namespace std
 
 
 /**
- * visitor to produc json representations of
- * vallues stored in mstch::node
+ * visitor to produce json representations of
+ * values stored in mstch::node
  */
 class mstch_node_to_json: public boost::static_visitor<nlohmann::json> {
 public:
 
-//    json operator()(const int& value) const {
-//        return json {value};
-//    }
-//
-//    json operator()(const double& value) const {
-//        return json {value};
-//    }
-//
-//    json operator()(const uint64_t& value) const {
-//        return json {value};
-//    }
-//
-//    json operator()(const int64_t& value) const {
-//        return json {value};
-//    }
-//
-//    json operator()(const uint32_t& value) const {
-//        return json {value};
-//    }
-//
-//    json operator()(const bool& value) const {
-//        return json {value};
-//    }
 
     // enabled for numeric types
     template<typename T>
