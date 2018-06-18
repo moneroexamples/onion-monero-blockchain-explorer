@@ -30,6 +30,7 @@
 #include <limits>
 #include <ctime>
 #include <future>
+#include <visitor/render_node.hpp>
 
 
 #define TMPL_DIR                    "./templates"
@@ -113,6 +114,93 @@ namespace std
 }
 
 
+
+/**
+ * visitor to produc json representations of
+ * vallues stored in mstch::node
+ */
+class mstch_node_to_json: public boost::static_visitor<nlohmann::json> {
+public:
+
+//    json operator()(const int& value) const {
+//        return json {value};
+//    }
+//
+//    json operator()(const double& value) const {
+//        return json {value};
+//    }
+//
+//    json operator()(const uint64_t& value) const {
+//        return json {value};
+//    }
+//
+//    json operator()(const int64_t& value) const {
+//        return json {value};
+//    }
+//
+//    json operator()(const uint32_t& value) const {
+//        return json {value};
+//    }
+//
+//    json operator()(const bool& value) const {
+//        return json {value};
+//    }
+
+    // enabled for numeric types
+    template<typename T>
+    std::enable_if_t<std::is_arithmetic<T>::value, nlohmann::json>
+    operator()(T const& value) const {
+        return nlohmann::json {value};
+    }
+
+    nlohmann::json operator()(std::string const& value) const {
+        return nlohmann::json {value};
+    }
+
+    nlohmann::json operator()(mstch::map const& n_map) const
+    {
+        nlohmann::json j;
+
+        for (auto const& kv: n_map)
+            j[kv.first] = boost::apply_visitor(mstch_node_to_json(), kv.second);
+
+        return j;
+    }
+
+    nlohmann::json operator()(mstch::array const& n_array) const
+    {
+        nlohmann::json j;
+
+        for (auto const& v:  n_array)
+            j.push_back(boost::apply_visitor(mstch_node_to_json(), v));
+
+        return j;
+
+    }
+
+    // catch other types that are non-numeric and not listed above
+    template<typename T>
+    std::enable_if_t<!std::is_arithmetic<T>::value, nlohmann::json>
+    operator()(const T&) const {
+        return nlohmann::json {};
+    }
+
+};
+
+namespace mstch
+{
+namespace internal
+{
+    // add conversion from mstch::map to nlohmann::json
+    void
+    to_json(nlohmann::json& j, mstch::map const &m)
+    {
+        for (auto const& kv: m)
+            j[kv.first] = boost::apply_visitor(mstch_node_to_json(), kv.second);
+    }
+}
+}
+
 namespace xmreg
 {
 
@@ -123,6 +211,8 @@ using namespace std;
 
 using epee::string_tools::pod_to_hex;
 using epee::string_tools::hex_to_pod;
+
+
 
 /**
 * @brief The tx_details struct
@@ -1175,6 +1265,10 @@ public:
                                                  _blk_height, current_blockchain_height);
 
         // initalise page tempate map with basic info about blockchain
+
+        string blk_pow_hash_str = pod_to_hex(get_block_longhash(blk, _blk_height));
+        uint64_t blk_difficulty = core_storage->get_db().get_block_difficulty(_blk_height);
+
         mstch::map context {
                 {"testnet"              , testnet},
                 {"stagenet"             , stagenet},
@@ -1192,6 +1286,8 @@ public:
                 {"blk_age"              , age.first},
                 {"delta_time"           , delta_time},
                 {"blk_nonce"            , blk.nonce},
+                {"blk_pow_hash"         , blk_pow_hash_str},
+                {"blk_difficulty"       , blk_difficulty},
                 {"age_format"           , age.second},
                 {"major_ver"            , std::to_string(blk.major_version)},
                 {"minor_ver"            , std::to_string(blk.minor_version)},
@@ -3965,6 +4061,8 @@ public:
     }
 
 
+
+
     /*
      * Lets use this json api convention for success and error
      * https://labs.omniti.com/labs/jsend
@@ -4208,6 +4306,56 @@ public:
             j_response["message"] = "Faild parsing raw tx data into json";
             return j_response;
         }
+
+        j_response["status"] = "success";
+
+        return j_response;
+    }
+
+
+    json
+    json_detailedtransaction(string tx_hash_str)
+    {
+        json j_response {
+                {"status", "fail"},
+                {"data"  , json {}}
+        };
+
+        json& j_data = j_response["data"];
+
+        transaction tx;
+
+        bool found_in_mempool {false};
+        uint64_t tx_timestamp {0};
+        string error_message;
+
+        if (!find_tx_for_json(tx_hash_str, tx, found_in_mempool, tx_timestamp, error_message))
+        {
+            j_data["title"] = error_message;
+            return j_response;
+        }
+
+        // get detailed tx information
+        mstch::map tx_context = construct_tx_context(tx, 1 /*full detailed */);
+
+        // remove some page specific and html stuff
+        tx_context.erase("timescales");
+        tx_context.erase("tx_json");
+        tx_context.erase("tx_json_raw");
+        tx_context.erase("enable_mixins_details");
+        tx_context.erase("with_ring_signatures");
+        tx_context.erase("show_part_of_inputs");
+        tx_context.erase("show_more_details_link");
+        tx_context.erase("max_no_of_inputs_to_show");
+        tx_context.erase("inputs_xmr_sum_not_zero");
+        tx_context.erase("have_raw_tx");
+        tx_context.erase("have_any_unknown_amount");
+        tx_context.erase("has_error");
+        tx_context.erase("error_msg");
+        tx_context.erase("server_time");
+        tx_context.erase("construction_time");
+
+        j_data = tx_context;
 
         j_response["status"] = "success";
 
@@ -6139,6 +6287,32 @@ private:
         boost::erase_all(raw_tx_data, "-----END CERTIFICATE-----");
     }
 
+
+    bool
+    find_tx_for_json(
+            string const& tx_hash_str,
+            transaction& tx,
+            bool& found_in_mempool,
+            uint64_t& tx_timestamp,
+            string& error_message)
+    {
+        // parse tx hash string to hash object
+        crypto::hash tx_hash;
+
+        if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+        {
+            error_message = fmt::format("Cant parse tx hash: {:s}", tx_hash_str);
+            return false;
+        }
+
+        if (!find_tx(tx_hash, tx, found_in_mempool, tx_timestamp))
+        {
+            error_message = fmt::format("Cant find tx hash: {:s}", tx_hash_str);
+            return false;
+        }
+
+        return true;
+    }
 
     bool
     search_mempool(crypto::hash tx_hash,

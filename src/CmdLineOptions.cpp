@@ -51,6 +51,8 @@ namespace xmreg
                  "enable Monero total emission monitoring thread")
                 ("port,p", value<string>()->default_value("8081"),
                  "default explorer port")
+                ("bindaddr,x", value<string>()->default_value("0.0.0.0"),
+                 "default bind address for the explorer")
                 ("testnet-url", value<string>()->default_value(""),
                  "you can specify testnet url, if you run it on mainnet or stagenet. link will show on front page to testnet explorer")
                 ("stagenet-url", value<string>()->default_value(""),
