@@ -114,6 +114,93 @@ namespace std
 }
 
 
+
+/**
+ * visitor to produc json representations of
+ * vallues stored in mstch::node
+ */
+class mstch_node_to_json: public boost::static_visitor<nlohmann::json> {
+public:
+
+//    json operator()(const int& value) const {
+//        return json {value};
+//    }
+//
+//    json operator()(const double& value) const {
+//        return json {value};
+//    }
+//
+//    json operator()(const uint64_t& value) const {
+//        return json {value};
+//    }
+//
+//    json operator()(const int64_t& value) const {
+//        return json {value};
+//    }
+//
+//    json operator()(const uint32_t& value) const {
+//        return json {value};
+//    }
+//
+//    json operator()(const bool& value) const {
+//        return json {value};
+//    }
+
+    // enabled for numeric types
+    template<typename T>
+    std::enable_if_t<std::is_arithmetic<T>::value, nlohmann::json>
+    operator()(T const& value) const {
+        return nlohmann::json {value};
+    }
+
+    nlohmann::json operator()(std::string const& value) const {
+        return nlohmann::json {value};
+    }
+
+    nlohmann::json operator()(mstch::map const& n_map) const
+    {
+        nlohmann::json j;
+
+        for (auto const& kv: n_map)
+            j[kv.first] = boost::apply_visitor(mstch_node_to_json(), kv.second);
+
+        return j;
+    }
+
+    nlohmann::json operator()(mstch::array const& n_array) const
+    {
+        nlohmann::json j;
+
+        for (auto const& v:  n_array)
+            j.push_back(boost::apply_visitor(mstch_node_to_json(), v));
+
+        return j;
+
+    }
+
+    // catch other types that are non-numeric and not listed above
+    template<typename T>
+    std::enable_if_t<!std::is_arithmetic<T>::value, nlohmann::json>
+    operator()(const T&) const {
+        return nlohmann::json {};
+    }
+
+};
+
+namespace mstch
+{
+namespace internal
+{
+    // add conversion from mstch::map to nlohmann::json
+    void
+    to_json(nlohmann::json& j, mstch::map const &m)
+    {
+        for (auto const& kv: m)
+            j[kv.first] = boost::apply_visitor(mstch_node_to_json(), kv.second);
+    }
+}
+}
+
 namespace xmreg
 {
 
@@ -124,6 +211,8 @@ using namespace std;
 
 using epee::string_tools::pod_to_hex;
 using epee::string_tools::hex_to_pod;
+
+
 
 /**
 * @brief The tx_details struct
@@ -271,80 +360,6 @@ struct tx_details
 
     ~tx_details() {};
 };
-
-
-class my_render_node: public boost::static_visitor<json> {
-public:
-
-//    my_render_node(json& _j) : j {_j}
-//    {}
-
-    json operator()(const int& value) const {
-        //return std::to_string(value);
-        return json {value};
-    }
-
-    json operator()(const double& value) const {
-        return json {value};
-    }
-
-    json operator()(const uint64_t& value) const {
-        return json {value};
-    }
-
-    json operator()(const int64_t& value) const {
-        return json {value};
-    }
-
-    json operator()(const uint32_t& value) const {
-        return json {value};
-    }
-
-    json operator()(const bool& value) const {
-        return json {value};
-    }
-
-    json operator()(const string& value) const {
-        return json {value};
-    }
-
-    json operator()(const mstch::map& n_map) const
-    {
-        json j;
-
-        for (auto const& kv: n_map)
-        {
-            j[kv.first] = boost::apply_visitor(my_render_node(), kv.second);
-        }
-
-        return j;
-
-    }
-
-    json operator()(const mstch::array& n_array) const
-    {
-        json j;
-
-        for (auto const& v:  n_array)
-            j.push_back(boost::apply_visitor(my_render_node(), v));
-
-        return j;
-
-    }
-
-    json operator()(const mstch::lambda& value) const {
-       return json {"lambda"};
-    }
-
-    template<class T>
-    json operator()(const T&) const {
-       return json {};
-    }
-
-//private:
-//    json &j;
-};
-
 
 
 class page
@@ -4320,24 +4335,27 @@ public:
             return j_response;
         }
 
+        // get detailed tx information
         mstch::map tx_context = construct_tx_context(tx, 1 /*full detailed */);
 
-        std::string view{"{{#bold}}{{yay}} :){{/bold}}"};
+        // remove some page specific and html stuff
+        tx_context.erase("timescales");
+        tx_context.erase("tx_json");
+        tx_context.erase("tx_json_raw");
+        tx_context.erase("enable_mixins_details");
+        tx_context.erase("with_ring_signatures");
+        tx_context.erase("show_part_of_inputs");
+        tx_context.erase("show_more_details_link");
+        tx_context.erase("max_no_of_inputs_to_show");
+        tx_context.erase("inputs_xmr_sum_not_zero");
+        tx_context.erase("have_raw_tx");
+        tx_context.erase("have_any_unknown_amount");
+        tx_context.erase("has_error");
+        tx_context.erase("error_msg");
+        tx_context.erase("server_time");
+        tx_context.erase("construction_time");
 
-        json j;
-       //% boost::apply_visitor(my_render_node(j), kv.second);
-
-        for (auto const& kv: tx_context)
-        {
-            //j_data[kv.first] = boost::apply_visitor(render_node2(), kv.second);
-
-            //string a = boost::apply_visitor(my_render_node(), kv.second);
-            j[kv.first] = boost::apply_visitor(my_render_node(), kv.second);
-
-            //cout << kv.first << " = " << a << endl;
-        }
-
-        cout << j.dump() << '\n';
+        j_data = tx_context;
 
         j_response["status"] = "success";
 
