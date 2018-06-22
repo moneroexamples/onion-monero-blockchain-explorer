@@ -2730,7 +2730,7 @@ public:
                                                      "Its prefix is: {:s}",
                                              data_prefix);
 
-                    cout << msg << endl;
+                    cerr << msg << endl;
 
                     return string(msg);
                 }
@@ -2738,6 +2738,11 @@ public:
                 crypto::hash tx_hash_from_blob;
                 crypto::hash tx_prefix_hash_from_blob;
                 cryptonote::transaction tx_from_blob;
+
+//                std::stringstream ss;
+//                ss << tx_data_blob;
+//                binary_archive<false> ba(ss);
+//                serialization::serialize(ba, tx_from_blob);
 
                 if (!cryptonote::parse_and_validate_tx_from_blob(tx_data_blob,
                                                                  tx_from_blob,
