@@ -59,12 +59,6 @@ namespace xmreg
                           tx_out& out,
                           size_t& output_index);
 
-        bool
-        get_tx_hash_from_output_pubkey(const public_key& output_pubkey,
-                                       const uint64_t& block_height,
-                                       crypto::hash& tx_hash,
-                                       transaction& tx_found);
-
         uint64_t
         get_blk_timestamp(uint64_t blk_height);
 
