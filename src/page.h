@@ -783,8 +783,8 @@ public:
                 // get all transactions in the block found
                 // initialize the first list with transaction for solving
                 // the block i.e. coinbase.
-                list<cryptonote::transaction> blk_txs {blk.miner_tx};
-                list<crypto::hash> missed_txs;
+                vector<cryptonote::transaction> blk_txs {blk.miner_tx};
+                vector<crypto::hash> missed_txs;
 
                 if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs))
                 {
@@ -4671,8 +4671,8 @@ public:
 
             json& j_txs = j_blocks.back()["txs"];
 
-            list<cryptonote::transaction> blk_txs {blk.miner_tx};
-            list<crypto::hash> missed_txs;
+            vector<cryptonote::transaction> blk_txs {blk.miner_tx};
+            vector<crypto::hash> missed_txs;
 
             if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs))
             {
@@ -5237,8 +5237,8 @@ public:
             }
 
             // get transactions in the given block
-            list <cryptonote::transaction> blk_txs{blk.miner_tx};
-            list <crypto::hash> missed_txs;
+            vector<cryptonote::transaction> blk_txs{blk.miner_tx};
+            vector<crypto::hash> missed_txs;
 
             if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs))
             {
