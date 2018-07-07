@@ -886,7 +886,7 @@ public:
         else if (current_network_info.hash_rate > 1e3)
             hash_rate = fmt::format("{:0.3f} kH/s", current_network_info.hash_rate/1.0e3);
         else
-            hash_rate = fmt::format("{:0.3f} H/s", current_network_info.hash_rate);
+            hash_rate = fmt::format("{:d} H/s", current_network_info.hash_rate);
 
         pair<string, string> network_info_age = get_age(local_copy_server_timestamp,
                                                         current_network_info.info_timestamp);
