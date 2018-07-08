@@ -531,7 +531,10 @@
 {{^have_raw_tx}}
     {{^with_ring_signatures}}
         {{#show_more_details_link}}
-            <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}/1">More details</a></h5>
+            <h5 style="margin-top:1px">
+                <a href="/tx/{{tx_hash}}/1">More details</a>
+                | <a href="/txhex/{{tx_hash}}">As hex</a>
+            </h5>
         {{/show_more_details_link}}
     {{/with_ring_signatures}}
     {{#with_ring_signatures}}
