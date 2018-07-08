@@ -309,6 +309,11 @@ main(int ac, const char* av[])
         return crow::response(xmrblocks.show_tx(remove_bad_chars(tx_hash)));
     });
 
+    CROW_ROUTE(app, "/txhex/<string>")
+    ([&](const crow::request& req, string tx_hash) {
+        return crow::response(xmrblocks.show_tx_hex(remove_bad_chars(tx_hash)));
+    });
+
     CROW_ROUTE(app, "/tx/<string>/<uint>")
     ([&](string tx_hash, uint16_t with_ring_signatures)
      {

@@ -1596,6 +1596,48 @@ public:
     }
 
     string
+    show_tx_hex(string tx_hash_str)
+    {
+        crypto::hash tx_hash;
+
+        if (!epee::string_tools::hex_to_pod(tx_hash_str, tx_hash))
+        {
+            string msg = fmt::format("Cant parse {:s} as tx hash!", tx_hash_str);
+            cerr << msg << endl;
+            return msg;
+        }
+
+        // get transaction
+        transaction tx;
+
+        if (!mcore->get_tx(tx_hash, tx))
+        {
+            cerr << "Cant get tx in blockchain: " << tx_hash
+                 << ". \n Check mempool now" << endl;
+
+            vector<MempoolStatus::mempool_tx> found_txs;
+
+            search_mempool(tx_hash, found_txs);
+
+            if (found_txs.empty())
+            {
+                // tx is nowhere to be found :-(
+                return string("Cant get tx: " + tx_hash_str);
+            }
+        }
+
+        try
+        {
+            return tx_to_hex(tx);
+        }
+        catch (std::exception const& e)
+        {
+            cerr << e.what() << endl;
+            return string {"Failed to obtain hex of tx due to: "} + e.what();
+        }
+    }
+
+    string
     show_my_outputs(string tx_hash_str,
                     string xmr_address_str,
                     string viewkey_str, /* or tx_prv_key_str when tx_prove == true */

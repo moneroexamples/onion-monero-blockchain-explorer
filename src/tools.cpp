@@ -1266,4 +1266,10 @@ pause_execution(uint64_t no_seconds, const string& text)
     cout << endl;
 }
 
+string
+tx_to_hex(transaction const& tx)
+{
+    return epee::string_tools::buff_to_hex_nodelimer(t_serializable_object_to_blob(tx));
+}
+
 }
