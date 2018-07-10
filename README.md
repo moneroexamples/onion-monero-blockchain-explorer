@@ -21,7 +21,7 @@ Monero C++ libraries, but also demonstrates how to use:
  - [json](https://github.com/nlohmann/json) - JSON for Modern C++
  - [fmt](https://github.com/fmtlib/fmt) - Small, safe and fast string formatting library
 
-## Explorer hosts
+## Addresses
 
 Tor users:
 
@@ -55,7 +55,6 @@ Alternative block explorers:
 
 - [http://moneroblocks.info](http://moneroblocks.info/)
 - [https://monerobase.com](https://monerobase.com/)
-- [https://monerovision.com](https://monerovision.com)
 - [http://chainradar.com](http://chainradar.com/xmr/blocks)
 
 
@@ -73,13 +72,13 @@ The key features of the Onion Monero Blockchain Explorer are:
  - showing public components of Monero addresses,
  - decoding which outputs and mixins belong to the given Monero address and viewkey,
  - can prove that you send Monero to someone,
- - detailed information about ring members, such as, their age, timescale and their ring sizes,
+ - detailed information about mixins, such as, mixins' age, timescale, mixin of mixins,
  - showing number of amount output indices,
- - support Monero testnet and stagnet networks,
+ - support Monero testnet network,
  - tx checker and pusher for online pushing of transactions,
  - estimate possible spendings based on address and viewkey,
- - can provide total amount of all miner fees,
- - decoding encrypted payment id,
+ - can provide total amount of all miner fees.
+ - decoding encrypted payment id.
  - decoding outputs and proving txs sent to sub-address.
 
 
@@ -91,7 +90,7 @@ Current development branch:
 
 
 
-## Compilation on Ubuntu 16.04/18.04
+## Compilation on Ubuntu 16.04
 
 ##### Compile latest Monero development version
 
@@ -101,7 +100,7 @@ Download and compile recent Monero into your home folder:
 # first install monero dependecines
 sudo apt update
 
-sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libcurl4-openssl-dev libgtest-dev libreadline-dev libzmq3-dev libsodium-dev libpcsclite-dev
+sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libcurl4-openssl-dev libgtest-dev libreadline-dev libzmq3-dev libsodium-dev
 
 # go to home folder
 cd ~
@@ -111,7 +110,7 @@ git clone --recursive https://github.com/monero-project/monero
 cd monero/
 
 # checkout last monero version
-git checkout -b last_release v0.12.1.0
+git checkout -b last_release v0.12.0.0
 
 make
 ```
@@ -147,6 +146,10 @@ cmake ..
 make
 ```
 
+When compilation finishes executable `xmrblocks` should be created. Before running
+please make sure that  `~/Downloads` folder exists and is writable.
+Time zone library that explorer is using, puts there
+its database of time zone offsets
 
 To run it:
 ```
@@ -154,14 +157,7 @@ To run it:
 ```
 
 By default it will look for blockchain in its default location i.e., `~/.bitmonero/lmdb`.
-You can use `-b` option if its in different location.
-
-For example:
-
-```bash
-./xmrblocks -b /home/mwo/non-defult-monero-location/lmdb/
-```
-
+You can use `--bc-path` option if its in different location.
 Example output:
 
 ```bash
