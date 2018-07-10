@@ -74,11 +74,11 @@ The key features of the Onion Monero Blockchain Explorer are:
  - can prove that you send Monero to someone,
  - detailed information about mixins, such as, mixins' age, timescale, mixin of mixins,
  - showing number of amount output indices,
- - support Monero testnet and stagnet networks,
+ - support Monero testnet network,
  - tx checker and pusher for online pushing of transactions,
  - estimate possible spendings based on address and viewkey,
- - can provide total amount of all miner fees,
- - decoding encrypted payment id,
+ - can provide total amount of all miner fees.
+ - decoding encrypted payment id.
  - decoding outputs and proving txs sent to sub-address.
 
 
@@ -146,6 +146,10 @@ cmake ..
 make
 ```
 
+When compilation finishes executable `xmrblocks` should be created. Before running
+please make sure that  `~/Downloads` folder exists and is writable.
+Time zone library that explorer is using, puts there
+its database of time zone offsets
 
 To run it:
 ```
@@ -153,14 +157,7 @@ To run it:
 ```
 
 By default it will look for blockchain in its default location i.e., `~/.bitmonero/lmdb`.
-You can use `-b` option if its in different location.
-
-For example:
-
-```bash
-./xmrblocks -b /home/mwo/non-defult-monero-location/lmdb/
-```
-
+You can use `--bc-path` option if its in different location.
 Example output:
 
 ```bash
