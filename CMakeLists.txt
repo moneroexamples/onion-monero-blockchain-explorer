@@ -119,7 +119,6 @@ set(LIBRARIES
         checkpoints
         version
         epee
-        pcsclite
         ${Boost_LIBRARIES}
         pthread
         unbound
