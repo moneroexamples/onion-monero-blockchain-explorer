@@ -33,13 +33,11 @@ namespace xmreg
 
         hw::device* m_device;
 
-        network_type nettype;
-
     public:
         MicroCore();
 
         bool
-        init(const string& _blockchain_path, network_type nt);
+        init(const string& _blockchain_path);
 
         Blockchain&
         get_core();
@@ -79,11 +77,11 @@ namespace xmreg
 
 
 
+
     bool
     init_blockchain(const string& path,
                     MicroCore& mcore,
-                    Blockchain*& core_storage,
-                    network_type nt);
+                    Blockchain*& core_storage);
 
 
 }
