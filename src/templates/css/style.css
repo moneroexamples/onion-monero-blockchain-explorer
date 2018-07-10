@@ -1,141 +1,279 @@
 body {
-    margin: 0;
-    padding: 0;
-    color: white;
-    background-color: black;
+        margin: 0;
+        padding: 0;
+        color: white;
+        font-family: 'Poppins', sans-serif;
+    font-weight: thin;
+    background: #072138;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    text-align: center;
+        text-align: center;
+    font-weight: 300;
+}
+
+h1, h2 {
+    color:#8AF1F0;
+    font-weight: 500;
+    /*text-transform: uppercase;*/
 }
 
 .center {
+        margin: auto;
+        width: 100%;
+        max-width: 1400px;
+}
+
+.header-center {
     margin: auto;
-    width: 96%;
-    /*border: 1px solid #73AD21;
-    padding: 10px;*/
+        width: 100%;
+        max-width: 800px;
+}
+
+
+table {
+        width: 100%;
+        border-spacing: 0;
+
 }
 
 tr, li, #pages, .info {
-    font-family: "Lucida Console", Monaco, monospace;
-    font-size  : 12px;
-    height: 22px;
+        font-family: "Lucida Console", Monaco, monospace;
+        font-size  : 12px;
+        height: 22px;
+}
+
+tr:hover {
+        background-color: #1A2B3D;
+}
+
+tr:first-of-type {
+        background-color: #011B28;
+    font-family: 'Poppins', sans-serif;
+    font-weight: bold;
+
+}
+
+td {
+        border-top: 1px solid white!important;
 }
 
 #pages
 {
-    margin-top: 15px;
+        margin-top: 15px;
 }
 
 td {
-    text-align: center;
+        text-align: center;
 }
 
 a:link {
-    text-decoration: none;
-    color: white;
+        text-decoration: none;
+        color: #B3EDEF;
 }
 
 a:visited {
-    text-decoration: none;
-    color: white;
+        text-decoration: none;
+        color: lightpink;
 }
 
 a:hover {
-    text-decoration: underline;
-    color: white;
+        color: deepskyblue;
 }
 
 a:active {
-    text-decoration: none;
-    color: white;
+        text-decoration: none;
+        color: white;
 }
 
 form {
-    display: inline-block;
-    text-align: center;
+        display: inline-block;
+        vertical-align: middle;
+        text-align: center;
 }
 
 .style-1 input[type="text"] {
-    padding: 2px;
-    border: solid 1px #dcdcdc;
-    transition: box-shadow 0.3s, border 0.3s;
+        padding: 10px;
+    margin-right: 10px;
+        font-size: 12px;
+    border-radius: 30px;
+    border:1px #8AF1F0;
+    border-style:groove;
+    background: #072138;
+    outline:none;
+    font-family: "Poppins", sans-serif;
+    color: white;
+        transition: box-shadow 0.1s, border 0.3s;
 }
 .style-1 input[type="text"]:focus,
 .style-1 input[type="text"].focus {
-    border: solid 1px #707070;
-    box-shadow: 0 0 5px 1px #969696;
+    box-shadow: 0 0 5px 1px #8AF1F0;
+
 }
+
+.style-1 input[type="submit"] {
+        min-height: 36px;
+        border: none;
+    background-image:linear-gradient(to right, #8AF1F0 0%, #CF9EBB 100%);
+    border-radius: 30px;
+    min-width: 100px;
+    font-family: "Poppins", sans-serif;
+    font-weight: 600;
+        -webkit-appearance: none;
+        vertical-align: middle;
+        padding: 10px;
+        color: #fff;
+        background-color: #89F0EF;
+        text-transform: uppercase;
+        font-size: 12px;
+    transition: box-shadow 0.1s, border 0.3s;
+}
+
+.style-1 input[type="submit"]:hover,
+.style-1 input[type="submit"].hover {
+    box-shadow: 0 0 5px 1px #8AF1F0;
+        }
 
 
 .tabs {
-    position: relative;
-    min-height: 220px; /* This part sucks */
-    clear: both;
-    margin: 25px 0;
+        position: relative;
+        min-height: 220px; /* This part sucks */
+        clear: both;
+        margin: 25px 0;
 }
 
 .tab {
-    float: left;
+        float: left;
 }
 
 .tab label {
-    background: black;
+    background: #072138;
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid #8FEBEC;
     margin-left: -1px;
     position: relative;
     left: 1px;
 }
 
 .tab [type=radio] {
-    display: none;
+        display: none;
 }
 
 .content {
-    position: absolute;
-    top: 28px;
-    left: 0;
-    background: black;
-    right: 0;
-    bottom: 0;
-    padding: 20px;
-    border: 1px solid #ccc;
+        position: absolute;
+    height:205px;
+        top: 28px;
+        left: 0;
+        background: #011B28;
+        right: 0;
+        bottom: 0;
+        padding: 20px;
+        border: 1px solid #8CEFEF;
 }
 
 [type=radio]:checked ~ label {
-    background: #505050 ;
-    border-bottom: 1px solid white;
-    z-index: 2;
+        background: #91EAEB;
+    border-bottom: 1px solid #072138;
+    z-index: 0;
+}
+
+::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: white;
+    opacity: 0.8; /* Firefox */
 }
 
 [type=radio]:checked ~ label ~ .content {
-    z-index: 1;
+        z-index: 1;
 }
 
 input#toggle-1[type=checkbox] {
-    position: absolute;
-    /*top: -9999px;*/
-    left: -9999px;
+        position: absolute;
+        /*top: -9999px;*/
+        left: -9999px;
 
 }
 label#show-decoded-inputs {
-    /*-webkit-appearance: push-button;*/
-    /*-moz-appearance: button;*/
-    display: inline-block;
-    /*margin: 60px 0 10px 0;*/
-    cursor: pointer;
-    background-color: black;;
-    color: white;
-    width: 100%;
-    text-align: center;
+        /*-webkit-appearance: push-button;*/
+        /*-moz-appearance: button;*/
+        display: inline-block;
+        margin: 30px 0 10px 0;
+        cursor: pointer;
+        background-color: black;;
+        color: white;
+        width: 100%;
+        text-align: center;
 }
 
 div#decoded-inputs{
-    display: none;
+        display: none;
 }
 
 /* Toggled State */
 input#toggle-1[type=checkbox]:checked ~ div#decoded-inputs {
+        display: block;
+}
+
+header {
+    height:100px;
+    margin-bottom: 10px;
+    padding-top: 0px;
+    background-color:black;
+}
+
+header img {
+    margin: 10px 20px 10px 0px;
+        max-width: 200px;
+        vertical-align: middle;
+    float:left;
+    width:auto;
+}
+
+ul {
+    list-style-type: none;
+    width:100%;
+    margin-left: 20px;
+    display:inline;
+
+}
+
+li {
+    float:left;
+    display: table-cell;
+    float: none;
+    margin-bottom: 0;
+    font-family: 'Poppins', sans-serif;
+    font-weight:bold;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.header-center li > a {
     display: block;
+    color: #fff;
+    padding-top:40px;
+    padding-right:40px;
+    text-align: center;
+    text-decoration: none;
+
+
+}
+
+.header-center li > a:link {
+        text-decoration: none;
+        color: white;
+}
+
+.header-center li > a:visited {
+        text-decoration: none;
+        color: white;
+}
+
+.header-center li > a:hover {
+        color: #8AF1F0;
+    transition: all .35s ease;
+}
+
+.header-center li > a:active {
+        text-decoration: none;
+        color: white;
 }
