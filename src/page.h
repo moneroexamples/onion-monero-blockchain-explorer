@@ -1628,6 +1628,8 @@ public:
                 // tx is nowhere to be found :-(
                 return string("Cant get tx: " + tx_hash_str);
             }
+
+            tx = found_txs.at(0).tx;
         }
 
         try
