@@ -64,6 +64,7 @@ main(int ac, const char* av[])
     auto enable_js_opt                 = opts.get_option<bool>("enable-js");
     auto enable_mixin_details_opt      = opts.get_option<bool>("enable-mixin-details");
     auto enable_json_api_opt           = opts.get_option<bool>("enable-json-api");
+    auto enable_as_hex_opt             = opts.get_option<bool>("enable-as-hex");
     auto enable_tx_cache_opt           = opts.get_option<bool>("enable-tx-cache");
     auto enable_block_cache_opt        = opts.get_option<bool>("enable-block-cache");
     auto show_cache_times_opt          = opts.get_option<bool>("show-cache-times");
@@ -91,6 +92,7 @@ main(int ac, const char* av[])
     bool enable_output_key_checker    {*enable_output_key_checker_opt};
     bool enable_mixin_details         {*enable_mixin_details_opt};
     bool enable_json_api              {*enable_json_api_opt};
+    bool enable_as_hex                {*enable_as_hex_opt};
     bool enable_tx_cache              {*enable_tx_cache_opt};
     bool enable_block_cache           {*enable_block_cache_opt};
     bool enable_emission_monitor      {*enable_emission_monitor_opt};
@@ -262,6 +264,7 @@ main(int ac, const char* av[])
                           nettype,
                           enable_pusher,
                           enable_js,
+                          enable_as_hex,
                           enable_key_image_checker,
                           enable_output_key_checker,
                           enable_autorefresh_option,
@@ -309,10 +312,18 @@ main(int ac, const char* av[])
         return crow::response(xmrblocks.show_tx(remove_bad_chars(tx_hash)));
     });
 
-    CROW_ROUTE(app, "/txhex/<string>")
-    ([&](const crow::request& req, string tx_hash) {
-        return crow::response(xmrblocks.show_tx_hex(remove_bad_chars(tx_hash)));
-    });
+    if (enable_as_hex)
+    {
+        CROW_ROUTE(app, "/txhex/<string>")
+        ([&](const crow::request& req, string tx_hash) {
+            return crow::response(xmrblocks.show_tx_hex(remove_bad_chars(tx_hash)));
+        });
+
+        CROW_ROUTE(app, "/blockhex/<uint>")
+        ([&](const crow::request& req, size_t block_height) {
+            return crow::response(xmrblocks.show_block_hex(block_height));
+        });
+    }
 
     CROW_ROUTE(app, "/tx/<string>/<uint>")
     ([&](string tx_hash, uint16_t with_ring_signatures)
