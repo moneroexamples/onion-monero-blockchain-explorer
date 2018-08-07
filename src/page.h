@@ -1644,7 +1644,7 @@ public:
     }
 
     string
-    show_block_hex(size_t block_height)
+    show_block_hex(size_t block_height, bool complete_blk)
     {
 
         // get transaction
@@ -1658,8 +1658,37 @@ public:
 
         try
         {
-            return epee::string_tools::buff_to_hex_nodelimer(
-                        t_serializable_object_to_blob(blk));
+            if (complete_blk == false)
+            {
+                // get only block data as hex
+
+                return epee::string_tools::buff_to_hex_nodelimer(
+                            t_serializable_object_to_blob(blk));
+            }
+            else
+            {
+                // get block_complete_entry (block and its txs) as hex
+
+                block_complete_entry complete_block_data;
+
+                if (!mcore->get_block_complete_entry(blk, complete_block_data))
+                {
+                    cerr << "Failed to obtain complete block data " << endl;
+                    return string {"Failed to obtain complete block data "};
+                }
+
+                std::string complete_block_data_str;
+
+                if(!epee::serialization::store_t_to_binary(
+                            complete_block_data, complete_block_data_str))
+                {
+                    cerr << "Failed to serialize complete_block_data\n";
+                    return string {"Failed to obtain complete block data"};
+                }
+
+                return epee::string_tools
+                        ::buff_to_hex_nodelimer(complete_block_data_str);
+            }
         }
         catch (std::exception const& e)
         {
