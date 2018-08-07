@@ -80,6 +80,12 @@ MicroCore::get_core()
     return m_blockchain_storage;
 }
 
+tx_memory_pool&
+MicroCore::get_mempool()
+{
+    return m_mempool;
+}
+
 /**
  * Get block by its height
  *
@@ -259,6 +265,28 @@ init_blockchain(const string& path,
 
     return true;
 }
+
+
+bool
+MicroCore::get_block_complete_entry(block const& b, block_complete_entry& bce)
+{
+    bce.block = cryptonote::block_to_blob(b);
+
+    for (const auto &tx_hash: b.tx_hashes)
+    {
+      transaction tx;
+
+      if (!get_tx(tx_hash, tx))
+        return false;
+
+      cryptonote::blobdata txblob =  tx_to_blob(tx);
+
+      bce.txs.push_back(txblob);
+    }
+
+    return true;
+}
+
 
 string
 MicroCore::get_blkchain_path()
