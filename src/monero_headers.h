@@ -26,7 +26,7 @@
 #include "blockchain_db/lmdb/db_lmdb.h"
 #include "device/device_default.hpp"
 
-#include "wallet/wallet2.h"
+#include "wallet/wallet.h"
 
 #include "serialization/binary_utils.h"
 

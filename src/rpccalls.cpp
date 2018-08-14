@@ -111,7 +111,7 @@ rpccalls::get_mempool(vector<tx_info>& mempool_txs)
 
 
 bool
-rpccalls::commit_tx(tools::wallet2::pending_tx& ptx, string& error_msg)
+rpccalls::commit_tx(tools::wallet::pending_tx& ptx, string& error_msg)
 {
     COMMAND_RPC_SEND_RAW_TX::request  req;
     COMMAND_RPC_SEND_RAW_TX::response res;

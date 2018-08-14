@@ -346,7 +346,8 @@ array<uint64_t, 4>
 summary_of_in_out_rct(
         const transaction& tx,
         vector<pair<txout_to_key, uint64_t>>& output_pub_keys,
-        vector<txin_to_key>& input_key_imgs)
+        vector<txin_to_key>& input_key_imgs,
+        vector<txin_to_key>& input_token_key_imgs)
 {
 
     uint64_t xmr_outputs       {0};
@@ -360,7 +361,7 @@ summary_of_in_out_rct(
         if (txout.target.type() != typeid(txout_to_key))
         {
             // push empty pair.
-            output_pub_keys.push_back(pair<txout_to_key, uint64_t>{});
+            output_pub_keys.emplace_back();
             continue;
         }
 
@@ -368,7 +369,7 @@ summary_of_in_out_rct(
         const txout_to_key& txout_key
                 = boost::get<cryptonote::txout_to_key>(txout.target);
 
-        output_pub_keys.push_back(make_pair(txout_key, txout.amount));
+        output_pub_keys.emplace_back(txout_key, txout.amount);
 
         xmr_outputs += txout.amount;
     }

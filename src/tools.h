@@ -8,7 +8,7 @@
 #define PATH_SEPARARTOR '/'
 
 #define XMR_AMOUNT(value) \
-    static_cast<double>(value) / 1e12
+    static_cast<double>(value) / 1e10
 
 #define REMOVE_HASH_BRAKETS(a_hash) \
     a_hash.substr(1, a_hash.size()-2)
@@ -155,7 +155,8 @@ array<uint64_t, 4>
 summary_of_in_out_rct(
         const transaction& tx,
         vector<pair<txout_to_key, uint64_t>>& output_pub_keys,
-        vector<txin_to_key>& input_key_imgs);
+        vector<txin_to_key>& input_key_imgs,
+        vector<txin_to_key>& input_token_key_imgs = {});
 
 // this version for mempool txs from json
 array<uint64_t, 6>
@@ -274,7 +275,7 @@ get_tx_pub_key_from_received_outs(const transaction &tx);
 static
 string
 xmr_amount_to_str(const uint64_t& xmr_amount,
-                  string _format="{:0.12f}",
+                  string _format="{:0.10f}",
                   bool zero_to_question_mark=true)
 {
     string amount_str = "?";
