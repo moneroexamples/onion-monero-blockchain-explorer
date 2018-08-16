@@ -55,7 +55,7 @@
 
     {{#emission}}
         <h3 style="font-size: 12px; margin-top: 2px">
-            Monero emission (fees) is {{amount}} ({{fee_amount}}) as of {{blk_no}} block
+            Safex emission (fees) is {{amount}} ({{fee_amount}}) as of {{blk_no}} block
         </h3>
     {{/emission}}
 
@@ -82,7 +82,8 @@
                     <td>size [kB]<!--(Δm)--></td>
                     <td>transaction hash</td>
                     <td>fee</td>
-                    <td>outputs</td>
+                    <td>cash outputs</td>
+                    <td>token outputs</td>
                     <td>in/out/pID</td>
                     <td>ring size</td>
                     <td>tx size [kB]</td>
@@ -95,6 +96,7 @@
                     <td><a href="/tx/{{hash}}">{{hash}}</a></td>
                     <td>{{tx_fee_short}}</td>
                     <td>{{sum_outputs_short}}</td>
+                    <td>{{sum_outputs_token_short}}</td>
                     <td>{{no_inputs}}/{{no_outputs}}/{{pID}}</td>
                     <td>{{mixin}}</td>
                     <td>{{tx_size_short}}</td>

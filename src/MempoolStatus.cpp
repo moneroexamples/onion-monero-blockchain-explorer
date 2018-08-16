@@ -144,14 +144,13 @@ MempoolStatus::read_mempool()
         mempool_tx& last_tx = local_copy_of_mempool_txs.back();
 
         // key images of inputs
-        vector<txin_to_key> input_key_imgs;
+        vector<displayable_input> input_key_imgs;
 
         // public keys and xmr amount of outputs
-        vector<pair<txout_to_key, uint64_t>> output_pub_keys;
+        vector<pair<displayable_output, uint64_t>> output_pub_keys;
 
         // sum xmr in inputs and ouputs in the given tx
-        const array<uint64_t, 4>& sum_data = summary_of_in_out_rct(
-               tx, output_pub_keys, input_key_imgs);
+        const auto& sum_data = summary_of_in_out_rct(tx, output_pub_keys, input_key_imgs);
 
 
 

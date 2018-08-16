@@ -371,8 +371,8 @@ Partial results shown:
     "tx_hash": "6093260dbe79fd6277694d14789dc8718f1bd54457df8bab338c2efa3bb0f03d",
     "tx_size": 13323,
     "tx_version": 2,
-    "xmr_inputs": 0,
-    "xmr_outputs": 0
+    "cash_inputs": 0,
+    "cash_outputs": 0
   },
   "status": "success"
 }
@@ -470,8 +470,8 @@ Partial results shown:
         "tx_hash": "3ff71b65bec34c9261e01a856e6a03594cf0472acf6b77db3f17ebd18eaa30bf",
         "tx_size": 95,
         "tx_version": 2,
-        "xmr_inputs": 0,
-        "xmr_outputs": 8025365394426
+        "cash_inputs": 0,
+        "cash_outputs": 8025365394426
       }
     ]
   },
@@ -509,8 +509,8 @@ Partial results shown:
         "tx_hash": "9f3374f8ac67febaab153eab297937a3d0d2c706601e496bf5028146da0c9aef",
         "tx_size": 13291,
         "tx_version": 2,
-        "xmr_inputs": 0,
-        "xmr_outputs": 0
+        "cash_inputs": 0,
+        "cash_outputs": 0
       }
     ],
     "txs_no": 7
@@ -562,8 +562,8 @@ Partial results shown:
         "tx_hash": "479ba432f5c88736b438dd4446a11a13046a752d469f7828151f5c5b86be4e9a",
         "tx_size": 95,
         "tx_version": 2,
-        "xmr_inputs": 0,
-        "xmr_outputs": 7992697599717
+        "cash_inputs": 0,
+        "cash_outputs": 7992697599717
       }
     ]
   },
