@@ -3,6 +3,7 @@
 //
 
 #include "tools.h"
+//#include "page.h"
 #include <codecvt>
 #include <thread>
 
@@ -342,69 +343,70 @@ sum_money_in_outputs(const json& _json)
 };
 
 
-array<uint64_t, 4>
+array<uint64_t, 7>
 summary_of_in_out_rct(
-        const transaction& tx,
-        vector<pair<txout_to_key, uint64_t>>& output_pub_keys,
-        vector<txin_to_key>& input_key_imgs)
-{
+        const transaction &tx,
+        vector<pair<xmreg::displayable_output, uint64_t>> &output_pub_keys,
+        vector<xmreg::displayable_input> &input_key_imgs) {
 
-    uint64_t xmr_outputs       {0};
-    uint64_t xmr_inputs        {0};
-    uint64_t mixin_no          {0};
-    uint64_t num_nonrct_inputs {0};
+    uint64_t xmr_outputs{0};
+    uint64_t token_outputs{0};
+    uint64_t xmr_inputs{0};
+    uint64_t token_inputs{0};
+    uint64_t mixin_no{0};
+    uint64_t token_mixin_no{0};
+    uint64_t num_nonrct_inputs{0};
 
-
-    for (const tx_out& txout: tx.vout)
-    {
-        if (txout.target.type() != typeid(txout_to_key))
-        {
-            // push empty pair.
-            output_pub_keys.push_back(pair<txout_to_key, uint64_t>{});
+    // Process outputs
+    for (auto const &txout: tx.vout) {
+        if (txout.target.type() != typeid(txout_to_key) && txout.target.type() != typeid(txout_token_to_key)) {
+            output_pub_keys.emplace_back();
             continue;
         }
 
-        // get tx input key
-        const txout_to_key& txout_key
-                = boost::get<cryptonote::txout_to_key>(txout.target);
+        if (txout.target.type() == typeid(txout_to_key)) {
+            auto target = boost::get<cryptonote::txout_to_key>(txout.target);
+            output_pub_keys.emplace_back(target, txout.amount);
+            xmr_outputs += txout.amount;
+        }
 
-        output_pub_keys.push_back(make_pair(txout_key, txout.amount));
-
-        xmr_outputs += txout.amount;
+        if (txout.target.type() == typeid(txout_token_to_key)) {
+            auto target = boost::get<cryptonote::txout_token_to_key>(txout.target);
+            output_pub_keys.emplace_back(target, txout.token_amount);
+            token_outputs += txout.token_amount;
+        }
     }
 
-    size_t input_no = tx.vin.size();
+    // Process inputs
 
-    for (size_t i = 0; i < input_no; ++i)
-    {
-
-        if(tx.vin[i].type() != typeid(cryptonote::txin_to_key))
-        {
+    for (auto const &txin: tx.vin) {
+        if ((txin.type() != typeid(txin_to_key) && txin.type() != typeid(txin_token_to_key))) {
             continue;
         }
-
-        // get tx input key
-        const cryptonote::txin_to_key& tx_in_to_key
-                = boost::get<cryptonote::txin_to_key>(tx.vin[i]);
-
-        xmr_inputs += tx_in_to_key.amount;
-
-        if (tx_in_to_key.amount != 0)
-        {
-            ++num_nonrct_inputs;
+        if (txin.type() == typeid(txin_to_key)) {
+            auto input = boost::get<txin_to_key>(txin);
+            xmr_inputs += input.amount;
+            if (input.amount != 0) {
+                ++num_nonrct_inputs;
+            }
+            if (mixin_no == 0) {
+                mixin_no = input.key_offsets.size();
+            }
+            input_key_imgs.emplace_back(input);
         }
 
-        if (mixin_no == 0)
-        {
-            mixin_no = tx_in_to_key.key_offsets.size();
+        if (txin.type() == typeid(txin_token_to_key)) {
+            auto input = boost::get<txin_token_to_key>(txin);
+            token_inputs += input.token_amount;
+            if (token_mixin_no == 0) {
+                token_mixin_no = input.key_offsets.size();
+            }
+            input_key_imgs.emplace_back(input);
         }
+    }
 
-        input_key_imgs.push_back(tx_in_to_key);
-
-    } //  for (size_t i = 0; i < input_no; ++i)
-
-
-    return {xmr_outputs, xmr_inputs, mixin_no, num_nonrct_inputs};
+    return {xmr_outputs, token_outputs, xmr_inputs, token_inputs, mixin_no,
+            token_mixin_no, num_nonrct_inputs};
 };
 
 

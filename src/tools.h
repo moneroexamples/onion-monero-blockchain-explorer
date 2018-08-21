@@ -8,7 +8,7 @@
 #define PATH_SEPARARTOR '/'
 
 #define XMR_AMOUNT(value) \
-    static_cast<double>(value) / 1e12
+    static_cast<double>(value) / 1e10
 
 #define REMOVE_HASH_BRAKETS(a_hash) \
     a_hash.substr(1, a_hash.size()-2)
@@ -16,10 +16,12 @@
 
 
 #include "monero_headers.h"
+#include "display_types.h"
 
 #include "../ext/fmt/ostream.h"
 #include "../ext/fmt/format.h"
 #include "../ext/json.hpp"
+//#include "page.h"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
@@ -40,6 +42,7 @@
  */
 namespace xmreg
 {
+
 
 using namespace cryptonote;
 using namespace crypto;
@@ -151,11 +154,11 @@ pair<uint64_t, uint64_t>
 sum_money_in_outputs(const json& _json);
 
 
-array<uint64_t, 4>
+array<uint64_t, 7>
 summary_of_in_out_rct(
-        const transaction& tx,
-        vector<pair<txout_to_key, uint64_t>>& output_pub_keys,
-        vector<txin_to_key>& input_key_imgs);
+        const transaction &tx,
+        vector<pair<xmreg::displayable_output, uint64_t>> &output_pub_keys,
+        vector<xmreg::displayable_input> &input_token_key_imgs);
 
 // this version for mempool txs from json
 array<uint64_t, 6>
@@ -274,21 +277,16 @@ get_tx_pub_key_from_received_outs(const transaction &tx);
 static
 string
 xmr_amount_to_str(const uint64_t& xmr_amount,
-                  string _format="{:0.12f}",
-                  bool zero_to_question_mark=true)
+                  string _format="{:0.10f}",
+                  bool zero_to_question_mark=true,
+                  std::string const &zero_string="?")
 {
-    string amount_str = "?";
+    string amount_str = zero_string;
 
-    if (!zero_to_question_mark)
-    {
+    if (!zero_to_question_mark) {
         amount_str = fmt::format(_format, XMR_AMOUNT(xmr_amount));
-    }
-    else
-    {
-        if (xmr_amount > 0 && zero_to_question_mark == true)
-        {
-            amount_str = fmt::format(_format, XMR_AMOUNT(xmr_amount));
-        }
+    } else if (xmr_amount > 0) {
+        amount_str = fmt::format(_format, XMR_AMOUNT(xmr_amount));
     }
 
     return amount_str;

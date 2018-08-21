@@ -56,21 +56,27 @@
     </table>
 
 
-  <h3>{{outputs_no}} output(s) for total of {{outputs_xmr_sum}} xmr</h3>
+  <h3>{{outputs_no}} output(s) for total of {{outputs_xmr_sum}} cash and {{outputs_token_sum}} token(s)</h3>
   <div class="center">
-      <table class="center">
-          <tr>
-              <td>stealth address</td>
-              <td>amount</td>
-              <td>amount idx</td>
-          </tr>
-          {{#outputs}}
-          <tr>
-              <td>{{output_idx}}: {{out_pub_key}}</td>
-              <td>{{amount}}</td>
-              <td>{{amount_idx}} of {{num_outputs}}</td>
-          </tr>
-          {{/outputs}}
+      <table class="center primary table">
+          <thead>
+              <tr>
+                  <th>stealth address</th>
+                  <th>amount</th>
+                  <th>amount idx</th>
+                  <th>token?</th>
+              </tr>
+          </thead>
+          <tbody>
+              {{#outputs}}
+              <tr>
+                  <td>{{output_idx}}: {{out_pub_key}}</td>
+                  <td>{{amount}}</td>
+                  <td>{{amount_idx}} of {{num_outputs}}</td>
+                  <td>{{token}}</td>
+              </tr>
+              {{/outputs}}
+          </tbody>
       </table>
   </div>
 
@@ -397,14 +403,14 @@
     {{/enable_mixins_details}}
 
     {{^inputs_xmr_sum_not_zero}}
-        <h3>{{inputs_no}} input(s) for total of {{inputs_xmr_sum}} xmr</h3>
+        <h3>{{inputs_no}} input(s) for total of {{inputs_xmr_sum}} cash and {{inputs_token_sum}} token(s)</h3>
     {{/inputs_xmr_sum_not_zero}}
     {{#inputs_xmr_sum_not_zero}}
         {{^have_any_unknown_amount}}
-            <h3>{{inputs_no}} inputs(s) for total of {{inputs_xmr_sum}} xmr</h3>
+            <h3>{{inputs_no}} inputs(s) for total of {{inputs_xmr_sum}} cash and {{inputs_token_sum}} token(s)</h3>
         {{/have_any_unknown_amount}}
         {{#have_any_unknown_amount}}
-            <h3>{{inputs_no}} inputs(s) for total of at least {{inputs_xmr_sum}} xmr</h3>
+            <h3>{{inputs_no}} inputs(s) for total of at least {{inputs_xmr_sum}} cash and {{inputs_token_sum}} token(s)</h3>
         {{/have_any_unknown_amount}}
     {{/inputs_xmr_sum_not_zero}}
 
@@ -433,6 +439,7 @@
               {{/have_raw_tx}}
           </td>
           <td>amount: {{amount}}</td>
+          <td>token: {{token}}</td>
        </tr>
           <tr>
             <td colspan="2">

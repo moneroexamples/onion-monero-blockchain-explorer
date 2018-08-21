@@ -94,7 +94,7 @@ public:
     get_mempool(vector<tx_info>& mempool_txs);
 
     bool
-    commit_tx(tools::wallet2::pending_tx& ptx, string& error_msg);
+    commit_tx(tools::wallet::pending_tx& ptx, string& error_msg);
 
     bool
     get_network_info(COMMAND_RPC_GET_INFO::response& info);

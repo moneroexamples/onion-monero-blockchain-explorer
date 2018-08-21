@@ -43,7 +43,7 @@ foreach (l ${LIBS})
 
 	find_library(Xmr_${L}_LIBRARY
 		NAMES ${l}
-		PATHS ${CMAKE_LIBRARY_PATH}
+		PATHS ${CMAKE_LIBRARY_PATH} ${CPP_MONERO_DIR}
 		PATH_SUFFIXES "/src/${l}" "/src/" "/external/db_drivers/lib${l}" "/lib" "/src/crypto" "/contrib/epee/src" "/external/easylogging++/"
 		NO_DEFAULT_PATH
 	)
