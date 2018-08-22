@@ -321,6 +321,11 @@ main(int ac, const char* av[])
             return crow::response(xmrblocks.show_tx_hex(remove_bad_chars(tx_hash)));
         });
 
+        CROW_ROUTE(app, "/ringmembershex/<string>")
+        ([&](string tx_hash) {
+            return crow::response(xmrblocks.show_ringmembers_hex(remove_bad_chars(tx_hash)));
+        });
+
         CROW_ROUTE(app, "/blockhex/<uint>")
         ([&](size_t block_height) {
             return crow::response(xmrblocks.show_block_hex(block_height, false));
