@@ -1602,35 +1602,11 @@ show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0)
 string
 show_tx_hex(string tx_hash_str)
 {
+    transaction tx;
     crypto::hash tx_hash;
 
-    if (!epee::string_tools::hex_to_pod(tx_hash_str, tx_hash))
-    {
-        string msg = fmt::format("Cant parse {:s} as tx hash!", tx_hash_str);
-        cerr << msg << endl;
-        return msg;
-    }
-
-    // get transaction
-    transaction tx;
-
-    if (!mcore->get_tx(tx_hash, tx))
-    {
-        cerr << "Cant get tx in blockchain: " << tx_hash
-             << ". \n Check mempool now" << endl;
-
-        vector<MempoolStatus::mempool_tx> found_txs;
-
-        search_mempool(tx_hash, found_txs);
-
-        if (found_txs.empty())
-        {
-            // tx is nowhere to be found :-(
-            return string("Cant get tx: " + tx_hash_str);
-        }
-
-        tx = found_txs.at(0).tx;
-    }
+    if (!get_tx(tx_hash_str, tx, tx_hash))
+        return string {"Cant get tx: "} +  tx_hash_str;
 
     try
     {
@@ -1700,35 +1676,11 @@ show_block_hex(size_t block_height, bool complete_blk)
 string
 show_ringmembers_hex(string const& tx_hash_str)
 {
+    transaction tx;
     crypto::hash tx_hash;
 
-    if (!epee::string_tools::hex_to_pod(tx_hash_str, tx_hash))
-    {
-        string msg = fmt::format("Cant parse {:s} as tx hash!", tx_hash_str);
-        cerr << msg << endl;
-        return msg;
-    }
-
-    // get transaction
-    transaction tx;
-
-    if (!mcore->get_tx(tx_hash, tx))
-    {
-        cerr << "Cant get tx in blockchain: " << tx_hash
-             << ". \n Check mempool now" << endl;
-
-        vector<MempoolStatus::mempool_tx> found_txs;
-
-        search_mempool(tx_hash, found_txs);
-
-        if (found_txs.empty())
-        {
-            // tx is nowhere to be found :-(
-            return string("Cant get tx: " + tx_hash_str);
-        }
-
-        tx = found_txs.at(0).tx;
-    }
+    if (!get_tx(tx_hash_str, tx, tx_hash))
+        return string {"Cant get tx: "} +  tx_hash_str;
 
     vector<txin_to_key> input_key_imgs = xmreg::get_key_images(tx);
 
@@ -1752,34 +1704,34 @@ show_ringmembers_hex(string const& tx_hash_str)
             // the amount and absolute offset
             // check how many outputs there are for that amount
             // go to next input if a too large offset was found
-            if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
+            if (are_absolute_offsets_good(absolute_offsets, in_key)
+                    == false)
                 continue;
 
             core_storage->get_db().get_output_key(in_key.amount,
                                                   absolute_offsets,
                                                   mixin_outputs);
         }
-        catch (const OUTPUT_DNE& e)
+        catch (OUTPUT_DNE const& e)
         {
             cerr << "get_output_keys: " << e.what() << endl;
             continue;
         }
 
         for (auto const& mo: mixin_outputs)
-        {
             all_mixin_outputs.emplace_back(pod_to_hex(mo));
-        }
 
     } // for (txin_to_key const& in_key: input_key_imgs)
 
     if (all_mixin_outputs.empty())
         return string {"No ring members to serialize"};
 
-
+    // archive all_mixin_outputs vector
     std::ostringstream oss;
     boost::archive::portable_binary_oarchive archive(oss);
     archive << all_mixin_outputs;
 
+    // return as all_mixin_outputs vector hex
     return epee::string_tools
             ::buff_to_hex_nodelimer(oss.str());
 
@@ -6690,6 +6642,41 @@ add_css_style(mstch::map& context)
     context["css_styles"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
         return template_file["css_styles"];
     }};
+}
+
+bool
+get_tx(string const& tx_hash_str,
+       transaction& tx,
+       crypto::hash& tx_hash)
+{
+    if (!epee::string_tools::hex_to_pod(tx_hash_str, tx_hash))
+    {
+        string msg = fmt::format("Cant parse {:s} as tx hash!", tx_hash_str);
+        cerr << msg << endl;
+        return false;
+    }
+
+    // get transaction
+
+    if (!mcore->get_tx(tx_hash, tx))
+    {
+        cerr << "Cant get tx in blockchain: " << tx_hash
+             << ". \n Check mempool now\n";
+
+        vector<MempoolStatus::mempool_tx> found_txs;
+
+        search_mempool(tx_hash, found_txs);
+
+        if (found_txs.empty())
+        {
+            // tx is nowhere to be found :-(
+            return false;
+        }
+
+        tx = found_txs.at(0).tx;
+    }
+
+    return true;
 }
 
 void
