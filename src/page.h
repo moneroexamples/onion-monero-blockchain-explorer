@@ -355,6 +355,7 @@ cryptonote::network_type nettype;
 bool mainnet;
 bool testnet;
 bool stagenet;
+bool regnet;
 
 bool enable_js;
 
@@ -452,9 +453,10 @@ page(MicroCore* _mcore,
           block_tx_cache(200),
           tx_context_cache(1000)
 {
-    mainnet = nettype == cryptonote::network_type::MAINNET;
-    testnet = nettype == cryptonote::network_type::TESTNET;
+    mainnet  = nettype == cryptonote::network_type::MAINNET;
+    testnet  = nettype == cryptonote::network_type::TESTNET;
     stagenet = nettype == cryptonote::network_type::STAGENET;
+    regnet   = nettype == cryptonote::network_type::FAKECHAIN;
 
 
     no_of_mempool_tx_of_frontpage = 25;
@@ -511,13 +513,15 @@ page(MicroCore* _mcore,
 
         // the same idea as above for the stagenet
 
-        if (stagenet)
+        // regnet uses same parameters as stagenet
+        if (stagenet && regnet)
         {
             template_file["config.js"] = std::regex_replace(
                     template_file["config.js"],
                     std::regex("stagenet: false"),
                     "stagenet: true");
         }
+
 
         template_file["all_in_one.js"] = template_file["jquery.min.js"] +
                                          template_file["crc32.js"] +
@@ -592,6 +596,7 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
     mstch::map context {
             {"testnet"                  , testnet},
             {"stagenet"                 , stagenet},
+            {"regnet"                   , regnet},
             {"testnet_url"              , testnet_url},
             {"stagenet_url"             , stagenet_url},
             {"mainnet_url"              , mainnet_url},
@@ -1102,6 +1107,7 @@ altblocks()
     mstch::map context {
             {"testnet"              , testnet},
             {"stagenet"             , stagenet},
+            {"regnet"               , regnet},
             {"blocks"               , mstch::array()}
     };
 
@@ -1250,6 +1256,7 @@ show_block(uint64_t _blk_height)
     mstch::map context {
             {"testnet"              , testnet},
             {"stagenet"             , stagenet},
+            {"regnet"               , regnet},
             {"blk_hash"             , blk_hash_str},
             {"blk_height"           , _blk_height},
             {"blk_timestamp"        , blk_timestamp},
@@ -1580,6 +1587,7 @@ show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0)
     mstch::map context {
             {"testnet"          , this->testnet},
             {"stagenet"         , this->stagenet},
+            {"regnet"           , this->regnet},
             {"show_cache_times" , show_cache_times},
             {"txs"              , mstch::array{}}
     };
@@ -1956,6 +1964,7 @@ show_my_outputs(string tx_hash_str,
     mstch::map context {
             {"testnet"              , testnet},
             {"stagenet"             , stagenet},
+            {"regnet"               , regnet},
             {"tx_hash"              , tx_hash_str},
             {"tx_prefix_hash"       , pod_to_hex(txd.prefix_hash)},
             {"xmr_address"          , xmr_address_str},
@@ -2538,7 +2547,8 @@ show_rawtx()
     // initalise page tempate map with basic info about blockchain
     mstch::map context {
             {"testnet"              , testnet},
-            {"stagenet"             , stagenet}
+            {"stagenet"             , stagenet},
+            {"regnet"               , regnet},
     };
 
     add_css_style(context);
@@ -2571,6 +2581,7 @@ show_checkrawtx(string raw_tx_data, string action)
     mstch::map context {
             {"testnet"              , testnet},
             {"stagenet"             , stagenet},
+            {"regnet"               , regnet},
             {"unsigned_tx_given"    , unsigned_tx_given},
             {"have_raw_tx"          , true},
             {"has_error"            , false},
@@ -3199,6 +3210,7 @@ show_pushrawtx(string raw_tx_data, string action)
     mstch::map context {
             {"testnet"              , testnet},
             {"stagenet"             , stagenet},
+            {"regnet"               , regnet},
             {"have_raw_tx"          , true},
             {"has_error"            , false},
             {"error_msg"            , string {}},
@@ -3403,6 +3415,7 @@ show_rawkeyimgs()
     mstch::map context {
             {"testnet"            , testnet},
             {"stagenet"           , stagenet},
+            {"regnet"             , regnet},
     };
 
     add_css_style(context);
@@ -3417,7 +3430,8 @@ show_rawoutputkeys()
     // initalize page template context map
     mstch::map context {
             {"testnet"            , testnet},
-            {"stagenet"           , stagenet}
+            {"stagenet"           , stagenet},
+            {"regnet"             , regnet},
     };
 
     add_css_style(context);
@@ -3442,6 +3456,7 @@ show_checkrawkeyimgs(string raw_data, string viewkey_str)
     mstch::map context{
             {"testnet"         , testnet},
             {"stagenet"        , stagenet},
+            {"regnet"          , regnet},
             {"has_error"       , false},
             {"error_msg"       , string{}},
     };
@@ -3588,6 +3603,7 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
     mstch::map context{
             {"testnet"         , testnet},
             {"stagenet"        , stagenet},
+            {"regnet"         , regnet},
             {"has_error"       , false},
             {"error_msg"       , string{}}
     };

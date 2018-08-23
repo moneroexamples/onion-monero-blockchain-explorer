@@ -27,6 +27,8 @@ namespace xmreg
                  "use testnet blockchain")
                 ("stagenet,s", value<bool>()->default_value(false)->implicit_value(true),
                  "use stagenet blockchain")
+                ("regnet,r", value<bool>()->default_value(false)->implicit_value(true),
+                 "use regtest blockchain")
                 ("enable-pusher", value<bool>()->default_value(false)->implicit_value(true),
                  "enable signed transaction pusher")
                 ("enable-mixin-details", value<bool>()->default_value(false)->implicit_value(true),

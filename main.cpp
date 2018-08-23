@@ -51,12 +51,13 @@ main(int ac, const char* av[])
     auto ssl_key_file_opt              = opts.get_option<string>("ssl-key-file");
     auto no_blocks_on_index_opt        = opts.get_option<string>("no-blocks-on-index");
     auto testnet_url                   = opts.get_option<string>("testnet-url");
-    auto stagenet_url                  = opts.get_option<string>("stagenet-url");
+    auto stagenet_url                  = opts.get_option<string>("stagenet-url");    
     auto mainnet_url                   = opts.get_option<string>("mainnet-url");
     auto mempool_info_timeout_opt      = opts.get_option<string>("mempool-info-timeout");
     auto mempool_refresh_time_opt      = opts.get_option<string>("mempool-refresh-time");
     auto testnet_opt                   = opts.get_option<bool>("testnet");
     auto stagenet_opt                  = opts.get_option<bool>("stagenet");
+    auto regnet_opt                    = opts.get_option<bool>("regnet");
     auto enable_key_image_checker_opt  = opts.get_option<bool>("enable-key-image-checker");
     auto enable_output_key_checker_opt = opts.get_option<bool>("enable-output-key-checker");
     auto enable_autorefresh_option_opt = opts.get_option<bool>("enable-autorefresh-option");
@@ -74,16 +75,20 @@ main(int ac, const char* av[])
 
     bool testnet                      {*testnet_opt};
     bool stagenet                     {*stagenet_opt};
+    bool regnet                       {*regnet_opt};
 
-    if (testnet && stagenet)
+    if (testnet && stagenet && regnet)
     {
-        cerr << "testnet and stagenet cannot be specified at the same time!" << endl;
+        cerr << "testnet, stagenet and regnet cannot be specified at the same time!" << endl;
         return EXIT_FAILURE;
     }
 
-    const cryptonote::network_type nettype = testnet ?
+    cryptonote::network_type nettype = testnet ?
         cryptonote::network_type::TESTNET : stagenet ?
         cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
+
+    if (regnet)
+        nettype = cryptonote::network_type::FAKECHAIN;
 
     bool enable_pusher                {*enable_pusher_opt};
     bool enable_js                    {*enable_js_opt};
