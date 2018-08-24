@@ -117,6 +117,7 @@ set(LIBRARIES
         checkpoints
         version
         epee
+        sodium
         ${Boost_LIBRARIES}
         pthread
         unbound
