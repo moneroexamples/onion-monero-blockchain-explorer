@@ -1684,11 +1684,16 @@ show_ringmembers_hex(string const& tx_hash_str)
 
     vector<txin_to_key> input_key_imgs = xmreg::get_key_images(tx);
 
-    std::vector<string> all_mixin_outputs;
+    // key: vector of absolute_offsets,
+    // value: vector of output_info_of_mixins
+    std::map<vector<uint64_t>, vector<string>> all_mixin_outputs;
 
        // make timescale maps for mixins in input
     for (txin_to_key const& in_key: input_key_imgs)
     {
+
+        string const& key_image_str = pod_to_hex(in_key.k_image);
+
         // get absolute offsets of mixins
         std::vector<uint64_t> absolute_offsets
                 = cryptonote::relative_output_offsets_to_absolute(
@@ -1719,7 +1724,7 @@ show_ringmembers_hex(string const& tx_hash_str)
         }
 
         for (auto const& mo: mixin_outputs)
-            all_mixin_outputs.emplace_back(pod_to_hex(mo));
+            all_mixin_outputs[absolute_offsets].emplace_back(pod_to_hex(mo));
 
     } // for (txin_to_key const& in_key: input_key_imgs)
 
