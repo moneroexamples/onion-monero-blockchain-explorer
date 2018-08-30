@@ -1722,7 +1722,6 @@ show_ringmembers_hex(string const& tx_hash_str)
 
         // add accociated amount to these offsets so that we can differentiate
         // between same offsets, but for different amounts
-
         absolute_offsets.push_back(in_key.amount);
 
         for (auto const& mo: mixin_outputs)
