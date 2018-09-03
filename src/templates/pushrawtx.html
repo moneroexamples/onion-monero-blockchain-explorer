@@ -1,33 +1,33 @@
 <div>
 
-    <div class="center">
-        <br/>
-        <h3 class="center">Transaction Pusher</h3>
-    </div>
-
-    <div class="center">
-
-        {{#txs}}
-            <h3>Attempting to push tx: {{tx_hash}}</h3>
-        {{/txs}}
-
-        {{#has_error}}
-            <h4 style="color:red">Attempt failed</h4>
-            <h4>{{error_msg}}</h4>
-        {{/has_error}}
-        {{^has_error}}
-            <h4 style="color:green">Success</h4>
-            <h4>
-                Your tx should be already in the txpool waiting to be included
-                in an upcoming block.
-            </h4>
-
-            {{#txs}}
-                <h4>Go to tx: <a href="/tx/{{tx_hash}}">{{tx_hash}}</a></h4>
-            {{/txs}}
-
-        {{/has_error}}
-
-    </div>
+  <div>
     <br/>
+    <h3>Transaction Pusher</h3>
+  </div>
+
+  <div class="center">
+
+    {{#txs}}
+    <h3>Attempting to push tx: {{tx_hash}}</h3>
+    {{/txs}}
+
+    {{#has_error}}
+    <h4 style="color:red">Attempt failed</h4>
+    <h4>{{error_msg}}</h4>
+    {{/has_error}}
+    {{^has_error}}
+    <h4 style="color:green">Success</h4>
+    <h4>
+      Your tx should be already in the txpool waiting to be included
+      in an upcoming block.
+    </h4>
+
+    {{#txs}}
+    <h4>Go to tx: <a href="/tx/{{tx_hash}}">{{tx_hash}}</a></h4>
+    {{/txs}}
+
+    {{/has_error}}
+
+  </div>
+  <br/>
 </div>

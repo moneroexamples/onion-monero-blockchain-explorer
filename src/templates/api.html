@@ -1,0 +1,566 @@
+<h2>Ryo Blockchain Explorer API</h2>
+<p>This explorer provides an API for getting details about transactions, blocks, mempool, network stats, and more. Additionally it provides a way to prove transactions and search for transactions belonging to a given address.</p>
+<h4>api/transaction/&lt;tx_hash&gt;</h4>
+<pre><code class="language-bash">curl  -w <span class="hljs-string">"\n"</span> -X GET <span class="hljs-string">"https://explorer.ryo-currency.com/api/transaction/4307e5619b29dcc1d9cdf4a52b3d0717bcbab0efc06d88fb79a1e0e33594e6ec"</span>
+</code></pre>
+<p>Partial results shown:</p>
+<pre><code class="language-json">{
+    "<span class="hljs-attribute">data</span>":<span class="hljs-value">{
+      "<span class="hljs-attribute">block_height</span>":<span class="hljs-value"><span class="hljs-number">156844</span></span>,
+      "<span class="hljs-attribute">coinbase</span>":<span class="hljs-value"><span class="hljs-literal">true</span></span>,
+      "<span class="hljs-attribute">confirmations</span>":<span class="hljs-value"><span class="hljs-number">4</span></span>,
+      "<span class="hljs-attribute">current_height</span>":<span class="hljs-value"><span class="hljs-number">156848</span></span>,
+      "<span class="hljs-attribute">extra</span>":<span class="hljs-value"><span class="hljs-string">"0190c6a55fe6d77033f225291b36d22b700264d9c3f7c3648516f73f6470216015021039303031000000020000001049d4e900"</span></span>,
+      "<span class="hljs-attribute">inputs</span>":<span class="hljs-value"><span class="hljs-literal">null</span></span>,
+      "<span class="hljs-attribute">mixin</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+      "<span class="hljs-attribute">outputs</span>":<span class="hljs-value">[
+	{
+	"<span class="hljs-attribute">amount</span>":<span class="hljs-value"><span class="hljs-number">41978500000</span></span>,
+	"<span class="hljs-attribute">public_key</span>":<span class="hljs-value"><span class="hljs-string">"9935ac366ebd6fb6aee84581d9027dd0498ff6761a470bfaa8e48ff429788e22"</span>
+	</span>}
+	]</span>,
+      "<span class="hljs-attribute">payment_id</span>":<span class="hljs-value"><span class="hljs-string">""</span></span>,
+      "<span class="hljs-attribute">payment_id8</span>":<span class="hljs-value"><span class="hljs-string">""</span></span>,
+      "<span class="hljs-attribute">rct_type</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+      "<span class="hljs-attribute">timestamp</span>":<span class="hljs-value"><span class="hljs-number">1532649166</span></span>,
+      "<span class="hljs-attribute">timestamp_utc</span>":<span class="hljs-value"><span class="hljs-string">"2018-07-26 23:52:46"</span></span>,
+      "<span class="hljs-attribute">tx_fee</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+      "<span class="hljs-attribute">tx_hash</span>":<span class="hljs-value"><span class="hljs-string">"4307e5619b29dcc1d9cdf4a52b3d0717bcbab0efc06d88fb79a1e0e33594e6ec"</span></span>,
+      "<span class="hljs-attribute">tx_size</span>":<span class="hljs-value"><span class="hljs-number">102</span></span>,
+      "<span class="hljs-attribute">tx_version</span>":<span class="hljs-value"><span class="hljs-number">3</span></span>,
+      "<span class="hljs-attribute">xmr_inputs</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+      "<span class="hljs-attribute">xmr_outputs</span>":<span class="hljs-value"><span class="hljs-number">41978500000</span>
+      </span>}</span>,
+    "<span class="hljs-attribute">status</span>":<span class="hljs-value"><span class="hljs-string">"success"</span>
+    </span>}
+</code></pre>
+<hr>
+<h4>api/transactions</h4>
+<p>Transactions in last 25 blocks</p>
+<pre><code class="language-bash">curl  -w <span class="hljs-string">"\n"</span> -X GET <span class="hljs-string">"https://explorer.ryo-currency.com/api/transactions"</span>
+</code></pre>
+<p>Partial results shown:</p>
+<pre><code class="language-json">{
+    "<span class="hljs-attribute">data</span>":<span class="hljs-value">{
+      "<span class="hljs-attribute">blocks</span>":<span class="hljs-value">[
+	{
+	"<span class="hljs-attribute">age</span>":<span class="hljs-value"><span class="hljs-string">"00:05:41"</span></span>,
+	"<span class="hljs-attribute">hash</span>":<span class="hljs-value"><span class="hljs-string">"e3ff8c52516b8389888ee742d7f18448e3760199560f24ebd80092e46019fa9c"</span></span>,
+	"<span class="hljs-attribute">height</span>":<span class="hljs-value"><span class="hljs-number">156848</span></span>,
+	"<span class="hljs-attribute">size</span>":<span class="hljs-value"><span class="hljs-number">28268.0</span></span>,
+	"<span class="hljs-attribute">timestamp</span>":<span class="hljs-value"><span class="hljs-number">1532649512</span></span>,
+	"<span class="hljs-attribute">timestamp_utc</span>":<span class="hljs-value"><span class="hljs-string">"2018-07-26 23:58:32"</span></span>,
+	"<span class="hljs-attribute">txs</span>":<span class="hljs-value">[
+	  {
+	  "<span class="hljs-attribute">coinbase</span>":<span class="hljs-value"><span class="hljs-literal">true</span></span>,
+	  "<span class="hljs-attribute">extra</span>":<span class="hljs-value"><span class="hljs-string">"01c9417029a41208a7142bf3a458935403328b34ca54a6c8b8a2ecf661043844000211af08e9cf0732704a000000000000000000"</span></span>,
+	  "<span class="hljs-attribute">mixin</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+	  "<span class="hljs-attribute">payment_id</span>":<span class="hljs-value"><span class="hljs-string">""</span></span>,
+	  "<span class="hljs-attribute">payment_id8</span>":<span class="hljs-value"><span class="hljs-string">""</span></span>,
+	  "<span class="hljs-attribute">rct_type</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+	  "<span class="hljs-attribute">tx_fee</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+	  "<span class="hljs-attribute">tx_hash</span>":<span class="hljs-value"><span class="hljs-string">"5ace475abe36a574ee0d73e2c6aa5ba37473361934ed1b36981f17cbd8c6ecb4"</span></span>,
+	  "<span class="hljs-attribute">tx_size</span>":<span class="hljs-value"><span class="hljs-number">103</span></span>,
+	  "<span class="hljs-attribute">tx_version</span>":<span class="hljs-value"><span class="hljs-number">3</span></span>,
+	  "<span class="hljs-attribute">xmr_inputs</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+	  "<span class="hljs-attribute">xmr_outputs</span>":<span class="hljs-value"><span class="hljs-number">41999000000</span>
+	  </span>},
+	  {
+	  "<span class="hljs-attribute">coinbase</span>":<span class="hljs-value"><span class="hljs-literal">false</span></span>,
+	  "<span class="hljs-attribute">extra</span>":<span class="hljs-value"><span class="hljs-string">"0181a8586bb9e3f98e04b80496632a9fea2afa59fb5e3c844b1ab28182f833e053"</span></span>,
+	  "<span class="hljs-attribute">mixin</span>":<span class="hljs-value"><span class="hljs-number">13</span></span>,
+	  "<span class="hljs-attribute">payment_id</span>":<span class="hljs-value"><span class="hljs-string">""</span></span>,
+	  "<span class="hljs-attribute">payment_id8</span>":<span class="hljs-value"><span class="hljs-string">""</span></span>,
+	  "<span class="hljs-attribute">rct_type</span>":<span class="hljs-value"><span class="hljs-number">1</span></span>,
+	  "<span class="hljs-attribute">tx_fee</span>":<span class="hljs-value"><span class="hljs-number">14000000</span></span>,
+	  "<span class="hljs-attribute">tx_hash</span>":<span class="hljs-value"><span class="hljs-string">"242b5bca09edf614a6440a183c949934dbc1de82176bc2103141be7aed39ae32"</span></span>,
+	  "<span class="hljs-attribute">tx_size</span>":<span class="hljs-value"><span class="hljs-number">13586</span></span>,
+	  "<span class="hljs-attribute">tx_version</span>":<span class="hljs-value"><span class="hljs-number">3</span></span>,
+	  "<span class="hljs-attribute">xmr_inputs</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+	  "<span class="hljs-attribute">xmr_outputs</span>":<span class="hljs-value"><span class="hljs-number">0</span>
+	  </span>},
+	  {
+	  "<span class="hljs-attribute">coinbase</span>":<span class="hljs-value"><span class="hljs-literal">false</span></span>,
+	  "<span class="hljs-attribute">extra</span>":<span class="hljs-value"><span class="hljs-string">"01622d73b89759ab0ba0d9fb211fd430ada1b5958eea6a14b5aa08f0cd0a1def1c"</span></span>,
+	  "<span class="hljs-attribute">mixin</span>":<span class="hljs-value"><span class="hljs-number">13</span></span>,
+	  "<span class="hljs-attribute">payment_id</span>":<span class="hljs-value"><span class="hljs-string">""</span></span>,
+	  "<span class="hljs-attribute">payment_id8</span>":<span class="hljs-value"><span class="hljs-string">""</span></span>,
+	  "<span class="hljs-attribute">rct_type</span>":<span class="hljs-value"><span class="hljs-number">2</span></span>,
+	  "<span class="hljs-attribute">tx_fee</span>":<span class="hljs-value"><span class="hljs-number">15000000</span></span>,
+	  "<span class="hljs-attribute">tx_hash</span>":<span class="hljs-value"><span class="hljs-string">"01cf17ce53e132f1a987cb1b4dbfe51d13a163425d2202744c624166514746d9"</span></span>,
+	  "<span class="hljs-attribute">tx_size</span>":<span class="hljs-value"><span class="hljs-number">14579</span></span>,
+	  "<span class="hljs-attribute">tx_version</span>":<span class="hljs-value"><span class="hljs-number">3</span></span>,
+	  "<span class="hljs-attribute">xmr_inputs</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+	  "<span class="hljs-attribute">xmr_outputs</span>":<span class="hljs-value"><span class="hljs-number">0</span>
+	  </span>}
+	  ]
+	</span>},
+	]</span>,
+      "<span class="hljs-attribute">current_height</span>":<span class="hljs-value"><span class="hljs-number">156849</span></span>,
+      "<span class="hljs-attribute">limit</span>":<span class="hljs-value"><span class="hljs-number">25</span></span>,
+      "<span class="hljs-attribute">page</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+      "<span class="hljs-attribute">total_page_no</span>":<span class="hljs-value"><span class="hljs-number">6273</span>
+      </span>}</span>,
+    "<span class="hljs-attribute">status</span>":<span class="hljs-value"><span class="hljs-string">"success"</span>
+    </span>}
+</code></pre>
+<hr>
+<h4>api/transactions?page=&lt;page_no&gt;&amp;limit=&lt;tx_per_page&gt;</h4>
+<pre><code class="language-bash">curl  -w <span class="hljs-string">"\n"</span> -X GET <span class="hljs-string">"https://explorer.ryo-currency.com/api/transactions?page=2&amp;limit=10"</span>
+</code></pre>
+<p>Result analogical to the one above.</p>
+<hr>
+<h4>api/block/&lt;block_number|block_hash&gt;</h4>
+<pre><code class="language-bash">curl  -w <span class="hljs-string">"\n"</span> -X GET <span class="hljs-string">"https://explorer.ryo-currency.com/api/block/150000"</span>
+</code></pre>
+<p>Partial results shown:</p>
+<pre><code class="language-json">{
+    "<span class="hljs-attribute">data</span>":<span class="hljs-value">{
+      "<span class="hljs-attribute">block_height</span>":<span class="hljs-value"><span class="hljs-number">150000</span></span>,
+      "<span class="hljs-attribute">current_height</span>":<span class="hljs-value"><span class="hljs-number">156849</span></span>,
+      "<span class="hljs-attribute">hash</span>":<span class="hljs-value"><span class="hljs-string">"debc58ac64fc8dc7ae35b0b8782ae33a0fe5855dc85930bc52b8fec3c1aee94a"</span></span>,
+      "<span class="hljs-attribute">size</span>":<span class="hljs-value"><span class="hljs-number">422899</span></span>,
+      "<span class="hljs-attribute">timestamp</span>":<span class="hljs-value"><span class="hljs-number">1530990884</span></span>,
+      "<span class="hljs-attribute">timestamp_utc</span>":<span class="hljs-value"><span class="hljs-string">"2018-07-07 19:14:44"</span></span>,
+      "<span class="hljs-attribute">txs</span>":<span class="hljs-value">[
+	{
+	"<span class="hljs-attribute">coinbase</span>":<span class="hljs-value"><span class="hljs-literal">true</span></span>,
+	"<span class="hljs-attribute">extra</span>":<span class="hljs-value"><span class="hljs-string">"01e10420c2c5461ace855ffc8aa4a8256e784e873c325d71e798812ac90c35c19b020816d80f5c00000000"</span></span>,
+	"<span class="hljs-attribute">mixin</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+	"<span class="hljs-attribute">payment_id</span>":<span class="hljs-value"><span class="hljs-string">""</span></span>,
+	"<span class="hljs-attribute">payment_id8</span>":<span class="hljs-value"><span class="hljs-string">""</span></span>,
+	"<span class="hljs-attribute">rct_type</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+	"<span class="hljs-attribute">tx_fee</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+	"<span class="hljs-attribute">tx_hash</span>":<span class="hljs-value"><span class="hljs-string">"2743243d3eb70b88baa26f70dd20c606470c5995de194ad9d0d4acf83d5ab761"</span></span>,
+	"<span class="hljs-attribute">tx_size</span>":<span class="hljs-value"><span class="hljs-number">94</span></span>,
+	"<span class="hljs-attribute">tx_version</span>":<span class="hljs-value"><span class="hljs-number">3</span></span>,
+	"<span class="hljs-attribute">xmr_inputs</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+	"<span class="hljs-attribute">xmr_outputs</span>":<span class="hljs-value"><span class="hljs-number">42187500000</span>
+	</span>},
+	]
+      </span>}</span>,
+    "<span class="hljs-attribute">status</span>":<span class="hljs-value"><span class="hljs-string">"success"</span>
+    </span>}
+</code></pre>
+<hr>
+<h4>api/mempool</h4>
+<p>Return all txs in the mempool.</p>
+<pre><code class="language-bash">curl  -w <span class="hljs-string">"\n"</span> -X GET <span class="hljs-string">"https://explorer.ryo-currency.com/api/mempool"</span>
+</code></pre>
+<p>Partial results shown:</p>
+<pre><code class="language-json">{
+    "<span class="hljs-attribute">data</span>":<span class="hljs-value">{
+      "<span class="hljs-attribute">limit</span>":<span class="hljs-value"><span class="hljs-number">100000000</span></span>,
+      "<span class="hljs-attribute">page</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+      "<span class="hljs-attribute">total_page_no</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+      "<span class="hljs-attribute">txs</span>":<span class="hljs-value">[
+	{
+	"<span class="hljs-attribute">coinbase</span>":<span class="hljs-value"><span class="hljs-literal">false</span></span>,
+	"<span class="hljs-attribute">extra</span>":<span class="hljs-value"><span class="hljs-string">"0221000140bc7298830abaeb711b7214acb45c431db86c52da40f739fb6908f5dbe596019d29ab0f8b846889d1971d8d7915baab2b2335c4105bcdda1517544f2c4aa086"</span></span>,
+	"<span class="hljs-attribute">mixin</span>":<span class="hljs-value"><span class="hljs-number">13</span></span>,
+	"<span class="hljs-attribute">payment_id</span>":<span class="hljs-value"><span class="hljs-string">"0140bc7298830abaeb711b7214acb45c431db86c52da40f739fb6908f5dbe596"</span></span>,
+	"<span class="hljs-attribute">payment_id8</span>":<span class="hljs-value"><span class="hljs-string">""</span></span>,
+	"<span class="hljs-attribute">rct_type</span>":<span class="hljs-value"><span class="hljs-number">2</span></span>,
+	"<span class="hljs-attribute">timestamp</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+	"<span class="hljs-attribute">timestamp_utc</span>":<span class="hljs-value"><span class="hljs-string">"1970-01-01 00:00:00"</span></span>,
+	"<span class="hljs-attribute">tx_fee</span>":<span class="hljs-value"><span class="hljs-number">8000000</span></span>,
+	"<span class="hljs-attribute">tx_hash</span>":<span class="hljs-value"><span class="hljs-string">"8f00e3746c7fe1e50bd72da69e00449b53586fbd793ed392a63c283b9fbf7c49"</span></span>,
+	"<span class="hljs-attribute">tx_size</span>":<span class="hljs-value"><span class="hljs-number">15584</span></span>,
+	"<span class="hljs-attribute">tx_version</span>":<span class="hljs-value"><span class="hljs-number">3</span></span>,
+	"<span class="hljs-attribute">xmr_inputs</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+	"<span class="hljs-attribute">xmr_outputs</span>":<span class="hljs-value"><span class="hljs-number">0</span>
+	</span>},
+	]</span>,
+      "<span class="hljs-attribute">txs_no</span>":<span class="hljs-value"><span class="hljs-number">3</span>
+      </span>}</span>,
+    "<span class="hljs-attribute">status</span>":<span class="hljs-value"><span class="hljs-string">"success"</span>
+    </span>}
+</code></pre>
+<p>Limit of 100000000 is just default value above to ensure that all mempool txs are fetched
+  if no specific limit given.</p>
+<hr>
+<h4>api/mempool?limit=&lt;no_of_top_txs&gt;</h4>
+<p>Return number of newest mempool txs, e.g., only 10.</p>
+<pre><code class="language-bash">curl  -w <span class="hljs-string">"\n"</span> -X GET <span class="hljs-string">"https://explorer.ryo-currency.com/api/mempool?limit=10"</span>
+</code></pre>
+<p>Result analogical to the one above.</p>
+<hr>
+<h4>api/search/&lt;block_number|tx_hash|block_hash&gt;</h4>
+<pre><code class="language-bash">curl  -w <span class="hljs-string">"\n"</span> -X GET <span class="hljs-string">"https://explorer.ryo-currency.com/api/search/150000"</span>
+</code></pre>
+<p>Partial results shown:</p>
+<pre><code class="language-json">{
+    "<span class="hljs-attribute">data</span>":<span class="hljs-value">{
+      "<span class="hljs-attribute">block_height</span>":<span class="hljs-value"><span class="hljs-number">150000</span></span>,
+      "<span class="hljs-attribute">current_height</span>":<span class="hljs-value"><span class="hljs-number">156850</span></span>,
+      "<span class="hljs-attribute">hash</span>":<span class="hljs-value"><span class="hljs-string">"debc58ac64fc8dc7ae35b0b8782ae33a0fe5855dc85930bc52b8fec3c1aee94a"</span></span>,
+      "<span class="hljs-attribute">size</span>":<span class="hljs-value"><span class="hljs-number">422899</span></span>,
+      "<span class="hljs-attribute">timestamp</span>":<span class="hljs-value"><span class="hljs-number">1530990884</span></span>,
+      "<span class="hljs-attribute">timestamp_utc</span>":<span class="hljs-value"><span class="hljs-string">"2018-07-07 19:14:44"</span></span>,
+      "<span class="hljs-attribute">title</span>":<span class="hljs-value"><span class="hljs-string">"block"</span></span>,
+      "<span class="hljs-attribute">txs</span>":<span class="hljs-value">[
+	{
+	"<span class="hljs-attribute">coinbase</span>":<span class="hljs-value"><span class="hljs-literal">true</span></span>,
+	"<span class="hljs-attribute">extra</span>":<span class="hljs-value"><span class="hljs-string">"01e10420c2c5461ace855ffc8aa4a8256e784e873c325d71e798812ac90c35c19b020816d80f5c00000000"</span></span>,
+	"<span class="hljs-attribute">mixin</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+	"<span class="hljs-attribute">payment_id</span>":<span class="hljs-value"><span class="hljs-string">""</span></span>,
+	"<span class="hljs-attribute">payment_id8</span>":<span class="hljs-value"><span class="hljs-string">""</span></span>,
+	"<span class="hljs-attribute">rct_type</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+	"<span class="hljs-attribute">tx_fee</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+	"<span class="hljs-attribute">tx_hash</span>":<span class="hljs-value"><span class="hljs-string">"2743243d3eb70b88baa26f70dd20c606470c5995de194ad9d0d4acf83d5ab761"</span></span>,
+	"<span class="hljs-attribute">tx_size</span>":<span class="hljs-value"><span class="hljs-number">94</span></span>,
+	"<span class="hljs-attribute">tx_version</span>":<span class="hljs-value"><span class="hljs-number">3</span></span>,
+	"<span class="hljs-attribute">xmr_inputs</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+	"<span class="hljs-attribute">xmr_outputs</span>":<span class="hljs-value"><span class="hljs-number">42187500000</span>
+	</span>},
+	]
+      </span>}</span>,
+    "<span class="hljs-attribute">status</span>":<span class="hljs-value"><span class="hljs-string">"success"</span>
+    </span>}
+</code></pre>
+<hr>
+<h4>api/outputs?txhash=&lt;tx_hash&gt;&amp;address=<address>&amp;viewkey=<viewkey>&amp;txprove=&lt;0|1&gt;</viewkey></address></h4>
+<p>For <code>txprove=0</code> we check which outputs belong to given address and corresponding viewkey.
+  For <code>txprove=1</code> we use to prove to the recipient that we sent them founds.
+  For this, we use recipient's address and our tx private key as a viewkey value,
+  i.e., <code>viewkey=&lt;tx_private_key&gt;</code></p>
+<p>Checking outputs:</p>
+<pre><code class="language-bash"><span class="hljs-comment"># we use here official Ryo project's donation address as an example</span>
+    curl  -w <span class="hljs-string">"\n"</span> -X GET <span class="hljs-string">"https://explorer.ryo-currency.com/api/outputs?txhash=17049bc5f2d9fbca1ce8dae443bbbbed2fc02f1ee003ffdd0571996905faa831&amp;address=RYoLshW4LVn8TurtCrZzAd79FURtPHb93ATRYch3JpSDgvPRubk1VeEKg33sVifjASf7NzZtgQ6urVAAAKDKDtmUiDraNbdDvyk&amp;viewkey=f359631075708155cc3d92a32b75a7d02a5dcf27756707b47a2b31b21c389501&amp;txprove=0"</span>
+</code></pre>
+<pre><code class="language-json">{
+    "<span class="hljs-attribute">data</span>": <span class="hljs-value">{
+      "<span class="hljs-attribute">address</span>": <span class="hljs-value"><span class="hljs-string">"RYoLshW4LVn8TurtCrZzAd79FURtPHb93ATRYch3JpSDgvPRubk1VeEKg33sVifjASf7NzZtgQ6urVAAAKDKDtmUiDraNbdDvyk"</span></span>,
+      "<span class="hljs-attribute">outputs</span>": <span class="hljs-value">[
+	{
+	"<span class="hljs-attribute">amount</span>": <span class="hljs-value"><span class="hljs-number">34980000000000</span></span>,
+	"<span class="hljs-attribute">match</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,
+	"<span class="hljs-attribute">output_idx</span>": <span class="hljs-value"><span class="hljs-number">0</span></span>,
+	"<span class="hljs-attribute">output_pubkey</span>": <span class="hljs-value"><span class="hljs-string">"35d7200229e725c2bce0da3a2f20ef0720d242ecf88bfcb71eff2025c2501fdb"</span>
+	</span>},
+	{
+	"<span class="hljs-attribute">amount</span>": <span class="hljs-value"><span class="hljs-number">0</span></span>,
+	"<span class="hljs-attribute">match</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
+	"<span class="hljs-attribute">output_idx</span>": <span class="hljs-value"><span class="hljs-number">1</span></span>,
+	"<span class="hljs-attribute">output_pubkey</span>": <span class="hljs-value"><span class="hljs-string">"44efccab9f9b42e83c12da7988785d6c4eb3ec6e7aa2ae1234e2f0f7cb9ed6dd"</span>
+	</span>}
+	]</span>,
+      "<span class="hljs-attribute">tx_hash</span>": <span class="hljs-value"><span class="hljs-string">"17049bc5f2d9fbca1ce8dae443bbbbed2fc02f1ee003ffdd0571996905faa831"</span></span>,
+      "<span class="hljs-attribute">tx_prove</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
+      "<span class="hljs-attribute">viewkey</span>": <span class="hljs-value"><span class="hljs-string">"f359631075708155cc3d92a32b75a7d02a5dcf27756707b47a2b31b21c389501"</span>
+      </span>}</span>,
+    "<span class="hljs-attribute">status</span>": <span class="hljs-value"><span class="hljs-string">"success"</span>
+    </span>}
+</code></pre>
+<p>Proving transfer:</p>
+<p>We use recipient's address (i.e. not our address from which we sent Ryo to recipient).
+  For the viewkey, we use <code>tx_private_key</code> (although the GET variable is still called <code>viewkey</code>) that we obtained by sending this txs.</p>
+<pre><code class="language-bash">curl  -w <span class="hljs-string">"\n"</span> -X GET <span class="hljs-string">"https://explorer.ryo-currency.com/api/outputs?txhash=94782a8c0aa8d8768afa0c040ef0544b63eb5148ca971a024ac402cad313d3b3&amp;address=RYoLshW4LVn8TurtCrZzAd79FURtPHb93ATRYch3JpSDgvPRubk1VeEKg33sVifjASf7NzZtgQ6urVAAAKDKDtmUiDraNbdDvyk&amp;viewkey=e94b5bfc599d2f741d6f07e3ab2a83f915e96fb374dfb2cd3dbe730e34ecb40b&amp;txprove=1"</span>
+</code></pre>
+<pre><code class="language-json">{
+    "<span class="hljs-attribute">data</span>": <span class="hljs-value">{
+      "<span class="hljs-attribute">address</span>": <span class="hljs-value"><span class="hljs-string">"RYoLshW4LVn8TurtCrZzAd79FURtPHb93ATRYch3JpSDgvPRubk1VeEKg33sVifjASf7NzZtgQ6urVAAAKDKDtmUiDraNbdDvyk"</span></span>,
+      "<span class="hljs-attribute">outputs</span>": <span class="hljs-value">[
+	{
+	"<span class="hljs-attribute">amount</span>": <span class="hljs-value"><span class="hljs-number">1000000000000</span></span>,
+	"<span class="hljs-attribute">match</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,
+	"<span class="hljs-attribute">output_idx</span>": <span class="hljs-value"><span class="hljs-number">0</span></span>,
+	"<span class="hljs-attribute">output_pubkey</span>": <span class="hljs-value"><span class="hljs-string">"c1bf4dd020b5f0ab70bd672d2f9e800ea7b8ab108b080825c1d6cfc0b7f7ee00"</span>
+	</span>},
+	{
+	"<span class="hljs-attribute">amount</span>": <span class="hljs-value"><span class="hljs-number">0</span></span>,
+	"<span class="hljs-attribute">match</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
+	"<span class="hljs-attribute">output_idx</span>": <span class="hljs-value"><span class="hljs-number">1</span></span>,
+	"<span class="hljs-attribute">output_pubkey</span>": <span class="hljs-value"><span class="hljs-string">"8c61fae6ada2a103565dfdd307c7145b2479ddb1dab1eaadfa6c34db65d189d5"</span>
+	</span>}
+	]</span>,
+      "<span class="hljs-attribute">tx_hash</span>": <span class="hljs-value"><span class="hljs-string">"94782a8c0aa8d8768afa0c040ef0544b63eb5148ca971a024ac402cad313d3b3"</span></span>,
+      "<span class="hljs-attribute">tx_prove</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,
+      "<span class="hljs-attribute">viewkey</span>": <span class="hljs-value"><span class="hljs-string">"e94b5bfc599d2f741d6f07e3ab2a83f915e96fb374dfb2cd3dbe730e34ecb40b"</span>
+      </span>}</span>,
+    "<span class="hljs-attribute">status</span>": <span class="hljs-value"><span class="hljs-string">"success"</span>
+    </span>}
+</code></pre>
+<p>Result analogical to the one above.</p>
+<hr>
+<h4>api/networkinfo</h4>
+<pre><code class="language-bash">curl  -w <span class="hljs-string">"\n"</span> -X GET <span class="hljs-string">"https://explorer.ryo-currency.com/api/networkinfo"</span>
+</code></pre>
+<pre><code class="language-json">{
+    "<span class="hljs-attribute">data</span>":<span class="hljs-value">{
+      "<span class="hljs-attribute">alt_blocks_count</span>":<span class="hljs-value"><span class="hljs-number">9</span></span>,
+      "<span class="hljs-attribute">block_size_limit</span>":<span class="hljs-value"><span class="hljs-number">491520</span></span>,
+      "<span class="hljs-attribute">block_size_median</span>":<span class="hljs-value"><span class="hljs-number">14191</span></span>,
+      "<span class="hljs-attribute">cumulative_difficulty</span>":<span class="hljs-value"><span class="hljs-number">284889040816739</span></span>,
+      "<span class="hljs-attribute">current</span>":<span class="hljs-value"><span class="hljs-literal">true</span></span>,
+      "<span class="hljs-attribute">current_hf_version</span>":<span class="hljs-value"><span class="hljs-number">4</span></span>,
+      "<span class="hljs-attribute">difficulty</span>":<span class="hljs-value"><span class="hljs-number">1085277793</span></span>,
+      "<span class="hljs-attribute">fee_per_kb</span>":<span class="hljs-value"><span class="hljs-number">500000</span></span>,
+      "<span class="hljs-attribute">grey_peerlist_size</span>":<span class="hljs-value"><span class="hljs-number">0</span></span>,
+      "<span class="hljs-attribute">hash_rate</span>":<span class="hljs-value"><span class="hljs-number">4521990</span></span>,
+      "<span class="hljs-attribute">height</span>":<span class="hljs-value"><span class="hljs-number">156853</span></span>,
+      "<span class="hljs-attribute">incoming_connections_count</span>":<span class="hljs-value"><span class="hljs-number">12</span></span>,
+      "<span class="hljs-attribute">outgoing_connections_count</span>":<span class="hljs-value"><span class="hljs-number">1</span></span>,
+      "<span class="hljs-attribute">stagenet</span>":<span class="hljs-value"><span class="hljs-literal">false</span></span>,
+      "<span class="hljs-attribute">start_time</span>":<span class="hljs-value"><span class="hljs-number">1531440507</span></span>,
+      "<span class="hljs-attribute">status</span>":<span class="hljs-value"><span class="hljs-literal">true</span></span>,
+      "<span class="hljs-attribute">target</span>":<span class="hljs-value"><span class="hljs-number">240</span></span>,
+      "<span class="hljs-attribute">target_height</span>":<span class="hljs-value"><span class="hljs-number">156824</span></span>,
+      "<span class="hljs-attribute">testnet</span>":<span class="hljs-value"><span class="hljs-literal">false</span></span>,
+      "<span class="hljs-attribute">top_block_hash</span>":<span class="hljs-value"><span class="hljs-string">"f0eb0e43acbd75c040279f847129573aa0d5e43e5d0a13f601ccf04c2fd689a3"</span></span>,
+      "<span class="hljs-attribute">tx_count</span>":<span class="hljs-value"><span class="hljs-number">433613</span></span>,
+      "<span class="hljs-attribute">tx_pool_size</span>":<span class="hljs-value"><span class="hljs-number">1</span></span>,
+      "<span class="hljs-attribute">tx_pool_size_kbytes</span>":<span class="hljs-value"><span class="hljs-number">15582</span></span>,
+      "<span class="hljs-attribute">white_peerlist_size</span>":<span class="hljs-value"><span class="hljs-number">1000</span>
+      </span>}</span>,
+    "<span class="hljs-attribute">status</span>":<span class="hljs-value"><span class="hljs-string">"success"</span>
+    </span>}
+</code></pre>
+<hr>
+<h4>api/outputsblocks</h4>
+<p>Search for our outputs in last few blocks (up to 5 blocks), using provided address and viewkey.</p>
+<pre><code class="language-bash">curl  -w <span class="hljs-string">"\n"</span> -X GET https://explorer.ryo-currency.com/api/outputsblocks?address=RYoLshW4LVn8TurtCrZzAd79FURtPHb93ATRYch3JpSDgvPRubk1VeEKg33sVifjASf7NzZtgQ6urVAAAKDKDtmUiDraNbdDvyk&amp;viewkey=<span class="hljs-number">807079280293998634</span>d66e745562edaaca45c0a75c8290603578b54e9397e90a&amp;<span class="hljs-built_in">limit</span>=<span class="hljs-number">5</span>&amp;mempool=<span class="hljs-number">1</span>
+</code></pre>
+<p>Example result:</p>
+<pre><code class="language-json">{
+    "<span class="hljs-attribute">data</span>": <span class="hljs-value">{
+      "<span class="hljs-attribute">address</span>": <span class="hljs-value"><span class="hljs-string">"0182d5be0f708cecf2b6f9889738bde5c930fad846d5b530e021afd1ae7e24a687ad50af3a5d38896655669079ad0163b4a369f6c852cc816dace5fc7792b72f"</span></span>,
+      "<span class="hljs-attribute">height</span>": <span class="hljs-value"><span class="hljs-number">960526</span></span>,
+      "<span class="hljs-attribute">limit</span>": <span class="hljs-value"><span class="hljs-string">"5"</span></span>,
+      "<span class="hljs-attribute">mempool</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,
+      "<span class="hljs-attribute">outputs</span>": <span class="hljs-value">[
+	{
+	"<span class="hljs-attribute">amount</span>": <span class="hljs-value"><span class="hljs-number">33000000000000</span></span>,
+	"<span class="hljs-attribute">block_no</span>": <span class="hljs-value"><span class="hljs-number">0</span></span>,
+	"<span class="hljs-attribute">in_mempool</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,
+	"<span class="hljs-attribute">output_idx</span>": <span class="hljs-value"><span class="hljs-number">1</span></span>,
+	"<span class="hljs-attribute">output_pubkey</span>": <span class="hljs-value"><span class="hljs-string">"2417b24fc99b2cbd9459278b532b37f15eab6b09bbfc44f9d17e15cd25d5b44f"</span></span>,
+	"<span class="hljs-attribute">payment_id</span>": <span class="hljs-value"><span class="hljs-string">""</span></span>,
+	"<span class="hljs-attribute">tx_hash</span>": <span class="hljs-value"><span class="hljs-string">"9233708004c51d15f44e86ac1a3b99582ed2bede4aaac6e2dd71424a9147b06f"</span>
+	</span>},
+	{
+	"<span class="hljs-attribute">amount</span>": <span class="hljs-value"><span class="hljs-number">2000000000000</span></span>,
+	"<span class="hljs-attribute">block_no</span>": <span class="hljs-value"><span class="hljs-number">960525</span></span>,
+	"<span class="hljs-attribute">in_mempool</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
+	"<span class="hljs-attribute">output_idx</span>": <span class="hljs-value"><span class="hljs-number">0</span></span>,
+	"<span class="hljs-attribute">output_pubkey</span>": <span class="hljs-value"><span class="hljs-string">"9984101f5471dda461f091962f1f970b122d4469077aed6b978a910dc3ed4576"</span></span>,
+	"<span class="hljs-attribute">payment_id</span>": <span class="hljs-value"><span class="hljs-string">"0000000000000055"</span></span>,
+	"<span class="hljs-attribute">tx_hash</span>": <span class="hljs-value"><span class="hljs-string">"37825d0feb2e96cd10fa9ec0b990ac2e97d2648c0f23e4f7d68d2298996acefd"</span>
+	</span>},
+	{
+	"<span class="hljs-attribute">amount</span>": <span class="hljs-value"><span class="hljs-number">96947454120000</span></span>,
+	"<span class="hljs-attribute">block_no</span>": <span class="hljs-value"><span class="hljs-number">960525</span></span>,
+	"<span class="hljs-attribute">in_mempool</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
+	"<span class="hljs-attribute">output_idx</span>": <span class="hljs-value"><span class="hljs-number">1</span></span>,
+	"<span class="hljs-attribute">output_pubkey</span>": <span class="hljs-value"><span class="hljs-string">"e4bded8e2a9ec4d41682a34d0a37596ec62742b28e74b897fcc00a47fcaa8629"</span></span>,
+	"<span class="hljs-attribute">payment_id</span>": <span class="hljs-value"><span class="hljs-string">"0000000000000000000000000000000000000000000000000000000000001234"</span></span>,
+	"<span class="hljs-attribute">tx_hash</span>": <span class="hljs-value"><span class="hljs-string">"4fad5f2bdb6dbd7efc2ce7efa3dd20edbd2a91640ce35e54c6887f0ee5a1a679"</span>
+	</span>}
+	]</span>,
+      "<span class="hljs-attribute">viewkey</span>": <span class="hljs-value"><span class="hljs-string">"807079280293998634d66e745562edaaca45c0a75c8290603578b54e9397e90a"</span>
+      </span>}</span>,
+    "<span class="hljs-attribute">status</span>": <span class="hljs-value"><span class="hljs-string">"success"</span>
+    </span>}
+</code></pre>
+<hr>
+<h4>api/emission</h4>
+<pre><code class="language-bash">curl  -w <span class="hljs-string">"\n"</span> -X GET <span class="hljs-string">"https://explorer.ryo-currency.com/api/emission"</span>
+</code></pre>
+<pre><code class="language-json">{
+    "<span class="hljs-attribute">data</span>":<span class="hljs-value">{
+      "<span class="hljs-attribute">blk_no</span>":<span class="hljs-value"><span class="hljs-number">156852</span></span>,
+      "<span class="hljs-attribute">coinbase</span>":<span class="hljs-value"><span class="hljs-number">14364698360000000</span></span>,
+      "<span class="hljs-attribute">fee</span>":<span class="hljs-value"><span class="hljs-number">5547807947200</span>
+      </span>}</span>,
+    "<span class="hljs-attribute">status</span>":<span class="hljs-value"><span class="hljs-string">"success"</span>
+    </span>}
+</code></pre>
+<hr>
+<h4>api/version</h4>
+<pre><code class="language-bash">curl  -w <span class="hljs-string">"\n"</span> -X GET <span class="hljs-string">"https://explorer.ryo-currency.com/api/version"</span>
+</code></pre>
+<pre><code class="language-json">{
+    "<span class="hljs-attribute">data</span>":<span class="hljs-value">{
+      "<span class="hljs-attribute">api</span>":<span class="hljs-value"><span class="hljs-number">65536</span></span>,
+      "<span class="hljs-attribute">blockchain_height</span>":<span class="hljs-value"><span class="hljs-number">156853</span></span>,
+      "<span class="hljs-attribute">git_branch_name</span>":<span class="hljs-value"><span class="hljs-string">"templates"</span></span>,
+      "<span class="hljs-attribute">last_git_commit_date</span>":<span class="hljs-value"><span class="hljs-string">"2018-07-02"</span></span>,
+      "<span class="hljs-attribute">last_git_commit_hash</span>":<span class="hljs-value"><span class="hljs-string">"70be873"</span></span>,
+      "<span class="hljs-attribute">monero_version_full</span>":<span class="hljs-value"><span class="hljs-string">"0.2.0.0-fb56bed"</span>
+      </span>}</span>,
+    "<span class="hljs-attribute">status</span>":<span class="hljs-value"><span class="hljs-string">"success"</span>
+    </span>}
+</code></pre>
+<p>api number is store as <code>uint32_t</code>. In this case <code>65536</code> represents
+  major version 1 and minor version 0.
+  In JavaScript to get these numbers, one can do as follows:</p>
+<pre><code class="language-javascript"><span class="hljs-keyword">var</span> api_major = response.data.api &gt;&gt; <span class="hljs-number">16</span>;
+    <span class="hljs-keyword">var</span> api_minor = response.data.api &amp; <span class="hljs-number">0xffff</span>;
+</code></pre>
+<hr>
+<h4>api/rawblock/&lt;block_number|block_hash&gt;</h4>
+<p>Return raw json block data, as represented in Ryo.</p>
+<pre><code class="language-bash">curl  -w <span class="hljs-string">"\n"</span> -X GET <span class="hljs-string">"https://explorer.ryo-currency.com/api/rawblock/150000"</span>
+</code></pre>
+<p>Example result not shown.</p>
+<hr>
+<h4>api/rawtransaction/&lt;tx_hash&gt;</h4>
+<p>Return raw json tx data, as represented in Ryo.</p>
+<pre><code class="language-bash">curl  -w <span class="hljs-string">"\n"</span> -X GET <span class="hljs-string">"https://explorer.ryo-currency.com/api/rawtransaction/4307e5619b29dcc1d9cdf4a52b3d0717bcbab0efc06d88fb79a1e0e33594e6ec"</span>
+</code></pre>
+<p>Example result not shown.</p>
+
+<style>
+  /*
+
+  Original style from softwaremaniacs.org (c) Ivan Sagalaev <Maniac@SoftwareManiacs.Org>
+
+    */
+
+    .hljs {
+    display: block;
+    overflow-x: auto;
+    padding: 0.5em;
+    background: #f0f0f0;
+    -webkit-text-size-adjust: none;
+    }
+
+    .hljs,
+    .hljs-subst,
+    .hljs-tag .hljs-title,
+    .nginx .hljs-title {
+    color: black;
+    }
+
+    .hljs-string,
+    .hljs-title,
+    .hljs-constant,
+    .hljs-parent,
+    .hljs-tag .hljs-value,
+    .hljs-rules .hljs-value,
+    .hljs-preprocessor,
+    .hljs-pragma,
+    .haml .hljs-symbol,
+    .ruby .hljs-symbol,
+    .ruby .hljs-symbol .hljs-string,
+    .hljs-template_tag,
+    .django .hljs-variable,
+    .smalltalk .hljs-class,
+    .hljs-addition,
+    .hljs-flow,
+    .hljs-stream,
+    .bash .hljs-variable,
+    .apache .hljs-tag,
+    .apache .hljs-cbracket,
+    .tex .hljs-command,
+    .tex .hljs-special,
+    .erlang_repl .hljs-function_or_atom,
+    .asciidoc .hljs-header,
+    .markdown .hljs-header,
+    .coffeescript .hljs-attribute {
+    color: #800;
+    }
+
+    .smartquote,
+    .hljs-comment,
+    .hljs-annotation,
+    .diff .hljs-header,
+    .hljs-chunk,
+    .asciidoc .hljs-blockquote,
+    .markdown .hljs-blockquote {
+    color: #888;
+    }
+
+    .hljs-number,
+    .hljs-date,
+    .hljs-regexp,
+    .hljs-literal,
+    .hljs-hexcolor,
+    .smalltalk .hljs-symbol,
+    .smalltalk .hljs-char,
+    .go .hljs-constant,
+    .hljs-change,
+    .lasso .hljs-variable,
+    .makefile .hljs-variable,
+    .asciidoc .hljs-bullet,
+    .markdown .hljs-bullet,
+    .asciidoc .hljs-link_url,
+    .markdown .hljs-link_url {
+    color: #080;
+    }
+
+    .hljs-label,
+    .hljs-javadoc,
+    .ruby .hljs-string,
+    .hljs-decorator,
+    .hljs-filter .hljs-argument,
+    .hljs-localvars,
+    .hljs-array,
+    .hljs-attr_selector,
+    .hljs-important,
+    .hljs-pseudo,
+    .hljs-pi,
+    .haml .hljs-bullet,
+    .hljs-doctype,
+    .hljs-deletion,
+    .hljs-envvar,
+    .hljs-shebang,
+    .apache .hljs-sqbracket,
+    .nginx .hljs-built_in,
+    .tex .hljs-formula,
+    .erlang_repl .hljs-reserved,
+    .hljs-prompt,
+    .asciidoc .hljs-link_label,
+    .markdown .hljs-link_label,
+    .vhdl .hljs-attribute,
+    .clojure .hljs-attribute,
+    .asciidoc .hljs-attribute,
+    .lasso .hljs-attribute,
+    .coffeescript .hljs-property,
+    .hljs-phony {
+    color: #88f;
+    }
+
+    .hljs-keyword,
+    .hljs-id,
+    .hljs-title,
+    .hljs-built_in,
+    .css .hljs-tag,
+    .hljs-javadoctag,
+    .hljs-phpdoc,
+    .hljs-dartdoc,
+    .hljs-yardoctag,
+    .smalltalk .hljs-class,
+    .hljs-winutils,
+    .bash .hljs-variable,
+    .apache .hljs-tag,
+    .hljs-type,
+    .hljs-typename,
+    .tex .hljs-command,
+    .asciidoc .hljs-strong,
+    .markdown .hljs-strong,
+    .hljs-request,
+    .hljs-status {
+    font-weight: bold;
+    }
+
+    .asciidoc .hljs-emphasis,
+    .markdown .hljs-emphasis {
+    font-style: italic;
+    }
+
+    .nginx .hljs-built_in {
+    font-weight: normal;
+    }
+
+    .coffeescript .javascript,
+    .javascript .xml,
+    .lasso .markup,
+    .tex .hljs-formula,
+    .xml .javascript,
+    .xml .vbscript,
+    .xml .css,
+    .xml .hljs-cdata {
+    opacity: 0.5;
+    }
+</style>

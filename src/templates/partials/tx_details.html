@@ -1,566 +1,567 @@
-
 <div>
 
-    <H4 style="margin:5px">Tx hash: {{tx_hash}}</H4>
+  <div class="line-break" style="margin-bottom:20px">
+    <p style="margin:5px">Tx hash: {{tx_hash}}</p>
     {{#enable_mixins_details}}
-        <H5 style="margin:5px">Tx prefix hash: {{tx_prefix_hash}}</H5>
+    <p style="margin:5px">Tx prefix hash: {{tx_prefix_hash}}</p>
     {{/enable_mixins_details}}
-    <H5 style="margin:5px">Tx public key: <span id="tx_pub_key">{{tx_pub_key}}</span></H5>
+    <p style="margin:5px">Tx public key: <span id="tx_pub_key">{{tx_pub_key}}</span></p>
     <span id="add_tx_pub_keys" style="display: none;">{{add_tx_pub_keys}}</span>
 
     {{#has_payment_id}}
-        <H5 style="margin:5px">Payment id: <span id="payment_id">{{payment_id}}</span></H5>
-        <H5 style="margin:5px">Payment id as ascii: {{payment_id_as_ascii}}</H5>
+    <p style="margin:5px">Payment id: <span id="payment_id">{{payment_id}}</span></p>
+    <p style="margin:5px">Payment id as ascii: {{payment_id_as_ascii}}</p>
     {{/has_payment_id}}
 
     {{#has_payment_id8}}
-        <H5 style="margin:5px">Payment id (encrypted): <span id="payment_id">{{payment_id8}}</span></H5>
+    <p style="margin:5px">Payment id (encrypted): <span id="payment_id">{{payment_id8}}</span></p>
     {{/has_payment_id8}}
 
 
     {{#have_prev_hash}}
-        <H5>Previous tx: <a href="/tx/{{prev_hash}}">{{prev_hash}}</a></H5>
+    <p>Previous tx: <a href="/tx/{{prev_hash}}">{{prev_hash}}</a></p>
     {{/have_prev_hash}}
 
     {{#have_next_hash}}
-        <H5>Next tx: <a href="/tx/{{next_hash}}">{{next_hash}}</a></H5>
+    <p>Next tx: <a href="/tx/{{next_hash}}">{{next_hash}}</a></p>
     {{/have_next_hash}}
-
-
-
-    <table class="center" style="width: 80%; margin-top:10px">
-        {{^have_raw_tx}}
-        <tr>
-            <td>Timestamp: {{blk_timestamp_uint}}</td>
-            <td>Timestamp [UCT]: {{blk_timestamp}}</td>
-            <td>Age [y:d:h:m:s]: {{delta_time}}</td>
-        </tr>
-        {{/have_raw_tx}}
-        <tr>
-            <td>Block: <a href="/block/{{blk_height}}">{{blk_height}}</a></td>
-            <td>Fee (per_kB): {{tx_fee}} ({{payed_for_kB}})</td>
-            <td>Tx size: {{tx_size}} kB</td>
-        </tr>
-        <tr>
-            <td>Tx version: {{tx_version}}</td>
-            <td>No of confirmations: {{confirmations}}</td>
-            <td>RingCT/type:  {{#is_ringct}}yes/{{rct_type}}{{/is_ringct}}{{^is_ringct}}no{{/is_ringct}}</td>
-        </tr>
-
-
-        <tr>
-            <td colspan="3" style="max-width:700px">Extra: {{extra}}</td>
-        </tr>
-
-
-    </table>
-
-
-  <h3>{{outputs_no}} output(s) for total of {{outputs_xmr_sum}} xmr</h3>
-  <div class="center">
-      <table class="center">
-          <tr>
-              <td>stealth address</td>
-              <td>amount</td>
-              <td>amount idx</td>
-          </tr>
-          {{#outputs}}
-          <tr>
-              <td>{{output_idx}}: {{out_pub_key}}</td>
-              <td>{{amount}}</td>
-              <td>{{amount_idx}} of {{num_outputs}}</td>
-          </tr>
-          {{/outputs}}
-      </table>
   </div>
 
-    {{^have_raw_tx}}
-    <div class="center" style="width:90%">
-        <div class="tabs">
+  <div class="table-scroller">
+    <div class="table-container">
 
-            <div class="tab">
-                <input type="radio" id="tab-1" name="tab-group-1" checked>
-                <label for="tab-1">Decode outputs</label>
-                <div class="content">
-                    <h4 style="margin: 0px">Check which outputs belong to given Monero address/subaddress and viewkey</h4>
-                    <h5 style="margin: 0px">
-                        For RingCT transactions, outputs' amounts are also decoded
-                        <br/>
-                        {{#enable_js}}
-                            Note: address/subaddress and viewkey are NOT sent to the server, as the calculations are done on the client side
-                        {{/enable_js}}
-                        {{^enable_js}}
-                            Note: address/subaddress and viewkey are sent to the server, as the calculations are done on the server side
-                        {{/enable_js}}
-                    </h5>
-                    <form action="/myoutputs" method="post" style="width:100%; margin-top:2px" class="style-1">
-                        <input type="hidden" name="tx_hash" value="{{tx_hash}}"><br/>
-                        <input type="text" name="xmr_address" size="110" placeholder="Monero address/subaddress"><br/>
-                        <input type="text" name="viewkey" size="110" placeholder="Private viewkey" style="margin-top:5px"><br/>
-                        <input type="hidden" name="raw_tx_data" value="{{raw_tx_data}}">
-                        <!--above raw_tx_data field only used when checking raw tx data through tx pusher-->
+      <table class="pure-table pure-table-striped">
+	<thead>
+	  <tr>
+	    <th colspan="3">Transaction Details</th>
+	  </tr>
+	</thead>
+	<tbody>
+	  {{^have_raw_tx}}
+	  <tr>
+	    <td>Timestamp: {{blk_timestamp_uint}}</td>
+	    <td>Timestamp [UCT]: {{blk_timestamp}}</td>
+	    <td>Age [y:d:h:m:s]: {{delta_time}}</td>
+	  </tr>
+	  {{/have_raw_tx}}
+	  <tr>
+	    <td>Block: <a href="/block/{{blk_height}}">{{blk_height}}</a></td>
+	    <td>Fee (per_kB): {{tx_fee}} ({{payed_for_kB}})</td>
+	    <td>Tx size: {{tx_size}} kB</td>
+	  </tr>
+	  <tr>
+	    <td>Tx version: {{tx_version}}</td>
+	    <td>No of confirmations: {{confirmations}}</td>
+	    <td>RingCT/type:  {{#is_ringct}}yes/{{rct_type}}{{/is_ringct}}{{^is_ringct}}no{{/is_ringct}}</td>
+	  </tr>
 
-                        {{#enable_js}}
-                        <!-- if have js, DONOT submit the form to server.
-                             change submit button, to just a button -->
-                            <button type="button" style="margin-top:5px" id="decode_btn" >Decode outputs</button>
-                        {{/enable_js}}
-                        {{^enable_js}}
-                            <input type="submit" value="Decode outputs" style="margin-top:5px" >
-                        {{/enable_js}}
-                    </form>
-                </div>
-            </div>
-
-            <div class="tab">
-                <input type="radio" id="tab-2" name="tab-group-1">
-                <label for="tab-2">Prove sending</label>
-
-                <div class="content">
-                    <h4 style="margin: 0px">Prove to someone that you have sent them Monero in this transaction</h4>
-                    <h5 style="margin: 0px">
-                        Tx private key can be obtained using <i>get_tx_key</i>
-                        command in  <i>monero-wallet-cli</i> command line tool
-                        <br/>
-                        {{#enable_js}}
-                            Note: address/subaddress and tx private key are NOT sent to the server, as the calculations are done on the client side
-                        {{/enable_js}}
-                        {{^enable_js}}
-                            Note: address/subaddress and tx private key are sent to the server, as the calculations are done on the server side
-                        {{/enable_js}}
-                    </h5>
-                    <form action="/prove" method="post" style="width:100%;margin-top:2px" class="style-1">
-                       <input type="hidden" name="txhash" value="{{tx_hash}}"><br/>
-                       <input type="text" name="txprvkey" size="120" placeholder="Tx private key"><br/>
-                        <input type="hidden" name="raw_tx_data" value="{{raw_tx_data}}">
-                        <!--above raw_tx_data field only used when checking raw tx data through tx pusher-->
-                       <input type="text" name="xmraddress" size="120" placeholder="Recipient's monero address/subaddress" style="margin-top:5px"><br/>
-
-                        {{#enable_js}}
-                            <!-- if have js, DONOT submit the form to server.
-                                 change submit button, to just a button -->
-                            <button type="button" style="margin-top:5px" id="prove_btn">Prove sending</button>
-                        {{/enable_js}}
-                        {{^enable_js}}
-                           <input type="submit" value="Prove sending" style="margin-top:5px">
-                        {{/enable_js}}
-
-                    </form>
-                </div>
-            </div>
-        </div>
+	  <tr>
+	    <td colspan="3">Extra: {{extra}}</td>
+	  </tr>
+	</tbody>
+      </table>
     </div>
-    {{/have_raw_tx}}
+  </div>
 
-    {{#enable_js}}
+  <h3>{{outputs_no}} output(s) for total of {{outputs_xmr_sum}} Ryo</h3>
+  <div class="table-scroller">
+    <div class="table-container">
+      <table class="pure-table pure-table-striped">
+	<thead>
+	  <tr>
+            <th>stealth address</th>
+            <th style="width:140px">amount</th>
+            <th style="width:160px">amount idx</th>
+	  </tr>
+	</thead>
+	<tbody>
+	  {{#outputs}}
+	  <tr>
+            <td>{{output_idx}}: {{out_pub_key}}</td>
+            <td>{{amount}}</td>
+            <td>{{amount_idx}} of {{num_outputs}}</td>
+	  </tr>
+	  {{/outputs}}
+	</tbody>
+      </table>
+    </div>
+  </div>
 
-        <!-- to disply results from deconding and proving txs using js -->
-        <div id="decode-prove-results" class="center" style="width: 80%; margin-top:10px;border-style: dotted">
+  {{^have_raw_tx}}
+  <div class="tabs-scroller">
+    <div class="tabs-container">
 
-        </div>
+      <div class="tabs">
 
-        <script>
+	<div class="tab">
+          <input type="radio" id="tab-1" name="tab-group-1" checked>
+          <label for="tab-1">Decode outputs</label>
+          <div class="content">
+            <p style="margin: 0px">Check which outputs belong to given Ryo address/subaddress and viewkey</p>
+            <p style="margin: 0px">
+              For RingCT transactions, outputs' amounts are also decoded
+              <br/>
+              {{#enable_js}}
+              Note: address/subaddress and viewkey are NOT sent to the server, as the calculations are done on the client side
+              {{/enable_js}}
+              {{^enable_js}}
+              Note: address/subaddress and viewkey are sent to the server, as the calculations are done on the server side
+              {{/enable_js}}
+            </p>
+            <form action="/myoutputs" method="post" class="pure-form">
+              <input type="hidden" name="tx_hash" value="{{tx_hash}}"/>
+              <input type="text" name="xmr_address" placeholder="Ryo address/subaddress" class="pure-input-1" />
+              <input type="text" name="viewkey" placeholder="Private viewkey" class="pure-input-1" />
+              <input type="hidden" name="raw_tx_data" value="{{raw_tx_data}}" />
+              <!--above raw_tx_data field only used when checking raw tx data through tx pusher-->
 
-            //  here we handle button presses from the above forms
-            //  to decode and prove txs.
-            $(document).ready(function() {
+              {{#enable_js}}
+              <!-- if have js, DONOT submit the form to server.
+                   change submit button, to just a button -->
+              <button type="button" id="decode_btn" class="pure-button pure-button-active">Decode outputs</button>
+              {{/enable_js}}
+              {{^enable_js}}
+              <input type="submit" value="Decode outputs" class="pure-button pure-button-active" />
+              {{/enable_js}}
+            </form>
+          </div>
+	</div>
 
-                // we need output pubplic keys, their indexes and amounts.
-                // all this is already avaliable on the html, but we can use
-                // musch framework to produce js array for this
+	<div class="tab">
+          <input type="radio" id="tab-2" name="tab-group-1">
+          <label for="tab-2">Prove sending</label>
 
-                var tx_json = {{#tx_json_raw}}{{/tx_json_raw}};
+          <div class="content">
+            <p style="margin: 0px">Prove to someone that you have sent them Ryo in this transaction</p>
+            <p style="margin: 0px">
+              Tx private key can be obtained using <i>get_tx_key</i>
+              command in  <i>ryo-wallet-cli</i> command line tool
+              <br/>
+              {{#enable_js}}
+              Note: address/subaddress and tx private key are NOT sent to the server, as the calculations are done on the client side
+              {{/enable_js}}
+              {{^enable_js}}
+              Note: address/subaddress and tx private key are sent to the server, as the calculations are done on the server side
+              {{/enable_js}}
+            </p>
+            <form action="/prove" method="post" class="pure-form">
+              <input type="hidden" name="txhash" value="{{tx_hash}}" />
+              <input type="text" name="txprvkey" placeholder="Tx private key" class="pure-input-1" />
+              <input type="hidden" name="raw_tx_data" value="{{raw_tx_data}}" />
+              <!--above raw_tx_data field only used when checking raw tx data through tx pusher-->
+              <input type="text" name="xmraddress" placeholder="Recipient's ryo address/subaddress" class="pure-input-1" />
 
-                var tx_public_key = $("#tx_pub_key").text();
+              {{#enable_js}}
+              <!-- if have js, DONOT submit the form to server.
+                   change submit button, to just a button -->
+              <button type="button" id="prove_btn" class="pure-button pure-button-active">Prove sending</button>
+              {{/enable_js}}
+              {{^enable_js}}
+              <input type="submit" value="Prove sending" class="pure-button pure-button-active" />
+              {{/enable_js}}
 
-                // when we process multi-ouput tx, it can have extra public keys
-                // due to sub-addresses
-                var add_tx_pub_keys = $("#add_tx_pub_keys").text().split(';').slice(0, -1);
+            </form>
+          </div>
+	</div>
+      </div>
+    </div>
+  </div>
 
-                //console.log("add_tx_pub_keys: ", add_tx_pub_keys);
+  {{/have_raw_tx}}
 
-                var payment_id = $("#payment_id").text();
+  {{#enable_js}}
 
+  <!-- to disply results from deconding and proving txs using js -->
+  <div id="decode-prove-results" class="center" style="width: 80%; margin-top:10px;border-style: dotted">
 
-                $("#decode_btn").click(function() {
+  </div>
 
-                    var address = $("input[name=xmr_address]").val().trim();
-                    var viewkey = $("input[name=viewkey]").val().trim();
+  <script>
 
-                    if (!address || !viewkey) {
-                        $("#decode-prove-results").html("<h4>Address or viewkey key not provided!</h4>");
-                        return;
-                    }
+    //  here we handle button presses from the above forms
+    //  to decode and prove txs.
+    $(document).ready(function() {
 
-                    // not used when decoding, but used when proving.
-                    // so we just use array here
-                    multiple_tx_secret_keys = [];
+    // we need output pubplic keys, their indexes and amounts.
+    // all this is already avaliable on the html, but we can use
+    // musch framework to produce js array for this
 
-                    try {
-                        var address_decoded = decode_address(address);
-                        decodeOutputs(tx_json, tx_public_key, viewkey,
-                                      address_decoded.spend, payment_id,
-                                      add_tx_pub_keys, multiple_tx_secret_keys, false);
-                    } catch(err){
-                        console.log(err);
-                        $("#decode-prove-results").html('<h4>Error: ' + err + '</h4>' );
-                    }
-                });
+    var tx_json = {{#tx_json_raw}}{{/tx_json_raw}};
 
-                $("#prove_btn").click(function() {
+    var tx_public_key = $("#tx_pub_key").text();
 
-                    var address    = $("input[name=xmraddress]").val().trim();
-                    var tx_prv_key = $("input[name=txprvkey]").val().trim();
+    // when we process multi-ouput tx, it can have extra public keys
+    // due to sub-addresses
+    var add_tx_pub_keys = $("#add_tx_pub_keys").text().split(';').slice(0, -1);
 
-                    if (!address || !tx_prv_key) {
-                        $("#decode-prove-results").html("<h4>Address or tx private key not provided!</h4>");
-                        return;
-                    }
+    //console.log("add_tx_pub_keys: ", add_tx_pub_keys);
 
-                    try {
-                        // when using subaddress, there can be more than one tx_prv_key
-                        var multiple_tx_prv_keys = parse_str_secret_key(tx_prv_key);
-
-                        var address_decoded = decode_address(address);
-                        decodeOutputs(tx_json, address_decoded.view, tx_prv_key,
-                                      address_decoded.spend, payment_id,
-                                      add_tx_pub_keys, multiple_tx_prv_keys, true);
-                    } catch(err){
-                        console.log(err);
-                        $("#decode-prove-results").html('<h4>Error: ' + err + '</h4>' );
-                    }
-                });
-
-            });
-
-            // based on C++ code by stoffu
-            function parse_str_secret_key(key_str) {
-
-                var multiple_tx_secret_keys = [];
-
-                var num_keys = Math.floor(key_str.length / 64);
-
-                if (num_keys * 64 !=  key_str.length)
-                    throw "num_keys * 64 !=  key_str.length";
-
-                for (var i = 0; i < num_keys; i++)
-                {
-                    multiple_tx_secret_keys.push(key_str.slice(64*i, 64*i + 64));
-                }
-
-                return multiple_tx_secret_keys;
-            }
-
-
-            function decodeOutputs(tx_json, pub_key, sec_key,
-                                   address_pub_key, payment_id,
-                                   add_tx_pub_keys,  multiple_tx_prv_keys, tx_prove) {
-                //console.log(tx_json);
-
-                var is_rct = (tx_json.version === 2);
-                var rct_type = (is_rct ? tx_json.rct_signatures.type : -1);
-
-                var key_derivation = "";
-
-                if (tx_prove)
-                    key_derivation = generate_key_derivation(pub_key, multiple_tx_prv_keys[0]);
-                else
-                    key_derivation = generate_key_derivation(pub_key, sec_key);
-
-
-                var add_key_derivation = [];
-
-                if (add_tx_pub_keys) {
-                    for (var i = 0; i < add_tx_pub_keys.length; i++)
-                    {
-                        if (!tx_prove)
-                            add_key_derivation.push(generate_key_derivation(add_tx_pub_keys[i], sec_key));
-                        else
-                            add_key_derivation.push(generate_key_derivation(pub_key, multiple_tx_prv_keys[i+1]));
-                    }
-                }
-
-                //console.log("add_key_derivation: ", add_key_derivation);
-
-
-                // go over each tx output, and check if it is ours or not
-                var decoding_results_str = '<h3>Output decoding results</h3>';
-
-                decoding_results_str += '<table class="center">';
-
-                decoding_results_str += '<tr>' +
-                    '<td></td>' +
-                    '<td>output public key</td>' +
-                    '<td>amount</td>' +
-                    '<td>output match?</td>' +
-                    '</tr>';
-
-                var output_idx = 0;
-
-                var sum_outptus = 0;
-
-                tx_json.vout.forEach(function(output) {
-
-                    var output_pub_key = output.target.key;
-                    var amount         = output.amount;
-
-                    var pubkey_generated = derive_public_key(key_derivation, output_idx, address_pub_key);
-
-                    var mine_output = (output_pub_key == pubkey_generated);
-
-                    var with_additional = false;
-
-                    var mine_output_str = "false";
-
-                    if (!mine_output && add_tx_pub_keys.length == tx_json.vout.length) {
-
-                        pubkey_generated = derive_public_key(add_key_derivation[output_idx],
-                                                             output_idx, address_pub_key);
-
-                        mine_output = (output_pub_key == pubkey_generated);
-                        with_additional = true;
-                    }
-
-                    if (mine_output) {
-
-                        mine_output_str = '<span style="color: #008009;font-weight: bold">true</span>';
-
-                        if (is_rct && rct_type > 0 /* not coinbase*/) {
-                            try {
-                                //var ecdh = decodeRct(tx_json.rct_signatures, output_idx, key_derivation);
-                                var ecdh = decodeRct(tx_json.rct_signatures, output_idx,
-                                                     (with_additional ? add_key_derivation[output_idx] : key_derivation));
+    var payment_id = $("#payment_id").text();
 
 
-                                amount = parseInt(ecdh.amount);
-                            } catch (err) {
-                                decoding_results_str += "<span class='validNo'>RingCT amount for output " + i + " with pubkey: " + output_pub_key + "</span>" + "<br>"; //rct commitment != computed
-                                throw "invalid rct amount";
-                            }
+    $("#decode_btn").click(function() {
+
+    var address = $("input[name=xmr_address]").val().trim();
+    var viewkey = $("input[name=viewkey]").val().trim();
+
+    if (!address || !viewkey) {
+    $("#decode-prove-results").html("<h4>Address or viewkey key not provided!</h4>");
+    return;
+    }
+
+    // not used when decoding, but used when proving.
+    // so we just use array here
+    multiple_tx_secret_keys = [];
+
+    try {
+    var address_decoded = decode_address(address);
+    decodeOutputs(tx_json, tx_public_key, viewkey,
+    address_decoded.spend, payment_id,
+    add_tx_pub_keys, multiple_tx_secret_keys, false);
+    } catch(err){
+    console.log(err);
+    $("#decode-prove-results").html('<h4>Error: ' + err + '</h4>' );
+    }
+    });
+
+    $("#prove_btn").click(function() {
+
+    var address    = $("input[name=xmraddress]").val().trim();
+    var tx_prv_key = $("input[name=txprvkey]").val().trim();
+
+    if (!address || !tx_prv_key) {
+    $("#decode-prove-results").html("<h4>Address or tx private key not provided!</h4>");
+    return;
+    }
+
+    try {
+    // when using subaddress, there can be more than one tx_prv_key
+    var multiple_tx_prv_keys = parse_str_secret_key(tx_prv_key);
+
+    var address_decoded = decode_address(address);
+    decodeOutputs(tx_json, address_decoded.view, tx_prv_key,
+    address_decoded.spend, payment_id,
+    add_tx_pub_keys, multiple_tx_prv_keys, true);
+    } catch(err){
+    console.log(err);
+    $("#decode-prove-results").html('<h4>Error: ' + err + '</h4>' );
+    }
+    });
+
+    });
+
+    // based on C++ code by stoffu
+    function parse_str_secret_key(key_str) {
+
+    var multiple_tx_secret_keys = [];
+
+    var num_keys = Math.floor(key_str.length / 64);
+
+    if (num_keys * 64 !=  key_str.length)
+    throw "num_keys * 64 !=  key_str.length";
+
+    for (var i = 0; i < num_keys; i++)
+			{
+			multiple_tx_secret_keys.push(key_str.slice(64*i, 64*i + 64));
+			}
+
+			return multiple_tx_secret_keys;
+			}
+
+
+			function decodeOutputs(tx_json, pub_key, sec_key,
+                        address_pub_key, payment_id,
+                        add_tx_pub_keys,  multiple_tx_prv_keys, tx_prove) {
+			//console.log(tx_json);
+
+			var is_rct = (tx_json.version === 2);
+			var rct_type = (is_rct ? tx_json.rct_signatures.type : -1);
+
+			var key_derivation = "";
+
+			if (tx_prove)
+			key_derivation = generate_key_derivation(pub_key, multiple_tx_prv_keys[0]);
+			else
+			key_derivation = generate_key_derivation(pub_key, sec_key);
+
+
+			var add_key_derivation = [];
+
+			if (add_tx_pub_keys) {
+			for (var i = 0; i < add_tx_pub_keys.length; i++)
+					    {
+					    if (!tx_prove)
+					    add_key_derivation.push(generate_key_derivation(add_tx_pub_keys[i], sec_key));
+					    else
+					    add_key_derivation.push(generate_key_derivation(pub_key, multiple_tx_prv_keys[i+1]));
+					    }
+					    }
+
+					    //console.log("add_key_derivation: ", add_key_derivation);
+
+
+					    // go over each tx output, and check if it is ours or not
+					    var decoding_results_str = '<h3>Output decoding results</h3>';
+
+					    decoding_results_str += '<table class="center">';
+
+					    decoding_results_str += '<tr>' +
+					    '<td></td>' +
+					    '<td>output public key</td>' +
+					    '<td>amount</td>' +
+					    '<td>output match?</td>' +
+					    '</tr>';
+
+					    var output_idx = 0;
+
+					    var sum_outptus = 0;
+
+					    tx_json.vout.forEach(function(output) {
+
+					    var output_pub_key = output.target.key;
+					    var amount         = output.amount;
+
+					    var pubkey_generated = derive_public_key(key_derivation, output_idx, address_pub_key);
+
+					    var mine_output = (output_pub_key == pubkey_generated);
+
+					    var with_additional = false;
+
+					    var mine_output_str = "false";
+
+					    if (!mine_output && add_tx_pub_keys.length == tx_json.vout.length) {
+
+					    pubkey_generated = derive_public_key(add_key_derivation[output_idx],
+                                            output_idx, address_pub_key);
+
+					    mine_output = (output_pub_key == pubkey_generated);
+					    with_additional = true;
+					    }
+
+					    if (mine_output) {
+
+					    mine_output_str = '<span style="color: #008009;font-weight: bold">true</span>';
+
+					    if (is_rct && rct_type > 0 /* not coinbase*/) {
+                        try {
+                        //var ecdh = decodeRct(tx_json.rct_signatures, output_idx, key_derivation);
+                        var ecdh = decodeRct(tx_json.rct_signatures, output_idx,
+                        (with_additional ? add_key_derivation[output_idx] : key_derivation));
+
+
+                        amount = parseInt(ecdh.amount);
+                        } catch (err) {
+                        decoding_results_str += "<span class='validNo'>RingCT amount for output " + i + " with pubkey: " + output_pub_key + "</span>" + "<br>"; //rct commitment != computed
+                        throw "invalid rct amount";
+                        }
                         }
 
                         sum_outptus += amount;
-                    }
+			}
 
-                    decoding_results_str += "<tr>"
+			decoding_results_str += "<tr>"
                         +"<td>" + output_idx +  "</td>"
                         +"<td>" + output_pub_key +  "</td>"
-                        +"<td>" + (amount / 1e12) +  "</td>"
+                        +"<td>" + (amount / 1e9) +  "</td>"
                         +"<td>" + mine_output_str +  "</td>"
                         +"</tr>";
 
-                    //console.log(output[1], pubkey_generated);
+			//console.log(output[1], pubkey_generated);
 
-                    output_idx++;
-                });
+			output_idx++;
+			});
 
-                decoding_results_str += "</table>";
+			decoding_results_str += "</table>";
 
-                decoding_results_str += "<h3>Sum XMR from matched outputs (i.e., incoming XMR): " + (sum_outptus / 1e12) + "</h3>"
+			decoding_results_str += "<h3>Sum Ryo from matched outputs (i.e., incoming Ryo): " + (sum_outptus / 1e9) + "</h3>"
 
 
-                // decrypt payment_id8 which results in using
-                // integrated address
-                if (payment_id.length == 16) {
-                    if (pub_key) {
+			// decrypt payment_id8 which results in using
+			// integrated address
+			if (payment_id.length == 16) {
+			if (pub_key) {
                         var decrypted_payment_id8
-                            = decrypt_payment_id(payment_id, pub_key, sec_key);
+                        = decrypt_payment_id(payment_id, pub_key, sec_key);
                         console.log("decrypted_payment_id8: " + decrypted_payment_id8);
                         decoding_results_str += "<h5>Decrypted payment id: "
-                            + decrypted_payment_id8
-                            + " (value incorrect if you are not the recipient of the tx)</h5>"
-                    }
-                }
+                        + decrypted_payment_id8
+                        + " (value incorrect if you are not the recipient of the tx)</h5>"
+			}
+			}
 
 
-                $("#decode-prove-results").html(decoding_results_str);
-            }
+			$("#decode-prove-results").html(decoding_results_str);
+			}
 
-        </script>
+			</script>
 
-    {{/enable_js}}
+{{/enable_js}}
 
 
 
 {{#has_inputs}}
-    {{#enable_mixins_details}}
-      <h3>Inputs' ring size time scale (from {{min_mix_time}} till {{max_mix_time}};
-        resolution: {{timescales_scale}} days{{#have_raw_tx}}; R - real ring member {{/have_raw_tx}})
-      </h3>
-      <div class="center">
-        <ul class="center">
-          {{#timescales}}
-            <li  style="list-style-type: none; text-align: center; font-size: 8px">|{{timescale}}|</li>
-          {{/timescales}}
-        </ul>
-      </div>
-    {{/enable_mixins_details}}
-
-    {{^inputs_xmr_sum_not_zero}}
-        <h3>{{inputs_no}} input(s) for total of {{inputs_xmr_sum}} xmr</h3>
-    {{/inputs_xmr_sum_not_zero}}
-    {{#inputs_xmr_sum_not_zero}}
-        {{^have_any_unknown_amount}}
-            <h3>{{inputs_no}} inputs(s) for total of {{inputs_xmr_sum}} xmr</h3>
-        {{/have_any_unknown_amount}}
-        {{#have_any_unknown_amount}}
-            <h3>{{inputs_no}} inputs(s) for total of at least {{inputs_xmr_sum}} xmr</h3>
-        {{/have_any_unknown_amount}}
-    {{/inputs_xmr_sum_not_zero}}
-
-    {{#show_part_of_inputs}}
-        <h5 style="margin-top: 2px">
-           Only {{max_no_of_inputs_to_show}} inputs are shown. To see all,
-            click "<a href="/tx/{{tx_hash}}/1">more details</a>"
-        </h5>
-    {{/show_part_of_inputs}}
-
-    <div class="center">
-       <table class="center">
-      {{#inputs}}
-        <tr>
-          <td style="text-align: left;">
-              key image  {{input_idx}}: {{in_key_img}}
-              {{#have_raw_tx}}
-               Already spent:
-                {{#already_spent}}
-                    <span style="color: red; font-weight: bold;">True</span>
-                {{/already_spent}}
-              {{^already_spent}}
-                False
-              {{/already_spent}}
-
-              {{/have_raw_tx}}
-          </td>
-          <td>amount: {{amount}}</td>
-       </tr>
-          <tr>
-            <td colspan="2">
-                {{#enable_mixins_details}}
-                    <table style="width:100%; margin-bottom:20px">
-                    <tr>
-                      <td>ring members</td>
-                      {{#have_raw_tx}}
-                        <td>Is it real?</td>
-                      {{/have_raw_tx}}
-                      <td>blk</td>
-                      <td>ring size</td>
-                      <td>in/out</td>
-                      <td>timestamp</td>
-                      <td>age [y:d:h:m:s]</td>
-
-                    </tr>
-                 {{#mixins}}
-                    <tr>
-                      <td> - {{mix_idx}}: <a href="/tx/{{mix_tx_hash}}">{{mix_pub_key}}</a></td>
-                      {{#have_raw_tx}}
-                        {{#mix_is_it_real}}
-                            <td><span style="color: #008009;font-weight: bold">{{mix_is_it_real}}</span></td>
-                        {{/mix_is_it_real}}
-                        {{^mix_is_it_real}}
-                            <td>{{mix_is_it_real}}</td>
-                        {{/mix_is_it_real}}
-                      {{/have_raw_tx}}
-                      <td>{{mix_blk}}</td>
-                      <td>{{mix_mixin_no}}</td>
-                      <td>{{mix_inputs_no}}/{{mix_outputs_no}}</td>
-                      <td>{{mix_timestamp}}</td>
-                      <td>{{mix_age}}</td>
-                    </tr>
-                 {{/mixins}}
-                 </table>
-                {{/enable_mixins_details}}
-                {{^enable_mixins_details}}
-                <table style="width:100%; margin-bottom:20px">
-                    <tr>
-                        <td>ring members</td>
-                        {{#have_raw_tx}}
-                            <td>Is it real?</td>
-                        {{/have_raw_tx}}
-                        <td>blk</td>
-                    </tr>
-                    {{#mixins}}
-                    <tr>
-                        <td> - {{mix_idx}}: {{mix_pub_key}}</td>
-                        {{#have_raw_tx}}
-                            {{#mix_is_it_real}}
-                                <td><span style="color: #008009;font-weight: bold">{{mix_is_it_real}}</span></td>
-                            {{/mix_is_it_real}}
-                            {{^mix_is_it_real}}
-                                <td>{{mix_is_it_real}}</td>
-                            {{/mix_is_it_real}}
-                        {{/have_raw_tx}}
-                        <td>{{mix_blk}}</td>
-                    </tr>
-                    {{/mixins}}
-                </table>
-                {{/enable_mixins_details}}
-           </td>
-         </tr>
-
-<!--
-        {{#with_ring_signatures}}
-
-          <tr>
-            <td colspan="2">
-                <table style="width:100%; margin-bottom:20px">
-                <tr>
-                  <td>Ring signature</td>
-                </tr>
-                {{#ring_sigs}}
-                <tr>
-                    <td>{{ring_sig}}</td>
-                </tr>
-                {{/ring_sigs}}
-             </table>
-           </td>
-         </tr>
-
-        {{/with_ring_signatures}}
--->
-
-      {{/inputs}}
-      </table>
-
-
+{{#enable_mixins_details}}
+<div style="text-align:center">
+  <h3 style="margin-bottom:0;">Inputs' ring size time scale</h3>
+  <small>(from {{min_mix_time}} till {{max_mix_time}};
+    resolution: {{timescales_scale}} days{{#have_raw_tx}}; R - real ring member {{/have_raw_tx}})
+  </small>
+  <div class="table-scroller">
+    <ul style="padding:0">
+      {{#timescales}}
+      <li  style="list-style-type:none;text-align:center;font-size:8px;margin-bottom:8px">|{{timescale}}|</li>
+      {{/timescales}}
+    </ul>
   </div>
+</div>
+{{/enable_mixins_details}}
 
+{{^inputs_xmr_sum_not_zero}}
+<h3>{{inputs_no}} input(s) for total of {{inputs_xmr_sum}} Ryo</h3>
+{{/inputs_xmr_sum_not_zero}}
+{{#inputs_xmr_sum_not_zero}}
+{{^have_any_unknown_amount}}
+<h3>{{inputs_no}} inputs(s) for total of {{inputs_xmr_sum}} Ryo</h3>
+{{/have_any_unknown_amount}}
+{{#have_any_unknown_amount}}
+<h3>{{inputs_no}} inputs(s) for total of at least {{inputs_xmr_sum}} Ryo</h3>
+{{/have_any_unknown_amount}}
+{{/inputs_xmr_sum_not_zero}}
 
- {{/has_inputs}}
+{{#show_part_of_inputs}}
+<p style="margin-top: 2px">
+  Only {{max_no_of_inputs_to_show}} inputs are shown. To see all,
+  click "<a href="/tx/{{tx_hash}}/1">more details</a>"
+</p>
+{{/show_part_of_inputs}}
+
+{{#inputs}}
+<div class="input" style="margin-bottom:40px">
+  <p class="line-break">
+    key image  {{input_idx}}: {{in_key_img}}
+    {{#have_raw_tx}}
+    Already spent:
+    {{#already_spent}}
+    <span style="color: red; font-weight: bold;">True</span>
+    {{/already_spent}}
+    {{^already_spent}}
+    False
+    {{/already_spent}}
+
+    {{/have_raw_tx}}
+
+    amount: {{amount}}
+  </p>
+  {{#enable_mixins_details}}
+  <div class="table-scroller">
+    <div class="table-container">
+      <table class="pure-table pure-table-striped">
+	<thead>
+          <tr>
+            <th>ring members</th>
+            {{#have_raw_tx}}
+            <th style="width:80px">Is it real?</th>
+            {{/have_raw_tx}}
+            <th style="width:80px">blk</th>
+            <th style="width:40px">ring size</th>
+            <th style="width:50px">in/out</th>
+            <th style="width:150px">timestamp</th>
+            <th style="width:130px">age [y:d:h:m:s]</th>
+          </tr>
+	</thead>
+	<tbody>
+          {{#mixins}}
+          <tr>
+            <td> - {{mix_idx}}: <a href="/tx/{{mix_tx_hash}}">{{mix_pub_key}}</a></td>
+            {{#have_raw_tx}}
+            {{#mix_is_it_real}}
+            <td><span style="color: #008009;font-weight: bold">{{mix_is_it_real}}</span></td>
+            {{/mix_is_it_real}}
+            {{^mix_is_it_real}}
+            <td>{{mix_is_it_real}}</td>
+            {{/mix_is_it_real}}
+            {{/have_raw_tx}}
+            <td>{{mix_blk}}</td>
+            <td>{{mix_mixin_no}}</td>
+            <td>{{mix_inputs_no}}/{{mix_outputs_no}}</td>
+            <td>{{mix_timestamp}}</td>
+            <td>{{mix_age}}</td>
+          </tr>
+          {{/mixins}}
+	</tbody>
+      </table>
+    </div>
+  </div>
+  {{/enable_mixins_details}}
+  {{^enable_mixins_details}}
+  <div class="table-scroller">
+    <div class="table-container">
+      <table class="pure-table pure-table-striped">
+	<thead>
+          <tr>
+            <th>ring members</th>
+            {{#have_raw_tx}}
+            <th>Is it real?</th>
+            {{/have_raw_tx}}
+            <th>blk</th>
+          </tr>
+	</thead>
+	<tbody>
+          {{#mixins}}
+          <tr>
+            <td> - {{mix_idx}}: {{mix_pub_key}}</td>
+            {{#have_raw_tx}}
+            {{#mix_is_it_real}}
+            <td><span style="color: #008009;font-weight: bold">{{mix_is_it_real}}</span></td>
+            {{/mix_is_it_real}}
+            {{^mix_is_it_real}}
+            <td>{{mix_is_it_real}}</td>
+            {{/mix_is_it_real}}
+            {{/have_raw_tx}}
+            <td>{{mix_blk}}</td>
+          </tr>
+          {{/mixins}}
+	</tbody>
+      </table>
+    </div>
+  </div>
+  {{/enable_mixins_details}}
+</div>
+{{/inputs}}
+
+{{/has_inputs}}
 
 {{^have_raw_tx}}
-    {{^with_ring_signatures}}
-        {{#show_more_details_link}}
-            <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}/1">More details</a></h5>
-        {{/show_more_details_link}}
-    {{/with_ring_signatures}}
-    {{#with_ring_signatures}}
-        <label id="show-decoded-inputs" for="toggle-1">Show JSON representation of tx</label>
-        <input type="checkbox" id="toggle-1">
-        <div id="decoded-inputs">
-            <div class="center">
-                <code style="white-space: pre-wrap; font-size: 10px">
-                    {{tx_json}}
-                </code>
-            </div>
-        </div>
-        <br/><br/>
-        <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}">Less details</a></h5>
-    {{/with_ring_signatures}}
+{{^with_ring_signatures}}
+{{#show_more_details_link}}
+<h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}/1">More details</a></h5>
+{{/show_more_details_link}}
+{{/with_ring_signatures}}
+{{#with_ring_signatures}}
+<div id="decoded-inputs">
+  <pre>
+    <code>
+      {{tx_json}}
+    </code>
+  </pre>
+</div>
+<br/><br/>
+<h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}">Less details</a></h5>
+{{/with_ring_signatures}}
 {{/have_raw_tx}}
 
 
 {{#show_cache_times}}
-    <div class="center">
-        {{#construction_time}}
-            <h6 style="margin-top: 1px;color:#949490">
-                Tx details construction time: {{construction_time}} s
-                {{#from_cache}}
-                    <br/>Tx read from the tx cache
-                {{/from_cache}}
-            </h6>
-        {{/construction_time}}
-    </div>
+<div>
+  {{#construction_time}}
+  <h6 style="margin-top: 1px;color:#949490">
+    Tx details construction time: {{construction_time}} s
+    {{#from_cache}}
+    <br/>Tx read from the tx cache
+    {{/from_cache}}
+  </h6>
+  {{/construction_time}}
+</div>
 {{/show_cache_times}}
 
 </div>

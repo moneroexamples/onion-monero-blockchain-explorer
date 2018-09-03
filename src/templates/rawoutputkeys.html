@@ -1,25 +1,31 @@
 <div>
-    <div class="center">
-        <br/>
-        <h3 class="center">Signed Outputs Public Keys Checker</h3>
-    </div>
+  <div>
+    <br/>
+    <h3>Signed Outputs Public Keys Checker</h3>
+  </div>
 
 
-    <div class="center">
-        <form action="/checkrawoutputkeys" method="post" style="width:100%; margin-top:15px" class="style-1">
-            Paste base64 encoded, signed output keys data here<br/>
-            (In Linux, can get base64 signed raw tx data: <i>base64 your_output_keys_filename | xclip -selection clipboard</i>)<br/>
-            (In Windows, can get base64 signed raw tx data: <i>certutil.exe -encode -f your_output_keys_filename encoded.txt & type "encoded.txt" | clip</i>)<br/>
-            <textarea name="rawoutputkeysdata" rows="20" cols="80"></textarea><br/><br/>
-            Viewkey (<i>output keys file data is encoded using your viewkey. Thus is needed for decryption</i>)
-            <br/>
-            Note: data and viewkey are sent to the server, as the calculations are done on the server side
-            <br/>
-            <input type="text"  name="viewkey" size="80">
-            <br/>
-            <input type="submit" name="action" value="check">
-        </form>
-    </div>
+  <div>
+    <form action="/checkrawoutputkeys" method="post" class="pure-form">
+      <p>
+	Paste base64 encoded, signed output keys data here<br/>
+	(In Linux, can get base64 signed raw tx data: <i>base64 your_output_keys_filename | xclip -selection clipboard</i>)<br/>
+	(In Windows, can get base64 signed raw tx data: <i>certutil.exe -encode -f your_output_keys_filename encoded.txt & type "encoded.txt" | clip</i>)
+      </p>
+      
+      <textarea name="rawoutputkeysdata" style="width:100%;height:400px;"></textarea>
+
+      <p>
+	Viewkey (<i>output keys file data is encoded using your viewkey. Thus is needed for decryption</i>)
+	<br/>
+	Note: data and viewkey are sent to the server, as the calculations are done on the server side
+      </p>
+      
+      <input type="text"  name="viewkey" class="pure-input-1" />
+      <br/><br/>
+      <input type="submit" name="action" value="check" class="pure-button pure-button-active" />
+    </form>
+  </div>
 
 
 </div>

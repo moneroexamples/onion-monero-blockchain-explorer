@@ -1,63 +1,63 @@
 <div>
 
-    <div class="center">
-        <br/>
-        <h3 class="center">Signed Outputs Public Keys Checker</h3>
-    </div>
+  <div>
+    <br/>
+    <h3>Signed Outputs Public Keys Checker</h3>
+  </div>
 
-    <h3>Data file prefix: {{data_prefix}}</h3>
+  <h3>Data file prefix: {{data_prefix}}</h3>
 
-    {{#has_error}}
-        <h4 style="color:red">Attempt failed</h4>
-        <h4>{{error_msg}}</h4>
-    {{/has_error}}
-    {{^has_error}}
-        <h4>Output keys for address: {{address}}</h4>
-        <h4>Viewkey: {{viewkey}}</h4>
-        {{#has_total_xmr}}
-            <h4>Total xmr: {{total_xmr}}</h4>
-        {{/has_total_xmr}}
+  {{#has_error}}
+  <h4 style="color:red">Attempt failed</h4>
+  <h4>{{error_msg}}</h4>
+  {{/has_error}}
+  {{^has_error}}
+  <h4>Output keys for address: {{address}}</h4>
+  <h4>Viewkey: {{viewkey}}</h4>
+  {{#has_total_xmr}}
+  <h4>Total xmr: {{total_xmr}}</h4>
+  {{/has_total_xmr}}
 
-        <div class="center">
+  <div class="center">
 
-            <form method="post" style="width:100%; margin-top:15px" class="style-1">
-                <table class="center" style="width:80%">
-                    <tr>
-                        <td>Output no.</td>
-                        <td>Public key</td>
-                        <td>Timestamp</td>
-                        <td>RingCT</td>
-                        {{#are_key_images_known}}
-                            <td>Is spent?</td>
-                        {{/are_key_images_known}}
-                        <td>Amount</td>
-                    </tr>
-                    {{#output_keys}}
-                    <input type="hidden" id="key_img_{{key_image}}" name="key_sig_pair_{{key_image}}" value="{{signature}}">
-                        <tr>
-                            <td>{{output_no}}</td>
-                            <td><a href="/tx/{{tx_hash}}">{{output_pub_key}}</a></td>
-                            <td>{{timestamp}}</td>
-                            <td>{{is_ringct}}</td>
-                            {{#are_key_images_known}}
-                                <td>{{^is_spent}}
-                                        <span style="color: #008009;font-weight: bold">{{is_spent}}</span>
-                                    {{/is_spent}}
-                                    {{#is_spent}}
-                                        {{is_spent}}
-                                    {{/is_spent}}
-                                </td>
-                            {{/are_key_images_known}}
-                            <td>{{amount}}</td>
+    <form method="post" style="width:100%; margin-top:15px" class="style-1">
+      <table class="center" style="width:80%">
+        <tr>
+          <td>Output no.</td>
+          <td>Public key</td>
+          <td>Timestamp</td>
+          <td>RingCT</td>
+          {{#are_key_images_known}}
+          <td>Is spent?</td>
+          {{/are_key_images_known}}
+          <td>Amount</td>
+        </tr>
+        {{#output_keys}}
+        <input type="hidden" id="key_img_{{key_image}}" name="key_sig_pair_{{key_image}}" value="{{signature}}">
+        <tr>
+          <td>{{output_no}}</td>
+          <td><a href="/tx/{{tx_hash}}">{{output_pub_key}}</a></td>
+          <td>{{timestamp}}</td>
+          <td>{{is_ringct}}</td>
+          {{#are_key_images_known}}
+          <td>{{^is_spent}}
+            <span style="color: #008009;font-weight: bold">{{is_spent}}</span>
+            {{/is_spent}}
+            {{#is_spent}}
+            {{is_spent}}
+            {{/is_spent}}
+          </td>
+          {{/are_key_images_known}}
+          <td>{{amount}}</td>
 
-                        </tr>
-                    {{/output_keys}}
-                </table>
-                <br/>
-            </form>
+        </tr>
+        {{/output_keys}}
+      </table>
+      <br/>
+    </form>
 
-        </div>
+  </div>
 
-    {{/has_error}}
+  {{/has_error}}
 
 </div>

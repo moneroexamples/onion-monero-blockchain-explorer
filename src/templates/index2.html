@@ -1,65 +1,68 @@
 
 <div class="center">
-     <h3 style="font-size: 12px; margin-top: 20px">
 
-        Server time: {{server_timestamp}}  | <a href="/txpool">Transaction pool</a>
-         {{#enable_pusher}}
-            | <a href="/rawtx">Transaction pusher </a>
-         {{/enable_pusher}}
-         {{#enable_key_image_checker}}
-            | <a href="/rawkeyimgs">Key images checker</a>
-         {{/enable_key_image_checker}}
-         {{#enable_output_key_checker}}
-            | <a href="/rawoutputkeys">Output keys checker</a>
-         {{/enable_output_key_checker}}
-         {{#enable_autorefresh_option}}
-             |
-            {{#refresh}}
-                <a href="/">Autorefresh is ON (10 s)</a>
-            {{/refresh}}
-            {{^refresh}}
-               <a href="/autorefresh">Autorefresh is OFF</a>
-            {{/refresh}}
-         {{/enable_autorefresh_option}}
-         {{#testnet_url}}
-            | <a href="{{testnet_url}}">Go to testnet explorer</a>
-         {{/testnet_url}}
-         {{#stagenet_url}}
-            | <a href="{{stagenet_url}}">Go to stagenet explorer</a>
-         {{/stagenet_url}}
-         {{#mainnet_url}}
-            | <a href="{{mainnet_url}}">Go to mainnet explorer</a>
-         {{/mainnet_url}}
-         {{#testnet}}
-            | This is <span style="color:#ff6b62">testnet</span> blockchain
-         {{/testnet}}
-         {{#stagenet}}
-            | This is <span style="color:#ff6b62">stagenet</span> blockchain
-         {{/stagenet}}
+  <div class="pure-g network-stats">
 
-        </h3>
+    <div class="pure-u-1 pure-u-md-1-2 pure-u-xl-1-4">
+      <div class="infoBox">
+	<div class="infoBoxIcon">
+	  <svg width="2304" height="1792" viewBox="0 0 2304 1792" xmlns="http://www.w3.org/2000/svg"><path d="M640 1632l384-192v-314l-384 164v342zm-64-454l404-173-404-173-404 173zm1088 454l384-192v-314l-384 164v342zm-64-454l404-173-404-173-404 173zm-448-293l384-165v-266l-384 164v267zm-64-379l441-189-441-189-441 189zm1088 518v416q0 36-19 67t-52 47l-448 224q-25 14-57 14t-57-14l-448-224q-4-2-7-4-2 2-7 4l-448 224q-25 14-57 14t-57-14l-448-224q-33-16-52-47t-19-67v-416q0-38 21.5-70t56.5-48l434-186v-400q0-38 21.5-70t56.5-48l448-192q23-10 50-10t50 10l448 192q35 16 56.5 48t21.5 70v400l434 186q36 16 57 48t21 70z"/></svg>
+	</div>
+	<div class="infoBoxContent">
+	  <div class="text"><span>Network Height</span></div>
+	  <div class="value"><span>{{height_human}}</span></div>
+	</div>
+      </div>
+    </div>
 
+    <div class="pure-u-1 pure-u-md-1-2 pure-u-xl-1-4">
+      <div class="infoBox">
+	<div class="infoBoxIcon">
+	  <svg width="1792" height="1792" viewBox="0 0 1792 1792" xmlns="http://www.w3.org/2000/svg"><path d="M384 1152q0-53-37.5-90.5t-90.5-37.5-90.5 37.5-37.5 90.5 37.5 90.5 90.5 37.5 90.5-37.5 37.5-90.5zm192-448q0-53-37.5-90.5t-90.5-37.5-90.5 37.5-37.5 90.5 37.5 90.5 90.5 37.5 90.5-37.5 37.5-90.5zm428 481l101-382q6-26-7.5-48.5t-38.5-29.5-48 6.5-30 39.5l-101 382q-60 5-107 43.5t-63 98.5q-20 77 20 146t117 89 146-20 89-117q16-60-6-117t-72-91zm660-33q0-53-37.5-90.5t-90.5-37.5-90.5 37.5-37.5 90.5 37.5 90.5 90.5 37.5 90.5-37.5 37.5-90.5zm-640-640q0-53-37.5-90.5t-90.5-37.5-90.5 37.5-37.5 90.5 37.5 90.5 90.5 37.5 90.5-37.5 37.5-90.5zm448 192q0-53-37.5-90.5t-90.5-37.5-90.5 37.5-37.5 90.5 37.5 90.5 90.5 37.5 90.5-37.5 37.5-90.5zm320 448q0 261-141 483-19 29-54 29h-1402q-35 0-54-29-141-221-141-483 0-182 71-348t191-286 286-191 348-71 348 71 286 191 191 286 71 348z"/></svg>
+	</div>
+	<div class="infoBoxContent">
+	  <div class="text"><span>Network Hashrate</span></div>
+	  <div class="value"><span>{{network_info.hash_rate}}</span></div>
+	</div>
+      </div>
+    </div>
 
-    {{#network_info}}
-        <h3 style="font-size: 12px; margin-top: 5px; margin-bottom: 3">
-            Network difficulty: {{difficulty}}
-            | Hard fork: v{{current_hf_version}}
-            | Hash rate: {{hash_rate}}
-            | Fee per kb: {{fee_per_kb}}
-            | Median block size limit: {{block_size_limit}} kB
-            {{^is_current_info}}
-            | Data from {{age}} {{age_format}} ago
-            {{/is_current_info}}
-        </h3>
-    {{/network_info}}
+    <div class="pure-u-1 pure-u-md-1-2 pure-u-xl-1-4">
+      <div class="infoBox">
+	<div class="infoBoxIcon">
+	  <svg width="2048" height="1792" viewBox="0 0 2048 1792" xmlns="http://www.w3.org/2000/svg"><path d="M640 896v512h-256v-512h256zm384-512v1024h-256v-1024h256zm1024 1152v128h-2048v-1536h128v1408h1920zm-640-896v768h-256v-768h256zm384-384v1152h-256v-1152h256z"/></svg>
+	</div>
+	<div class="infoBoxContent">
+	  <div class="text"><span>Network Difficulty</span></div>
+	  <div class="value"><span>{{network_info.difficulty_human}}</span></div>
+	</div>
+      </div>
+    </div>
 
     {{#emission}}
-        <h3 style="font-size: 12px; margin-top: 2px">
-            Monero emission (fees) is {{amount}} ({{fee_amount}}) as of {{blk_no}} block
-        </h3>
+    <div class="pure-u-1 pure-u-md-1-2 pure-u-xl-1-4">
+      <div class="infoBox">
+	<div class="infoBoxIcon">
+	  <svg width="1792" height="1792" viewBox="0 0 1792 1792" xmlns="http://www.w3.org/2000/svg"><path d="M1760 896q0 176-68.5 336t-184 275.5-275.5 184-336 68.5-336-68.5-275.5-184-184-275.5-68.5-336q0-213 97-398.5t265-305.5 374-151v228q-221 45-366.5 221t-145.5 406q0 130 51 248.5t136.5 204 204 136.5 248.5 51 248.5-51 204-136.5 136.5-204 51-248.5q0-230-145.5-406t-366.5-221v-228q206 31 374 151t265 305.5 97 398.5z"/></svg>
+	</div>
+	<div class="infoBoxContent">
+	  <div class="text"><span>Circulating Supply</span></div>
+	  <div class="value"><span>{{amount_human}} Ryo</span></div>
+	</div>
+      </div>
+    </div>
     {{/emission}}
 
-
+    <div class="pure-u-1" style="margin-left:10px;">
+      <small>
+	Server time: {{server_timestamp}}
+	| Hard fork: v{{network_info.current_hf_version}}
+	{{#network_info}}{{^is_current_info}}| Data from {{age}} {{age_format}} ago{{/is_current_info}}{{/network_info}}
+      </small>
+    </div>
+    
+  </div>
+  
 </div>
 
     {{{mempool_info}}}
@@ -71,45 +74,51 @@
       <h2 style="margin-bottom: 0px">Transactions in older blocks<!--(height: {{height}})--></h2>
     {{/is_page_zero}}
 
-    <h4 style="font-size: 14px; margin-top: 0px">(Median size of 100 blocks: {{blk_size_median}} kB)</h4>
+    <p>(Median size of 100 blocks: {{blk_size_median}} kB)</p>
 
-    <div class="center">
-
-            <table class="center">
-                <tr>
-                    <td>height</td>
-                    <td>age {{age_format}}<!--(Δm)--></td>
-                    <td>size [kB]<!--(Δm)--></td>
-                    <td>transaction hash</td>
-                    <td>fee</td>
-                    <td>outputs</td>
-                    <td>in/out/pID</td>
-                    <td>ring size</td>
-                    <td>tx size [kB]</td>
-                </tr>
-                {{#txs}}
-                <tr>
-                    <td><a href="/block/{{height}}">{{height}}</a></td>
-                    <td>{{age}}<!--{{time_delta}}--></td>
-                    <td>{{blk_size}}</td>
-                    <td><a href="/tx/{{hash}}">{{hash}}</a></td>
-                    <td>{{tx_fee_short}}</td>
-                    <td>{{sum_outputs_short}}</td>
-                    <td>{{no_inputs}}/{{no_outputs}}/{{pID}}</td>
-                    <td>{{mixin}}</td>
-                    <td>{{tx_size_short}}</td>
-                </tr>
-                {{/txs}}
-            </table>
-
-            <div id="pages" class="center" style="text-align: center;">
-             {{^is_page_zero}}
-               <a href="/page/{{prev_page}}">previous page</a> |
-               <a href="/">first page</a> |
-             {{/is_page_zero}}
-                current page: {{page_no}}/<a href="/page/{{total_page_no}}">{{total_page_no}}</a>
-                | <a href="/page/{{next_page}}">next page</a>
-            </div>
+    <div>
+      <div class="table-scroller">
+	<div class="table-container">
+          <table class="pure-table pure-table-striped">
+	    <thead>
+            <tr>
+              <th style="width:50px;">height</th>
+              <th style="width:70px;">age {{age_format}}<!--(Δm)--></th>
+              <th style="width:50px;">size [kB]<!--(Δm)--></th>
+              <th>transaction hash</th>
+              <th style="width:50px;">fee</th>
+              <th style="width:60px;">outputs</th>
+              <th style="width:80px;">in/out/pID</th>
+              <th style="width:40px;">ring size</th>
+              <th style="width:70px;">tx size [kB]</th>
+            </tr>
+	    </thead>
+	    <tbody>
+            {{#txs}}
+            <tr>
+              <td><a href="/block/{{height}}">{{height}}</a></td>
+              <td>{{age}}<!--{{time_delta}}--></td>
+              <td>{{blk_size}}</td>
+              <td><a href="/tx/{{hash}}">{{hash}}</a></td>
+              <td>{{tx_fee_short}}</td>
+              <td>{{sum_outputs_short}}</td>
+              <td>{{no_inputs}}/{{no_outputs}}/{{pID}}</td>
+              <td>{{mixin}}</td>
+              <td>{{tx_size_short}}</td>
+            </tr>
+            {{/txs}}
+	    </tbody>
+          </table>
+	</div>
+      </div>
+      <div id="pages">
+        {{^is_page_zero}}
+        <a href="/page/{{prev_page}}">previous page</a> |
+        <a href="/">first page</a> |
+        {{/is_page_zero}}
+        current page: {{page_no}} / <a href="/page/{{total_page_no}}">{{total_page_no}}</a>
+        | <a href="/page/{{next_page}}">next page</a>
+      </div>
 
     </div>
 
