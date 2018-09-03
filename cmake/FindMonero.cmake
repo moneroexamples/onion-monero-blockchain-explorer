@@ -28,7 +28,7 @@
 # (c) 2014-2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
-set(LIBS common;blocks;cryptonote_basic;cryptonote_core;multisig;
+set(LIBS common;blockchain_utilities;cryptonote_basic;cryptonote_core;multisig;
 		cryptonote_protocol;daemonizer;mnemonics;epee;lmdb;device;
 		blockchain_db;ringct;wallet;cncrypto;easylogging;version;checkpoints)
 
@@ -63,7 +63,7 @@ if (EXISTS ${MONERO_BUILD_DIR}/src/ringct/libringct_basic.a)
 	set_property(TARGET ringct_basic
 			PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/src/ringct/libringct_basic.a)
 endif()
- 
+
 
 message(STATUS ${MONERO_SOURCE_DIR}/build)
 
