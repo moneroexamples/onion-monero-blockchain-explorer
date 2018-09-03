@@ -1256,7 +1256,7 @@ public:
         // get xmr in the block reward
         context["blk_reward"]
                 = xmreg::xmr_amount_to_str(txd_coinbase.xmr_outputs - sum_fees, "{:0.6f}");
-        context["blk_diff"] = blk.difficulty;
+        context["blk_diff"] = blk.Difficulty;
         add_css_style(context);
 
         // render the page
