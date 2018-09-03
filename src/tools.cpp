@@ -1047,7 +1047,8 @@ decrypt(const std::string &ciphertext,
         return {};
     }
 
-  
+    crypto::chacha_key key;
+
     const crypto::chacha_iv &iv = *(const crypto::chacha_iv*)&ciphertext[0];
 
     std::string plaintext;
