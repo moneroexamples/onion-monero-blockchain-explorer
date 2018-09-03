@@ -1196,7 +1196,6 @@ public:
                 {"major_ver"            , std::to_string(blk.major_version)},
                 {"minor_ver"            , std::to_string(blk.minor_version)},
                 {"blk_size"             , fmt::format("{:0.4f}",
-                {"blk_diff"             , blk.difficulty},
                                                       static_cast<double>(blk_size) / 1024.0)},
         };
         context.emplace("coinbase_txs", mstch::array{{txd_coinbase.get_mstch_map()}});
@@ -1257,7 +1256,7 @@ public:
         // get xmr in the block reward
         context["blk_reward"]
                 = xmreg::xmr_amount_to_str(txd_coinbase.xmr_outputs - sum_fees, "{:0.6f}");
-
+        context["blk_diff"] = blk.difficulty;
         add_css_style(context);
 
         // render the page
