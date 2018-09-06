@@ -1947,9 +1947,9 @@ show_my_outputs(string tx_hash_str,
 
     string shortcut_url = domain
                           + (tx_prove ? "/prove" : "/myoutputs")
-                          + "/" + tx_hash_str
-                          + "/" + xmr_address_str
-                          + "/" + viewkey_str;
+                          + '/' + tx_hash_str
+                          + '/' + xmr_address_str
+                          + '/' + viewkey_str;
 
 
     string viewkey_str_partial = viewkey_str;
@@ -1990,11 +1990,10 @@ show_my_outputs(string tx_hash_str,
     // public transaction key is combined with our viewkey
     // to create, so called, derived key.
     key_derivation derivation;
-    std::vector<key_derivation> additional_derivations(txd.additional_pks.size());
+    std::vector<key_derivation> additional_derivations(txd.additional_pks.size());   
 
-    //cout << multiple_tx_secret_keys.size() << " " <<  txd.additional_pks.size() + 1 << '\n';
-
-    if (tx_prove && multiple_tx_secret_keys.size() != txd.additional_pks.size() + 1)
+    if (tx_prove && multiple_tx_secret_keys.size()
+            != txd.additional_pks.size() + 1)
     {
         return string("This transaction includes additional tx pubkeys whose "
                        "size doesn't match with the provided tx secret keys");
@@ -2034,7 +2033,8 @@ show_my_outputs(string tx_hash_str,
 
     if (decrypted_payment_id8 != null_hash8)
     {
-        if (mcore->get_device()->decrypt_payment_id(decrypted_payment_id8, pub_key, prv_view_key))
+        if (mcore->get_device()->decrypt_payment_id(
+                    decrypted_payment_id8, pub_key, prv_view_key))
         {
             context["decrypted_payment_id8"] = pod_to_hex(decrypted_payment_id8);
         }
@@ -2071,7 +2071,8 @@ show_my_outputs(string tx_hash_str,
 
         bool with_additional = false;
 
-        if (!mine_output && txd.additional_pks.size() == txd.output_pub_keys.size())
+        if (!mine_output && txd.additional_pks.size()
+                == txd.output_pub_keys.size())
         {
             derive_public_key(additional_derivations[output_idx],
                               output_idx,
@@ -2096,15 +2097,17 @@ show_my_outputs(string tx_hash_str,
 
                 bool r;
 
-                r = decode_ringct(tx.rct_signatures,
-                                  with_additional ? additional_derivations[output_idx] : derivation,
-                                  output_idx,
-                                  tx.rct_signatures.ecdhInfo[output_idx].mask,
-                                  rct_amount);
+                r = decode_ringct(
+                            tx.rct_signatures,
+                            with_additional
+                              ? additional_derivations[output_idx] : derivation,
+                            output_idx,
+                            tx.rct_signatures.ecdhInfo[output_idx].mask,
+                            rct_amount);
 
                 if (!r)
                 {
-                    cerr << "\nshow_my_outputs: Cant decode ringCT! " << endl;
+                    cerr << "\nshow_my_outputs: Cant decode RingCT!\n";
                 }
 
                 outp.second         = rct_amount;
@@ -2148,9 +2151,14 @@ show_my_outputs(string tx_hash_str,
     // parefct matches must be equal to number of inputs in a tx.
     uint64_t no_of_matched_mixins {0};
 
+    // Hold all possible mixins that we found. This is only used so that
+    // we get number of all posibilities, and their total xmr amount
+    // (useful for unit testing)
+    //                     public_key    , amount
+    std::vector<std::pair<crypto::public_key, uint64_t>> all_possible_mixins;
+
     for (const txin_to_key& in_key: input_key_imgs)
     {
-
         // get absolute offsets of mixins
         std::vector<uint64_t> absolute_offsets
                 = cryptonote::relative_output_offsets_to_absolute(
@@ -2231,10 +2239,9 @@ show_my_outputs(string tx_hash_str,
 
                 string out_msg = fmt::format(
                         "Output with amount {:d} and index {:d} does not exist!",
-                        in_key.amount, abs_offset
-                );
+                        in_key.amount, abs_offset);
 
-                cerr << out_msg << endl;
+                cerr << out_msg << '\n';
 
                 break;
             }
@@ -2250,7 +2257,6 @@ show_my_outputs(string tx_hash_str,
             if (!mcore->get_tx(tx_out_idx.first, mixin_tx))
             {
                 cerr << "Cant get tx: " << tx_out_idx.first << endl;
-
                 break;
             }
 
@@ -2258,33 +2264,35 @@ show_my_outputs(string tx_hash_str,
 
             mixins.push_back(mstch::map{
                     {"mixin_pub_key"      , out_pub_key_str},
-                    make_pair<string, mstch::array>("mixin_outputs"      , mstch::array{}),
-                    {"has_mixin_outputs"  , false}
-            });
+                    make_pair<string, mstch::array>("mixin_outputs"
+                                                    , mstch::array{}),
+                    {"has_mixin_outputs"  , false}});
 
             mstch::array& mixin_outputs = boost::get<mstch::array>(
-                    boost::get<mstch::map>(mixins.back())["mixin_outputs"]
-            );
+                    boost::get<mstch::map>(mixins.back())["mixin_outputs"]);
 
             mstch::node& has_mixin_outputs
                     = boost::get<mstch::map>(mixins.back())["has_mixin_outputs"];
 
-
             bool found_something {false};
-
 
             public_key mixin_tx_pub_key
                     = xmreg::get_tx_pub_key_from_received_outs(mixin_tx);
-            std::vector<public_key> mixin_additional_tx_pub_keys = cryptonote::get_additional_tx_pub_keys_from_extra(mixin_tx);
+
+            std::vector<public_key> mixin_additional_tx_pub_keys
+                    = cryptonote::get_additional_tx_pub_keys_from_extra(mixin_tx);
 
             string mixin_tx_pub_key_str = pod_to_hex(mixin_tx_pub_key);
 
             // public transaction key is combined with our viewkey
             // to create, so called, derived key.
             key_derivation derivation;
-            std::vector<key_derivation> additional_derivations(mixin_additional_tx_pub_keys.size());
 
-            if (!generate_key_derivation(mixin_tx_pub_key, prv_view_key, derivation))
+            std::vector<key_derivation> additional_derivations(
+                        mixin_additional_tx_pub_keys.size());
+
+            if (!generate_key_derivation(mixin_tx_pub_key,
+                                         prv_view_key, derivation))
             {
                 cerr << "Cant get derived key for: "  << "\n"
                      << "pub_tx_key: " << mixin_tx_pub_key << " and "
@@ -2294,11 +2302,13 @@ show_my_outputs(string tx_hash_str,
             }
             for (size_t i = 0; i < mixin_additional_tx_pub_keys.size(); ++i)
             {
-                if (!generate_key_derivation(mixin_additional_tx_pub_keys[i], prv_view_key, additional_derivations[i]))
+                if (!generate_key_derivation(mixin_additional_tx_pub_keys[i],
+                                             prv_view_key,
+                                             additional_derivations[i]))
                 {
                     cerr << "Cant get derived key for: "  << "\n"
-                         << "pub_tx_key: " << mixin_additional_tx_pub_keys[i] << " and "
-                         << "prv_view_key" << prv_view_key << endl;
+                         << "pub_tx_key: " << mixin_additional_tx_pub_keys[i]
+                         << " and prv_view_key" << prv_view_key << endl;
 
                     continue;
                 }
@@ -2312,25 +2322,30 @@ show_my_outputs(string tx_hash_str,
             mixin_outputs.push_back(mstch::map{
                     {"mix_tx_hash"      , mixin_tx_hash_str},
                     {"mix_tx_pub_key"   , mixin_tx_pub_key_str},
-                    make_pair<string, mstch::array>("found_outputs"    , mstch::array{}),
+                    make_pair<string, mstch::array>("found_outputs"
+                                                    , mstch::array{}),
                     {"has_found_outputs", false}
             });
 
             mstch::array& found_outputs = boost::get<mstch::array>(
-                    boost::get<mstch::map>(mixin_outputs.back())["found_outputs"]
+                    boost::get<mstch::map>(
+                            mixin_outputs.back())["found_outputs"]
             );
 
             mstch::node& has_found_outputs
-                    = boost::get<mstch::map>(mixin_outputs.back())["has_found_outputs"];
+                    = boost::get<mstch::map>(
+                        mixin_outputs.back())["has_found_outputs"];
+
+            uint64_t ringct_amount {0};
 
             // for each output in mixin tx, find the one from key_image
             // and check if its ours.
             for (const auto& mix_out: output_pub_keys)
             {
 
-                txout_to_key txout_k      = std::get<0>(mix_out);
+                txout_to_key const& txout_k      = std::get<0>(mix_out);
                 uint64_t amount           = std::get<1>(mix_out);
-                uint64_t output_idx_in_tx = std::get<2>(mix_out);
+                uint64_t output_idx_in_tx = std::get<2>(mix_out);             
 
                 //cout << " - " << pod_to_hex(txout_k.key) << endl;
 
@@ -2353,14 +2368,19 @@ show_my_outputs(string tx_hash_str,
 
                 // check if generated public key matches the current output's key
                 bool mine_output = (txout_k.key == tx_pubkey_generated);
+
                 bool with_additional = false;
-                if (!mine_output && mixin_additional_tx_pub_keys.size() == output_pub_keys.size())
+
+                if (!mine_output && mixin_additional_tx_pub_keys.size()
+                        == output_pub_keys.size())
                 {
                     derive_public_key(additional_derivations[output_idx_in_tx],
                                       output_idx_in_tx,
                                       address_info.address.m_spend_public_key,
                                       tx_pubkey_generated);
+
                     mine_output = (txout_k.key == tx_pubkey_generated);
+
                     with_additional = true;
                 }
 
@@ -2376,16 +2396,17 @@ show_my_outputs(string tx_hash_str,
 
                         bool r;
 
-                        r = decode_ringct(mixin_tx.rct_signatures,
-                                          with_additional ? additional_derivations[output_idx_in_tx] : derivation,
-                                          output_idx_in_tx,
-                                          mixin_tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask,
-                                          rct_amount);
+                        r = decode_ringct(
+                                    mixin_tx.rct_signatures,
+                                    with_additional
+                                    ? additional_derivations[output_idx_in_tx] : derivation,
+                                    output_idx_in_tx,
+                                    mixin_tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask,
+                                    rct_amount);
 
                         if (!r)
-                        {
-                            cerr << "show_my_outputs: key images: Cant decode ringCT!" << endl;
-                        }
+                            cerr << "show_my_outputs: key images: "
+                                    "Cant decode RingCT!\n";
 
                         amount = rct_amount;
 
@@ -2412,21 +2433,17 @@ show_my_outputs(string tx_hash_str,
                 });
 
                 //cout << "txout_k.key == output_data.pubkey" << endl;
-                //cout << pod_to_hex(txout_k.key) << " == " << pod_to_hex(output_data.pubkey) << endl;
 
                 if (mine_output)
                 {
-
                     found_something = true;
-                    show_key_images = true;
+                    show_key_images = true;                   
 
                     // increase sum_mixin_xmr only when
                     // public key of an outputs used in ring signature,
                     // matches a public key in a mixin_tx
                     if (txout_k.key != output_data.pubkey)
-                    {
-                        continue;
-                    }
+                        continue;              
 
                     // sum up only first output matched found in each input
                     if (no_of_output_matches_found == 0)
@@ -2444,6 +2461,7 @@ show_my_outputs(string tx_hash_str,
                         else if (mixin_tx.version == 2) // ringct
                         {
                             sum_mixin_xmr += amount;
+                            ringct_amount += amount;
                         }
 
                         no_of_matched_mixins++;
@@ -2469,11 +2487,9 @@ show_my_outputs(string tx_hash_str,
 //                                << ", key_img == input_key: " << (key_img == in_key.k_image)
 //                                << endl;
 
-
-
                     no_of_output_matches_found++;
 
-                }
+                } // if (mine_output)
 
             } // for (const pair<txout_to_key, uint64_t>& mix_out: txd.output_pub_keys)
 
@@ -2481,11 +2497,16 @@ show_my_outputs(string tx_hash_str,
 
             has_mixin_outputs = found_something;
 
+            //   all_possible_mixins_amount += amount;
+
+            if (found_something)
+                all_possible_mixins.push_back(
+                    {mixin_tx_pub_key,
+                     in_key.amount == 0 ? ringct_amount : in_key.amount});
+
             ++count;
 
         } // for (const cryptonote::output_data_t& output_data: mixin_outputs)
-
-
 
     } //  for (const txin_to_key& in_key: input_key_imgs)
 
@@ -2504,6 +2525,23 @@ show_my_outputs(string tx_hash_str,
 
 
     uint64_t possible_spending  {0};
+
+    //cout << "\nall_possible_mixins: " << all_possible_mixins.size() << '\n';
+
+    // useful for unit testing as it provides total xmr sum
+    // of possible mixins
+    uint64_t all_possible_mixins_amount1  {0};
+
+    for (auto& p: all_possible_mixins)
+        all_possible_mixins_amount1 += p.second;
+
+    //cout << "\all_possible_mixins_amount: " << all_possible_mixins_amount1 << '\n';
+
+    //cout << "\nmixins: " << mix << '\n';
+
+    context["no_all_possible_mixins"] = all_possible_mixins.size();
+    context["all_possible_mixins_amount"] = all_possible_mixins_amount1;
+
 
     // show spending only if sum of mixins is more than
     // what we get + fee, and number of perferctly matched
