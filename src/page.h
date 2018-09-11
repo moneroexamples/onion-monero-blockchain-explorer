@@ -653,7 +653,7 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
         crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
 
         // get block size in kB
-        double blk_size = static_cast<double>(core_storage->get_db().get_block_size(i))/1024.0;
+        double blk_size = static_cast<double>(core_storage->get_db().get_block_weight(i))/1024.0;
 
         string blk_size_str = fmt::format("{:0.2f}", blk_size);
 
@@ -1225,7 +1225,7 @@ show_block(uint64_t _blk_height)
     }
 
     // get block size in bytes
-    uint64_t blk_size = core_storage->get_db().get_block_size(_blk_height);
+    uint64_t blk_size = core_storage->get_db().get_block_weight(_blk_height);
 
     // miner reward tx
     transaction coinbase_tx = blk.miner_tx;
@@ -4610,7 +4610,7 @@ json_block(string block_no_or_hash)
 
 
     // get block size in bytes
-    uint64_t blk_size = core_storage->get_db().get_block_size(block_height);
+    uint64_t blk_size = core_storage->get_db().get_block_weight(block_height);
 
     // miner reward tx
     transaction coinbase_tx = blk.miner_tx;
@@ -4839,7 +4839,7 @@ json_transactions(string _page, string _limit)
         }
 
         // get block size in bytes
-        double blk_size = core_storage->get_db().get_block_size(i);
+        double blk_size = core_storage->get_db().get_block_weight(i);
 
         crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
 
