@@ -256,8 +256,8 @@ struct tx_details
 
             mixin_str        = std::to_string(mixin_no);
             fee_str          = fmt::format("{:0.6f}", xmr_amount);
-            fee_short_str    = fmt::format("{:0.3f}", xmr_amount);
-            payed_for_kB_str = fmt::format("{:0.3f}", payed_for_kB);
+            fee_short_str    = fmt::format("{:0.4f}", xmr_amount);
+            payed_for_kB_str = fmt::format("{:0.4f}", payed_for_kB);
         }
 
 
@@ -5542,7 +5542,7 @@ json_emission()
 
         string emission_blk_no   = std::to_string(current_values.blk_no - 1);
         string emission_coinbase = xmr_amount_to_str(current_values.coinbase, "{:0.3f}");
-        string emission_fee      = xmr_amount_to_str(current_values.fee, "{:0.3f}", false);
+        string emission_fee      = xmr_amount_to_str(current_values.fee, "{:0.4f}", false);
 
         j_data = json {
                 {"blk_no"  , current_values.blk_no - 1},
