@@ -2539,7 +2539,7 @@ show_my_outputs(string tx_hash_str,
 
     //cout << "\nmixins: " << mix << '\n';
 
-    context["no_all_possible_mixins"] = all_possible_mixins.size();
+    context["no_all_possible_mixins"] = static_cast<uint64_t>(all_possible_mixins.size());
     context["all_possible_mixins_amount"] = all_possible_mixins_amount1;
 
 
