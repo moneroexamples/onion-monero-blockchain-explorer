@@ -256,8 +256,8 @@ struct tx_details
 
             mixin_str        = std::to_string(mixin_no);
             fee_str          = fmt::format("{:0.6f}", xmr_amount);
-            fee_short_str    = fmt::format("{:0.3f}", xmr_amount);
-            payed_for_kB_str = fmt::format("{:0.3f}", payed_for_kB);
+            fee_short_str    = fmt::format("{:0.4f}", xmr_amount);
+            payed_for_kB_str = fmt::format("{:0.4f}", payed_for_kB);
         }
 
 
@@ -653,7 +653,7 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
         crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
 
         // get block size in kB
-        double blk_size = static_cast<double>(core_storage->get_db().get_block_size(i))/1024.0;
+        double blk_size = static_cast<double>(core_storage->get_db().get_block_weight(i))/1024.0;
 
         string blk_size_str = fmt::format("{:0.2f}", blk_size);
 
@@ -1225,7 +1225,7 @@ show_block(uint64_t _blk_height)
     }
 
     // get block size in bytes
-    uint64_t blk_size = core_storage->get_db().get_block_size(_blk_height);
+    uint64_t blk_size = core_storage->get_db().get_block_weight(_blk_height);
 
     // miner reward tx
     transaction coinbase_tx = blk.miner_tx;
@@ -2539,7 +2539,7 @@ show_my_outputs(string tx_hash_str,
 
     //cout << "\nmixins: " << mix << '\n';
 
-    context["no_all_possible_mixins"] = all_possible_mixins.size();
+    context["no_all_possible_mixins"] = static_cast<uint64_t>(all_possible_mixins.size());
     context["all_possible_mixins_amount"] = all_possible_mixins_amount1;
 
 
@@ -4610,7 +4610,7 @@ json_block(string block_no_or_hash)
 
 
     // get block size in bytes
-    uint64_t blk_size = core_storage->get_db().get_block_size(block_height);
+    uint64_t blk_size = core_storage->get_db().get_block_weight(block_height);
 
     // miner reward tx
     transaction coinbase_tx = blk.miner_tx;
@@ -4839,7 +4839,7 @@ json_transactions(string _page, string _limit)
         }
 
         // get block size in bytes
-        double blk_size = core_storage->get_db().get_block_size(i);
+        double blk_size = core_storage->get_db().get_block_weight(i);
 
         crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
 
@@ -5542,7 +5542,7 @@ json_emission()
 
         string emission_blk_no   = std::to_string(current_values.blk_no - 1);
         string emission_coinbase = xmr_amount_to_str(current_values.coinbase, "{:0.3f}");
-        string emission_fee      = xmr_amount_to_str(current_values.fee, "{:0.3f}", false);
+        string emission_fee      = xmr_amount_to_str(current_values.fee, "{:0.4f}", false);
 
         j_data = json {
                 {"blk_no"  , current_values.blk_no - 1},
