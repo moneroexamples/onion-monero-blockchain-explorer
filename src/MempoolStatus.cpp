@@ -139,9 +139,12 @@ MempoolStatus::read_mempool()
 
         mempool_size_kB += _tx_info.blob_size;
 
-        local_copy_of_mempool_txs.push_back(mempool_tx {tx_hash, tx});
+        local_copy_of_mempool_txs.push_back(mempool_tx{});
 
         mempool_tx& last_tx = local_copy_of_mempool_txs.back();
+
+        last_tx.tx_hash = tx_hash;
+        last_tx.tx = tx;
 
         // key images of inputs
         vector<txin_to_key> input_key_imgs;
