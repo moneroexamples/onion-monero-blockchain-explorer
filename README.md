@@ -114,7 +114,7 @@ cd monero/
 # checkout last monero version
 git checkout -b last_release v0.12.1.0
 
-make
+USE_SINGLE_BUILDDIR=1 make
 ```
 
 ##### Compile and run the explorer
