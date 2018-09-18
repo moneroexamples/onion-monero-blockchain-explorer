@@ -111,8 +111,6 @@ git clone --recursive https://github.com/monero-project/monero
 
 cd monero/
 
-# checkout last monero version
-git checkout -b last_release v0.12.1.0
 
 USE_SINGLE_BUILDDIR=1 make
 ```
