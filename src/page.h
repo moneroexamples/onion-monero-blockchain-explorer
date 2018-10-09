@@ -1256,6 +1256,7 @@ public:
         // get xmr in the block reward
         context["blk_reward"]
                 = xmreg::xmr_amount_to_str(txd_coinbase.xmr_outputs - sum_fees, "{:0.6f}");
+
         add_css_style(context);
 
         // render the page
@@ -6357,3 +6358,4 @@ private:
 
 
 #endif //CROWXMR_PAGE_H
+
