@@ -935,7 +935,7 @@ decode_ringct(rct::rctSig const& rv,
         switch (rv.type)
         {
             case rct::RCTTypeSimple:
-            case rct::RCTTypeSimpleBulletproof:
+            case rct::RCTTypeBulletproof:
                 amount = rct::decodeRctSimple(rv,
                                               rct::sk2rct(scalar1),
                                               i,
@@ -943,7 +943,6 @@ decode_ringct(rct::rctSig const& rv,
                                               hw::get_device("default"));
                 break;
             case rct::RCTTypeFull:
-            case rct::RCTTypeFullBulletproof:
                 amount = rct::decodeRct(rv,
                                         rct::sk2rct(scalar1),
                                         i,
@@ -1047,8 +1046,8 @@ decrypt(const std::string &ciphertext,
         return {};
     }
 
-
-
+    crypto::chacha_key key;
+    crypto::generate_chacha_key(std::string((const char*)&password, sizeof(password)), chacha_key, 1);
     const crypto::chacha_iv &iv = *(const crypto::chacha_iv*)&ciphertext[0];
 
     std::string plaintext;
