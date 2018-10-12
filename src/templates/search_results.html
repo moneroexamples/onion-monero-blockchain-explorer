@@ -1,146 +1,181 @@
 
-<h3>Search results for:</h3>
-<code class="line-break">{{search_text}}</code>
+  <h3> Search results for: {{search_text}} </h3>
 
-{{#no_results}}
-<div>
-  <p>Nothing in the blockchain has been found that matches the search term.</p>
-  <p>Note: there might be some delay when newest txs become searchable</p>
-</div>
-{{/no_results}}
+  {{#no_results}}
+    <h4 style="margin-bottom:2px">Nothing in the blockchain has been found that matches the search term :-(</h4>
+    <h5 style="margin:2px">Note: there might be some delay when newest txs become searchable</h5>
+  {{/no_results}}
 
+   {{#to_many_results}}
+    <h3>More than 500 results found. Showing no more than this</h3>
+   {{/to_many_results}}
 
-{{#to_many_results}}
-<p>More than 500 results found. Showing no more than this</p>
-{{/to_many_results}}
+  <div>
 
+    {{#has_key_images}}
 
-{{#has_key_images}}
-<div>
-  <h3>The search term matches key image found in the following transaction</h3>
-  <table class="center" style="width:90%">
-    {{>tx_table_head}}
-    {{#key_images}}
-    {{>tx_table_row}}
-    {{/key_images}}
-  </table>
-</div>
-{{/has_key_images}}
+        <h3>The search term matches key image found in the following transaction</h3>
 
+        <table class="center" style="width:90%">
+            {{>tx_table_head}}
+            {{#key_images}}
+                {{>tx_table_row}}
+            {{/key_images}}
+        </table>
 
-{{#has_tx_public_keys}}
-<div>
-  <h3>The search term matches tx public key of the following transaction</h3>
-  <table class="center" style="width:90%">
-    {{>tx_table_head}}
-    {{#tx_public_keys}}
-    {{>tx_table_row}}
-    {{/tx_public_keys}}
-  </table>
-</div>
-{{/has_tx_public_keys}}
+    {{/has_key_images}}
 
+  </div>
 
-{{#has_payments_id}}
-<div>
-  <h3>The search term matches payment id found in the following transaction(s)</h3>
-  <table class="center" style="width:90%">
-    {{>tx_table_head}}
-    {{#payments_id}}
-    {{>tx_table_row}}
-    {{/payments_id}}
-  </table>
-</div>
-{{/has_payments_id}}
+  <div>
 
+      {{#has_tx_public_keys}}
 
-{{#has_encrypted_payments_id}}
-<div>
-  <h3>The search term matches encrypted payment id found in the following transaction(s)</h3>
-  <table class="center" style="width:90%">
-    {{>tx_table_head}}
-    {{#encrypted_payments_id}}
-    {{>tx_table_row}}
-    {{/encrypted_payments_id}}
-  </table>
-</div>
-{{/has_encrypted_payments_id}}
+        <h3>The search term matches tx public key of the following transaction</h3>
 
+        <table class="center" style="width:90%">
+            {{>tx_table_head}}
+            {{#tx_public_keys}}
+                {{>tx_table_row}}
+            {{/tx_public_keys}}
+        </table>
 
-{{#has_output_public_keys}}
-<div>
-  <h3>The search term matches output public key found in the following transaction(s)</h3>
-  <table class="center" style="width:90%">
-    {{>tx_table_head}}
-    {{#output_public_keys}}
-    {{>tx_table_row}}
-    {{/output_public_keys}}
-  </table>
-</div>
-{{/has_output_public_keys}}
+    {{/has_tx_public_keys}}
 
+  </div>
 
-{{#has_output_public_keys_based_on_global_idx}}
-<div>
-  <h3>The search term matches global index of an output in the following transaction(s)</h3>
-  <table class="center" style="width:90%">
-    {{>tx_table_head}}
-    {{#output_public_keys_based_on_global_idx}}
-    {{>tx_table_row}}
-    {{/output_public_keys_based_on_global_idx}}
-  </table>
-</div>
-{{/has_output_public_keys_based_on_global_idx}}
+  <div>
 
+    {{#has_payments_id}}
 
-{{#has_output_public_keys_based_on_amount_idx}}
-<div>
-  <h3>The search term matches amount index and an amount of an output
-    in the following transaction(s)</h3>
-  <table class="center" style="width:90%">
-    {{>tx_table_head}}
-    {{#output_public_keys_based_on_amount_idx}}
-    {{>tx_table_row}}
-    {{/output_public_keys_based_on_amount_idx}}
-  </table>
-</div>
-{{/has_output_public_keys_based_on_amount_idx}}
+    <h3>The search term matches payment id found in the following transaction(s)</h3>
 
+    <table class="center" style="width:90%">
+        {{>tx_table_head}}
+        {{#payments_id}}
+            {{>tx_table_row}}
+        {{/payments_id}}
+    </table>
 
-{{#has_tx_in_the_minute}}
-<div>
-  <h3>Transactions performed in the given minute</h3>
-  <table class="center" style="width:90%">
-    {{>tx_table_head}}
-    {{#tx_in_the_minute}}
-    {{>tx_table_row}}
-    {{/tx_in_the_minute}}
-  </table>
-</div>
-{{/has_tx_in_the_minute}}
+    {{/has_payments_id}}
 
+  </div>
 
-{{#has_tx_in_the_hour}}
-<div>
-  <h3>Transactions performed in the given hour</h3>
-  <table class="center" style="width:90%">
-    {{>tx_table_head}}
-    {{#tx_in_the_hour}}
-    {{>tx_table_row}}
-    {{/tx_in_the_hour}}
-  </table>
-</div>
-{{/has_tx_in_the_hour}}
+    {{#has_encrypted_payments_id}}
+
+    <h3>The search term matches encrypted payment id found in the following transaction(s)</h3>
+
+    <table class="center" style="width:90%">
+        {{>tx_table_head}}
+        {{#encrypted_payments_id}}
+            {{>tx_table_row}}
+        {{/encrypted_payments_id}}
+    </table>
+
+    {{/has_encrypted_payments_id}}
+
+  </div>
+
+  <div>
+
+    {{#has_output_public_keys}}
+
+    <h3>The search term matches output public key found in the following transaction(s)</h3>
+
+    <table class="center" style="width:90%">
+        {{>tx_table_head}}
+        {{#output_public_keys}}
+            {{>tx_table_row}}
+        {{/output_public_keys}}
+    </table>
+
+    {{/has_output_public_keys}}
+
+  </div>
+
+  <div>
+
+    {{#has_output_public_keys_based_on_global_idx}}
+
+    <h3>The search term matches global index of an output in the following transaction(s)</h3>
+
+    <table class="center" style="width:90%">
+        {{>tx_table_head}}
+        {{#output_public_keys_based_on_global_idx}}
+            {{>tx_table_row}}
+        {{/output_public_keys_based_on_global_idx}}
+    </table>
+
+    {{/has_output_public_keys_based_on_global_idx}}
+
+  </div>
+
+  <div>
+
+    {{#has_output_public_keys_based_on_amount_idx}}
+
+    <h3>The search term matches amount index and an amount of an output
+        in the following transaction(s)</h3>
+
+    <table class="center" style="width:90%">
+        {{>tx_table_head}}
+        {{#output_public_keys_based_on_amount_idx}}
+            {{>tx_table_row}}
+        {{/output_public_keys_based_on_amount_idx}}
+    </table>
+
+    {{/has_output_public_keys_based_on_amount_idx}}
+
+  </div>
 
 
-{{#has_tx_in_the_day}}
-<div>
-  <h3>Transactions performed in the given day</h3>
-  <table class="center" style="width:90%">
-    {{>tx_table_head}}
-    {{#tx_in_the_day}}
-    {{>tx_table_row}}
-    {{/tx_in_the_day}}
-  </table>
-</div>
-{{/has_tx_in_the_day}}
+  <div>
+
+      {{#has_tx_in_the_minute}}
+
+      <h3>Transactions performed in the given minute</h3>
+
+      <table class="center" style="width:90%">
+          {{>tx_table_head}}
+          {{#tx_in_the_minute}}
+          {{>tx_table_row}}
+          {{/tx_in_the_minute}}
+      </table>
+
+      {{/has_tx_in_the_minute}}
+
+  </div>
+
+  <div>
+
+      {{#has_tx_in_the_hour}}
+
+      <h3>Transactions performed in the given hour</h3>
+
+      <table class="center" style="width:90%">
+          {{>tx_table_head}}
+          {{#tx_in_the_hour}}
+          {{>tx_table_row}}
+          {{/tx_in_the_hour}}
+      </table>
+
+      {{/has_tx_in_the_hour}}
+
+  </div>
+
+  <div>
+
+      {{#has_tx_in_the_day}}
+
+      <h3>Transactions performed in the given day</h3>
+
+      <table class="center" style="width:90%">
+          {{>tx_table_head}}
+          {{#tx_in_the_day}}
+          {{>tx_table_row}}
+          {{/tx_in_the_day}}
+      </table>
+
+      {{/has_tx_in_the_day}}
+
+  </div>

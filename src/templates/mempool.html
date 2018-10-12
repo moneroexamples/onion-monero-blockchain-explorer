@@ -1,47 +1,40 @@
 <h2 style="margin-bottom: 0px">
-  Transaction pool
+   Transaction pool
 </h2>
-<p>(no of txs: {{mempool_size}}, size: {{mempool_size_kB}} kB, updated every {{ mempool_refresh_time }} seconds)</p>
-<div>
-  <div class="table-scroller">
-    <div class="table-container">
-      <table class="pure-table pure-table-striped">
-	<thead>
-          <tr>
-            <th style="width:90px">age [h:m:s]</th>
-            <th>transaction hash</th>
-            <th style="width:100px">fee/per_kB</th>
-            <!--<th>outputs</th>-->
-            <th style="width:80px">in/out/pID</th>
-            <th style="width:40px">ring size</th>
-            <th style="width:70px">tx size [kB]</th>
-          </tr>
-	</thead>
-	<tbody>
-          {{#mempooltxs}}
-          <tr>
-            <td>{{age}}</td>
-            <td><a href="/tx/{{hash}}">{{hash}}</a></td>
-            <td>{{fee}}/{{payed_for_kB}}</td>
-            <!--<td>{{xmr_outputs}}</td>-->
-            <td>{{no_inputs}}/{{no_outputs}}/{{pID}}</td>
-            <td>{{mixin}}</td>
-            <td>{{txsize}}</td>
-          </tr>
-          {{/mempooltxs}}
-	</tbody>
-      </table>
-    </div>
-  </div>
+<h4 style="font-size: 12px; margin-top: 0px">(no of txs: {{mempool_size}}, size: {{mempool_size_kB}} kB, updated every {{ mempool_refresh_time }} seconds)</h4>
+<div class="center">
+    
+      <table class="center" style="width:80%">
+            <tr>
+                <td>age [h:m:s]</td>
+                <td>transaction hash</td>
+                <td>fee/per_kB</td>
+                <!--<td>outputs</td>-->
+                <td>in/out/pID</td>
+                <td>ring size</td>
+                <td>tx size [kB]</td>
+            </tr>
+            {{#mempooltxs}}
+            <tr>
+                <td>{{age}}</td>
+                <td><a href="/tx/{{hash}}">{{hash}}</a></td>
+                <td>{{fee}}/{{payed_for_kB}}</td>
+                <!--<td>{{xmr_outputs}}</td>-->
+                <td>{{no_inputs}}/{{no_outputs}}/{{pID}}</td>
+                <td>{{mixin}}</td>
+                <td>{{txsize}}</td>
+            </tr>
+            {{/mempooltxs}}
+        </table>
 
-  {{^mempool_fits_on_front_page}}
-  {{#partial_mempool_shown}}
-  <div class="center" style="text-align: center; margin-bottom: 10px">
-    <a href="/txpool">Only {{no_of_mempool_tx_of_frontpage}} txs shown. Click here to see all of them</a>
-  </div>
-  {{/partial_mempool_shown}}
+    {{^mempool_fits_on_front_page}}
+      {{#partial_mempool_shown}}
+      <div class="center" style="text-align: center; margin-bottom: 10px">
+          <a href="/txpool">Only {{no_of_mempool_tx_of_frontpage}} txs shown. Click here to see all of them</a>
+      </div>
+      {{/partial_mempool_shown}}
 
-  {{/mempool_fits_on_front_page}}
+    {{/mempool_fits_on_front_page}}
 
 
 </div>
