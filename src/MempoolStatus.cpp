@@ -267,6 +267,7 @@ MempoolStatus::read_network_info()
     local_copy.cumulative_difficulty      = rpc_network_info.cumulative_difficulty;
     local_copy.block_size_limit           = rpc_network_info.block_size_limit;
     local_copy.block_size_median          = rpc_network_info.block_size_median;
+    local_copy.block_weight_limit         = rpc_network_info.block_weight_limit;
     local_copy.start_time                 = rpc_network_info.start_time;
 
 
