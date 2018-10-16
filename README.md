@@ -693,7 +693,6 @@ Example result:
 
 ```json
 {
-{
   "data": {
     "address": "0182d5be0f708cecf2b6f9889738bde5c930fad846d5b530e021afd1ae7e24a687ad50af3a5d38896655669079ad0163b4a369f6c852cc816dace5fc7792b72f",
     "height": 960526,
