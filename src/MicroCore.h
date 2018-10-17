@@ -44,6 +44,9 @@ namespace xmreg
         Blockchain&
         get_core();
 
+        tx_memory_pool&
+        get_mempool();
+
         bool
         get_block_by_height(const uint64_t& height, block& blk);
 
@@ -59,14 +62,11 @@ namespace xmreg
                           tx_out& out,
                           size_t& output_index);
 
-        bool
-        get_tx_hash_from_output_pubkey(const public_key& output_pubkey,
-                                       const uint64_t& block_height,
-                                       crypto::hash& tx_hash,
-                                       transaction& tx_found);
-
         uint64_t
         get_blk_timestamp(uint64_t blk_height);
+
+        bool
+        get_block_complete_entry(block const& b, block_complete_entry& bce);
 
         string
         get_blkchain_path();

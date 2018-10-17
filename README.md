@@ -28,24 +28,22 @@ Tor users:
  - [http://dvwae436pd7nt4bc.onion](http://dvwae436pd7nt4bc.onion) (Front-end templates are [maintained by @suhz](https://github.com/suhz/onion-monero-blockchain-explorer/tree/moneroexplorer.com/src/templates)).
 
 Clearnet versions:
- - [https://labor.serveo.net/](https://labor.serveo.net/) - temprorary link (slow), bleading edge version.
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
  - [https://MoneroExplorer.com/](https://moneroexplorer.com/) - nice looking one, https enabled.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
- - [https://moneroexplorer.pro/](https://moneroexplorer.pro/) - nice looking one, https enabled.
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
  - [https://blox.minexmr.com/](https://blox.minexmr.com/) - - https enabled.
 
 Testnet version:
 
- - [http://nimis.serveo.net/](http://nimis.serveo.net/) - bleeding edge version (down currently).
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
  - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
 
 Stagenet version:
 
- - [http://162.210.173.150:8083/](http://162.210.173.150:8083/) - recent version.
+ - [https://stagenet.xmrchain.net/](https://stagenet.xmrchain.net/)
+ - [http://162.210.173.150:8083/](http://162.210.173.150:8083/)
 
 i2p users (main Monero network):
 
@@ -54,7 +52,6 @@ i2p users (main Monero network):
 Alternative block explorers:
 
 - [http://moneroblocks.info](http://moneroblocks.info/)
-- [https://monerobase.com](https://monerobase.com/)
 - [https://monerovision.com](https://monerovision.com)
 - [http://chainradar.com](http://chainradar.com/xmr/blocks)
 
@@ -93,7 +90,7 @@ Current development branch:
 
 ## Compilation on Ubuntu 16.04/18.04
 
-##### Compile latest Monero development version
+##### Compile latest Monero version (0.13)
 
 Download and compile recent Monero into your home folder:
 
@@ -110,10 +107,8 @@ git clone --recursive https://github.com/monero-project/monero
 
 cd monero/
 
-# checkout last monero version
-git checkout -b last_release v0.12.1.0
 
-make
+USE_SINGLE_BUILDDIR=1 make
 ```
 
 ##### Compile and run the explorer
@@ -697,7 +692,6 @@ curl  -w "\n" -X GET http://127.0.0.1:8081/api/outputsblocks?address=9sDyNU82ih1
 Example result:
 
 ```json
-{
 {
   "data": {
     "address": "0182d5be0f708cecf2b6f9889738bde5c930fad846d5b530e021afd1ae7e24a687ad50af3a5d38896655669079ad0163b4a369f6c852cc816dace5fc7792b72f",

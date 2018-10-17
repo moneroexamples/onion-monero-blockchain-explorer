@@ -30,6 +30,11 @@
             <td>Total fees:</td><td>{{sum_fees}}</td>
             <td>No of txs:</td><td>{{no_txs}}</td>
         </tr>
+        <tr>
+            <td>PoW hash:</td><td>{{blk_pow_hash}}</td>
+            <td>Difficulty:</td><td>{{blk_difficulty}}</td>
+            <td></td>
+        </tr>
     </table>
 
     <h3>Miner reward transaction</h3>
@@ -77,6 +82,14 @@
                 </tr>
             {{/blk_txs}}
         </table>
-    {{/have_txs}}
+    {{/have_txs}}    
+
+
+    {{#enable_as_hex}}
+        <h5 style="margin-top:1px">
+            <a href="/blockhex/{{blk_height}}">Block as hex</a>
+            | <a href="/blockhexcomplete/{{blk_height}}">Complete block as hex</a>
+        </h5>
+    {{/enable_as_hex}}
 
 </div>

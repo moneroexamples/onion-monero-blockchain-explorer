@@ -370,6 +370,9 @@ calc_median(It it_begin, It it_end)
 void
 pause_execution(uint64_t no_seconds, const string& text = "now");
 
+string
+tx_to_hex(transaction const& tx);
+
 }
 
 #endif //XMREG01_TOOLS_H

@@ -935,7 +935,7 @@ decode_ringct(rct::rctSig const& rv,
         switch (rv.type)
         {
             case rct::RCTTypeSimple:
-            case rct::RCTTypeSimpleBulletproof:
+            case rct::RCTTypeBulletproof:
                 amount = rct::decodeRctSimple(rv,
                                               rct::sk2rct(scalar1),
                                               i,
@@ -943,7 +943,6 @@ decode_ringct(rct::rctSig const& rv,
                                               hw::get_device("default"));
                 break;
             case rct::RCTTypeFull:
-            case rct::RCTTypeFullBulletproof:
                 amount = rct::decodeRct(rv,
                                         rct::sk2rct(scalar1),
                                         i,
@@ -1048,7 +1047,7 @@ decrypt(const std::string &ciphertext,
     }
 
     crypto::chacha_key key;
-    crypto::generate_chacha_key(&skey, sizeof(skey), key);
+    crypto::generate_chacha_key(&skey, sizeof(skey), key, 1);
 
     const crypto::chacha_iv &iv = *(const crypto::chacha_iv*)&ciphertext[0];
 
@@ -1264,6 +1263,12 @@ pause_execution(uint64_t no_seconds, const string& text)
     }
 
     cout << endl;
+}
+
+string
+tx_to_hex(transaction const& tx)
+{
+    return epee::string_tools::buff_to_hex_nodelimer(t_serializable_object_to_blob(tx));
 }
 
 }
