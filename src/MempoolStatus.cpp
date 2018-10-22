@@ -124,6 +124,18 @@ MempoolStatus::read_mempool()
 
     (void) pool_key_image_info;
 
+    // sort txpool txs
+
+    // mempool txs are not sorted base on their arival time,
+    // so we sort it here.
+
+    std::sort(mempool_tx_info.begin(), mempool_tx_info.end(),
+    [](tx_info& t1, tx_info& t2)
+    {
+        return t1.receive_time > t2.receive_time;
+    });
+
+
     // if dont have tx_blob member, construct tx
     // from json obtained from the rpc call
 
