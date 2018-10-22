@@ -110,7 +110,12 @@ MempoolStatus::read_mempool()
     // get txs in the mempool
     std::vector<tx_info> mempool_tx_info;
 
-    if (!rpc.get_mempool(mempool_tx_info))
+    //std::vector<tx_info> pool_tx_info;
+    std::vector<spent_key_image_info> pool_key_image_info;
+
+    if (!mcore->get_mempool().get_transactions_and_spent_keys_info(
+                mempool_tx_info,
+                pool_key_image_info))
     {
         cerr << "Getting mempool failed " << endl;
         return false;
