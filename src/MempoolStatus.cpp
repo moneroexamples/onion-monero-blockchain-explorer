@@ -113,6 +113,7 @@ MempoolStatus::read_mempool()
     //std::vector<tx_info> pool_tx_info;
     std::vector<spent_key_image_info> pool_key_image_info;
 
+    // get txpool from lmdb database instead of rpc call
     if (!mcore->get_mempool().get_transactions_and_spent_keys_info(
                 mempool_tx_info,
                 pool_key_image_info))
@@ -120,6 +121,8 @@ MempoolStatus::read_mempool()
         cerr << "Getting mempool failed " << endl;
         return false;
     }
+
+    (void) pool_key_image_info;
 
     // if dont have tx_blob member, construct tx
     // from json obtained from the rpc call
