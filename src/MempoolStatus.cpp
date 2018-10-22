@@ -177,7 +177,6 @@ MempoolStatus::read_mempool()
                tx, output_pub_keys, input_key_imgs);
 
 
-
         double tx_size =  static_cast<double>(_tx_info.blob_size)/1024.0;
 
         double payed_for_kB = XMR_AMOUNT(_tx_info.fee) / tx_size;
@@ -192,7 +191,9 @@ MempoolStatus::read_mempool()
         last_tx.num_nonrct_inputs = sum_data[3];
 
         last_tx.fee_str          = xmreg::xmr_amount_to_str(_tx_info.fee, "{:0.4f}", false);
+        last_tx.fee_micro_str    = xmreg::xmr_amount_to_str(_tx_info.fee*1.0e6, "{:04.0f}", false);
         last_tx.payed_for_kB_str = fmt::format("{:0.4f}", payed_for_kB);
+        last_tx.payed_for_kB_micro_str = fmt::format("{:04.0f}", payed_for_kB*1e6);
         last_tx.xmr_inputs_str   = xmreg::xmr_amount_to_str(last_tx.sum_inputs , "{:0.3f}");
         last_tx.xmr_outputs_str  = xmreg::xmr_amount_to_str(last_tx.sum_outputs, "{:0.3f}");
         last_tx.timestamp_str    = xmreg::timestamp_to_str_gm(_tx_info.receive_time);

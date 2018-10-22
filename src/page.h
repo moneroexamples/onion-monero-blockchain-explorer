@@ -244,6 +244,8 @@ struct tx_details
         string fee_str {"N/A"};
         string fee_short_str {"N/A"};
         string payed_for_kB_str {""};
+        string fee_micro_str {"N/A"};
+        string payed_for_kB_micro_str {""};
 
         const double& xmr_amount = XMR_AMOUNT(fee);
 
@@ -258,7 +260,9 @@ struct tx_details
             mixin_str        = std::to_string(mixin_no);
             fee_str          = fmt::format("{:0.6f}", xmr_amount);
             fee_short_str    = fmt::format("{:0.4f}", xmr_amount);
+            fee_micro_str    = fmt::format("{:04.0f}" , xmr_amount * 1e6);
             payed_for_kB_str = fmt::format("{:0.4f}", payed_for_kB);
+            payed_for_kB_micro_str = fmt::format("{:04.0f}", payed_for_kB * 1e6);
         }
 
 
@@ -268,7 +272,9 @@ struct tx_details
                 {"pub_key"           , pod_to_hex(pk)},
                 {"tx_fee"            , fee_str},
                 {"tx_fee_short"      , fee_short_str},
+                {"fee_micro"         , fee_micro_str},
                 {"payed_for_kB"      , payed_for_kB_str},
+                {"payed_for_kB_micro", payed_for_kB_micro_str},
                 {"sum_inputs"        , xmr_amount_to_str(xmr_inputs , "{:0.6f}")},
                 {"sum_outputs"       , xmr_amount_to_str(xmr_outputs, "{:0.6f}")},
                 {"sum_inputs_short"  , xmr_amount_to_str(xmr_inputs , "{:0.3f}")},
@@ -1055,8 +1061,8 @@ mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
                 {"timestamp"       , mempool_tx.timestamp_str},
                 {"age"             , age_str},
                 {"hash"            , pod_to_hex(mempool_tx.tx_hash)},
-                {"fee"             , mempool_tx.fee_str},
-                {"payed_for_kB"    , mempool_tx.payed_for_kB_str},
+                {"fee"             , mempool_tx.fee_micro_str},
+                {"payed_for_kB"    , mempool_tx.payed_for_kB_micro_str},
                 {"xmr_inputs"      , mempool_tx.xmr_inputs_str},
                 {"xmr_outputs"     , mempool_tx.xmr_outputs_str},
                 {"no_inputs"       , mempool_tx.no_inputs},
@@ -5918,6 +5924,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
             {"tx_blk_height"         , tx_blk_height},
             {"tx_size"               , fmt::format("{:0.4f}", tx_size)},
             {"tx_fee"                , xmreg::xmr_amount_to_str(txd.fee, "{:0.12f}", false)},
+            {"tx_fee_micro"          , xmreg::xmr_amount_to_str(txd.fee*1e6, "{:0.4f}", false)},
             {"payed_for_kB"          , fmt::format("{:0.12f}", payed_for_kB)},
             {"tx_version"            , static_cast<uint64_t>(txd.version)},
             {"blk_timestamp"         , blk_timestamp},
