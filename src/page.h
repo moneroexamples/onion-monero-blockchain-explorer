@@ -1883,6 +1883,9 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
     tx_json["hash"] = tx_hash_str;
     tx_json["hex"]  = tx_hex;
     tx_json["nettype"] = static_cast<size_t>(nettype);
+    tx_json["is_ringct"] = (tx.version > 1);
+    tx_json["rct_type"] = tx.rct_signatures.type;
+
     tx_json["_comment"] = "Just a placeholder for some comment if needed later";
 
     // add placeholder for sender and recipient details
@@ -1960,6 +1963,7 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
     tx_json["block"] = epee::string_tools
              ::buff_to_hex_nodelimer(complete_block_data_str);
 
+    tx_json["block_version"] = json {blk.major_version, blk.minor_version};
 
     tx_json["inputs"] = json::array();
 
