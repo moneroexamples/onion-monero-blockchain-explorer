@@ -1894,15 +1894,22 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
                             {"address", ""},
                             {"viewkey", ""},
                             {"spendkey", ""},
+                            {"amount", 0ull},
+                            {"change", 0ull},
                             {"_comment", ""}};
 
-    tx_json["recipient"] = json {
-                            {"seed", ""},
-                            {"address", ""},
-                            {"is_subaddress", false},
-                            {"viewkey", ""},
-                            {"spendkey", ""},
-                            {"_comment", ""}};
+    tx_json["recipient"] = json::array();
+
+
+    tx_json["recipient"].push_back(
+                            json { {"seed", ""},
+                                {"address", ""},
+                                {"is_subaddress", false},
+                                {"viewkey", ""},
+                                {"spendkey", ""},
+                                {"amount", 0ull},
+                                {"_comment", ""}});
+
 
     uint64_t tx_blk_height {0};
 
@@ -1943,6 +1950,12 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
         cerr << "Failed to serialize complete_block_data\n";
         return json {"error", "Failed to obtain complete block data"};
     }
+
+    tx_details txd = get_tx_details(tx);
+
+    tx_json["payment_id"] = pod_to_hex(txd.payment_id);
+    tx_json["payment_id8"] = pod_to_hex(txd.payment_id8);
+    tx_json["payment_id8e"] = "placeholder for decrypted value";
 
     tx_json["block"] = epee::string_tools
              ::buff_to_hex_nodelimer(complete_block_data_str);
