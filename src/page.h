@@ -1970,7 +1970,7 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
 
     tx_json["payment_id"] = pod_to_hex(txd.payment_id);
     tx_json["payment_id8"] = pod_to_hex(txd.payment_id8);
-    tx_json["payment_id8e"] = "placeholder for decrypted value";
+    tx_json["payment_id8e"] = pod_to_hex(txd.payment_id8);
 
     tx_json["block"] = epee::string_tools
              ::buff_to_hex_nodelimer(complete_block_data_str);
@@ -2406,8 +2406,11 @@ show_my_outputs(string tx_hash_str,
                           address_info.address.m_spend_public_key,
                           tx_pubkey);
 
-        //cout << pod_to_hex(outp.first.key) << endl;
-        //cout << pod_to_hex(tx_pubkey) << endl;
+//        cout << pod_to_hex(derivation) << ", " << output_idx << ", "
+//             << pod_to_hex(address_info.address.m_spend_public_key) << ", "
+//             << pod_to_hex(outp.first.key) << " == "
+//             << pod_to_hex(tx_pubkey) << '\n'  << '\n';
+
 
         // check if generated public key matches the current output's key
         bool mine_output = (outp.first.key == tx_pubkey);
@@ -2421,6 +2424,7 @@ show_my_outputs(string tx_hash_str,
                               output_idx,
                               address_info.address.m_spend_public_key,
                               tx_pubkey);
+
 
             mine_output = (outp.first.key == tx_pubkey);
 
