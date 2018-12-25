@@ -45,12 +45,16 @@ namespace xmreg
                  "enable caching of block details")
                 ("enable-js", value<bool>()->default_value(false)->implicit_value(true),
                  "enable checking outputs and proving txs using JavaScript on client side")
+                ("enable-as-hex", value<bool>()->default_value(false)->implicit_value(true),
+                 "enable links to provide hex represtations of a tx and a block")
                 ("enable-autorefresh-option", value<bool>()->default_value(false)->implicit_value(true),
                  "enable users to have the index page on autorefresh")
                 ("enable-emission-monitor", value<bool>()->default_value(false)->implicit_value(true),
                  "enable Monero total emission monitoring thread")
                 ("port,p", value<string>()->default_value("8081"),
                  "default explorer port")
+                ("bindaddr,x", value<string>()->default_value("0.0.0.0"),
+                 "default bind address for the explorer")
                 ("testnet-url", value<string>()->default_value(""),
                  "you can specify testnet url, if you run it on mainnet or stagenet. link will show on front page to testnet explorer")
                 ("stagenet-url", value<string>()->default_value(""),
