@@ -12,7 +12,7 @@ Mainnet
 
 Alternative block explorers:
 
-- [https://chainradar.com/aeon/blocks](https://chainradar.com/aeon/blocks)
+- [http://aeon.lol/](http://aeon.lol/)
 
 
 ## Compilation on Ubuntu 16.04
