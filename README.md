@@ -86,7 +86,7 @@ Current development branch:
 
  - https://github.com/moneroexamples/onion-monero-blockchain-explorer/tree/devel
 
-
+Note: `devel` branch of the explorer follows `master` branch of the monero.
 
 ## Compilation on Ubuntu 16.04/18.04
 
@@ -103,10 +103,10 @@ sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound
 # go to home folder
 cd ~
 
-git clone --recursive https://github.com/monero-project/monero
+# download monero sourced for branch release-v0.13 
+git clone --recurse-submodules -b release-v0.13 https://github.com/monero-project/monero.git
 
 cd monero/
-
 
 USE_SINGLE_BUILDDIR=1 make
 ```
