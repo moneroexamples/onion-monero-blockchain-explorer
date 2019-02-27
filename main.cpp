@@ -336,9 +336,14 @@ main(int ac, const char* av[])
             return crow::response(xmrblocks.show_block_hex(block_height, true));
         });
 
+//        CROW_ROUTE(app, "/ringmemberstxhex/<string>")
+//        ([&](string tx_hash) {
+//            return crow::response(xmrblocks.show_ringmemberstx_hex(remove_bad_chars(tx_hash)));
+//        });
+
         CROW_ROUTE(app, "/ringmemberstxhex/<string>")
         ([&](string tx_hash) {
-            return crow::response(xmrblocks.show_ringmemberstx_hex(remove_bad_chars(tx_hash)));
+            return myxmr::jsonresponse {xmrblocks.show_ringmemberstx_jsonhex(remove_bad_chars(tx_hash))};
         });
 
     }

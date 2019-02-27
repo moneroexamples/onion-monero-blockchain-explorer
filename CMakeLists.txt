@@ -19,12 +19,16 @@ endif()
 
 message(STATUS MONERO_DIR ": ${MONERO_DIR}")
 
-set(MONERO_SOURCE_DIR ${MONERO_DIR}
-        CACHE PATH "Path to the root directory for Monero")
+if (NOT MONERO_SOURCE_DIR)
+    set(MONERO_SOURCE_DIR ${MONERO_DIR}
+          CACHE PATH "Path to the root directory for Monero")
+endif()
 
-# set location of monero build tree
-set(MONERO_BUILD_DIR ${MONERO_SOURCE_DIR}/build/release/
-        CACHE PATH "Path to the build directory for Monero")
+if (NOT MONERO_BUILD_DIR)
+    # set location of monero build tree
+    set(MONERO_BUILD_DIR ${MONERO_SOURCE_DIR}/build/release/
+          CACHE PATH "Path to the build directory for Monero")
+endif()
 
 set(MY_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake"
         CACHE PATH "The path to the cmake directory of the current project")
@@ -65,9 +69,16 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR WIN32)
     set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/external/unbound/libunbound.a)
 endif()
 
+
+
 # include boost headers
 include_directories(${Boost_INCLUDE_DIRS})
+
+# include monero
+include_directories(${MONERO_SOURCE_DIR}/build)
+
 include_directories("ext/mstch/include")
+include_directories("ext/mstch/include/src")
 include_directories("ext/crow")
 
 # add ext/ subfolder
