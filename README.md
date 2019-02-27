@@ -103,7 +103,7 @@ sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound
 # go to home folder
 cd ~
 
-git clone --recursive https://github.com/monero-project/monero
+git clone --recursive -b release-v0.13 https://github.com/monero-project/monero.git
 
 cd monero/
 
