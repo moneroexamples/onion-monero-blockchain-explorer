@@ -90,7 +90,7 @@ Note: `devel` branch of the explorer follows `master` branch of the monero.
 
 ## Compilation on Ubuntu 16.04/18.04
 
-##### Compile latest Monero version (0.13)
+##### Compile latest Monero version (0.14.0.0)
 
 Download and compile recent Monero into your home folder:
 
@@ -120,8 +120,8 @@ as follows:
 # go to home folder if still in ~/monero
 cd ~
 
-# download the source code
-git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
+# download the source code of the devel branch
+git clone --recursive -b devel  https://github.com/moneroexamples/openmonero.git
 
 # enter the downloaded sourced code folder
 cd onion-monero-blockchain-explorer
