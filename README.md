@@ -25,25 +25,28 @@ Monero C++ libraries, but also demonstrates how to use:
 
 Tor users:
 
- - [http://dvwae436pd7nt4bc.onion](http://dvwae436pd7nt4bc.onion) (Front-end templates are [maintained by @suhz](https://github.com/suhz/onion-monero-blockchain-explorer/tree/moneroexplorer.com/src/templates)).
+ - [http://dvwae436pd7nt4bc.onion](http://dvwae436pd7nt4bc.onion) (Down for now: front-end templates are [maintained by @suhz](https://github.com/suhz/onion-monero-blockchain-explorer/tree/moneroexplorer.com/src/templates)).
 
 Clearnet versions:
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
- - [https://MoneroExplorer.com/](https://moneroexplorer.com/) - nice looking one, https enabled.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
  - [https://blox.minexmr.com/](https://blox.minexmr.com/) - - https enabled.
+ - [https://community.xmr.to/explorer/mainnet/](https://community.xmr.to/explorer/mainnet/)
+
 
 Testnet version:
 
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
- - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
+ - [https://community.xmr.to/explorer/testnet/](https://community.xmr.to/explorer/testnet/)
 
 Stagenet version:
-
+ 
  - [https://stagenet.xmrchain.net/](https://stagenet.xmrchain.net/)
+ - [http://139.162.60.17:8082/](http://139.162.60.17:8082/) 
  - [http://162.210.173.150:8083/](http://162.210.173.150:8083/)
+ - [https://community.xmr.to/explorer/stagenet/](https://community.xmr.to/explorer/stagenet/)
 
 i2p users (main Monero network):
 
