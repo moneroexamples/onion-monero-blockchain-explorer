@@ -380,7 +380,6 @@ bool enable_output_key_checker;
 bool enable_mixins_details;
 bool enable_tx_cache;
 bool enable_block_cache;
-bool enable_as_hex;
 bool show_cache_times;
 
 
@@ -431,7 +430,6 @@ page(MicroCore* _mcore,
      cryptonote::network_type _nettype,
      bool _enable_pusher,
      bool _enable_js,
-     bool _enable_as_hex,
      bool _enable_key_image_checker,
      bool _enable_output_key_checker,
      bool _enable_autorefresh_option,
@@ -451,7 +449,6 @@ page(MicroCore* _mcore,
           nettype {_nettype},
           enable_pusher {_enable_pusher},
           enable_js {_enable_js},
-          enable_as_hex {_enable_as_hex},
           enable_key_image_checker {_enable_key_image_checker},
           enable_output_key_checker {_enable_output_key_checker},
           enable_autorefresh_option {_enable_autorefresh_option},
@@ -1435,7 +1432,6 @@ show_block(uint64_t _blk_height)
             {"blk_timestamp_epoch"  , blk.timestamp},
             {"prev_hash"            , prev_hash_str},
             {"next_hash"            , next_hash_str},
-            {"enable_as_hex"        , enable_as_hex},
             {"have_next_hash"       , have_next_hash},
             {"have_prev_hash"       , have_prev_hash},
             {"have_txs"             , have_txs},
@@ -6557,7 +6553,6 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
     context["inputs_xmr_sum"]           = xmreg::xmr_amount_to_str(inputs_xmr_sum);
     context["server_time"]              = server_time_str;
     context["enable_mixins_details"]    = detailed_view;
-    context["enable_as_hex"]            = enable_as_hex;
     context["show_part_of_inputs"]      = show_part_of_inputs;
     context["max_no_of_inputs_to_show"] = max_no_of_inputs_to_show;
 
