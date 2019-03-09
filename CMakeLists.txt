@@ -26,7 +26,7 @@ endif()
 
 if (NOT MONERO_BUILD_DIR)
     # set location of monero build tree
-    set(MONERO_BUILD_DIR ${MONERO_SOURCE_DIR}/build/Linux/v3.0.0/release/
+    set(MONERO_BUILD_DIR ${MONERO_SOURCE_DIR}/build/Linux/development/release/
           CACHE PATH "Path to the build directory for Monero")
 endif()
 
