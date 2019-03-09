@@ -1,5 +1,5 @@
 
-<div>
+<div class="text-center" style="border-radius: 5px;width: 50%;margin: 0px auto;float: none;">
 
     <H4>Block hash (height): {{blk_hash}} ({{blk_height}})</H4>
 
@@ -14,7 +14,7 @@
 
 
 
-    <table class="center">
+    <table class="text-center">
         <tr>
             <td>Timestamp [UCT] (epoch):</td><td>{{blk_timestamp}} ({{blk_timestamp_epoch}})</td>
             <td>Age {{age_format}}:</td><td>{{blk_age}}</td>
@@ -29,6 +29,11 @@
             <td>nonce:</td><td>{{blk_nonce}}</td>
             <td>Total fees:</td><td>{{sum_fees}}</td>
             <td>No of txs:</td><td>{{no_txs}}</td>
+        </tr>
+        <tr>
+            <td>PoW hash:</td><td>{{blk_pow_hash}}</td>
+            <td>Difficulty:</td><td>{{blk_difficulty}}</td>
+            <td></td>
         </tr>
     </table>
 
@@ -59,8 +64,7 @@
             <tr>
                 <td>hash</td>
                 <td>outputs</td>
-                <td>fee</td>
-                <td>ring size</td>
+                <td>fee [&#181;&#x271]</td>
                 <td>in/out</td>
                 <td>size [kB]</td>
                 <td>version</td>
@@ -69,14 +73,21 @@
                 <tr>
                     <td><a href="/tx/{{hash}}">{{hash}}</a></td>
                     <td>{{sum_outputs}}</td>
-                    <td>{{tx_fee}}</td>
-                    <td>{{mixin}}</td>
+                    <td>{{fee_micro}}</td>
                     <td>{{no_inputs}}/{{no_outputs}}</td>                    
                     <td>{{tx_size}}</td>
                     <td>{{version}}</td>
                 </tr>
             {{/blk_txs}}
         </table>
-    {{/have_txs}}
+    {{/have_txs}}    
+
+
+    {{#enable_as_hex}}
+        <h5 style="margin-top:1px">
+            <a href="/blockhex/{{blk_height}}">Block as hex</a>
+            | <a href="/blockhexcomplete/{{blk_height}}">Complete block as hex</a>
+        </h5>
+    {{/enable_as_hex}}
 
 </div>

@@ -110,11 +110,31 @@ MempoolStatus::read_mempool()
     // get txs in the mempool
     std::vector<tx_info> mempool_tx_info;
 
-    if (!rpc.get_mempool(mempool_tx_info))
+    //std::vector<tx_info> pool_tx_info;
+    std::vector<spent_key_image_info> pool_key_image_info;
+
+    // get txpool from lmdb database instead of rpc call
+    if (!mcore->get_mempool().get_transactions_and_spent_keys_info(
+                mempool_tx_info,
+                pool_key_image_info))
     {
         cerr << "Getting mempool failed " << endl;
         return false;
     }
+
+    (void) pool_key_image_info;
+
+    // sort txpool txs
+
+    // mempool txs are not sorted base on their arival time,
+    // so we sort it here.
+
+    std::sort(mempool_tx_info.begin(), mempool_tx_info.end(),
+    [](tx_info& t1, tx_info& t2)
+    {
+        return t1.receive_time > t2.receive_time;
+    });
+
 
     // if dont have tx_blob member, construct tx
     // from json obtained from the rpc call
@@ -139,9 +159,12 @@ MempoolStatus::read_mempool()
 
         mempool_size_kB += _tx_info.blob_size;
 
-        local_copy_of_mempool_txs.push_back(mempool_tx {tx_hash, tx});
+        local_copy_of_mempool_txs.push_back(mempool_tx{});
 
         mempool_tx& last_tx = local_copy_of_mempool_txs.back();
+
+        last_tx.tx_hash = tx_hash;
+        last_tx.tx = tx;
 
         // key images of inputs
         vector<txin_to_key> input_key_imgs;
@@ -152,7 +175,6 @@ MempoolStatus::read_mempool()
         // sum xmr in inputs and ouputs in the given tx
         const array<uint64_t, 4>& sum_data = summary_of_in_out_rct(
                tx, output_pub_keys, input_key_imgs);
-
 
 
         double tx_size =  static_cast<double>(_tx_info.blob_size)/1024.0;
@@ -168,8 +190,10 @@ MempoolStatus::read_mempool()
         last_tx.mixin_no          = sum_data[2];
         last_tx.num_nonrct_inputs = sum_data[3];
 
-        last_tx.fee_str          = xmreg::xmr_amount_to_str(_tx_info.fee, "{:0.3f}", false);
+        last_tx.fee_str          = xmreg::xmr_amount_to_str(_tx_info.fee, "{:0.4f}", false);
+        last_tx.fee_micro_str    = xmreg::xmr_amount_to_str(_tx_info.fee*1.0e6, "{:04.0f}", false);
         last_tx.payed_for_kB_str = fmt::format("{:0.4f}", payed_for_kB);
+        last_tx.payed_for_kB_micro_str = fmt::format("{:04.0f}", payed_for_kB*1e6);
         last_tx.xmr_inputs_str   = xmreg::xmr_amount_to_str(last_tx.sum_inputs , "{:0.3f}");
         last_tx.xmr_outputs_str  = xmreg::xmr_amount_to_str(last_tx.sum_outputs, "{:0.3f}");
         last_tx.timestamp_str    = xmreg::timestamp_to_str_gm(_tx_info.receive_time);
@@ -259,11 +283,12 @@ MempoolStatus::read_network_info()
     local_copy.outgoing_connections_count = rpc_network_info.outgoing_connections_count;
     local_copy.incoming_connections_count = rpc_network_info.incoming_connections_count;
     local_copy.white_peerlist_size        = rpc_network_info.white_peerlist_size;
-    local_copy.nettype                    = rpc_network_info.testnet ? cryptonote::network_type::TESTNET :
+    local_copy.nettype                    = rpc_network_info.testnet ? cryptonote::network_type::TESTNET : 
                                             rpc_network_info.stagenet ? cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
     local_copy.cumulative_difficulty      = rpc_network_info.cumulative_difficulty;
     local_copy.block_size_limit           = rpc_network_info.block_size_limit;
     local_copy.block_size_median          = rpc_network_info.block_size_median;
+    local_copy.block_weight_limit         = rpc_network_info.block_weight_limit;
     local_copy.start_time                 = rpc_network_info.start_time;
 
 
@@ -316,8 +341,8 @@ MempoolStatus::is_thread_running()
     return is_running;
 }
 
-bf::path MempoolStatus::blockchain_path {"~/.triton/lmdb"};
-string MempoolStatus::deamon_url {"http:://127.0.0.1:9131"};
+bf::path MempoolStatus::blockchain_path {"/home/mwo/.bitmonero/lmdb"};
+string MempoolStatus::deamon_url {"http:://127.0.0.1:18081"};
 cryptonote::network_type MempoolStatus::nettype {cryptonote::network_type::MAINNET};
 atomic<bool>       MempoolStatus::is_running {false};
 boost::thread      MempoolStatus::m_thread;

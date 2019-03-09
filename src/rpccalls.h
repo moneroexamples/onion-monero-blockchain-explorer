@@ -81,7 +81,7 @@ class rpccalls
 
 public:
 
-    rpccalls(string _deamon_url = "http:://127.0.0.1:9131",
+    rpccalls(string _deamon_url = "http:://127.0.0.1:18081",
              uint64_t _timeout = 200000);
 
     bool
@@ -185,6 +185,8 @@ public:
 
     bool
     get_block(string const& blk_hash, block& blk, string& error_msg);
+    bool
+    get_service_node(COMMAND_RPC_GET_SERVICE_NODES::response &res, const std::vector<std::string> &pubkeys);
 
 };
 

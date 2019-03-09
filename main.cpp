@@ -166,8 +166,8 @@ main(int ac, const char* av[])
 
     string deamon_url {*deamon_url_opt};
 
-    if (testnet && deamon_url == "http:://127.0.0.1:9131")
-        deamon_url = "http:://127.0.0.1:9131";
+    if (testnet && deamon_url == "http:://127.0.0.1:18081")
+        deamon_url = "http:://127.0.0.1:28081";
     if (stagenet && deamon_url == "http:://127.0.0.1:18081")
         deamon_url = "http:://127.0.0.1:38081";
 
@@ -311,7 +311,21 @@ main(int ac, const char* av[])
      {
         return xmrblocks.show_tx(remove_bad_chars(tx_hash), with_ring_signatures);
     });
+    CROW_ROUTE(app, "/service_node/<string>")
+    ([&](const crow::request& req, std::string service_node_pubkey) {
+        return crow::response(xmrblocks.show_service_node(remove_bad_chars(service_node_pubkey)));
+    });
 
+    CROW_ROUTE(app, "/service_nodes")
+    ([&](const crow::request& req) {
+        return xmrblocks.service_nodes(true /*add_header_and_footer*/);
+    });
+
+    // TODO(loki): This should be combined into the normal search mechanism, we shouldn't have 2 search bars.
+    CROW_ROUTE(app, "/search_service_node").methods("GET"_method)
+    ([&](const crow::request& req) {
+        return xmrblocks.show_service_node(remove_bad_chars(string(req.url_params.get("value"))));
+    });
     CROW_ROUTE(app, "/myoutputs").methods("POST"_method)
     ([&](const crow::request& req)
      {

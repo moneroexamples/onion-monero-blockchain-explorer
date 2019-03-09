@@ -1,6 +1,6 @@
 
-<div class="center">
-     <h3 style="font-size: 12px; margin-top: 20px">
+<div class="text-center">
+     <h3>
 
         Server time: {{server_timestamp}} |
 
@@ -22,9 +22,9 @@
       <h2>older blocks<!--(height: {{height}})--></h2>
     {{/is_page_zero}}
 
-    <div class="center">
+<div class="text-center">
 
-            <table class="center">
+            <table class="table text-center">
                 <tr>
                     <td>height</td>
                     <td>age {{age_format}} (Δm)</td>
@@ -34,6 +34,7 @@
                     <td>outputs</td>
                     <td>ring size</td>
                     <td>size [kB]</td>
+					<hr>
                 </tr>
                 {{#blocks}}
                 <tr>
@@ -45,11 +46,12 @@
                     <td>{{xmr_outputs}}</td>
                     <td>{{mixin_range}}</td>
                     <td>{{blksize}}</td>
+					<hr>
                 </tr>
                 {{/blocks}}
             </table>
 
-            <div class="center" style="text-align: center;">
+            <table class="text-center">
              {{^is_page_zero}}
                <a href="/page/{{prev_page}}">previous page</a> |
                <a href="/">first page</a> |

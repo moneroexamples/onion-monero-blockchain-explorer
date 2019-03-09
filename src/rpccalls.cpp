@@ -275,9 +275,9 @@ rpccalls::get_dynamic_per_kb_fee_estimate(
         uint64_t& fee,
         string& error_msg)
 {
-    epee::json_rpc::request<COMMAND_RPC_GET_PER_KB_FEE_ESTIMATE::request>
+    epee::json_rpc::request<COMMAND_RPC_GET_BASE_FEE_ESTIMATE::request>
             req_t = AUTO_VAL_INIT(req_t);
-    epee::json_rpc::response<COMMAND_RPC_GET_PER_KB_FEE_ESTIMATE::response, std::string>
+    epee::json_rpc::response<COMMAND_RPC_GET_BASE_FEE_ESTIMATE::response, std::string>
             resp_t = AUTO_VAL_INIT(resp_t);
 
 
@@ -400,7 +400,33 @@ rpccalls::get_block(string const& blk_hash, block& blk, string& error_msg)
 
     return parse_and_validate_block_from_blob(block_bin_blob, blk);
 }
+bool
+rpccalls::get_service_node(COMMAND_RPC_GET_SERVICE_NODES::response &res, const std::vector<std::string> &pubkeys)
+{
+    std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
 
+    bool result = false;
+    if (!connect_to_monero_daemon())
+    {
+        cerr << "rpccalls::get_service_node: not connected to daemon" << endl;
+        return result;
+    }
+
+    epee::json_rpc::request<COMMAND_RPC_GET_SERVICE_NODES::request> request;
+    epee::json_rpc::response<COMMAND_RPC_GET_SERVICE_NODES::response, std::string> response;
+    request.params.service_node_pubkeys = pubkeys;
+    request.jsonrpc = "2.0";
+    request.id      = epee::serialization::storage_entry(0);
+    request.method  = "get_service_nodes";
+
+    result = epee::net_utils::invoke_http_json("/json_rpc", request, response, m_http_client, timeout_time_ms);
+
+    if (!result)
+        cerr << "Error connecting to Triton daemon at " << daemon_url << endl;
+
+    res = response.result;
+    return result;
+}
 
 
 }

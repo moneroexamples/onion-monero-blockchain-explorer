@@ -1047,7 +1047,8 @@ decrypt(const std::string &ciphertext,
     }
 
     crypto::chacha_key key;
-    crypto::generate_chacha_key(std::string((const char*)&password, sizeof(password)), chacha_key, 1);
+    crypto::generate_chacha_key(&skey, sizeof(skey), key, 1);
+
     const crypto::chacha_iv &iv = *(const crypto::chacha_iv*)&ciphertext[0];
 
     std::string plaintext;
@@ -1264,4 +1265,71 @@ pause_execution(uint64_t no_seconds, const string& text)
     cout << endl;
 }
 
+string
+tx_to_hex(transaction const& tx)
+{
+    return epee::string_tools::buff_to_hex_nodelimer(t_serializable_object_to_blob(tx));
+}
+td::string bytes_to_hex(char const *bytes, int len)
+{
+    std::string result;
+    result.reserve(len * 2);
+
+    static char const _4bits_to_hex_char[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+    for (int i = 0; i < len; i++)
+    {
+      char byte  = bytes[i];
+      char hex01 = (byte >> 0) & 0xF;
+      char hex02 = byte >> 4;
+
+      result.push_back(_4bits_to_hex_char[hex01]);
+      result.push_back(_4bits_to_hex_char[hex02]);
+    }
+
+    return result;
+}
+
+void
+get_human_readable_timestamp(uint64_t ts, std::string *result)
+{
+    result->clear();
+    if (ts < 1234567890)
+        return;
+
+    char buf[64];
+    time_t tt = ts;
+    struct tm tm;
+    gmtime_r(&tt, &tm);
+    strftime(buf, sizeof(buf), "%Y-%m-%d %I:%M:%S", &tm);
+    *result = buf;
+}
+char const *get_human_time_ago(time_t t, time_t now)
+{
+    if (t == now)
+      return "now";
+
+    static char buf[128];
+    buf[0] = 0;
+
+    char *buf_ptr       = buf;
+    char const *buf_end = buf + sizeof(buf);
+    time_t dt           = t > now ? t - now : now - t;
+
+    if (t > now)
+    {
+      buf_ptr += snprintf(buf_ptr, buf_ptr - buf_end, "in ");
+    }
+
+    if (dt < 90)             buf_ptr += snprintf(buf_ptr, buf_ptr - buf_end, "%zu seconds", dt);
+    else if (dt < 90 * 60)   buf_ptr += snprintf(buf_ptr, buf_ptr - buf_end, "%zu minutes", dt/60);
+    else if (dt < 36 * 3600) buf_ptr += snprintf(buf_ptr, buf_ptr - buf_end, "%zu hours", dt/3600);
+    else                     buf_ptr += snprintf(buf_ptr, buf_ptr - buf_end, "%zu days", dt/(3600*24));
+
+    if (t < now)
+    {
+      buf_ptr += snprintf(buf_ptr, buf_ptr - buf_end, " ago");
+    }
+
+    return buf;
+}
 }

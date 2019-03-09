@@ -1,0 +1,50 @@
+<div class="Wrapper">
+    <H4 style="margin:5px">Service Node Public Key: {{public_key}}</H4>
+    <H4 style="margin:5px">Operator Address: {{operator_address}}</H4>
+
+    <h2>Metadata</h2>
+    <div class="TitleDivider"></div>
+    <table class="table table-striped table-dark" style="border-radius: 5px;width: 90%;margin: 0px auto;float: none;">
+        <tr>
+            <td>Staking Requirement: {{staking_requirement}}</td>
+            <td>Last Reward At Height/Index: <a href="/block/{{last_reward_at_block}}">{{last_reward_at_block}}</a>/{{last_reward_at_block_tx_index}}</td>
+        </tr>
+
+        <tr>
+            <td>Total Contributed: {{total_contributed}}</td>
+            <td>Operator Cut: {{operator_cut}}%</td>
+        </tr>
+
+        <tr>
+            <td>Total Reserved: {{total_reserved}}</td>
+            <td>Register Height: {{register_height}}</td>
+        </tr>
+
+        <tr>
+            <td></td>
+            <td>Last Uptime Proof: {{last_uptime_proof}}</td>
+        </tr>
+    </table>
+
+    <div class="TitleDivider"></div>
+    <p style="margin: 0px"> {{service_node_registered_text}} </p>
+
+    <h2>{{num_contributors}} Contributor(s)</h2>
+    <div class="TitleDivider"></div>
+
+    <table class="table table-striped table-dark" style="border-radius: 5px;width: 90%;margin: 0px auto;float: none;">
+        <tr class="TableHeader">
+            <td>Contributor</td>
+            <td>Amount</td>
+            <td>Reserved</td>
+        </tr>
+
+        {{#service_node_contributors_array}}
+        <tr>
+            <td>{{address}}</td>
+            <td>{{amount}}</td>
+            <td>{{reserved}}</td>
+        </tr>
+        {{/service_node_contributors_array}}
+    </table>
+</div>

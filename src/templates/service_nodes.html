@@ -1,0 +1,63 @@
+
+<div class="Wrapper">
+    <h2 style="margin-bottom: 0px">Service Nodes </h2>
+
+    <h4 class="Subtitle">(No. of Service Nodes: {{service_node_active_size}})</h4>
+    <div class="TitleDivider"></div>
+
+    <table class="table table-striped table-dark" style="border-radius: 5px;width: 90%;margin: 0px auto;float: none;">
+          <tr class="TableHeader">
+              <td>Public Key</td>
+              <td>Contributors</td>
+              <td>Operator Cut (%)</td>
+              <td>Staking Requirement</td>
+              <td>Last Reward At Height</td>
+              <td>Last Uptime Proof</td>
+              <td>Expiry Date UTC (Estimated)</td>
+          </tr>
+
+          {{#service_node_active_array}}
+          <tr>
+              <td><a href="/service_node/{{public_key}}">{{public_key}}</a></td>
+              <td>{{num_contributors}}</td>
+              <td>{{operator_cut}}</td>
+              <td>{{staking_requirement}}</td>
+              <td>{{last_reward_at_block}}</td>
+              <td>{{last_uptime_proof}}</td>
+              <td>{{expiration_date}} ({{expiration_time_relative}})</td>
+          </tr>
+          {{/service_node_active_array}}
+      </table>
+
+      <h2 style="margin-bottom: 0px">Service Nodes Awaiting</h2>
+      <h4 class="Subtitle">(No. of Service Nodes awaiting contribution: {{service_node_awaiting_size}})</h4>
+      <div class="TitleDivider"></div>
+
+      <table class="table table-striped table-dark" style="border-radius: 5px;width: 90%;margin: 0px auto;float: none;">
+          <tr class="TableHeader">
+              <td>Public Key</td>
+              <td>Contributors</td>
+              <td>Operator Cut (%)</td>
+              <td>Open For Contribution</td>
+              <td>Contributed</td>
+              <td>Reserved</td>
+              <td>Staking Requirement</td>
+              <td>Expiry Date UTC (Estimated)</td>
+          </tr>
+
+          {{#service_node_awaiting_array}}
+          <tr>
+              <td><a href="/service_node/{{public_key}}">{{public_key}}</a></td>
+              <td>{{num_contributors}}</td>
+              <td>{{operator_cut}}</td>
+              <td>{{open_for_contribution}}</td>
+              <td>{{contributed}}</td>
+              <td>{{reserved}}</td>
+              <td>{{staking_requirement}}</td>
+              <td>{{expiration_date}} ({{expiration_time_relative}})</td>
+          </tr>
+          {{/service_node_awaiting_array}}
+      </table>
+
+      <a href="/service_nodes">{{service_node_link_text}}</a>
+</div> <!-- Wrapper -->
