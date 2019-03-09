@@ -1270,7 +1270,7 @@ tx_to_hex(transaction const& tx)
 {
     return epee::string_tools::buff_to_hex_nodelimer(t_serializable_object_to_blob(tx));
 }
-td::string bytes_to_hex(char const *bytes, int len)
+std::string bytes_to_hex(char const *bytes, int len)
 {
     std::string result;
     result.reserve(len * 2);
