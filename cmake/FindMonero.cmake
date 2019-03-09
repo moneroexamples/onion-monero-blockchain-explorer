@@ -71,7 +71,7 @@ message(STATUS ${MONERO_SOURCE_DIR}/build)
 include_directories(
 		${MONERO_SOURCE_DIR}/src
 		${MONERO_SOURCE_DIR}/external
-		${MONERO_SOURCE_DIR}/bin
+		${MONERO_SOURCE_DIR}/build
 		${MONERO_SOURCE_DIR}/external/easylogging++
 		${MONERO_SOURCE_DIR}/contrib/epee/include
 		${MONERO_SOURCE_DIR}/external/db_drivers/liblmdb)
