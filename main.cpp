@@ -259,7 +259,6 @@ main(int ac, const char* av[])
                           nettype,
                           enable_pusher,
                           enable_js,
-						  enable_as_hex,
                           enable_key_image_checker,
                           enable_output_key_checker,
                           enable_autorefresh_option,
