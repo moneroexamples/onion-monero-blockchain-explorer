@@ -14,7 +14,7 @@ endif()
 
 
 if (NOT MONERO_DIR)
-    set(MONERO_DIR ~/TP)
+    set(MONERO_DIR ~/TritonProtocol)
 endif()
 
 message(STATUS MONERO_DIR ": ${MONERO_DIR}")
