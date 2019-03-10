@@ -1,5 +1,5 @@
 
-<div class="text-center" style="border-radius: 5px;width: 90%;margin: 0px auto;float: none;">
+<div class="text-center" style="border-radius: 5px;width: 70%;margin: 0px auto;float: none;">
 
     <H4 style="margin:5px">Tx hash: {{tx_hash}}</H4>
     {{#enable_mixins_details}}
@@ -28,7 +28,7 @@
 
 
 
-    <table class="center" style="width: 80%; margin-top:10px">
+    <table class="table table-striped table-dark">
         {{^have_raw_tx}}
         <tr>
             <td>Timestamp: {{blk_timestamp_uint}}</td>
@@ -49,61 +49,16 @@
 
 
         <tr>
-            <td colspan="3" style="max-width:700px">Extra: {{extra}}</td>
+            <td colspan="3" style="font-size: 12px">Extra: {{extra}}</td>
         </tr>
 
 
     </table>
-    {{#have_deregister_info}}
-           <h2>Service Node Deregister Metadata</h2>
-           <div class="TitleDivider"></div>
-           <p>Service Node Index: {{deregister_service_node_index}}</p>
-           <p>Block Height: {{deregister_block_height}}</p>
 
-           <table class="table table-striped table-dark" style="border-radius: 5px;width: 90%;margin: 0px auto;float: none;">
-               <tr class="TableHeader">
-                   <td>Voters Quorum Index</td>
-                   <td>Signature</td>
-               </tr>
-
-               {{#deregister_vote_array}}
-               <tr>
-                   <td>{{deregister_voters_quorum_index}}</td>
-                   <td>{{deregister_signature}}</td>
-               </tr>
-               {{/deregister_vote_array}}
-           </table>
-       {{/have_deregister_info}}
-
-       {{#have_register_info}}
-           <h2>Service Node Register Metadata</h2>
-           <div class="TitleDivider"></div>
-           <p>Service Node Public Key: {{register_service_node_pubkey}}</p>
-           <p>Portions For Operator: {{register_portions_for_operator}}%</p>
-           <p>Expiration Timestamp: {{register_expiration_timestamp_friendly}} ({{register_expiration_timestamp}}) or {{register_expiration_timestamp_relative}}</p>
-           <p>Signature: {{register_signature}}</p>
-
-           <h2>Service Node Register Payout Addresses</h2>
-                   <div class="TitleDivider"></div>
-           <table class="table table-striped table-dark" style="border-radius: 5px;width: 90%;margin: 0px auto;float: none;">
-               <tr class="TableHeader">
-                 <td>Address</td>
-                   <td>Portions</td>
-               </tr>
-
-               {{#register_array}}
-               <tr>
-                 <td>{{register_address}}</td>
-
-                   <td>{{register_portions}}%</td>
-               </tr>
-               {{/register_array}}
-           </table>
-       {{/have_register_info}}
 
   <h3>{{outputs_no}} output(s) for total of {{outputs_xmr_sum}} XTRI</h3>
   <div class="center">
-      <table class="center">
+      <table class="table table-striped table-dark">
           <tr>
               <td>stealth address</td>
               <td>amount</td>
@@ -120,7 +75,7 @@
   </div>
 
     {{^have_raw_tx}}
-    <div class="center" style="width:90%">
+    <div class="center">
         <div class="tabs">
 
             <div class="tab">
@@ -128,7 +83,7 @@
                 <label for="tab-1">Decode outputs</label>
                 <div class="content">
                     <h5 style="margin: 0px">Check which outputs belong to given Triton address/subaddress and viewkey</h5>
-                    <h5 style="margin: 0px">
+                    <p style="margin: 0px">
                         For RingCT transactions, outputs' amounts are also decoded
                         <br/>
                         {{#enable_js}}
@@ -137,16 +92,15 @@
                         {{^enable_js}}
                             Note: address/subaddress and viewkey are sent to the server, as the calculations are done on the server side
                         {{/enable_js}}
-                    </h5>
+                    </p>
                     <form action="/myoutputs" method="post" style="width:100%; margin-top:2px" class="style-1">
-                        <input type="hidden" class="input-group"  name="tx_hash" value="{{tx_hash}}"><br/>
-                        <input type="text" class="input-group" name="xmr_address" size="110" placeholder="Triton address/subaddress"><br/>
-                        <input type="text" class="input-group" name="viewkey" size="110" placeholder="Private viewkey" style="margin-top:5px"><br/>
-                        <input type="hidden"class="input-group"  name="raw_tx_data" value="{{raw_tx_data}}">
+                        <input type="hidden" class="form-control"  name="tx_hash" value="{{tx_hash}}"><br/>
+                        <input type="text" class="form-control" name="xmr_address" size="110" placeholder="Triton address/subaddress"><br/>
+                        <input type="text" class="form-control" name="viewkey" size="110" placeholder="Private viewkey" style="margin-top:5px"><br/>
+                        <input type="hidden"class="form-control"  name="raw_tx_data" value="{{raw_tx_data}}">
                         <!--above raw_tx_data field only used when checking raw tx data through tx pusher-->
 
-                        <button type="button" style="padding: 10px;" id="decode-btn" class="btn btn-outline-success">Decode outputs</button>
-
+                        <button type="button" style="padding: 10px;" id="decode-btn" class="btn btn-outline-primary">Decode outputs</button>
                     </form>
                 </div>
             </div>
@@ -157,7 +111,7 @@
 
                 <div class="content">
                     <h5 style="margin: 0px">Prove to someone that you have sent them Triton in this transaction</h5>
-                    <h5 style="margin: 0px">
+                    <p style="margin: 0px">
                         Tx private key can be obtained using <i>get_tx_key</i>
                         command in  <i>triton-wallet-cli</i> command line tool
                         <br/>
@@ -167,18 +121,18 @@
                         {{^enable_js}}
                             Note: address/subaddress and tx private key are sent to the server, as the calculations are done on the server side
                         {{/enable_js}}
-                    </h5>
+                    </p>
                     <form action="/prove" method="post" style="width:100%;margin-top:2px" class="style-1">
                        <input type="hidden" name="txhash" value="{{tx_hash}}"><br/>
-                       <input type="text" name="txprvkey" class="input-group" size="120" placeholder="Tx private key"><br/>
-                        <input type="hidden" class="input-group" name="raw_tx_data" value="{{raw_tx_data}}">
+                       <input type="text" name="txprvkey" class="form-control" size="120" placeholder="Tx private key"><br/>
+                        <input type="hidden" class="form-control" name="raw_tx_data" value="{{raw_tx_data}}">
                         <!--above raw_tx_data field only used when checking raw tx data through tx pusher-->
-                       <input type="text" name="xmraddress" size="120" class="input-group" placeholder="Recipient's triton address/subaddress" style="margin-top:5px"><br/>
+                       <input type="text" class="form-control" name="xmraddress" size="120" placeholder="Recipient's triton address/subaddress" style="margin-top:5px"><br/>
 
                         {{#enable_js}}
                             <!-- if have js, DONOT submit the form to server.
                                  change submit button, to just a button -->
-                            <button type="button" style="padding: 10px;" class="prove_btn btn btn-outline-success my-2 my-sm-0">Prove sending</button>
+                            <button type="button" style="padding: 10px;" class="prove_btn btn btn-outline-primary my-2 my-sm-0">Prove sending</button>
                         {{/enable_js}}
                         {{^enable_js}}
                            <input type="submit" value="Prove sending" style="margin-top:5px">
@@ -194,7 +148,7 @@
     {{#enable_js}}
 
         <!-- to disply results from deconding and proving txs using js -->
-        <div id="decode-prove-results" class="center" style="width: 80%; margin-top:10px;border-style: dotted">
+        <div id="decode-prove-results" class="center">
 
         </div>
 
@@ -455,11 +409,11 @@
     {{/show_part_of_inputs}}
 
     <div class="center">
-       <table class="center">
+       <table class="table table-striped table-dark">
       {{#inputs}}
         <tr>
           <td style="text-align: left;">
-              key image  {{input_idx}}: {{in_key_img}}
+              Key Image  {{input_idx}}: {{in_key_img}}
               {{#have_raw_tx}}
                Already spent:
                 {{#already_spent}}
@@ -478,7 +432,7 @@
                 {{#enable_mixins_details}}
                     <table style="width:100%; margin-bottom:20px">
                     <tr>
-                      <td>ring members</td>
+                      <td>Ring Members</td>
                       {{#have_raw_tx}}
                         <td>Is it real?</td>
                       {{/have_raw_tx}}
@@ -491,7 +445,7 @@
                     </tr>
                  {{#mixins}}
                     <tr>
-                      <td> - {{mix_idx}}: <a href="/tx/{{mix_tx_hash}}">{{mix_pub_key}}</a></td>
+                      <td>{{mix_idx}}: <a href="/tx/{{mix_tx_hash}}">{{mix_pub_key}}</a></td>
                       {{#have_raw_tx}}
                         {{#mix_is_it_real}}
                             <td><span style="color: #008009;font-weight: bold">{{mix_is_it_real}}</span></td>
@@ -510,9 +464,9 @@
                  </table>
                 {{/enable_mixins_details}}
                 {{^enable_mixins_details}}
-                <table style="width:100%; margin-bottom:20px">
+                <table  clas="table table-striped table-dark">
                     <tr>
-                        <td>ring members</td>
+                        <td>Ring Members</td>
                         {{#have_raw_tx}}
                             <td>Is it real?</td>
                         {{/have_raw_tx}}
@@ -520,7 +474,7 @@
                     </tr>
                     {{#mixins}}
                     <tr>
-                        <td> - {{mix_idx}}: {{mix_pub_key}}</td>
+                        <td>{{mix_idx}}: {{mix_pub_key}}</td>
                         {{#have_raw_tx}}
                             {{#mix_is_it_real}}
                                 <td><span style="color: #008009;font-weight: bold">{{mix_is_it_real}}</span></td>

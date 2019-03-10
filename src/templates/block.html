@@ -1,5 +1,5 @@
 
-<div class="text-center" style="border-radius: 5px;width: 50%;margin: 0px auto;float: none;">
+<div class="text-center" style="border-radius: 5px;width: 70%;margin: 0px auto;float: none;">
 
     <H4>Block hash (height): {{blk_hash}} ({{blk_height}})</H4>
 
@@ -14,7 +14,7 @@
 
 
 
-    <table class="text-center">
+    <table class="table table-striped table-dark">
         <tr>
             <td>Timestamp [UCT] (epoch):</td><td>{{blk_timestamp}} ({{blk_timestamp_epoch}})</td>
             <td>Age {{age_format}}:</td><td>{{blk_age}}</td>
@@ -38,7 +38,7 @@
     </table>
 
     <h3>Miner reward transaction</h3>
-    <table class="center">
+    <table class="table table-striped table-dark">
         <tr>
             <td>hash</td>
             <td>outputs</td>
@@ -60,7 +60,7 @@
 
     <h3>Transactions ({{no_txs}})</h3>
     {{#have_txs}}
-        <table class="center" style="width:80%">
+        <table class="table table-striped table-dark">
             <tr>
                 <td>hash</td>
                 <td>outputs</td>
