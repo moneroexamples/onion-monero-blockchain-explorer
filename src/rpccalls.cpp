@@ -223,7 +223,7 @@ rpccalls::get_staking_requirement(uint64_t height, COMMAND_RPC_GET_STAKING_REQUI
     {
         std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
 
-        if (!connect_to_monero_daemon())
+        if (!connect_to_monero_deamon())
         {
             cerr << "get_network_info: not connected to daemon" << endl;
             return false;
