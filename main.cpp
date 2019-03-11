@@ -318,7 +318,12 @@ main(int ac, const char* av[])
 
     CROW_ROUTE(app, "/service_nodes")
     ([&](const crow::request& req) {
-        return xmrblocks.service_nodes(true /*add_header_and_footer*/);
+          return xmrblocks.render_service_nodes_html(true /*add_header_and_footer*/);
+    });
+
+    CROW_ROUTE(app, "/quorums")
+    ([&](const crow::request& req) {
+        return xmrblocks.render_quorum_states_html(true /*add_header_and_footer*/);
     });
 
     // TODO(loki): This should be combined into the normal search mechanism, we shouldn't have 2 search bars.

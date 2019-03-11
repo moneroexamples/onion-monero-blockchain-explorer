@@ -1,0 +1,46 @@
+
+{{#quorum_array}}
+<div class="text-center" style="border-radius: 5px;width: 70%;margin: 0px auto;float: none;">
+  <div class="TitleDivider"></div>
+  <h2 style="margin-bottom: 0px">Quorum State (Height: {{quorum_height}})</h2>
+
+    <h4 class="Subtitle">(No. of Service Nodes In Quorum: {{quorum_nodes_array_size}})</h4>
+    <div class="TitleDivider"></div>
+
+    <table class="table table-striped table-dark">
+          <tr class="TableHeader">
+              <td>Public Key</td>
+              <td>Last Uptime Proof</td>
+              <td>Expiry Date UTC (Estimated)</td>
+          </tr>
+
+          {{#quorum_nodes_array}}
+          <tr>
+              <td><a href="/service_node/{{public_key}}">{{public_key}}</a></td>
+              <td>{{last_uptime_proof}}</td>
+              <td>{{expiration_date}} ({{expiration_time_relative}})</td>
+          </tr>
+          {{/quorum_nodes_array}}
+      </table>
+
+      <h2 style="margin-bottom: 0px">Nodes To Test</h2>
+      <h4 class="Subtitle">(No. of Service Nodes To Test: {{nodes_to_test_array_size}})</h4>
+      <div class="TitleDivider"></div>
+
+    <table class="table table-striped table-dark">
+          <tr class="TableHeader">
+              <td>Public Key</td>
+              <td>Last Uptime Proof</td>
+              <td>Expiry Date UTC (Estimated)</td>
+          </tr>
+
+          {{#nodes_to_test_array}}
+          <tr>
+              <td><a href="/service_node/{{public_key}}">{{public_key}}</a></td>
+              <td>{{last_uptime_proof}}</td>
+              <td>{{expiration_date}} ({{expiration_time_relative}})</td>
+          </tr>
+          {{/nodes_to_test_array}}
+      </table>
+</div> <!-- Wrapper -->
+{{/quorum_array}}

@@ -57,6 +57,7 @@
 #define TMPL_MY_CHECKRAWOUTPUTKEYS  TMPL_DIR "/checkrawoutputkeys.html"
 #define TMPL_SERVICE_NODES          TMPL_DIR "/service_nodes.html"
 #define TMPL_SERVICE_NODE_DETAIL    TMPL_DIR "/service_node_detail.html"
+#define TMPL_QUORUM_STATES          TMPL_DIR "/quorum_states.html"
 
 #define JS_JQUERY   TMPL_DIR "/js/jquery.min.js"
 #define JS_CRC32    TMPL_DIR "/js/crc32.js"
@@ -346,12 +347,12 @@ struct tx_details
 
     ~tx_details() {};
 };
-struct ServiceNodeContext
+typedef struct ServiceNodeContext
 {
     std::string html_context;
     std::string html_full_context;
     int         num_entries_on_front_page;
-};
+}QuorumStateContext;
 
 class page
 {
@@ -360,7 +361,8 @@ static const bool FULL_AGE_FORMAT {true};
 
 MicroCore* mcore;
 Blockchain* core_storage;
- ServiceNodeContext m_snode_context;
+ServiceNodeContext snode_context;
+QuorumStateContext quorum_state_context;;
 rpccalls rpc;
 
 atomic<time_t> server_timestamp;
@@ -468,8 +470,11 @@ page(MicroCore* _mcore,
     testnet = nettype == cryptonote::network_type::TESTNET;
     stagenet = nettype == cryptonote::network_type::STAGENET;
 
-    m_snode_context                           = {};
-    m_snode_context.num_entries_on_front_page = 10;
+    snode_context                           = {};
+	snode_context.num_entries_on_front_page = 10;
+
+	quorum_state_context                           = {};
+	quorum_state_context.num_entries_on_front_page = 1;
 
     no_of_mempool_tx_of_frontpage = 25;
 
@@ -485,6 +490,8 @@ page(MicroCore* _mcore,
     template_file["mempool_error"]   = xmreg::read(TMPL_MEMPOOL_ERROR);
     template_file["mempool_full"]    = get_full_page(template_file["mempool"]);
     template_file["service_nodes"]   = xmreg::read(TMPL_SERVICE_NODES);
+	template_file["quorum_states"]   = xmreg::read(TMPL_QUORUM_STATES);
+    template_file["quorum_states_full"]  = get_full_page(xmreg::read(TMPL_QUORUM_STATES));
     template_file["service_nodes_full"]  = get_full_page(xmreg::read(TMPL_SERVICE_NODES));
     template_file["service_node_detail"] = get_full_page(xmreg::read(TMPL_SERVICE_NODE_DETAIL));
     template_file["block"]           = get_full_page(xmreg::read(TMPL_BLOCK));
@@ -581,10 +588,9 @@ void generate_service_node_mapping(mstch::array *array, bool on_homepage, std::v
        static std::string num_contributors_str;
        num_contributors_str.reserve(8);
 
-       static std::string friendly_uptime_proof_not_received = "Not Received";
        static std::string end_of_queue = "End Of Queue";
 
-       size_t iterate_count = on_homepage ? m_snode_context.num_entries_on_front_page : entries->size();
+        size_t iterate_count = on_homepage ? snode_context.num_entries_on_front_page : entries->size();
        iterate_count        = std::min(entries->size(), iterate_count);
 
        array->reserve(iterate_count);
@@ -618,7 +624,7 @@ void generate_service_node_mapping(mstch::array *array, bool on_homepage, std::v
              {"last_reward_at_block_tx_index", (entry->last_reward_transaction_index == UINT32_MAX) ? end_of_queue : std::to_string(entry->last_reward_transaction_index)},
              {"expiration_date",               expiration_time_str},
              {"expiration_time_relative",      std::string(get_human_time_ago(expiry_time, time(nullptr)))},
-             {"last_uptime_proof",             (entry->last_uptime_proof == 0) ? friendly_uptime_proof_not_received : get_age(server_timestamp, entry->last_uptime_proof).first},
+              {"last_uptime_proof",             last_uptime_proof_to_string(entry->last_uptime_proof)},
            };
            array->push_back(array_entry);
        }
@@ -628,14 +634,14 @@ void generate_service_node_mapping(mstch::array *array, bool on_homepage, std::v
     * Render service node data
     */
    std::string
-   service_nodes(bool add_header_and_footer)
+   render_service_nodes_html(bool add_header_and_footer)
    {
        bool on_homepage = !add_header_and_footer;
 
        COMMAND_RPC_GET_SERVICE_NODES::response response;
        if (!rpc.get_service_node(response, {}))
        {
-         return (on_homepage) ? m_snode_context.html_context : m_snode_context.html_full_context;
+          return (on_homepage) ? snode_context.html_context : snode_context.html_full_context;
        }
 
        char const active_array_id[]   = "service_node_active_array";
@@ -693,25 +699,158 @@ void generate_service_node_mapping(mstch::array *array, bool on_homepage, std::v
 
        if (on_homepage)
        {
-         if (unregistered.size() > m_snode_context.num_entries_on_front_page || registered.size() > m_snode_context.num_entries_on_front_page)
-         {
-           char buf[128];
-           snprintf(buf, sizeof(buf), "Only %d service nodes shown, click here to see all of them", m_snode_context.num_entries_on_front_page);
-           page_context["service_node_link_text"] = std::string(buf);
-         }
+           snode_context.html_context = mstch::render(template_file["service_nodes"], page_context);
+			return snode_context.html_context;
+        }
+        else
+        {
+          add_css_style(page_context);
+          snode_context.html_full_context = mstch::render(template_file["service_nodes_full"], page_context);
+          return snode_context.html_full_context;
+        }
+    }
+
+    std::string last_uptime_proof_to_string(time_t uptime_proof)
+    {
+      static std::string friendly_uptime_proof_not_received = "Not Received";
+
+      if (uptime_proof == 0)
+      {
+        return friendly_uptime_proof_not_received;
+      }
+      else
+      {
+        return get_age(server_timestamp, uptime_proof).first;
+      }
+    }
+
+    std::string
+    render_quorum_states_html(bool add_header_and_footer)
+    {
+        bool on_homepage             = !add_header_and_footer;
+        size_t num_quorums_to_render = 30;
+        if (on_homepage)
+        {
+          num_quorums_to_render = quorum_state_context.num_entries_on_front_page;
+        }
+
+        mstch::map page_context {};
+        page_context["quorum_array"] = mstch::array();
+        mstch::array& quorum_array   = boost::get<mstch::array>(page_context["quorum_array"]);
+        quorum_array.reserve(num_quorums_to_render);
+
+        uint64_t block_height = core_storage->get_current_blockchain_height() - 1;
+        for (size_t height = block_height; num_quorums_to_render > 0; --num_quorums_to_render, --height)
+        {
+          mstch::map quorum_part;
+          quorum_part["quorum_height"] = height;
+
+          // TODO(doyle): We should support querying batch quorums for perf
+          COMMAND_RPC_GET_QUORUM_STATE::response response = {};
+          if (!rpc.get_quorum_state(response, height))
+		{
+		   continue;
+		}
+		  char const quorum_node_array_id[]       = "quorum_nodes_array";
+          char const nodes_to_test_array_id[]     = "nodes_to_test_array";
+          quorum_part[quorum_node_array_id]       = mstch::array();
+          quorum_part[nodes_to_test_array_id]     = mstch::array();
+          quorum_part["quorum_nodes_array_size"]  = response.quorum_nodes.size();
+          quorum_part["nodes_to_test_array_size"] = response.nodes_to_test.size();
+
+          // Split and sort the entries
+          mstch::array& quorum_node_array   = boost::get<mstch::array>(quorum_part[quorum_node_array_id]);
+          mstch::array& nodes_to_test_array = boost::get<mstch::array>(quorum_part[nodes_to_test_array_id]);
+          quorum_node_array.reserve(response.quorum_nodes.size());
+          nodes_to_test_array.reserve(response.nodes_to_test.size());
+
+          static const std::string failed_entry = "--";
+          // TODO: refactor me pls
+          {
+            COMMAND_RPC_GET_SERVICE_NODES::response sn_response;
+            bool inaccurate_or_failed_query = !rpc.get_service_node(sn_response, response.quorum_nodes);
+
+            if (sn_response.service_node_states.size() != response.quorum_nodes.size())
+              inaccurate_or_failed_query = true;
+
+            for (size_t i = 0; i < response.quorum_nodes.size(); ++i)
+            {
+              std::string const &pub_key = response.quorum_nodes[i];
+              mstch::map array_entry { {"public_key", pub_key}, };
+
+              if (inaccurate_or_failed_query)
+              {
+                array_entry.emplace("last_uptime_proof",        failed_entry);
+                array_entry.emplace("expiration_date",          failed_entry);
+                array_entry.emplace("expiration_time_relative", failed_entry);
+              }
+              else
+              {
+                COMMAND_RPC_GET_SERVICE_NODES::response::entry const &entry = sn_response.service_node_states[i];
+
+                static std::string expiration_time_str;
+                time_t expiry_time = calculate_service_node_expiry_timestamp(entry.registration_height);
+                expiration_time_str.clear();
+                get_human_readable_timestamp(expiry_time, &expiration_time_str);
+
+                array_entry.emplace("last_uptime_proof",        last_uptime_proof_to_string(entry.last_uptime_proof));
+                array_entry.emplace("expiration_date",          expiration_time_str);
+                array_entry.emplace("expiration_time_relative", std::string(get_human_time_ago(expiry_time, time(nullptr))));
+              }
+              quorum_node_array.push_back(array_entry);
+            }
+          }
+
+          {
+            COMMAND_RPC_GET_SERVICE_NODES::response sn_response = {};
+            bool inaccurate_or_failed_query = !rpc.get_service_node(sn_response, response.nodes_to_test);
+
+            if (sn_response.service_node_states.size() != response.nodes_to_test.size())
+              inaccurate_or_failed_query = true;
+
+            for (size_t i = 0; i < response.nodes_to_test.size(); ++i)
+            {
+              std::string const &pub_key = response.nodes_to_test[i];
+              mstch::map array_entry { {"public_key", pub_key}, };
+
+              if (inaccurate_or_failed_query)
+              {
+                array_entry.emplace("last_uptime_proof",        failed_entry);
+                array_entry.emplace("expiration_date",          failed_entry);
+                array_entry.emplace("expiration_time_relative", failed_entry);
+              }
+              else
+              {
+                COMMAND_RPC_GET_SERVICE_NODES::response::entry const &entry = sn_response.service_node_states[i];
+
+                static std::string expiration_time_str;
+                time_t expiry_time = calculate_service_node_expiry_timestamp(entry.registration_height);
+                expiration_time_str.clear();
+                get_human_readable_timestamp(expiry_time, &expiration_time_str);
+
+                array_entry.emplace("last_uptime_proof",        last_uptime_proof_to_string(entry.last_uptime_proof));
+                array_entry.emplace("expiration_date",          expiration_time_str);
+                array_entry.emplace("expiration_time_relative", std::string(get_human_time_ago(expiry_time, time(nullptr))));
+              }
+              nodes_to_test_array.push_back(array_entry);
+            }
+          }
+
+          quorum_array.push_back(quorum_part);
        }
 
        if (on_homepage)
        {
-         m_snode_context.html_context = mstch::render(template_file["service_nodes"], page_context);
-         return m_snode_context.html_context;
+          quorum_state_context.html_context = mstch::render(template_file["quorum_states"], page_context);
+          return quorum_state_context.html_context;
        }
        else
        {
          add_css_style(page_context);
-         m_snode_context.html_full_context = mstch::render(template_file["service_nodes_full"], page_context);
-         return m_snode_context.html_full_context;
+          quorum_state_context.html_full_context = mstch::render(template_file["quorum_states_full"], page_context);
+          return quorum_state_context.html_full_context;
        }
+	   
    }
 /**
  * @brief show recent transactions and mempool
@@ -1127,11 +1266,20 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
     // get memory pool rendered template
     // service nodes
         {
-          std::future<std::string> service_node_future = std::async(std::launch::async, [&] { return service_nodes(false /*add_header_and_footer*/); });
-          std::future_status status = service_node_future.wait_for(std::chrono::milliseconds(1000));
+            std::future<std::string> future = std::async(std::launch::async, [&] { return render_service_nodes_html(false /*add_header_and_footer*/); });
+          std::future_status status = future.wait_for(std::chrono::milliseconds(1000));
 
           if (status == std::future_status::ready)
-            context["service_node_info"] = service_node_future.get();
+            context["service_node_summary"] = future.get();
+        }
+
+        // quorum states
+        {
+          std::future<std::string> future = std::async(std::launch::async, [&] { return render_quorum_states_html(false /*add_header_and_footer*/); });
+          std::future_status status = future.wait_for(std::chrono::milliseconds(1000));
+
+          if (status == std::future_status::ready)
+             context["quorum_state_summary"] = future.get();
         }
 
     //string mempool_html = mempool(false, no_of_mempool_tx_of_frontpage);
