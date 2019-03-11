@@ -99,6 +99,9 @@ public:
     bool
     get_network_info(COMMAND_RPC_GET_INFO::response& info);
 
+	 bool
+    get_staking_requirement(uint64_t height, COMMAND_RPC_GET_STAKING_REQUIREMENT::response& response);
+	
     bool
     get_hardfork_info( COMMAND_RPC_HARD_FORK_INFO::response& res);
 

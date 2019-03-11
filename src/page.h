@@ -1218,6 +1218,7 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
             {"block_size_median" , string {current_network_info.block_size_median_str}},
             {"is_current_info"   , current_network_info.current},
             {"is_pool_size_zero" , (current_network_info.tx_pool_size == 0)},
+			{"staking_requirement", print_money(current_network_info.staking_requirement)},
             {"current_hf_version", current_network_info.current_hf_version},
             {"age"               , network_info_age.first},
             {"age_format"        , network_info_age.second},

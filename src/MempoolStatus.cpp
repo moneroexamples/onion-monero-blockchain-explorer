@@ -268,7 +268,11 @@ MempoolStatus::read_network_info()
     if (!rpc.get_hardfork_info(rpc_hardfork_info))
         return false;
 
-
+	COMMAND_RPC_GET_STAKING_REQUIREMENT::response staking_requirement = {};
+    uint64_t query_height = (rpc_network_info.height < rpc_network_info.target_height) ? rpc_network_info.target_height : rpc_network_info.height;
+    if (!rpc.get_staking_requirement(query_height, staking_requirement))
+        return false;
+	
     network_info local_copy;
 
     local_copy.status                     = network_info::get_status_uint(rpc_network_info.status);
@@ -290,7 +294,7 @@ MempoolStatus::read_network_info()
     local_copy.block_size_median          = rpc_network_info.block_size_median;
     local_copy.block_weight_limit         = rpc_network_info.block_weight_limit;
     local_copy.start_time                 = rpc_network_info.start_time;
-
+	local_copy.staking_requirement        = staking_requirement.staking_requirement;
 
     strncpy(local_copy.block_size_limit_str, fmt::format("{:0.2f}",
                                              static_cast<double>(
