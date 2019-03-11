@@ -223,7 +223,7 @@ rpccalls::get_staking_requirement(uint64_t height, COMMAND_RPC_GET_STAKING_REQUI
     {
         std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
 
-        if (!connect_to_loki_daemon())
+        if (!connect_to_monero_daemon())
         {
             cerr << "get_network_info: not connected to daemon" << endl;
             return false;
@@ -249,15 +249,15 @@ rpccalls::get_staking_requirement(uint64_t height, COMMAND_RPC_GET_STAKING_REQUI
 
         if (!err.empty())
         {
-            cerr << "Error connecting to Loki daemon due to "
+            cerr << "Error connecting to Triton daemon due to "
                  << err << endl;
             return false;
         }
     }
     else
     {
-        cerr << "Error connecting to Loki daemon at "
-             << daemon_url << endl;
+        cerr << "Error connecting to Triton daemon at "
+             << deamon_url << endl;
         return false;
     }
 
