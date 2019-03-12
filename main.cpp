@@ -17,6 +17,15 @@ using namespace std;
 
 namespace myxmr
 {
+struct htmlresponse: crow::response
+{
+    htmlresponse(string&& _body)
+            : crow::response {std::move(_body)}
+    {
+        add_header("Content-Type", "text/html; charset=utf-8");
+    }
+};
+
 struct jsonresponse: crow::response
 {
     jsonresponse(const nlohmann::json& _body)
@@ -291,7 +300,8 @@ main(int ac, const char* av[])
 
     CROW_ROUTE(app, "/")
     ([&]() {
-        return crow::response(xmrblocks.index2());
+        //return crow::response(xmrblocks.index2());
+        return myxmr::htmlresponse(xmrblocks.index2());
     });
 
     CROW_ROUTE(app, "/page/<uint>")
