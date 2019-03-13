@@ -119,13 +119,14 @@ namespace std
  * visitor to produce json representations of
  * values stored in mstch::node
  */
-class mstch_node_to_json: public boost::static_visitor<nlohmann::json> {
+class mstch_node_to_json: public boost::static_visitor<nlohmann::json>
+{
 public:
 
 
     // enabled for numeric types
     template<typename T>
-    std::enable_if_t<std::is_arithmetic<T>::value, nlohmann::json>
+    typename  std::enable_if<std::is_arithmetic<T>::value, nlohmann::json>::type
     operator()(T const& value) const {
         return nlohmann::json {value};
     }
@@ -157,7 +158,7 @@ public:
 
     // catch other types that are non-numeric and not listed above
     template<typename T>
-    std::enable_if_t<!std::is_arithmetic<T>::value, nlohmann::json>
+    typename std::enable_if<!std::is_arithmetic<T>::value, nlohmann::json>::type
     operator()(const T&) const {
         return nlohmann::json {};
     }
