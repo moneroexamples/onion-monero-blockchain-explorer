@@ -93,7 +93,7 @@ Note: `devel` branch of the explorer follows `master` branch of the monero.
 
 ## Compilation on Ubuntu 16.04/18.04
 
-##### Compile latest Monero version (0.14.0.0)
+##### Compile latest Monero version (0.14.0.2)
 
 Download and compile recent Monero into your home folder:
 
@@ -106,8 +106,8 @@ sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound
 # go to home folder
 cd ~
 
-# download monero sourced for branch release-v0.13 
-git clone --recursive -b release-v0.13 https://github.com/monero-project/monero.git
+# download monero sourced for master branch
+git clone --recursive https://github.com/monero-project/monero.git
 
 cd monero/
 
