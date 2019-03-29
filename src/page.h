@@ -884,13 +884,15 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
 
     // perapre network info mstch::map for the front page
     string hash_rate;
+    double hr_d;
+    char metric_prefix;
+    cryptonote::difficulty_type hr = make_difficulty(current_network_info.hash_rate, current_network_info.hash_rate_top64);
+    get_metric_prefix(hr, hr_d, metric_prefix);
 
-    if (current_network_info.hash_rate > 1e6)
-        hash_rate = fmt::format("{:0.3f} MH/s", current_network_info.hash_rate/1.0e6);
-    else if (current_network_info.hash_rate > 1e3)
-        hash_rate = fmt::format("{:0.3f} kH/s", current_network_info.hash_rate/1.0e3);
+    if (metric_prefix != 0)
+        hash_rate = fmt::format("{:0.3f} {:c}H/s", hr_d, metric_prefix);
     else
-        hash_rate = fmt::format("{:d} H/s", current_network_info.hash_rate);
+        hash_rate = fmt::format("{:s} H/s", hr.str());
 
     pair<string, string> network_info_age = get_age(local_copy_server_timestamp,
                                                     current_network_info.info_timestamp);
@@ -903,7 +905,7 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
     }
 
     context["network_info"] = mstch::map {
-            {"difficulty"        , current_network_info.difficulty},
+            {"difficulty"        , make_difficulty(current_network_info.difficulty, current_network_info.difficulty_top64).str()},
             {"hash_rate"         , hash_rate},
             {"fee_per_kb"        , print_money(current_network_info.fee_per_kb)},
             {"alt_blocks_no"     , current_network_info.alt_blocks_count},
@@ -1246,7 +1248,7 @@ show_block(uint64_t _blk_height)
     // initalise page tempate map with basic info about blockchain
 
     string blk_pow_hash_str = pod_to_hex(get_block_longhash(blk, _blk_height));
-    uint64_t blk_difficulty = core_storage->get_db().get_block_difficulty(_blk_height);
+    cryptonote::difficulty_type blk_difficulty = core_storage->get_db().get_block_difficulty(_blk_height);
 
     mstch::map context {
             {"testnet"              , testnet},
@@ -1267,7 +1269,7 @@ show_block(uint64_t _blk_height)
             {"delta_time"           , delta_time},
             {"blk_nonce"            , blk.nonce},
             {"blk_pow_hash"         , blk_pow_hash_str},
-            {"blk_difficulty"       , blk_difficulty},
+            {"blk_difficulty"       , blk_difficulty.str()},
             {"age_format"           , age.second},
             {"major_ver"            , std::to_string(blk.major_version)},
             {"minor_ver"            , std::to_string(blk.minor_version)},
@@ -6581,7 +6583,7 @@ get_monero_network_info(json& j_info)
        {"current"                   , local_copy_network_info.current},
        {"height"                    , local_copy_network_info.height},
        {"target_height"             , local_copy_network_info.target_height},
-       {"difficulty"                , local_copy_network_info.difficulty},
+       {"difficulty"                , make_difficulty(local_copy_network_info.difficulty, local_copy_network_info.difficulty_top64).str()},
        {"target"                    , local_copy_network_info.target},
        {"hash_rate"                 , local_copy_network_info.hash_rate},
        {"tx_count"                  , local_copy_network_info.tx_count},
@@ -6594,7 +6596,7 @@ get_monero_network_info(json& j_info)
        {"testnet"                   , local_copy_network_info.nettype == cryptonote::network_type::TESTNET},
        {"stagenet"                  , local_copy_network_info.nettype == cryptonote::network_type::STAGENET},
        {"top_block_hash"            , pod_to_hex(local_copy_network_info.top_block_hash)},
-       {"cumulative_difficulty"     , local_copy_network_info.cumulative_difficulty},
+       {"cumulative_difficulty"     , make_difficulty(local_copy_network_info.cumulative_difficulty, local_copy_network_info.cumulative_difficulty_top64).str()},
        {"block_size_limit"          , local_copy_network_info.block_size_limit},
        {"block_size_median"         , local_copy_network_info.block_size_median},
        {"start_time"                , local_copy_network_info.start_time},

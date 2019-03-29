@@ -373,6 +373,12 @@ pause_execution(uint64_t no_seconds, const string& text = "now");
 string
 tx_to_hex(transaction const& tx);
 
+void
+get_metric_prefix(cryptonote::difficulty_type hr, double& hr_d, char& prefix);
+
+cryptonote::difficulty_type
+make_difficulty(uint64_t low, uint64_t high);
+
 }
 
 #endif //XMREG01_TOOLS_H
