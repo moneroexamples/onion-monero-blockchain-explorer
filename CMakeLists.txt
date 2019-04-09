@@ -19,16 +19,12 @@ endif()
 
 message(STATUS MONERO_DIR ": ${MONERO_DIR}")
 
-if (NOT MONERO_SOURCE_DIR)
-    set(MONERO_SOURCE_DIR ${MONERO_DIR}
-          CACHE PATH "Path to the root directory for Monero")
-endif()
+set(MONERO_SOURCE_DIR ${MONERO_DIR}
+        CACHE PATH "Path to the root directory for Monero")
 
-if (NOT MONERO_BUILD_DIR)
-    # set location of monero build tree
-    set(MONERO_BUILD_DIR ${MONERO_SOURCE_DIR}/build/release/
-          CACHE PATH "Path to the build directory for Monero")
-endif()
+# set location of monero build tree
+set(MONERO_BUILD_DIR ${MONERO_SOURCE_DIR}/build/release/
+        CACHE PATH "Path to the build directory for Monero")
 
 set(MY_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake"
         CACHE PATH "The path to the cmake directory of the current project")
