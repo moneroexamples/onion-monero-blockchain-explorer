@@ -1885,25 +1885,6 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
     tx_json["nettype"] = static_cast<size_t>(nettype);
     tx_json["_comment"] = "Just a placeholder for some comment if needed later";
 
-    // add placeholder for sender and recipient details
-    // this is most useful for unit testing on stagenet/testnet
-    // private monero networks, so we can easly put these
-    // networks accounts details here.
-    tx_json["sender"] = json {
-                            {"seed", ""},
-                            {"address", ""},
-                            {"viewkey", ""},
-                            {"spendkey", ""},
-                            {"_comment", ""}};
-
-    tx_json["recipient"] = json {
-                            {"seed", ""},
-                            {"address", ""},
-                            {"is_subaddress", false},
-                            {"viewkey", ""},
-                            {"spendkey", ""},
-                            {"_comment", ""}};
-
     uint64_t tx_blk_height {0};
 
     try
