@@ -120,8 +120,8 @@ as follows:
 # go to home folder if still in ~/monero
 cd ~
 
-# download the source code 
-git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
+# download the source code of the devel branch
+git clone --recursive -b devel  https://github.com/moneroexamples/openmonero.git
 
 # enter the downloaded sourced code folder
 cd onion-monero-blockchain-explorer
