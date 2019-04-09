@@ -345,7 +345,7 @@
                     decoding_results_str += "<tr>"
                         +"<td>" + output_idx +  "</td>"
                         +"<td>" + output_pub_key +  "</td>"
-                        +"<td>" + (amount / 1e12) +  "</td>"
+                        +"<td>" + (amount / 1e9) +  "</td>"
                         +"<td>" + mine_output_str +  "</td>"
                         +"</tr>";
 
@@ -356,7 +356,7 @@
 
                 decoding_results_str += "</table>";
 
-                decoding_results_str += "<h3>Sum XMR from matched outputs (i.e., incoming XMR): " + (sum_outptus / 1e12) + "</h3>"
+                decoding_results_str += "<h3>Sum XMR from matched outputs (i.e., incoming XMR): " + (sum_outptus / 1e9) + "</h3>"
 
 
                 // decrypt payment_id8 which results in using
