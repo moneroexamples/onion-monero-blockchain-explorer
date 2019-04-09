@@ -1720,7 +1720,7 @@ show_ringmembers_hex(string const& tx_hash_str)
                     == false)
                 continue;
 
-            core_storage->get_db().get_output_key(in_key.amount,
+            core_storage->get_db().get_output_key(epee::span<const uint64_t>(&in_key.amount, 1),
                                                   absolute_offsets,
                                                   mixin_outputs);
         }
@@ -2009,7 +2009,7 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
 
             // get mining ouput info
             core_storage->get_db().get_output_key(
-                        in_key.amount,
+                        epee::span<const uint64_t>(&in_key.amount, 1),
                         absolute_offsets,
                         mixin_outputs);
         }
@@ -2524,7 +2524,7 @@ show_my_outputs(string tx_hash_str,
             if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
                 continue;
 
-            core_storage->get_db().get_output_key(in_key.amount,
+            core_storage->get_db().get_output_key(epee::span<const uint64_t>(&in_key.amount, 1),
                                                   absolute_offsets,
                                                   mixin_outputs);
         }
@@ -4687,7 +4687,7 @@ json_transaction(string tx_hash_str)
             if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
                 continue;
 
-            core_storage->get_db().get_output_key(in_key.amount,
+            core_storage->get_db().get_output_key(epee::span<const uint64_t>(&in_key.amount, 1),
                                                   absolute_offsets,
                                                   outputs);
         }
@@ -6363,7 +6363,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
             // offsets seems good, so try to get the outputs for the amount and
             // offsets given
-            core_storage->get_db().get_output_key(in_key.amount,
+            core_storage->get_db().get_output_key(epee::span<const uint64_t>(&in_key.amount, 1),
                                                   absolute_offsets,
                                                   outputs);
         }
@@ -6576,7 +6576,8 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
         if (core_storage->get_db().tx_exists(txd.hash, tx_index))
         {
             out_amount_indices = core_storage->get_db()
-                    .get_tx_amount_output_indices(tx_index);
+                    .get_tx_amount_output_indices(tx_index)
+                    .front();
         }
         else
         {
