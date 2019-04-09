@@ -73,7 +73,7 @@ namespace xmreg
                  "path to crt file for ssl (https) functionality")
                 ("ssl-key-file", value<string>(),
                  "path to key file for ssl (https) functionality")
-                ("deamon-url,d", value<string>()->default_value("http:://127.0.0.1:18081"),
+                ("deamon-url,d", value<string>()->default_value("http:://127.0.0.1:19733"),
                  "Monero deamon url");
 
 
