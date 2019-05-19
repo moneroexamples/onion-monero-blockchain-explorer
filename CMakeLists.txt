@@ -128,6 +128,7 @@ set(LIBRARIES
         checkpoints
         version
         epee
+        randomx
         sodium
         ${Boost_LIBRARIES}
         pthread

@@ -30,7 +30,8 @@
 
 set(LIBS common;blocks;cryptonote_basic;cryptonote_core;multisig;
 		cryptonote_protocol;daemonizer;mnemonics;epee;lmdb;device;
-		blockchain_db;ringct;wallet;cncrypto;easylogging;version;checkpoints)
+		blockchain_db;ringct;wallet;cncrypto;easylogging;version;
+        checkpoints;randomx)
 
 set(Xmr_INCLUDE_DIRS "${CPP_MONERO_DIR}")
 
@@ -44,7 +45,7 @@ foreach (l ${LIBS})
 	find_library(Xmr_${L}_LIBRARY
 		NAMES ${l}
 		PATHS ${CMAKE_LIBRARY_PATH}
-		PATH_SUFFIXES "/src/${l}" "/src/" "/external/db_drivers/lib${l}" "/lib" "/src/crypto" "/contrib/epee/src" "/external/easylogging++/"
+        PATH_SUFFIXES "/src/${l}" "/src/" "/external/db_drivers/lib${l}" "/lib" "/src/crypto" "/contrib/epee/src" "/external/easylogging++/" "/external/${l}"
 		NO_DEFAULT_PATH
 	)
 
