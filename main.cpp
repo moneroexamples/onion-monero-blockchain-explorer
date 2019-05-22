@@ -70,7 +70,6 @@ main(int ac, const char* av[])
     auto enable_output_key_checker_opt = opts.get_option<bool>("enable-output-key-checker");
     auto enable_autorefresh_option_opt = opts.get_option<bool>("enable-autorefresh-option");
     auto enable_pusher_opt             = opts.get_option<bool>("enable-pusher");
-    auto enable_js_opt                 = opts.get_option<bool>("enable-js");
     auto enable_mixin_details_opt      = opts.get_option<bool>("enable-mixin-details");
     auto enable_json_api_opt           = opts.get_option<bool>("enable-json-api");
     auto enable_as_hex_opt             = opts.get_option<bool>("enable-as-hex");
@@ -95,7 +94,6 @@ main(int ac, const char* av[])
         cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
 
     bool enable_pusher                {*enable_pusher_opt};
-    bool enable_js                    {*enable_js_opt};
     bool enable_key_image_checker     {*enable_key_image_checker_opt};
     bool enable_autorefresh_option    {*enable_autorefresh_option_opt};
     bool enable_output_key_checker    {*enable_output_key_checker_opt};
@@ -275,7 +273,6 @@ main(int ac, const char* av[])
                           deamon_url,
                           nettype,
                           enable_pusher,
-                          enable_js,
                           enable_as_hex,
                           enable_key_image_checker,
                           enable_output_key_checker,
@@ -601,64 +598,6 @@ main(int ac, const char* av[])
                       "Disallow: ";
         return text;
     });
-
-    if (enable_js)
-    {
-        cout << "Enable JavaScript checking of outputs and proving txs\n";
-
-        CROW_ROUTE(app, "/js/jquery.min.js")
-        ([&]() {
-            return xmrblocks.get_js_file("jquery.min.js");
-        });
-
-        CROW_ROUTE(app, "/js/crc32.js")
-        ([&]() {
-            return xmrblocks.get_js_file("crc32.js");
-        });
-
-        CROW_ROUTE(app, "/js/biginteger.js")
-        ([&]() {
-            return xmrblocks.get_js_file("biginteger.js");
-        });
-
-        CROW_ROUTE(app, "/js/crypto.js")
-        ([&]() {
-            return xmrblocks.get_js_file("crypto.js");
-        });
-
-        CROW_ROUTE(app, "/js/config.js")
-        ([&]() {
-            return xmrblocks.get_js_file("config.js");
-        });
-
-        CROW_ROUTE(app, "/js/nacl-fast-cn.js")
-        ([&]() {
-            return xmrblocks.get_js_file("nacl-fast-cn.js");
-        });
-
-        CROW_ROUTE(app, "/js/base58.js")
-        ([&]() {
-            return xmrblocks.get_js_file("base58.js");
-        });
-
-        CROW_ROUTE(app, "/js/cn_util.js")
-        ([&]() {
-            return xmrblocks.get_js_file("cn_util.js");
-        });
-
-        CROW_ROUTE(app, "/js/sha3.js")
-        ([&]() {
-            return xmrblocks.get_js_file("sha3.js");
-        });
-
-        CROW_ROUTE(app, "/js/all_in_one.js")
-        ([&]() {
-            // /js/all_in_one.js file does not exist. it is generated on the fly
-            // from the above real files.
-            return xmrblocks.get_js_file("all_in_one.js");
-        });
-
-    } // if (enable_js)
 
     if (enable_json_api)
     {
