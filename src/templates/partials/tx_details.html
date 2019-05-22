@@ -86,12 +86,7 @@
                     <h5 style="margin: 0px">
                         For RingCT transactions, outputs' amounts are also decoded
                         <br/>
-                        {{#enable_js}}
-                            Note: address/subaddress and viewkey are NOT sent to the server, as the calculations are done on the client side
-                        {{/enable_js}}
-                        {{^enable_js}}
-                            Note: address/subaddress and viewkey are sent to the server, as the calculations are done on the server side
-                        {{/enable_js}}
+                        Note: address/subaddress and viewkey are sent to the server, as the calculations are done on the server side
                     </h5>
                     <form action="/myoutputs" method="post" style="width:100%; margin-top:2px" class="style-1">
                         <input type="hidden" name="tx_hash" value="{{tx_hash}}"><br/>
@@ -99,15 +94,7 @@
                         <input type="text" name="viewkey" size="110" placeholder="Private viewkey" style="margin-top:5px"><br/>
                         <input type="hidden" name="raw_tx_data" value="{{raw_tx_data}}">
                         <!--above raw_tx_data field only used when checking raw tx data through tx pusher-->
-
-                        {{#enable_js}}
-                        <!-- if have js, DONOT submit the form to server.
-                             change submit button, to just a button -->
-                            <button type="button" style="margin-top:5px" id="decode_btn" >Decode outputs</button>
-                        {{/enable_js}}
-                        {{^enable_js}}
-                            <input type="submit" value="Decode outputs" style="margin-top:5px" >
-                        {{/enable_js}}
+                        <input type="submit" value="Decode outputs" style="margin-top:5px" >
                     </form>
                 </div>
             </div>
@@ -122,12 +109,7 @@
                         Tx private key can be obtained using <i>get_tx_key</i>
                         command in  <i>monero-wallet-cli</i> command line tool
                         <br/>
-                        {{#enable_js}}
-                            Note: address/subaddress and tx private key are NOT sent to the server, as the calculations are done on the client side
-                        {{/enable_js}}
-                        {{^enable_js}}
-                            Note: address/subaddress and tx private key are sent to the server, as the calculations are done on the server side
-                        {{/enable_js}}
+                        Note: address/subaddress and tx private key are sent to the server, as the calculations are done on the server side
                     </h5>
                     <form action="/prove" method="post" style="width:100%;margin-top:2px" class="style-1">
                        <input type="hidden" name="txhash" value="{{tx_hash}}"><br/>
@@ -135,251 +117,13 @@
                         <input type="hidden" name="raw_tx_data" value="{{raw_tx_data}}">
                         <!--above raw_tx_data field only used when checking raw tx data through tx pusher-->
                        <input type="text" name="xmraddress" size="120" placeholder="Recipient's monero address/subaddress" style="margin-top:5px"><br/>
-
-                        {{#enable_js}}
-                            <!-- if have js, DONOT submit the form to server.
-                                 change submit button, to just a button -->
-                            <button type="button" style="margin-top:5px" id="prove_btn">Prove sending</button>
-                        {{/enable_js}}
-                        {{^enable_js}}
-                           <input type="submit" value="Prove sending" style="margin-top:5px">
-                        {{/enable_js}}
-
+                       <input type="submit" value="Prove sending" style="margin-top:5px">
                     </form>
                 </div>
             </div>
         </div>
     </div>
     {{/have_raw_tx}}
-
-    {{#enable_js}}
-
-        <!-- to disply results from deconding and proving txs using js -->
-        <div id="decode-prove-results" class="center" style="width: 80%; margin-top:10px;border-style: dotted">
-
-        </div>
-
-        <script>
-
-            //  here we handle button presses from the above forms
-            //  to decode and prove txs.
-            $(document).ready(function() {
-
-                // we need output pubplic keys, their indexes and amounts.
-                // all this is already avaliable on the html, but we can use
-                // musch framework to produce js array for this
-
-                var tx_json = {{#tx_json_raw}}{{/tx_json_raw}};
-
-                var tx_public_key = $("#tx_pub_key").text();
-
-                // when we process multi-ouput tx, it can have extra public keys
-                // due to sub-addresses
-                var add_tx_pub_keys = $("#add_tx_pub_keys").text().split(';').slice(0, -1);
-
-                //console.log("add_tx_pub_keys: ", add_tx_pub_keys);
-
-                var payment_id = $("#payment_id").text();
-
-
-                $("#decode_btn").click(function() {
-
-                    var address = $("input[name=xmr_address]").val().trim();
-                    var viewkey = $("input[name=viewkey]").val().trim();
-
-                    if (!address || !viewkey) {
-                        $("#decode-prove-results").html("<h4>Address or viewkey key not provided!</h4>");
-                        return;
-                    }
-
-                    // not used when decoding, but used when proving.
-                    // so we just use array here
-                    multiple_tx_secret_keys = [];
-
-                    try {
-                        var address_decoded = decode_address(address);
-                        decodeOutputs(tx_json, tx_public_key, viewkey,
-                                      address_decoded.spend, payment_id,
-                                      add_tx_pub_keys, multiple_tx_secret_keys, false);
-                    } catch(err){
-                        console.log(err);
-                        $("#decode-prove-results").html('<h4>Error: ' + err + '</h4>' );
-                    }
-                });
-
-                $("#prove_btn").click(function() {
-
-                    var address    = $("input[name=xmraddress]").val().trim();
-                    var tx_prv_key = $("input[name=txprvkey]").val().trim();
-
-                    if (!address || !tx_prv_key) {
-                        $("#decode-prove-results").html("<h4>Address or tx private key not provided!</h4>");
-                        return;
-                    }
-
-                    try {
-                        // when using subaddress, there can be more than one tx_prv_key
-                        var multiple_tx_prv_keys = parse_str_secret_key(tx_prv_key);
-
-                        var address_decoded = decode_address(address);
-                        decodeOutputs(tx_json, address_decoded.view, tx_prv_key,
-                                      address_decoded.spend, payment_id,
-                                      add_tx_pub_keys, multiple_tx_prv_keys, true);
-                    } catch(err){
-                        console.log(err);
-                        $("#decode-prove-results").html('<h4>Error: ' + err + '</h4>' );
-                    }
-                });
-
-            });
-
-            // based on C++ code by stoffu
-            function parse_str_secret_key(key_str) {
-
-                var multiple_tx_secret_keys = [];
-
-                var num_keys = Math.floor(key_str.length / 64);
-
-                if (num_keys * 64 !=  key_str.length)
-                    throw "num_keys * 64 !=  key_str.length";
-
-                for (var i = 0; i < num_keys; i++)
-                {
-                    multiple_tx_secret_keys.push(key_str.slice(64*i, 64*i + 64));
-                }
-
-                return multiple_tx_secret_keys;
-            }
-
-
-            function decodeOutputs(tx_json, pub_key, sec_key,
-                                   address_pub_key, payment_id,
-                                   add_tx_pub_keys,  multiple_tx_prv_keys, tx_prove) {
-                //console.log(tx_json);
-
-                var is_rct = (tx_json.version === 2);
-                var rct_type = (is_rct ? tx_json.rct_signatures.type : -1);
-
-                var key_derivation = "";
-
-                if (tx_prove)
-                    key_derivation = generate_key_derivation(pub_key, multiple_tx_prv_keys[0]);
-                else
-                    key_derivation = generate_key_derivation(pub_key, sec_key);
-
-
-                var add_key_derivation = [];
-
-                if (add_tx_pub_keys) {
-                    for (var i = 0; i < add_tx_pub_keys.length; i++)
-                    {
-                        if (!tx_prove)
-                            add_key_derivation.push(generate_key_derivation(add_tx_pub_keys[i], sec_key));
-                        else
-                            add_key_derivation.push(generate_key_derivation(pub_key, multiple_tx_prv_keys[i+1]));
-                    }
-                }
-
-                //console.log("add_key_derivation: ", add_key_derivation);
-
-
-                // go over each tx output, and check if it is ours or not
-                var decoding_results_str = '<h3>Output decoding results</h3>';
-
-                decoding_results_str += '<table class="center">';
-
-                decoding_results_str += '<tr>' +
-                    '<td></td>' +
-                    '<td>output public key</td>' +
-                    '<td>amount</td>' +
-                    '<td>output match?</td>' +
-                    '</tr>';
-
-                var output_idx = 0;
-
-                var sum_outptus = 0;
-
-                tx_json.vout.forEach(function(output) {
-
-                    var output_pub_key = output.target.key;
-                    var amount         = output.amount;
-
-                    var pubkey_generated = derive_public_key(key_derivation, output_idx, address_pub_key);
-
-                    var mine_output = (output_pub_key == pubkey_generated);
-
-                    var with_additional = false;
-
-                    var mine_output_str = "false";
-
-                    if (!mine_output && add_tx_pub_keys.length == tx_json.vout.length) {
-
-                        pubkey_generated = derive_public_key(add_key_derivation[output_idx],
-                                                             output_idx, address_pub_key);
-
-                        mine_output = (output_pub_key == pubkey_generated);
-                        with_additional = true;
-                    }
-
-                    if (mine_output) {
-
-                        mine_output_str = '<span style="color: #008009;font-weight: bold">true</span>';
-
-                        if (is_rct && rct_type > 0 /* not coinbase*/) {
-                            try {
-                                //var ecdh = decodeRct(tx_json.rct_signatures, output_idx, key_derivation);
-                                var ecdh = decodeRct(tx_json.rct_signatures, output_idx,
-                                                     (with_additional ? add_key_derivation[output_idx] : key_derivation));
-
-
-                                amount = parseInt(ecdh.amount);
-                            } catch (err) {
-                                decoding_results_str += "<span class='validNo'>RingCT amount for output " + i + " with pubkey: " + output_pub_key + "</span>" + "<br>"; //rct commitment != computed
-                                throw "invalid rct amount";
-                            }
-                        }
-
-                        sum_outptus += amount;
-                    }
-
-                    decoding_results_str += "<tr>"
-                        +"<td>" + output_idx +  "</td>"
-                        +"<td>" + output_pub_key +  "</td>"
-                        +"<td>" + (amount / 1e12) +  "</td>"
-                        +"<td>" + mine_output_str +  "</td>"
-                        +"</tr>";
-
-                    //console.log(output[1], pubkey_generated);
-
-                    output_idx++;
-                });
-
-                decoding_results_str += "</table>";
-
-                decoding_results_str += "<h3>Sum XMR from matched outputs (i.e., incoming XMR): " + (sum_outptus / 1e12) + "</h3>"
-
-
-                // decrypt payment_id8 which results in using
-                // integrated address
-                if (payment_id.length == 16) {
-                    if (pub_key) {
-                        var decrypted_payment_id8
-                            = decrypt_payment_id(payment_id, pub_key, sec_key);
-                        console.log("decrypted_payment_id8: " + decrypted_payment_id8);
-                        decoding_results_str += "<h5>Decrypted payment id: "
-                            + decrypted_payment_id8
-                            + " (value incorrect if you are not the recipient of the tx)</h5>"
-                    }
-                }
-
-
-                $("#decode-prove-results").html(decoding_results_str);
-            }
-
-        </script>
-
-    {{/enable_js}}
-
 
 
 {{#has_inputs}}

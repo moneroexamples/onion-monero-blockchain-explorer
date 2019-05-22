@@ -43,8 +43,6 @@ namespace xmreg
                  "show times of getting data from cache vs no cache")
                 ("enable-block-cache", value<bool>()->default_value(false)->implicit_value(true),
                  "enable caching of block details")
-                ("enable-js", value<bool>()->default_value(false)->implicit_value(true),
-                 "enable checking outputs and proving txs using JavaScript on client side")
                 ("enable-as-hex", value<bool>()->default_value(false)->implicit_value(true),
                  "enable links to provide hex represtations of a tx and a block")
                 ("enable-autorefresh-option", value<bool>()->default_value(false)->implicit_value(true),

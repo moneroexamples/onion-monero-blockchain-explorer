@@ -403,7 +403,6 @@ bool mainnet;
 bool testnet;
 bool stagenet;
 
-bool enable_js;
 
 bool enable_pusher;
 
@@ -462,7 +461,6 @@ page(MicroCore* _mcore,
      string _deamon_url,
      cryptonote::network_type _nettype,
      bool _enable_pusher,
-     bool _enable_js,
      bool _enable_as_hex,
      bool _enable_key_image_checker,
      bool _enable_output_key_checker,
@@ -482,7 +480,6 @@ page(MicroCore* _mcore,
           server_timestamp {std::time(nullptr)},
           nettype {_nettype},
           enable_pusher {_enable_pusher},
-          enable_js {_enable_js},
           enable_as_hex {_enable_as_hex},
           enable_key_image_checker {_enable_key_image_checker},
           enable_output_key_checker {_enable_output_key_checker},
@@ -531,65 +528,6 @@ page(MicroCore* _mcore,
     template_file["tx_details"]      = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html");
     template_file["tx_table_header"] = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html");
     template_file["tx_table_row"]    = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html");
-
-    if (enable_js) {
-        // JavaScript files
-        template_file["jquery.min.js"]   = xmreg::read(JS_JQUERY);
-        template_file["crc32.js"]        = xmreg::read(JS_CRC32);
-        template_file["crypto.js"]       = xmreg::read(JS_CRYPTO);
-        template_file["cn_util.js"]      = xmreg::read(JS_CNUTIL);
-        template_file["base58.js"]       = xmreg::read(JS_BASE58);
-        template_file["nacl-fast-cn.js"] = xmreg::read(JS_NACLFAST);
-        template_file["sha3.js"]         = xmreg::read(JS_SHA3);
-        template_file["config.js"]       = xmreg::read(JS_CONFIG);
-        template_file["biginteger.js"]   = xmreg::read(JS_BIGINT);
-
-        // need to set  "testnet: false," flag to reflect
-        // if we are running testnet or mainnet explorer
-
-        if (testnet)
-        {
-            template_file["config.js"] = std::regex_replace(
-                    template_file["config.js"],
-                    std::regex("testnet: false"),
-                    "testnet: true");
-        }
-
-        // the same idea as above for the stagenet
-
-        if (stagenet)
-        {
-            template_file["config.js"] = std::regex_replace(
-                    template_file["config.js"],
-                    std::regex("stagenet: false"),
-                    "stagenet: true");
-        }
-
-        template_file["all_in_one.js"] = template_file["jquery.min.js"] +
-                                         template_file["crc32.js"] +
-                                         template_file["biginteger.js"] +
-                                         template_file["config.js"] +
-                                         template_file["nacl-fast-cn.js"] +
-                                         template_file["crypto.js"] +
-                                         template_file["base58.js"] +
-                                         template_file["cn_util.js"] +
-                                         template_file["sha3.js"];
-
-        js_html_files += "<script src=\"/js/jquery.min.js\"></script>";
-        js_html_files += "<script src=\"/js/crc32.js\"></script>";
-        js_html_files += "<script src=\"/js/biginteger.js\"></script>";
-        js_html_files += "<script src=\"/js/config.js\"></script>";
-        js_html_files += "<script src=\"/js/nacl-fast-cn.js\"></script>";
-        js_html_files += "<script src=\"/js/crypto.js\"></script>";
-        js_html_files += "<script src=\"/js/base58.js\"></script>";
-        js_html_files += "<script src=\"/js/cn_util.js\"></script>";
-        js_html_files += "<script src=\"/js/sha3.js\"></script>";
-
-        // /js/all_in_one.js file does not exist. it is generated on the fly
-        // from the above real files.
-        js_html_files_all_in_one = "<script src=\"/js/all_in_one.js\"></script>";
-    }
-
 }
 
 /**
@@ -1641,9 +1579,6 @@ show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0)
     };
 
     add_css_style(context);
-
-    if (enable_js)
-        add_js_files(context);
 
     // render the page
     return mstch::render(template_file["tx"], context, partials);
@@ -3027,8 +2962,6 @@ show_checkrawtx(string raw_tx_data, string action)
 
     add_css_style(context);
 
-    if (enable_js)
-        add_js_files(context);
 
     if (unsigned_tx_given)
     {
@@ -3375,8 +3308,6 @@ show_checkrawtx(string raw_tx_data, string action)
 
             add_css_style(context);
 
-            if (enable_js)
-                add_js_files(context);
 
             // render the page
             return mstch::render(template_file["checkrawtx"], context, partials);
@@ -7091,8 +7022,6 @@ void
 add_css_style(mstch::map& context)
 {
     // add_css_style goes to every subpage so here we mark
-    // if js is anabled or not.
-    context["enable_js"] = enable_js;
 
     context["css_styles"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
         return template_file["css_styles"];
