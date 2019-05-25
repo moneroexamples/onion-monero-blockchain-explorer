@@ -1,0 +1,31 @@
+
+<div>
+
+    <H4>Block hash (height): {{blk_hash}} ({{blk_height}})</H4>
+    <h3>Recalculated {{pow}}</h3>
+
+    <h3>RandomX source code</h3>
+    {{#have_txs}}
+        <table class="center" style="width:80%">
+            <tr>
+                <td>hash</td>
+                <td>outputs</td>
+                <td>fee [&#181;&#x271]</td>
+                <td>in/out</td>
+                <td>size [kB]</td>
+                <td>version</td>
+            </tr>
+            {{#blk_txs}}
+                <tr>
+                    <td><a href="/tx/{{hash}}">{{hash}}</a></td>
+                    <td>{{sum_outputs}}</td>
+                    <td>{{fee_micro}}</td>
+                    <td>{{no_inputs}}/{{no_outputs}}</td>                    
+                    <td>{{tx_size}}</td>
+                    <td>{{version}}</td>
+                </tr>
+            {{/blk_txs}}
+        </table>
+    {{/have_txs}}    
+
+</div>
