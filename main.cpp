@@ -310,6 +310,11 @@ main(int ac, const char* av[])
     ([&](size_t block_height) {
         return myxmr::htmlresponse(xmrblocks.show_block(block_height));
     });
+    
+    CROW_ROUTE(app, "/randomx/<uint>")
+    ([&](size_t block_height) {
+        return myxmr::htmlresponse(xmrblocks.show_randomx(block_height));
+    });
 
     CROW_ROUTE(app, "/block/<string>")
     ([&](string block_hash) {

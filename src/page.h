@@ -10,6 +10,12 @@
 #include "mstch/mstch.hpp"
 
 #include "monero_headers.h"
+#include "randomx.h"
+#include "common.hpp"
+#include "blake2/blake2.h"
+#include "virtual_machine.hpp"
+#include "program.hpp"
+#include "aes_hash.hpp"
 
 #include "../gen/version.h"
 
@@ -29,7 +35,12 @@
 #include "../ext/vpetrigocaches/fifo_cache_policy.hpp"
 #include "../ext/mstch/src/visitor/render_node.hpp"
 
+extern "C" bool rx_needhash(const uint64_t height, uint64_t *seedheight);
+extern "C" void rx_seedhash(const uint64_t seedheight, const char *hash, const int miners);
+extern "C" void rx_slow_hash(const void *data, size_t length, char *hash, const int miners);
+extern "C" void rx_reorg(const uint64_t split_height);
 
+extern __thread randomx_vm *rx_vm;
 
 #include <algorithm>
 #include <limits>
@@ -49,6 +60,7 @@
 #define TMPL_HEADER                 TMPL_DIR "/header.html"
 #define TMPL_FOOTER                 TMPL_DIR "/footer.html"
 #define TMPL_BLOCK                  TMPL_DIR "/block.html"
+#define TMPL_RANDOMX                TMPL_DIR "/randomx.html"
 #define TMPL_TX                     TMPL_DIR "/tx.html"
 #define TMPL_ADDRESS                TMPL_DIR "/address.html"
 #define TMPL_MY_OUTPUTS             TMPL_DIR "/my_outputs.html"
@@ -60,16 +72,6 @@
 #define TMPL_MY_CHECKRAWKEYIMGS     TMPL_DIR "/checkrawkeyimgs.html"
 #define TMPL_MY_RAWOUTPUTKEYS       TMPL_DIR "/rawoutputkeys.html"
 #define TMPL_MY_CHECKRAWOUTPUTKEYS  TMPL_DIR "/checkrawoutputkeys.html"
-
-#define JS_JQUERY   TMPL_DIR "/js/jquery.min.js"
-#define JS_CRC32    TMPL_DIR "/js/crc32.js"
-#define JS_BIGINT   TMPL_DIR "/js/biginteger.js"
-#define JS_CONFIG   TMPL_DIR "/js/config.js"
-#define JS_BASE58   TMPL_DIR "/js/base58.js"
-#define JS_CRYPTO   TMPL_DIR "/js/crypto.js"
-#define JS_CNUTIL   TMPL_DIR "/js/cn_util.js"
-#define JS_NACLFAST TMPL_DIR "/js/nacl-fast-cn.js"
-#define JS_SHA3     TMPL_DIR "/js/sha3.js"
 
 #define ONIONEXPLORER_RPC_VERSION_MAJOR 1
 #define ONIONEXPLORER_RPC_VERSION_MINOR 1
@@ -514,6 +516,7 @@ page(MicroCore* _mcore,
     template_file["mempool_error"]   = xmreg::read(TMPL_MEMPOOL_ERROR);
     template_file["mempool_full"]    = get_full_page(template_file["mempool"]);
     template_file["block"]           = get_full_page(xmreg::read(TMPL_BLOCK));
+    template_file["randomx"]         = get_full_page(xmreg::read(TMPL_RANDOMX));
     template_file["tx"]              = get_full_page(xmreg::read(TMPL_TX));
     template_file["my_outputs"]      = get_full_page(xmreg::read(TMPL_MY_OUTPUTS));
     template_file["rawtx"]           = get_full_page(xmreg::read(TMPL_MY_RAWTX));
@@ -1143,7 +1146,6 @@ altblocks()
 string
 show_block(uint64_t _blk_height)
 {
-
     // get block at the given height i
     block blk;
 
@@ -1234,6 +1236,59 @@ show_block(uint64_t _blk_height)
     cryptonote::difficulty_type blk_difficulty 
         = core_storage->get_db().get_block_difficulty(_blk_height);
 
+
+    uint64_t seed_height;
+
+    rx_needhash(_blk_height, &seed_height);
+    cout << "seed_height: " << seed_height << '\n';
+
+    rx_seedhash(seed_height, blk_hash.data, 0);
+
+    blobdata bd = get_block_hashing_blob(blk);
+
+    crypto::hash res;
+    
+    //cout << pod_to_hex(blk_hash) << endl;
+
+    rx_slow_hash(bd.data(), bd.size(), res.data, 0);
+
+    cout << "pow: " << pod_to_hex(res) << endl;
+
+    cout << bool {rx_vm} << endl;
+
+
+
+    // based on randomx calculate hash
+    // the hash is seed used to generated scrachtpad and program
+    alignas(16) uint64_t tempHash[8];
+    blake2b(tempHash, sizeof(tempHash), bd.data(), bd.size(), nullptr, 0); 
+
+    rx_vm->initScratchpad(&tempHash);
+    rx_vm->resetRoundingMode();
+
+    for (int chain = 0; chain < RANDOMX_PROGRAM_COUNT - 1; ++chain) {
+        rx_vm->run(&tempHash);
+        blake2b(tempHash, sizeof(tempHash), 
+                rx_vm->getRegisterFile(), 
+                sizeof(randomx::RegisterFile), nullptr, 0); 
+    }   
+   rx_vm->run(&tempHash);
+
+    crypto::hash res2;
+    rx_vm->getFinalResult(res2.data, RANDOMX_HASH_SIZE);
+    
+    cout << "pow2: " << pod_to_hex(res2) << endl;
+    
+   std::cout << "\nddddd\n\n";  
+    std::cout << rx_vm->getProgram();
+
+    randomx::Program* prg 
+        = reinterpret_cast<randomx::Program*>(
+                reinterpret_cast<char*>(rx_vm) + 64);
+
+   std::cout << "\nddddd\n\n";  
+    cout << *prg << endl;
+
     mstch::map context {
             {"testnet"              , testnet},
             {"stagenet"             , stagenet},
@@ -1253,6 +1308,7 @@ show_block(uint64_t _blk_height)
             {"delta_time"           , delta_time},
             {"blk_nonce"            , blk.nonce},
             {"blk_pow_hash"         , blk_pow_hash_str},
+            {"is_randomx"           , (blk.major_version >= 12)},
             {"blk_difficulty_lo"    , (blk_difficulty << 64 >> 64).convert_to<uint64_t>()},
             {"blk_difficulty_hi"    , (blk_difficulty >> 64).convert_to<uint64_t>()},
             {"age_format"           , age.second},
@@ -1352,6 +1408,49 @@ show_block(string _blk_hash)
 
     return show_block(blk_height);
 }
+
+string
+show_randomx(uint64_t _blk_height)
+{
+    // get block at the given height i
+    block blk;
+
+    uint64_t current_blockchain_height
+            =  core_storage->get_current_blockchain_height();
+
+    if (_blk_height > current_blockchain_height)
+    {
+        cerr << "Cant get block: " << _blk_height
+             << " since its higher than current blockchain height"
+             << " i.e., " <<  current_blockchain_height
+             << endl;
+        return fmt::format("Cant get block {:d} since its higher than current blockchain height!",
+                           _blk_height);
+    }
+
+    if (!mcore->get_block_by_height(_blk_height, blk))
+    {
+        cerr << "Cant get block: " << _blk_height << endl;
+        return fmt::format("Cant get block {:d}!", _blk_height);
+    }
+
+    // get block's hash
+    crypto::hash blk_hash = core_storage->get_block_id_by_height(_blk_height);
+    
+    string blk_hash_str  = pod_to_hex(blk_hash);
+
+    mstch::map context {
+            {"testnet"              , testnet},
+            {"stagenet"             , stagenet},
+            {"blk_hash"             , blk_hash_str},
+            {"blk_height"           , _blk_height},
+    };
+    
+    add_css_style(context);
+
+    return mstch::render(template_file["randomx"], context);
+}
+
 
 string
 show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0)
@@ -7063,13 +7162,13 @@ get_tx(string const& tx_hash_str,
     return true;
 }
 
-void
-add_js_files(mstch::map& context)
+vector<string>
+get_randomx_code(uint64_t blk_height, 
+                 const block& blk)
 {
-    context["js_files"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
-        //return this->js_html_files;
-        return this->js_html_files_all_in_one;
-    }};
+    vector<string> rx_code;
+
+    return rx_code;
 }
 
 template <typename T, typename... Args>

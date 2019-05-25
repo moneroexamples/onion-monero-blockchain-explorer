@@ -72,6 +72,7 @@ message(STATUS ${MONERO_SOURCE_DIR}/build)
 include_directories(
 		${MONERO_SOURCE_DIR}/src
 		${MONERO_SOURCE_DIR}/external
+		${MONERO_SOURCE_DIR}/external/randomx/src
 		${MONERO_SOURCE_DIR}/build
 		${MONERO_SOURCE_DIR}/external/easylogging++
 		${MONERO_SOURCE_DIR}/contrib/epee/include
