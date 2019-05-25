@@ -1439,11 +1439,28 @@ show_randomx(uint64_t _blk_height)
     
     string blk_hash_str  = pod_to_hex(blk_hash);
 
+
+    vector<string> rx_code = get_randomx_code(_blk_height,
+                                    blk, blk_hash);
+
+    mstch::array rx_code_str = mstch::array{};
+    int code_idx {1};
+
+    for (auto& rxc: rx_code)
+    {
+        rx_code_str.push_back(
+           mstch::map {
+              {"rx_code_idx", code_idx++},
+              {"rx_code", std::move(rxc)}
+        });
+    }
+
     mstch::map context {
             {"testnet"              , testnet},
             {"stagenet"             , stagenet},
             {"blk_hash"             , blk_hash_str},
             {"blk_height"           , _blk_height},
+            {"rx_codes"             , rx_code_str},
     };
     
     add_css_style(context);
@@ -7164,9 +7181,66 @@ get_tx(string const& tx_hash_str,
 
 vector<string>
 get_randomx_code(uint64_t blk_height, 
-                 const block& blk)
+                 block const& blk,
+                 crypto::hash const& blk_hash)
 {
     vector<string> rx_code;
+
+    uint64_t seed_height;
+
+    rx_needhash(blk_height, &seed_height);
+
+    //cout << "seed_height: " << seed_height << '\n';
+
+    rx_seedhash(seed_height, blk_hash.data, 0);
+
+    blobdata bd = get_block_hashing_blob(blk);
+
+    crypto::hash res;
+    
+    //cout << pod_to_hex(blk_hash) << endl;
+
+    //rx_slow_hash(bd.data(), bd.size(), res.data, 0);
+
+    //cout << "pow: " << pod_to_hex(res) << endl;
+
+    //cout << bool {rx_vm} << endl;
+    //
+    if (!rx_vm)
+    {
+        cerr << "rx_vm is null\n";
+        return rx_code;
+    }
+
+    // based on randomx calculate hash
+    // the hash is seed used to generated scrachtpad and program
+    alignas(16) uint64_t tempHash[8];
+    blake2b(tempHash, sizeof(tempHash), bd.data(), bd.size(), nullptr, 0); 
+
+    rx_vm->initScratchpad(&tempHash);
+    rx_vm->resetRoundingMode();
+
+    for (int chain = 0; chain < RANDOMX_PROGRAM_COUNT - 1; ++chain) 
+    {
+        rx_vm->run(&tempHash);
+        blake2b(tempHash, sizeof(tempHash), 
+                rx_vm->getRegisterFile(), 
+                sizeof(randomx::RegisterFile), nullptr, 0); 
+
+        stringstream ss;
+        ss << rx_vm->getProgram();
+        rx_code.push_back(ss.str());
+    }   
+
+    rx_vm->run(&tempHash);
+    stringstream ss;
+    ss << rx_vm->getProgram();
+    rx_code.push_back(ss.str());
+
+    crypto::hash res2;
+    rx_vm->getFinalResult(res2.data, RANDOMX_HASH_SIZE);
+    
+    cout << "pow2: " << pod_to_hex(res2) << endl;
 
     return rx_code;
 }
