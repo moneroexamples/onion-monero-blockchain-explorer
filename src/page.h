@@ -16,6 +16,7 @@
 #include "virtual_machine.hpp"
 #include "program.hpp"
 #include "aes_hash.hpp"
+#include "assembly_generator_x86.hpp"
 
 #include "../gen/version.h"
 
@@ -1440,7 +1441,7 @@ show_randomx(uint64_t _blk_height)
     string blk_hash_str  = pod_to_hex(blk_hash);
 
 
-    vector<string> rx_code = get_randomx_code(_blk_height,
+    auto rx_code = get_randomx_code(_blk_height,
                                     blk, blk_hash);
 
     mstch::array rx_code_str = mstch::array{};
@@ -1451,7 +1452,8 @@ show_randomx(uint64_t _blk_height)
         rx_code_str.push_back(
            mstch::map {
               {"rx_code_idx", code_idx++},
-              {"rx_code", std::move(rxc)}
+              {"rx_code", std::move(rxc.first)},
+              {"rx_code_asm", std::move(rxc.second)}
         });
     }
 
@@ -7179,12 +7181,12 @@ get_tx(string const& tx_hash_str,
     return true;
 }
 
-vector<string>
+vector<std::pair<string, string>>
 get_randomx_code(uint64_t blk_height, 
                  block const& blk,
                  crypto::hash const& blk_hash)
 {
-    vector<string> rx_code;
+    vector<std::pair<string, string>> rx_code;
 
     uint64_t seed_height;
 
@@ -7220,6 +7222,8 @@ get_randomx_code(uint64_t blk_height,
     rx_vm->initScratchpad(&tempHash);
     rx_vm->resetRoundingMode();
 
+    randomx::Program prg;
+
     for (int chain = 0; chain < RANDOMX_PROGRAM_COUNT - 1; ++chain) 
     {
         rx_vm->run(&tempHash);
@@ -7227,15 +7231,31 @@ get_randomx_code(uint64_t blk_height,
                 rx_vm->getRegisterFile(), 
                 sizeof(randomx::RegisterFile), nullptr, 0); 
 
-        stringstream ss;
-        ss << rx_vm->getProgram();
-        rx_code.push_back(ss.str());
+        prg = *(rx_vm->getProgram());
+
+        stringstream ss, ss2;
+        ss << prg;
+
+
+        randomx::AssemblyGeneratorX86 asmX86;
+        asmX86.generateProgram(prg);
+        asmX86.printCode(ss2);
+
+        rx_code.emplace_back(ss.str(), ss2.str());
     }   
 
     rx_vm->run(&tempHash);
-    stringstream ss;
-    ss << rx_vm->getProgram();
-    rx_code.push_back(ss.str());
+
+    prg = *(rx_vm->getProgram());
+
+    stringstream ss, ss2;
+    ss << prg;
+
+    randomx::AssemblyGeneratorX86 asmX86;
+    asmX86.generateProgram(prg);
+    asmX86.printCode(ss2);
+
+    rx_code.emplace_back(ss.str(), ss2.str());
 
     crypto::hash res2;
     rx_vm->getFinalResult(res2.data, RANDOMX_HASH_SIZE);
