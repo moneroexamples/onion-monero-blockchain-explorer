@@ -2,14 +2,33 @@
 <div>
 
     <H4>Block hash (height): {{blk_hash}} ({{blk_height}})</H4>
-    <h3>Recalculated {{pow}}</h3>
+    <h4>
+        Eight RandomX and correspoding assembly x86 programs used
+        to calcualte PoW hash of the block
+    </h4>
 
-    <h3>RandomX source code</h3>
-    <div class="center" style="width:90%">
-        {{#rx_codes}}
-            <h4>Source code #{{rx_code_idx}}</h4>
+    {{#rx_codes}}
+    <h3> Program #{{rx_code_idx}}</h3>
+    <table class="center" style="width: 50%; margin-top:10px">
+        <tr>
+            <td style="text-align: left;">RandomX code</td>
+            <td style="text-align: left;">ASM x86</td>
+        </tr>
+    <tr>
+        <td colspan="2"></td>
+    </tr>
+    <tr>
+        <td style="text-align: left;vertical-align: top;">
             <pre>{{rx_code}}</pre>
-        {{/rx_codes}}
-    </div>
+         </td>
+        <td style="text-align: left;vertical-align: top;">
+            <pre>{{rx_code_asm}}</pre>
+        </td>
+    </tr>
+    </table>
+    {{/rx_codes}}
+
+
+
 
 </div>
