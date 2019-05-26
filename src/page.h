@@ -1238,58 +1238,6 @@ show_block(uint64_t _blk_height)
         = core_storage->get_db().get_block_difficulty(_blk_height);
 
 
-    uint64_t seed_height;
-
-    rx_needhash(_blk_height, &seed_height);
-    cout << "seed_height: " << seed_height << '\n';
-
-    rx_seedhash(seed_height, blk_hash.data, 0);
-
-    blobdata bd = get_block_hashing_blob(blk);
-
-    crypto::hash res;
-    
-    //cout << pod_to_hex(blk_hash) << endl;
-
-    rx_slow_hash(bd.data(), bd.size(), res.data, 0);
-
-    cout << "pow: " << pod_to_hex(res) << endl;
-
-    cout << bool {rx_vm} << endl;
-
-
-
-    // based on randomx calculate hash
-    // the hash is seed used to generated scrachtpad and program
-    alignas(16) uint64_t tempHash[8];
-    blake2b(tempHash, sizeof(tempHash), bd.data(), bd.size(), nullptr, 0); 
-
-    rx_vm->initScratchpad(&tempHash);
-    rx_vm->resetRoundingMode();
-
-    for (int chain = 0; chain < RANDOMX_PROGRAM_COUNT - 1; ++chain) {
-        rx_vm->run(&tempHash);
-        blake2b(tempHash, sizeof(tempHash), 
-                rx_vm->getRegisterFile(), 
-                sizeof(randomx::RegisterFile), nullptr, 0); 
-    }   
-   rx_vm->run(&tempHash);
-
-    crypto::hash res2;
-    rx_vm->getFinalResult(res2.data, RANDOMX_HASH_SIZE);
-    
-    cout << "pow2: " << pod_to_hex(res2) << endl;
-    
-   std::cout << "\nddddd\n\n";  
-    std::cout << rx_vm->getProgram();
-
-    randomx::Program* prg 
-        = reinterpret_cast<randomx::Program*>(
-                reinterpret_cast<char*>(rx_vm) + 64);
-
-   std::cout << "\nddddd\n\n";  
-    cout << *prg << endl;
-
     mstch::map context {
             {"testnet"              , testnet},
             {"stagenet"             , stagenet},
@@ -7188,39 +7136,34 @@ get_randomx_code(uint64_t blk_height,
 {
     vector<std::pair<string, string>> rx_code;
 
-    uint64_t seed_height;
-
-    rx_needhash(blk_height, &seed_height);
-
-    //cout << "seed_height: " << seed_height << '\n';
-
-    rx_seedhash(seed_height, blk_hash.data, 0);
-
     blobdata bd = get_block_hashing_blob(blk);
 
-    crypto::hash res;
-    
-    //cout << pod_to_hex(blk_hash) << endl;
-
-    //rx_slow_hash(bd.data(), bd.size(), res.data, 0);
-
-    //cout << "pow: " << pod_to_hex(res) << endl;
-
-    //cout << bool {rx_vm} << endl;
-    //
     if (!rx_vm)
     {
-        cerr << "rx_vm is null\n";
-        return rx_code;
+        // this will create rx_vm instance if one
+        // does not exist
+        get_block_longhash(core_storage, blk, blk_height, 0);
+
+        if (!rx_vm)
+        {
+            cerr << "rx_vm is still null!";
+            return {};
+        }
     }
 
-    // based on randomx calculate hash
+
+     // based on randomx calculate hash
     // the hash is seed used to generated scrachtpad and program
     alignas(16) uint64_t tempHash[8];
     blake2b(tempHash, sizeof(tempHash), bd.data(), bd.size(), nullptr, 0); 
 
     rx_vm->initScratchpad(&tempHash);
     rx_vm->resetRoundingMode();
+
+    //    randomx::Program* prg
+    //        = reinterpret_cast<randomx::Program*>(
+    //                reinterpret_cast<char*>(rx_vm) + 64);
+
 
     randomx::Program prg;
 
@@ -7257,10 +7200,10 @@ get_randomx_code(uint64_t blk_height,
 
     rx_code.emplace_back(ss.str(), ss2.str());
 
-    crypto::hash res2;
-    rx_vm->getFinalResult(res2.data, RANDOMX_HASH_SIZE);
+  //  crypto::hash res2;
+ //   rx_vm->getFinalResult(res2.data, RANDOMX_HASH_SIZE);
     
-    cout << "pow2: " << pod_to_hex(res2) << endl;
+   // cout << "pow2: " << pod_to_hex(res2) << endl;
 
     return rx_code;
 }
