@@ -7134,9 +7134,13 @@ get_randomx_code(uint64_t blk_height,
                  block const& blk,
                  crypto::hash const& blk_hash)
 {
+    static std::mutex mtx;
+
     vector<std::pair<string, string>> rx_code;
 
     blobdata bd = get_block_hashing_blob(blk);
+
+    std::lock_guard<std::mutex> lk {mtx};
 
     if (!rx_vm)
     {
