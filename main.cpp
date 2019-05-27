@@ -75,6 +75,7 @@ main(int ac, const char* av[])
     auto enable_json_api_opt           = opts.get_option<bool>("enable-json-api");
     auto enable_as_hex_opt             = opts.get_option<bool>("enable-as-hex");
     auto enable_tx_cache_opt           = opts.get_option<bool>("enable-tx-cache");
+    auto concurrency_opt               = opts.get_option<size_t>("concurrency");
     auto enable_block_cache_opt        = opts.get_option<bool>("enable-block-cache");
     auto show_cache_times_opt          = opts.get_option<bool>("show-cache-times");
     auto enable_emission_monitor_opt   = opts.get_option<bool>("enable-emission-monitor");
@@ -865,9 +866,16 @@ main(int ac, const char* av[])
     else
     {
         cout << "Staring in non-ssl mode" << endl;
-        app.bindaddr(bindaddr).port(app_port).multithreaded().run();
+        if (*concurrency_opt == 0)
+        {
+            app.bindaddr(bindaddr).port(app_port).multithreaded().run();
+        }
+        else
+        {
+            app.bindaddr(bindaddr).port(app_port)
+                .concurrency(*concurrency_opt).run();
+        }
     }
-
 
     if (enable_emission_monitor == true)
     {
