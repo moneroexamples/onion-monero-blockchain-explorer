@@ -7170,6 +7170,7 @@ get_randomx_code(uint64_t blk_height,
 
 
     randomx::Program prg;
+    randomx::RegisterFile reg;
 
     for (int chain = 0; chain < RANDOMX_PROGRAM_COUNT - 1; ++chain) 
     {
@@ -7178,7 +7179,8 @@ get_randomx_code(uint64_t blk_height,
                 rx_vm->getRegisterFile(), 
                 sizeof(randomx::RegisterFile), nullptr, 0); 
 
-        prg = *(rx_vm->getProgram());
+        prg = rx_vm->getProgram();
+        reg = *(rx_vm->getRegisterFile());
 
         stringstream ss, ss2;
         ss << prg;
@@ -7193,7 +7195,7 @@ get_randomx_code(uint64_t blk_height,
 
     rx_vm->run(&tempHash);
 
-    prg = *(rx_vm->getProgram());
+    prg = rx_vm->getProgram();
 
     stringstream ss, ss2;
     ss << prg;
