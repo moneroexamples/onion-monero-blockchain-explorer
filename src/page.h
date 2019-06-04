@@ -235,6 +235,70 @@ using namespace std;
 using epee::string_tools::pod_to_hex;
 using epee::string_tools::hex_to_pod;
 
+template< typename T >
+std::string as_hex(T i)
+{
+  std::stringstream ss;
+
+  ss << "0x" << setfill ('0') << setw(sizeof(T)*2) 
+         << hex << i;
+  return ss.str();
+}
+
+struct randomx_status
+{
+    randomx::Program prog;
+    randomx::RegisterFile reg_file;
+
+    randomx::AssemblyGeneratorX86 
+    get_asm() 
+    {
+        randomx::AssemblyGeneratorX86 asmX86;
+        asmX86.generateProgram(prog);
+    	return asmX86;
+    }
+
+    mstch::map
+    get_mstch() 
+    {
+        auto asmx86 = get_asm();
+
+        stringstream ss1, ss2;
+
+        ss1 << prog;
+        asmx86.printCode(ss2);
+        
+        mstch::map rx_map {
+            {"rx_code" , ss1.str()},
+            {"rx_code_asm", ss2.str()}
+        };
+
+	for (size_t i = 0; i < randomx::RegistersCount; ++i)
+	{
+	    rx_map["r"+std::to_string(i)] = as_hex(reg_file.r[i]);
+	}
+	
+	for (size_t i = 0; i < randomx::RegistersCount/2; ++i)
+	{
+	    rx_map["f"+std::to_string(i)] = rx_float_as_str(reg_file.f[i]);
+	    rx_map["e"+std::to_string(i)] = rx_float_as_str(reg_file.e[i]);
+	    rx_map["a"+std::to_string(i)] = rx_float_as_str(reg_file.a[i]);
+	}
+
+        return rx_map;
+    }
+
+    string
+    rx_float_as_str(randomx::fpu_reg_t fpu)
+    {
+	uint64_t* lo = reinterpret_cast<uint64_t*>(&fpu.lo);	
+	uint64_t* hi = reinterpret_cast<uint64_t*>(&fpu.hi);	
+
+	return 	 "{" + as_hex(*lo) + ", " + as_hex(*hi)+ "}";
+    }
+};
+
+
 /**
 * @brief The tx_details struct
 *
@@ -1397,12 +1461,9 @@ show_randomx(uint64_t _blk_height)
 
     for (auto& rxc: rx_code)
     {
-        rx_code_str.push_back(
-           mstch::map {
-              {"rx_code_idx", code_idx++},
-              {"rx_code", std::move(rxc.first)},
-              {"rx_code_asm", std::move(rxc.second)}
-        });
+        mstch::map rx_map = rxc.get_mstch();
+        rx_map["rx_code_idx"] = code_idx++;
+        rx_code_str.push_back(rx_map);
     }
 
     mstch::map context {
@@ -7129,14 +7190,14 @@ get_tx(string const& tx_hash_str,
     return true;
 }
 
-vector<std::pair<string, string>>
+vector<randomx_status>
 get_randomx_code(uint64_t blk_height, 
                  block const& blk,
                  crypto::hash const& blk_hash)
 {
     static std::mutex mtx;
 
-    vector<std::pair<string, string>> rx_code;
+    vector<randomx_status> rx_code;
 
     blobdata bd = get_block_hashing_blob(blk);
 
@@ -7167,47 +7228,33 @@ get_randomx_code(uint64_t blk_height,
     //    randomx::Program* prg
     //        = reinterpret_cast<randomx::Program*>(
     //                reinterpret_cast<char*>(rx_vm) + 64);
+    //
 
-
-    randomx::Program prg;
-    randomx::RegisterFile reg;
 
     for (int chain = 0; chain < RANDOMX_PROGRAM_COUNT - 1; ++chain) 
     {
         rx_vm->run(&tempHash);
+
         blake2b(tempHash, sizeof(tempHash), 
                 rx_vm->getRegisterFile(), 
                 sizeof(randomx::RegisterFile), nullptr, 0); 
 
-        prg = rx_vm->getProgram();
-        reg = *(rx_vm->getRegisterFile());
+        rx_code.push_back({});
 
-        stringstream ss, ss2;
-        ss << prg;
-
-
-        randomx::AssemblyGeneratorX86 asmX86;
-        asmX86.generateProgram(prg);
-        asmX86.printCode(ss2);
-
-        rx_code.emplace_back(ss.str(), ss2.str());
+        rx_code.back().prog = rx_vm->getProgram();
+    	rx_code.back().reg_file = *(rx_vm->getRegisterFile());
     }   
 
     rx_vm->run(&tempHash);
 
-    prg = rx_vm->getProgram();
+    rx_code.push_back({});
 
-    stringstream ss, ss2;
-    ss << prg;
+    rx_code.back().prog = rx_vm->getProgram();
+    rx_code.back().reg_file = *(rx_vm->getRegisterFile());
 
-    randomx::AssemblyGeneratorX86 asmX86;
-    asmX86.generateProgram(prg);
-    asmX86.printCode(ss2);
 
-    rx_code.emplace_back(ss.str(), ss2.str());
-
-  //  crypto::hash res2;
- //   rx_vm->getFinalResult(res2.data, RANDOMX_HASH_SIZE);
+  // crypto::hash res2;
+ //  rx_vm->getFinalResult(res2.data, RANDOMX_HASH_SIZE);
     
    // cout << "pow2: " << pod_to_hex(res2) << endl;
 
