@@ -1462,6 +1462,7 @@ show_randomx(uint64_t _blk_height)
     for (auto& rxc: rx_code)
     {
         mstch::map rx_map = rxc.get_mstch();
+        rx_map["first_program"] = (code_idx == 1);
         rx_map["rx_code_idx"] = code_idx++;
         rx_code_str.push_back(rx_map);
     }
