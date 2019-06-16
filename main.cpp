@@ -17,7 +17,16 @@ using namespace std;
 
 namespace myxmr
 {
-struct jsonresponse: crow::response
+struct htmlresponse: public crow::response
+{
+    htmlresponse(string&& _body)
+            : crow::response {std::move(_body)}
+    {
+        add_header("Content-Type", "text/html; charset=utf-8");
+    }
+};
+
+struct jsonresponse: public crow::response
 {
     jsonresponse(const nlohmann::json& _body)
             : crow::response {_body.dump()}
@@ -66,6 +75,7 @@ main(int ac, const char* av[])
     auto enable_json_api_opt           = opts.get_option<bool>("enable-json-api");
     auto enable_as_hex_opt             = opts.get_option<bool>("enable-as-hex");
     auto enable_tx_cache_opt           = opts.get_option<bool>("enable-tx-cache");
+    auto concurrency_opt               = opts.get_option<size_t>("concurrency");
     auto enable_block_cache_opt        = opts.get_option<bool>("enable-block-cache");
     auto show_cache_times_opt          = opts.get_option<bool>("show-cache-times");
     auto enable_emission_monitor_opt   = opts.get_option<bool>("enable-emission-monitor");
@@ -182,12 +192,13 @@ main(int ac, const char* av[])
 
     try
     {
-        mempool_info_timeout = boost::lexical_cast<uint64_t>(*mempool_info_timeout_opt);
+        mempool_info_timeout = boost::lexical_cast<uint64_t>(
+                *mempool_info_timeout_opt);
     }
     catch (boost::bad_lexical_cast &e)
     {
-        cout << "Cant cast " << (*mempool_info_timeout_opt) <<" into numbers. Using default values."
-             << endl;
+        cout << "Cant cast " << (*mempool_info_timeout_opt) 
+             <<" into numbers. Using default values.\n";
     }
 
     uint64_t mempool_refresh_time {10};
@@ -291,59 +302,68 @@ main(int ac, const char* av[])
 
     CROW_ROUTE(app, "/")
     ([&]() {
-        return crow::response(xmrblocks.index2());
+        return myxmr::htmlresponse(xmrblocks.index2());
     });
 
     CROW_ROUTE(app, "/page/<uint>")
     ([&](size_t page_no) {
-        return xmrblocks.index2(page_no);
+        return myxmr::htmlresponse(xmrblocks.index2(page_no));
     });
 
     CROW_ROUTE(app, "/block/<uint>")
     ([&](size_t block_height) {
-        return crow::response(xmrblocks.show_block(block_height));
+        return myxmr::htmlresponse(xmrblocks.show_block(block_height));
     });
 
     CROW_ROUTE(app, "/block/<string>")
     ([&](string block_hash) {
-        return crow::response(xmrblocks.show_block(remove_bad_chars(block_hash)));
+        return myxmr::htmlresponse(
+                xmrblocks.show_block(remove_bad_chars(block_hash)));
     });
 
     CROW_ROUTE(app, "/tx/<string>")
     ([&](string tx_hash) {
-        return crow::response(xmrblocks.show_tx(remove_bad_chars(tx_hash)));
+        return myxmr::htmlresponse(
+                xmrblocks.show_tx(remove_bad_chars(tx_hash)));
     });
 
     if (enable_as_hex)
     {
         CROW_ROUTE(app, "/txhex/<string>")
         ([&](string tx_hash) {
-            return crow::response(xmrblocks.show_tx_hex(remove_bad_chars(tx_hash)));
+            return crow::response(
+                    xmrblocks.show_tx_hex(remove_bad_chars(tx_hash)));
         });
 
         CROW_ROUTE(app, "/ringmembershex/<string>")
         ([&](string tx_hash) {
-            return crow::response(xmrblocks.show_ringmembers_hex(remove_bad_chars(tx_hash)));
+            return crow::response(
+                    xmrblocks.show_ringmembers_hex(remove_bad_chars(tx_hash)));
         });
 
         CROW_ROUTE(app, "/blockhex/<uint>")
         ([&](size_t block_height) {
-            return crow::response(xmrblocks.show_block_hex(block_height, false));
+            return crow::response(
+                    xmrblocks.show_block_hex(block_height, false));
         });
 
         CROW_ROUTE(app, "/blockhexcomplete/<uint>")
         ([&](size_t block_height) {
-            return crow::response(xmrblocks.show_block_hex(block_height, true));
+            return crow::response(
+                    xmrblocks.show_block_hex(block_height, true));
         });
 
 //        CROW_ROUTE(app, "/ringmemberstxhex/<string>")
 //        ([&](string tx_hash) {
-//            return crow::response(xmrblocks.show_ringmemberstx_hex(remove_bad_chars(tx_hash)));
+//            return crow::response(
+//              xmrblocks.show_ringmemberstx_hex(remove_bad_chars(tx_hash)));
 //        });
 
         CROW_ROUTE(app, "/ringmemberstxhex/<string>")
         ([&](string tx_hash) {
-            return myxmr::jsonresponse {xmrblocks.show_ringmemberstx_jsonhex(remove_bad_chars(tx_hash))};
+            return myxmr::jsonresponse {
+                xmrblocks.show_ringmemberstx_jsonhex(
+                        remove_bad_chars(tx_hash))};
         });
 
     }
@@ -351,11 +371,13 @@ main(int ac, const char* av[])
     CROW_ROUTE(app, "/tx/<string>/<uint>")
     ([&](string tx_hash, uint16_t with_ring_signatures)
      {
-        return xmrblocks.show_tx(remove_bad_chars(tx_hash), with_ring_signatures);
+        return myxmr::htmlresponse(
+                xmrblocks.show_tx(remove_bad_chars(tx_hash), 
+                    with_ring_signatures));
     });
 
     CROW_ROUTE(app, "/myoutputs").methods("POST"_method)
-    ([&](const crow::request& req)
+    ([&](const crow::request& req) -> myxmr::htmlresponse
      {
 
         map<std::string, std::string> post_body
@@ -378,9 +400,12 @@ main(int ac, const char* av[])
 
         string domain      =  get_domain(req);
 
-        return xmrblocks.show_my_outputs(tx_hash, xmr_address,
+        string response = xmrblocks.show_my_outputs(
+                                         tx_hash, xmr_address,
                                          viewkey, raw_tx_data,
                                          domain);
+
+        return myxmr::htmlresponse(std::move(response));
     });
 
     CROW_ROUTE(app, "/myoutputs/<string>/<string>/<string>")
@@ -390,15 +415,17 @@ main(int ac, const char* av[])
 
         string domain = get_domain(req);
 
-        return xmrblocks.show_my_outputs(remove_bad_chars(tx_hash),
+        return myxmr::htmlresponse(xmrblocks.show_my_outputs(
+                                         remove_bad_chars(tx_hash),
                                          remove_bad_chars(xmr_address),
                                          remove_bad_chars(viewkey),
                                          string {},
-                                         domain);
+                                         domain));
     });
 
     CROW_ROUTE(app, "/prove").methods("POST"_method)
-        ([&](const crow::request& req) {
+        ([&](const crow::request& req) -> myxmr::htmlresponse 
+         {
 
             map<std::string, std::string> post_body
                     = xmreg::parse_crow_post_data(req.body);
@@ -421,41 +448,45 @@ main(int ac, const char* av[])
 
             string domain      = get_domain(req);
 
-            return xmrblocks.show_prove(tx_hash,
+            return myxmr::htmlresponse(xmrblocks.show_prove(tx_hash,
                                         xmr_address,
                                         tx_prv_key,
                                         raw_tx_data,
-                                        domain);
+                                        domain));
     });
 
 
     CROW_ROUTE(app, "/prove/<string>/<string>/<string>")
     ([&](const crow::request& req, string tx_hash,
-         string xmr_address, string tx_prv_key) {
+         string xmr_address, string tx_prv_key) 
+     {
 
         string domain = get_domain(req);
 
-        return xmrblocks.show_prove(remove_bad_chars(tx_hash),
+        return myxmr::htmlresponse(xmrblocks.show_prove(
+                                    remove_bad_chars(tx_hash),
                                     remove_bad_chars(xmr_address),
                                     remove_bad_chars(tx_prv_key),
                                     string {},
-                                    domain);
+                                    domain));
     });
 
     if (enable_pusher)
     {
         CROW_ROUTE(app, "/rawtx")
         ([&]() {
-            return xmrblocks.show_rawtx();
+            return myxmr::htmlresponse(xmrblocks.show_rawtx());
         });
 
         CROW_ROUTE(app, "/checkandpush").methods("POST"_method)
-        ([&](const crow::request& req) {
+        ([&](const crow::request& req) -> myxmr::htmlresponse
+         {
 
             map<std::string, std::string> post_body
                     = xmreg::parse_crow_post_data(req.body);
 
-            if (post_body.count("rawtxdata") == 0 || post_body.count("action") == 0)
+            if (post_body.count("rawtxdata") == 0 
+                    || post_body.count("action") == 0)
             {
                 return string("Raw tx data or action not provided");
             }
@@ -464,9 +495,11 @@ main(int ac, const char* av[])
             string action      = remove_bad_chars(post_body["action"]);
 
             if (action == "check")
-                return xmrblocks.show_checkrawtx(raw_tx_data, action);
+                return myxmr::htmlresponse(
+                        xmrblocks.show_checkrawtx(raw_tx_data, action));
             else if (action == "push")
-                return xmrblocks.show_pushrawtx(raw_tx_data, action);
+                return myxmr::htmlresponse(
+                        xmrblocks.show_pushrawtx(raw_tx_data, action));
             return string("Provided action is neither check nor push");
 
         });
@@ -476,11 +509,12 @@ main(int ac, const char* av[])
     {
         CROW_ROUTE(app, "/rawkeyimgs")
         ([&]() {
-            return xmrblocks.show_rawkeyimgs();
+            return myxmr::htmlresponse(xmrblocks.show_rawkeyimgs());
         });
 
         CROW_ROUTE(app, "/checkrawkeyimgs").methods("POST"_method)
-        ([&](const crow::request& req) {
+        ([&](const crow::request& req) -> myxmr::htmlresponse
+         {
 
             map<std::string, std::string> post_body
                     = xmreg::parse_crow_post_data(req.body);
@@ -498,7 +532,8 @@ main(int ac, const char* av[])
             string raw_data = remove_bad_chars(post_body["rawkeyimgsdata"]);
             string viewkey  = remove_bad_chars(post_body["viewkey"]);
 
-            return xmrblocks.show_checkrawkeyimgs(raw_data, viewkey);
+            return myxmr::htmlresponse(
+                    xmrblocks.show_checkrawkeyimgs(raw_data, viewkey));
         });
     }
 
@@ -507,11 +542,12 @@ main(int ac, const char* av[])
     {
         CROW_ROUTE(app, "/rawoutputkeys")
         ([&]() {
-            return xmrblocks.show_rawoutputkeys();
+            return myxmr::htmlresponse(xmrblocks.show_rawoutputkeys());
         });
 
         CROW_ROUTE(app, "/checkrawoutputkeys").methods("POST"_method)
-        ([&](const crow::request& req) {
+        ([&](const crow::request& req) -> myxmr::htmlresponse
+         {
 
             map<std::string, std::string> post_body
                     = xmreg::parse_crow_post_data(req.body);
@@ -530,25 +566,29 @@ main(int ac, const char* av[])
             string raw_data = remove_bad_chars(post_body["rawoutputkeysdata"]);
             string viewkey  = remove_bad_chars(post_body["viewkey"]);
 
-            return xmrblocks.show_checkcheckrawoutput(raw_data, viewkey);
+            return myxmr::htmlresponse(
+                    xmrblocks.show_checkcheckrawoutput(raw_data, viewkey));
         });
     }
 
 
     CROW_ROUTE(app, "/search").methods("GET"_method)
     ([&](const crow::request& req) {
-        return xmrblocks.search(remove_bad_chars(string(req.url_params.get("value"))));
+        return myxmr::htmlresponse(
+                xmrblocks.search(
+                    remove_bad_chars(
+                        string(req.url_params.get("value")))));
     });
 
     CROW_ROUTE(app, "/mempool")
     ([&]() {
-        return xmrblocks.mempool(true);
+        return myxmr::htmlresponse(xmrblocks.mempool(true));
     });
 
     // alias to  "/mempool"
     CROW_ROUTE(app, "/txpool")
     ([&]() {
-        return xmrblocks.mempool(true);
+        return myxmr::htmlresponse(xmrblocks.mempool(true));
     });
 
 //    CROW_ROUTE(app, "/altblocks")
@@ -773,13 +813,16 @@ main(int ac, const char* av[])
 
             try
             {
-                in_mempool_aswell = regex_search(req.raw_url, regex {"mempool=[01]"}) ?
-                           boost::lexical_cast<bool>(req.url_params.get("mempool")) :
+                in_mempool_aswell = regex_search(
+                        req.raw_url, regex {"mempool=[01]"}) ?
+                           boost::lexical_cast<bool>(
+                                   req.url_params.get("mempool")) :
                            false;
             }
             catch (const boost::bad_lexical_cast &e)
             {
-                cerr << "Cant parse tx_prove as bool. Using default value" << endl;
+                cerr << "Cant parse tx_prove as bool. Using default value" 
+                     << endl;
             }
 
             myxmr::jsonresponse r{xmrblocks.json_outputsblocks(
@@ -816,15 +859,23 @@ main(int ac, const char* av[])
     if (use_ssl)
     {
         cout << "Staring in ssl mode" << endl;
-        app.bindaddr(bindaddr).port(app_port).ssl_file(ssl_crt_file, ssl_key_file)
+        app.bindaddr(bindaddr).port(app_port).ssl_file(
+                ssl_crt_file, ssl_key_file)
                 .multithreaded().run();
     }
     else
     {
         cout << "Staring in non-ssl mode" << endl;
-        app.bindaddr(bindaddr).port(app_port).multithreaded().run();
+        if (*concurrency_opt == 0)
+        {
+            app.bindaddr(bindaddr).port(app_port).multithreaded().run();
+        }
+        else
+        {
+            app.bindaddr(bindaddr).port(app_port)
+                .concurrency(*concurrency_opt).run();
+        }
     }
-
 
     if (enable_emission_monitor == true)
     {
