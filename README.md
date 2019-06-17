@@ -34,6 +34,7 @@ Clearnet versions:
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
  - [https://blox.minexmr.com/](https://blox.minexmr.com/) - - https enabled.
  - [https://community.xmr.to/explorer/mainnet/](https://community.xmr.to/explorer/mainnet/)
+ - [https://exp.xmr.sk/](https://exp.xmr.sk/)
 
 
 Testnet version:
@@ -92,30 +93,17 @@ Note: `devel` branch of the explorer follows `master` branch of the monero.
 
 ## Compilation on Ubuntu 16.04/18.04
 
-##### Compile latest Monero version (0.14.0.2)
 
-Download and compile recent Monero into your home folder:
+#### Monero download and compilation
 
-```bash
-# first install monero dependecines
-sudo apt update
+To download and compile recent Monero follow instructions
+in the following link:
 
-sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libcurl4-openssl-dev libgtest-dev libreadline-dev libzmq3-dev libsodium-dev libhidapi-dev libhidapi-libusb0
-
-# go to home folder
-cd ~
-
-# download monero sourced for master branch
-git clone --recursive https://github.com/monero-project/monero.git
-
-cd monero/
-
-USE_SINGLE_BUILDDIR=1 make
-```
+https://github.com/moneroexamples/monero-compilation/blob/master/README.md
 
 ##### Compile and run the explorer
 
-Once the Monero is compiles, the explorer can be downloaded and compiled
+Once the Monero compiles, the explorer can be downloaded and compiled
 as follows:
 
 ```bash
@@ -133,12 +121,6 @@ mkdir build && cd build
 
 # create the makefile
 cmake ..
-
-# altearnatively can use: cmake -DMONERO_DIR=/path/to/monero_folder ..
-# if monero is not in ~/monero
-#
-# also can build with ASAN (sanitizers), for example
-# cmake -DSANITIZE_ADDRESS=On ..
 
 # compile
 make
