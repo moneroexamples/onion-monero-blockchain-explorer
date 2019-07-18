@@ -59,6 +59,7 @@ struct MempoolStatus
         uint64_t height  {0};
         uint64_t target_height  {0};
         uint64_t difficulty  {0};
+        uint64_t difficulty_top64  {0};
         uint64_t target  {0};
         uint64_t tx_count  {0};
         uint64_t tx_pool_size  {0};
@@ -70,6 +71,7 @@ struct MempoolStatus
         cryptonote::network_type nettype {cryptonote::network_type::MAINNET};
         crypto::hash top_block_hash;
         uint64_t cumulative_difficulty  {0};
+        uint64_t cumulative_difficulty_top64  {0};
         uint64_t block_size_limit  {0};
         uint64_t block_size_median  {0};
         char block_size_limit_str[10];   // needs to be trivially copyable
@@ -78,6 +80,7 @@ struct MempoolStatus
         uint64_t current_hf_version {0};
 
         uint64_t hash_rate  {0};
+        uint64_t hash_rate_top64  {0};
         uint64_t fee_per_kb  {0};
         uint64_t info_timestamp  {0};
 
