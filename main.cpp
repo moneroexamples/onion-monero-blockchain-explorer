@@ -326,6 +326,16 @@ main(int ac, const char* av[])
         return myxmr::htmlresponse(
                 xmrblocks.show_tx(remove_bad_chars(tx_hash)));
     });
+    if (enable_autorefresh_option)
+    {
+        CROW_ROUTE(app, "/tx/<string>/autorefresh")
+        ([&](string tx_hash) {
+            bool refresh_page {true};
+            uint16_t with_ring_signatures {0};
+            return myxmr::htmlresponse(
+                xmrblocks.show_tx(remove_bad_chars(tx_hash), with_ring_signatures, refresh_page));
+        });
+    }
 
     if (enable_as_hex)
     {
@@ -375,6 +385,15 @@ main(int ac, const char* av[])
                 xmrblocks.show_tx(remove_bad_chars(tx_hash), 
                     with_ring_signatures));
     });
+    if (enable_autorefresh_option)
+    {
+        CROW_ROUTE(app, "/tx/<string>/<uint>/autorefresh")
+        ([&](string tx_hash, uint16_t with_ring_signature) {
+            bool refresh_page {true};
+            return myxmr::htmlresponse(
+                xmrblocks.show_tx(remove_bad_chars(tx_hash), with_ring_signature, refresh_page));
+        });
+    }
 
     CROW_ROUTE(app, "/myoutputs").methods("POST"_method)
     ([&](const crow::request& req) -> myxmr::htmlresponse
