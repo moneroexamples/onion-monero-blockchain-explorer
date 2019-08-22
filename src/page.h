@@ -1414,7 +1414,7 @@ show_block(string _blk_hash)
 }
 
 string
-show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0)
+show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0, bool refresh_page = false)
 {
 
     // parse tx hash string to hash object
@@ -1629,7 +1629,9 @@ show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0)
             {"testnet"          , this->testnet},
             {"stagenet"         , this->stagenet},
             {"show_cache_times" , show_cache_times},
-            {"txs"              , mstch::array{}}
+            {"txs"              , mstch::array{}},
+            {"refresh"          , refresh_page},
+            {"tx_hash"          , tx_hash_str}
     };
 
     boost::get<mstch::array>(context["txs"]).push_back(tx_context);
