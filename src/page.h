@@ -212,6 +212,7 @@ struct tx_details
     uint64_t size;
     uint64_t blk_height;
     size_t   version;
+    uint8_t  minor_version;
 
     bool has_additional_tx_pub_keys {false};
 
@@ -5762,6 +5763,7 @@ get_tx_json(const transaction& tx, const tx_details& txd)
             {"xmr_outputs" , txd.xmr_outputs},
             {"xmr_inputs"  , txd.xmr_inputs},
             {"tx_version"  , static_cast<uint64_t>(txd.version)},
+            {"tx_minor_version"  , static_cast<uint64_t>(txd.minor_version)},
             {"rct_type"    , tx.rct_signatures.type},
             {"coinbase"    , is_coinbase(tx)},
             {"mixin"       , txd.mixin_no},
@@ -5922,6 +5924,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
             {"tx_fee"                , xmreg::xmr_amount_to_str(txd.fee, "{:0.12f}", false)},
             {"payed_for_kB"          , fmt::format("{:0.12f}", payed_for_kB)},
             {"tx_version"            , static_cast<uint64_t>(txd.version)},
+            {"tx_minor_version"      , static_cast<uint64_t>(txd.minor_version)},
             {"blk_timestamp"         , blk_timestamp},
             {"blk_timestamp_uint"    , blk.timestamp},
             {"delta_time"            , age.first},
@@ -6416,6 +6419,7 @@ get_tx_details(const transaction& tx,
 
     // get tx version
     txd.version = tx.version;
+    txd.minor_version = tx.minor_version;
 
     // get unlock time
     txd.unlock_time = tx.unlock_time;
