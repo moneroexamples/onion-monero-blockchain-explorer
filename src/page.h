@@ -38,10 +38,13 @@
 
 extern "C" bool rx_needhash(const uint64_t height, uint64_t *seedheight);
 extern "C" void rx_seedhash(const uint64_t seedheight, const char *hash, const int miners);
-extern "C" void rx_slow_hash(const void *data, size_t length, char *hash, const int miners);
+extern "C" void rx_slow_hash(const uint64_t mainheight, const uint64_t seedheight, 
+                             const char *seedhash, 
+                             const void *data, size_t length,
+                             char *hash, int miners, int is_alt);
 extern "C" void rx_reorg(const uint64_t split_height);
 
-extern __thread randomx_vm *rx_vm;
+static  __thread randomx_vm *rx_vm = NULL;
 
 #include <algorithm>
 #include <limits>
@@ -1477,7 +1480,7 @@ show_randomx(uint64_t _blk_height)
     return mstch::render(template_file["randomx"], context);
 }
 
-
+string
 show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0, bool refresh_page = false)
 {
 
