@@ -47,6 +47,45 @@ extern "C" void me_rx_slow_hash(const uint64_t mainheight, const uint64_t seedhe
 
 extern  __thread randomx_vm *rx_vm;
 
+static void rx_initdata(randomx_cache *rs_cache, const int miners, const uint64_t seedheight) {
+  if (miners > 1) {
+    unsigned long delta = randomx_dataset_item_count() / miners;
+    unsigned long start = 0;
+    int i;
+    seedinfo *si;
+    CTHR_THREAD_TYPE *st;
+    si = malloc(miners * sizeof(seedinfo));
+    if (si == NULL)
+      local_abort("Couldn't allocate RandomX mining threadinfo");
+    st = malloc(miners * sizeof(CTHR_THREAD_TYPE));
+    if (st == NULL) {
+      free(si);
+      local_abort("Couldn't allocate RandomX mining threadlist");
+    }
+    for (i=0; i<miners-1; i++) {
+      si[i].si_cache = rs_cache;
+      si[i].si_start = start;
+      si[i].si_count = delta;
+      start += delta;
+    }
+    si[i].si_cache = rs_cache;
+    si[i].si_start = start;
+    si[i].si_count = randomx_dataset_item_count() - start;
+    for (i=1; i<miners; i++) {
+      CTHR_THREAD_CREATE(st[i], rx_seedthread, &si[i]);
+    }
+    randomx_init_dataset(rx_dataset, rs_cache, 0, si[0].si_count);
+    for (i=1; i<miners; i++) {
+      CTHR_THREAD_JOIN(st[i]);
+    }
+    free(st);
+    free(si);
+  } else {
+    randomx_init_dataset(rx_dataset, rs_cache, 0, randomx_dataset_item_count());
+  }
+  rx_dataset_height = seedheight;
+}
+
 #include <algorithm>
 #include <limits>
 #include <ctime>
@@ -7241,20 +7280,66 @@ get_randomx_code(uint64_t blk_height,
 {
     static std::mutex mtx;
 
+
+    randomx_flags flags = RANDOMX_FLAG_DEFAULT;
+
+    rx_state *rx_sp;
+    randomx_cache *cache;
+
+
     vector<randomx_status> rx_code;
 
     blobdata bd = get_block_hashing_blob(blk);
 
     std::lock_guard<std::mutex> lk {mtx};
 
+    cache = rx_sp->rs_cache;
+
+    if (cache == NULL)
+    {
+        cache = randomx_alloc_cache(flags);
+    }
+
+	if ( rx_sp->rs_cache == NULL 
+	     || memcmp(blk_hash.data, rx_sp->rs_hash, sizeof(rx_sp->rs_hash))) 
+	{
+		randomx_init_cache(cache, blk_hash.data, 32);
+		rx_sp->rs_cache = cache;
+		rx_sp->rs_height = blk_height;
+		memcpy(rx_sp->rs_hash, blk_hash.data, sizeof(rx_sp->rs_hash));
+	}
+
     if (!rx_vm)
     {
 
+<<<<<<< HEAD
         crypto::hash block_hash;
 
         // this will create rx_vm instance if one
         // does not exist
         me_get_block_longhash(core_storage, blk, block_hash, blk_height, 0);
+=======
+		if (rx_dataset == NULL) 
+		{
+			rx_dataset = randomx_alloc_dataset(RANDOMX_FLAG_DEFAULT);
+		}
+
+		if (rx_dataset != NULL)
+		{
+			rx_initdata(rx_sp->rs_cache, 0, blk_height);
+		}
+
+		rx_vm = randomx_create_vm(flags, rx_sp->rs_cache, rx_dataset);
+		
+        // this will create rx_vm instance if one
+        // does not exist
+        //get_block_longhash(core_storage, blk, blk_height, 0);
+
+        //randomx_init_cache(cache, blk_hash.data , 32);
+        //rx_sp->rs_cache = cache;
+        //rx_sp->rs_height = blk_height;
+        //memcpy(rx_sp->rs_hash, blk_hash.data, sizeof(rx_sp->rs_hash));
+>>>>>>> try something
 
         if (!rx_vm)
         {
