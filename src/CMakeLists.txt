@@ -21,7 +21,6 @@ set(SOURCE_FILES
 
 add_subdirectory(crypto)
 
-
 # make static library called libmyxrm
 # that we are going to link to
 # in the root CMakeLists.txt file
