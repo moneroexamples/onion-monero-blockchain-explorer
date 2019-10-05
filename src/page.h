@@ -7311,35 +7311,11 @@ get_randomx_code(uint64_t blk_height,
 
     if (!rx_vm)
     {
-
-<<<<<<< HEAD
         crypto::hash block_hash;
 
         // this will create rx_vm instance if one
         // does not exist
         me_get_block_longhash(core_storage, blk, block_hash, blk_height, 0);
-=======
-		if (rx_dataset == NULL) 
-		{
-			rx_dataset = randomx_alloc_dataset(RANDOMX_FLAG_DEFAULT);
-		}
-
-		if (rx_dataset != NULL)
-		{
-			rx_initdata(rx_sp->rs_cache, 0, blk_height);
-		}
-
-		rx_vm = randomx_create_vm(flags, rx_sp->rs_cache, rx_dataset);
-		
-        // this will create rx_vm instance if one
-        // does not exist
-        //get_block_longhash(core_storage, blk, blk_height, 0);
-
-        //randomx_init_cache(cache, blk_hash.data , 32);
-        //rx_sp->rs_cache = cache;
-        //rx_sp->rs_height = blk_height;
-        //memcpy(rx_sp->rs_hash, blk_hash.data, sizeof(rx_sp->rs_hash));
->>>>>>> try something
 
         if (!rx_vm)
         {
@@ -7347,7 +7323,6 @@ get_randomx_code(uint64_t blk_height,
             return {};
         }
     }
-
 
      // based on randomx calculate hash
     // the hash is seed used to generated scrachtpad and program
