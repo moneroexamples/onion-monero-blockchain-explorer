@@ -36,14 +36,14 @@
 #include "../ext/vpetrigocaches/fifo_cache_policy.hpp"
 #include "../ext/mstch/src/visitor/render_node.hpp"
 
-extern "C" bool me_rx_needhash(const uint64_t height, uint64_t *seedheight);
-extern "C" void me_rx_seedhash(const uint64_t seedheight, const char *hash, const int miners);
 extern "C" uint64_t me_rx_seedheight(const uint64_t height);
+
+// forked version of the rx_slow_hash from monero
 extern "C" void me_rx_slow_hash(const uint64_t mainheight, const uint64_t seedheight,
                              const char *seedhash,
                              const void *data, size_t length,
                              char *hash, int miners, int is_alt);
-extern "C" void me_rx_reorg(const uint64_t split_height);
+//extern "C" void me_rx_reorg(const uint64_t split_height);
 
 extern  __thread randomx_vm *rx_vm;
 
@@ -302,6 +302,8 @@ struct randomx_status
     }
 };
 
+// modified version of the get_block_longhash
+// from monero to use me_rx_slow_hash
 bool
 me_get_block_longhash(const Blockchain *pbc,
                    const block& b,
@@ -7270,12 +7272,6 @@ get_randomx_code(uint64_t blk_height,
     rx_vm->initScratchpad(&tempHash);
     rx_vm->resetRoundingMode();
 
-    //    randomx::Program* prg
-    //        = reinterpret_cast<randomx::Program*>(
-    //                reinterpret_cast<char*>(rx_vm) + 64);
-    //
-
-
     for (int chain = 0; chain < RANDOMX_PROGRAM_COUNT - 1; ++chain) 
     {
         rx_vm->run(&tempHash);
@@ -7297,11 +7293,9 @@ get_randomx_code(uint64_t blk_height,
     rx_code.back().prog = rx_vm->getProgram();
     rx_code.back().reg_file = *(rx_vm->getRegisterFile());
 
-
-  // crypto::hash res2;
- //  rx_vm->getFinalResult(res2.data, RANDOMX_HASH_SIZE);
-    
-   // cout << "pow2: " << pod_to_hex(res2) << endl;
+    //crypto::hash res2;
+    //rx_vm->getFinalResult(res2.data, RANDOMX_HASH_SIZE);
+    //cout << "pow2: " << pod_to_hex(res2) << endl;
 
     return rx_code;
 }
