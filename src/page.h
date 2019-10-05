@@ -36,15 +36,16 @@
 #include "../ext/vpetrigocaches/fifo_cache_policy.hpp"
 #include "../ext/mstch/src/visitor/render_node.hpp"
 
-extern "C" bool rx_needhash(const uint64_t height, uint64_t *seedheight);
-extern "C" void rx_seedhash(const uint64_t seedheight, const char *hash, const int miners);
-extern "C" void rx_slow_hash(const uint64_t mainheight, const uint64_t seedheight, 
-                             const char *seedhash, 
+extern "C" bool me_rx_needhash(const uint64_t height, uint64_t *seedheight);
+extern "C" void me_rx_seedhash(const uint64_t seedheight, const char *hash, const int miners);
+extern "C" uint64_t me_rx_seedheight(const uint64_t height);
+extern "C" void me_rx_slow_hash(const uint64_t mainheight, const uint64_t seedheight,
+                             const char *seedhash,
                              const void *data, size_t length,
                              char *hash, int miners, int is_alt);
-extern "C" void rx_reorg(const uint64_t split_height);
+extern "C" void me_rx_reorg(const uint64_t split_height);
 
-static  __thread randomx_vm *rx_vm = NULL;
+extern  __thread randomx_vm *rx_vm;
 
 #include <algorithm>
 #include <limits>
@@ -300,6 +301,45 @@ struct randomx_status
 	return 	 "{" + as_hex(*lo) + ", " + as_hex(*hi)+ "}";
     }
 };
+
+bool
+me_get_block_longhash(const Blockchain *pbc,
+                   const block& b,
+                   crypto::hash& res,
+                   const uint64_t height,
+                   const int miners)
+{
+  // block 202612 bug workaround
+  if (height == 202612)
+  {
+    static const std::string longhash_202612 = "84f64766475d51837ac9efbef1926486e58563c95a19fef4aec3254f03000000";
+    epee::string_tools::hex_to_pod(longhash_202612, res);
+    return true;
+  }
+  blobdata bd = get_block_hashing_blob(b);
+  if (b.major_version >= RX_BLOCK_VERSION)
+  {
+    uint64_t seed_height, main_height;
+    crypto::hash hash;
+
+    if (pbc != NULL)
+    {
+      seed_height = me_rx_seedheight(height);
+      hash = pbc->get_pending_block_id_by_height(seed_height);
+      main_height = pbc->get_current_blockchain_height();
+    } else
+    {
+      memset(&hash, 0, sizeof(hash));  // only happens when generating genesis block
+      seed_height = 0;
+      main_height = 0;
+    }
+
+    me_rx_slow_hash(main_height, seed_height,
+                    hash.data, bd.data(),
+                    bd.size(), res.data, miners, 0);
+  }
+  return true;
+}
 
 
 /**
@@ -7207,9 +7247,12 @@ get_randomx_code(uint64_t blk_height,
 
     if (!rx_vm)
     {
+
+        crypto::hash block_hash;
+
         // this will create rx_vm instance if one
         // does not exist
-        get_block_longhash(core_storage, blk, blk_height, 0);
+        me_get_block_longhash(core_storage, blk, block_hash, blk_height, 0);
 
         if (!rx_vm)
         {

@@ -71,6 +71,7 @@ message(STATUS ${MONERO_SOURCE_DIR}/build)
 # include monero headers
 include_directories(
 		${MONERO_SOURCE_DIR}/src
+                ${MONERO_SOURCE_DIR}/src/crypto
 		${MONERO_SOURCE_DIR}/external
 		${MONERO_SOURCE_DIR}/external/randomx/src
 		${MONERO_SOURCE_DIR}/build
