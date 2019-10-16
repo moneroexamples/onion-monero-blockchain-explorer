@@ -4878,11 +4878,6 @@ json_transaction(string tx_hash_str)
         no_confirmations = txd.no_confirmations;
     }
 
-    // get tx from tx fetched. can be use to double check
-    // if what we return in the json response agrees with
-    // what tx_hash was requested
-    string tx_hash_str_again = pod_to_hex(get_transaction_hash(tx));
-
     // get basic tx info
     j_data = get_tx_json(tx, txd);
 
