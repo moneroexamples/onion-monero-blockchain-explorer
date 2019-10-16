@@ -146,7 +146,7 @@ MicroCore::get_tx(const crypto::hash& tx_hash, transaction& tx)
             // check if pruned, as for coinbase
             try
             {
-                tx = m_blockchain_storage.get_db().get_pruned_tx(tx_hash);
+                tx = m_blockchain_storage.get_db().get_pruned_tx(tx_hash);  
                 return true;
             }
             catch (TX_DNE const& e)

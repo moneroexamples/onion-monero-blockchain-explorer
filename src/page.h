@@ -6858,7 +6858,14 @@ get_tx_details(const transaction& tx,
     tx_details txd;
 
     // get tx hash
-    txd.hash = get_transaction_hash(tx);
+    if (tx.pruned == 0)
+    {
+        txd.hash = get_transaction_hash(tx);
+    }
+    else
+    {
+        txd.hash = get_pruned_transaction_hash(tx, tx.prunable_hash);
+    }
 
     // get tx public key from extra
     // this check if there are two public keys
