@@ -37,14 +37,6 @@ namespace xmreg
                  "enable outputs key file checker")
                 ("enable-json-api", value<bool>()->default_value(false)->implicit_value(true),
                  "enable JSON REST api")
-                ("enable-tx-cache", value<bool>()->default_value(false)->implicit_value(true),
-                 "enable caching of transaction details")
-                ("show-cache-times", value<bool>()->default_value(false)->implicit_value(true),
-                 "show times of getting data from cache vs no cache")
-                ("enable-block-cache", value<bool>()->default_value(false)->implicit_value(true),
-                 "enable caching of block details")
-                ("enable-js", value<bool>()->default_value(false)->implicit_value(true),
-                 "enable checking outputs and proving txs using JavaScript on client side")
                 ("enable-as-hex", value<bool>()->default_value(false)->implicit_value(true),
                  "enable links to provide hex represtations of a tx and a block")
                 ("enable-autorefresh-option", value<bool>()->default_value(false)->implicit_value(true),
