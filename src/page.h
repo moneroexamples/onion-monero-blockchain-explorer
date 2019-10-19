@@ -700,7 +700,6 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
 
         uint64_t tx_i {0};
 
-        // this vector will go into block_tx cache
         //          tx_hash     , txd_map
         vector<pair<crypto::hash, mstch::node>> txd_pairs;
 
