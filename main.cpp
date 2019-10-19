@@ -32,6 +32,7 @@ struct jsonresponse: crow::response
 int
 main(int ac, const char* av[])
 {
+
     // get command line options
     xmreg::CmdLineOptions opts {ac, av};
 

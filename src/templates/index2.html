@@ -131,24 +131,3 @@
 
     </div>
 
-{{{service_node_summary}}}
-    <div class="Wrapper">
-      <p> <a class="" href="/service_nodes">Click here to see the service node list (at most only 10 are shown here)</a> </p>
-    </div>
-
-    {{{quorum_state_summary}}}
-    <div class="Wrapper">
-      <p> <a class="" href="/quorums">Click here to see the last 1hrs worth of the stored quorum states</a> </p>
-    </div>
-
-{{#show_cache_times}}
-    <div class="center">
-        <h6 style="margin-top: 1px;color:#949490">
-            Tx details construction time: {{construction_time_total}} s
-            <br/>
-            includes {{construction_time_cached}} s from block cache ({{cache_hits}} hits)
-            and {{construction_time_non_cached}} s from non cache ({{cache_misses}} misses)
-        </h6>
-    </div>
-{{/show_cache_times}}
-</div>
