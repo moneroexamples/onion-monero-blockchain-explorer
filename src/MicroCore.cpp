@@ -144,7 +144,17 @@ MicroCore::get_tx(const crypto::hash& tx_hash, transaction& tx)
         }
         catch (TX_DNE const& e)
         {
-            cerr << "MicroCore::get_tx: " << e.what() << endl;
+            try 
+            {
+                // coinbase txs are not considered pruned
+                tx = m_blockchain_storage.get_db().get_pruned_tx(tx_hash);
+                return true;
+            }
+            catch (TX_DNE const& e)
+            {
+                cerr << "MicroCore::get_tx: " << e.what() << endl;
+            }
+
             return false;
         }
     }

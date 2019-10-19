@@ -4451,11 +4451,6 @@ json_transaction(string tx_hash_str)
         no_confirmations = txd.no_confirmations;
     }
 
-    // get tx from tx fetched. can be use to double check
-    // if what we return in the json response agrees with
-    // what tx_hash was requested
-    string tx_hash_str_again = pod_to_hex(get_transaction_hash(tx));
-
     // get basic tx info
     j_data = get_tx_json(tx, txd);
 
@@ -6512,7 +6507,15 @@ get_tx_details(const transaction& tx,
     tx_details txd;
 
     // get tx hash
-    txd.hash = get_transaction_hash(tx);
+    
+    if (!tx.pruned)
+    {
+        txd.hash = get_transaction_hash(tx);
+    }
+    else
+    {
+        txd.hash = get_pruned_transaction_hash(tx, tx.prunable_hash);
+    }
 
     // get tx public key from extra
     // this check if there are two public keys
