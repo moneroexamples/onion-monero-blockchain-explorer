@@ -757,9 +757,14 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
 
     // perapre network info mstch::map for the front page
     string hash_rate;
+
     double hr_d;
     char metric_prefix;
-    cryptonote::difficulty_type hr = make_difficulty(current_network_info.hash_rate, current_network_info.hash_rate_top64);
+
+    cryptonote::difficulty_type hr = make_difficulty(
+            current_network_info.hash_rate, 
+            current_network_info.hash_rate_top64);
+
     get_metric_prefix(hr, hr_d, metric_prefix);
 
     if (metric_prefix != 0)
@@ -778,7 +783,7 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
     }
 
     context["network_info"] = mstch::map {
-            {"difficulty"        , make_difficulty(current_network_info.difficulty, current_network_info.difficulty_top64).str()},
+            {"difficulty"        , current_network_info.difficulty},
             {"hash_rate"         , hash_rate},
             {"fee_per_kb"        , print_money(current_network_info.fee_per_kb)},
             {"alt_blocks_no"     , current_network_info.alt_blocks_count},
