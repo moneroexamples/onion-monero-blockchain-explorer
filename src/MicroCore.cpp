@@ -137,13 +137,31 @@ MicroCore::get_tx(const crypto::hash& tx_hash, transaction& tx)
     if (m_blockchain_storage.have_tx(tx_hash))
     {
         // get transaction with given hash
-        tx = m_blockchain_storage.get_db().get_tx(tx_hash);
+        try
+        {
+            tx = m_blockchain_storage.get_db().get_tx(tx_hash);
+        }
+        catch (TX_DNE const& e)
+        {
+            try 
+            {
+                // coinbase txs are not considered pruned
+                tx = m_blockchain_storage.get_db().get_pruned_tx(tx_hash);
+                return true;
+            }
+            catch (TX_DNE const& e)
+            {
+                cerr << "MicroCore::get_tx: " << e.what() << endl;
+            }
+
+            return false;
+        }
     }
     else
     {
         cerr << "MicroCore::get_tx tx does not exist in blockchain: " << tx_hash << endl;
         return false;
-    }
+    }     
 
 
     return true;
