@@ -81,6 +81,7 @@ The key features of the Onion Monero Blockchain Explorer are:
  - can provide total amount of all miner fees,
  - decoding encrypted payment id,
  - decoding outputs and proving txs sent to sub-address.
+ - listing RandomX code for each block
 
 
 ## Development branch
@@ -168,10 +169,6 @@ xmrblocks, Onion Monero Blockchain Explorer:
   --enable-output-key-checker [=arg(=1)] (=0)
                                         enable outputs key file checker
   --enable-json-api [=arg(=1)] (=1)     enable JSON REST api
-  --enable-tx-cache [=arg(=1)] (=0)     enable caching of transaction details
-  --show-cache-times [=arg(=1)] (=0)    show times of getting data from cache
-                                        vs no cache
-  --enable-block-cache [=arg(=1)] (=0)  enable caching of block details
   --enable-autorefresh-option [=arg(=1)] (=0)
                                         enable users to have the index page on
                                         autorefresh
@@ -213,8 +210,6 @@ alias xmrblocksmainnet='~/onion-monero-blockchain-explorer/build/xmrblocks    --
 # for testnet explorer
 alias xmrblockstestnet='~/onion-monero-blockchain-explorer/build/xmrblocks -t --port 8082 --mainnet-url "http://139.162.32.245:8081" --enable-pusher --enable-emission-monitor'
 ```
-
-These are aliases similar to those used for http://139.162.32.245:8081/ and http://139.162.32.245:8082/, respectively.
 
 ## Enable Monero emission
 
