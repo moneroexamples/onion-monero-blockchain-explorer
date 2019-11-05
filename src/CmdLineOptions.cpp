@@ -29,6 +29,8 @@ namespace xmreg
                  "use stagenet blockchain")
                 ("enable-pusher", value<bool>()->default_value(false)->implicit_value(true),
                  "enable signed transaction pusher")
+                ("enable-randomx", value<bool>()->default_value(false)->implicit_value(true),
+                 "enable generation of randomx code")
                 ("enable-mixin-details", value<bool>()->default_value(false)->implicit_value(true),
                  "enable mixin details for key images, e.g., timescale, mixin of mixins, in tx context")
                 ("enable-key-image-checker", value<bool>()->default_value(false)->implicit_value(true),
@@ -68,7 +70,7 @@ namespace xmreg
                 ("ssl-key-file", value<string>(),
                  "path to key file for ssl (https) functionality")
                 ("deamon-url,d", value<string>()->default_value("http:://127.0.0.1:18081"),
-                 "Monero deamon url");
+                 "Monero daemon url");
 
 
         store(command_line_parser(acc, avv)

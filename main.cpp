@@ -71,6 +71,7 @@ main(int ac, const char* av[])
     auto enable_output_key_checker_opt = opts.get_option<bool>("enable-output-key-checker");
     auto enable_autorefresh_option_opt = opts.get_option<bool>("enable-autorefresh-option");
     auto enable_pusher_opt             = opts.get_option<bool>("enable-pusher");
+    auto enable_randomx_opt            = opts.get_option<bool>("enable-randomx");
     auto enable_mixin_details_opt      = opts.get_option<bool>("enable-mixin-details");
     auto enable_json_api_opt           = opts.get_option<bool>("enable-json-api");
     auto enable_as_hex_opt             = opts.get_option<bool>("enable-as-hex");
@@ -93,6 +94,7 @@ main(int ac, const char* av[])
         cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
 
     bool enable_pusher                {*enable_pusher_opt};
+    bool enable_randomx               {*enable_randomx_opt};
     bool enable_key_image_checker     {*enable_key_image_checker_opt};
     bool enable_autorefresh_option    {*enable_autorefresh_option_opt};
     bool enable_output_key_checker    {*enable_output_key_checker_opt};
@@ -269,6 +271,7 @@ main(int ac, const char* av[])
                           deamon_url,
                           nettype,
                           enable_pusher,
+                          enable_randomx,
                           enable_as_hex,
                           enable_key_image_checker,
                           enable_output_key_checker,

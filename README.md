@@ -160,6 +160,7 @@ xmrblocks, Onion Monero Blockchain Explorer:
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
   -s [ --stagenet ] [=arg(=1)] (=0)     use stagenet blockchain
   --enable-pusher [=arg(=1)] (=0)       enable signed transaction pusher
+  --enable-randomx [=arg(=1)] (=0)      enable generation of randomx code
   --enable-mixin-details [=arg(=1)] (=0)
                                         enable mixin details for key images,
                                         e.g., timescale, mixin of mixins, in tx
@@ -168,7 +169,9 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         enable key images file checker
   --enable-output-key-checker [=arg(=1)] (=0)
                                         enable outputs key file checker
-  --enable-json-api [=arg(=1)] (=1)     enable JSON REST api
+  --enable-json-api [=arg(=1)] (=0)     enable JSON REST api
+  --enable-as-hex [=arg(=1)] (=0)       enable links to provide hex
+                                        represtations of a tx and a block
   --enable-autorefresh-option [=arg(=1)] (=0)
                                         enable users to have the index page on
                                         autorefresh
@@ -176,6 +179,7 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         enable Monero total emission monitoring
                                         thread
   -p [ --port ] arg (=8081)             default explorer port
+  -x [ --bindaddr ] arg (=0.0.0.0)      default bind address for the explorer
   --testnet-url arg                     you can specify testnet url, if you run
                                         it on mainnet or stagenet. link will
                                         show on front page to testnet explorer
@@ -191,6 +195,9 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         for mempool data for the front page
   --mempool-refresh-time arg (=5)       time, in seconds, for each refresh of
                                         mempool state
+  -c [ --concurrency ] arg (=0)         number of threads handling http
+                                        queries. Default is 0 which means it is
+                                        based you on the cpu
   -b [ --bc-path ] arg                  path to lmdb folder of the blockchain,
                                         e.g., ~/.bitmonero/lmdb
   --ssl-crt-file arg                    path to crt file for ssl (https)
@@ -198,7 +205,7 @@ xmrblocks, Onion Monero Blockchain Explorer:
   --ssl-key-file arg                    path to key file for ssl (https)
                                         functionality
   -d [ --deamon-url ] arg (=http:://127.0.0.1:18081)
-                                        Monero deamon url
+                                        Monero daemon url
 ```
 
 Example usage, defined as bash aliases.

@@ -474,6 +474,8 @@ bool stagenet;
 
 bool enable_pusher;
 
+bool enable_randomx;
+
 bool enable_key_image_checker;
 bool enable_output_key_checker;
 bool enable_mixins_details;
@@ -506,6 +508,7 @@ page(MicroCore* _mcore,
      string _deamon_url,
      cryptonote::network_type _nettype,
      bool _enable_pusher,
+     bool _enable_randomx,
      bool _enable_as_hex,
      bool _enable_key_image_checker,
      bool _enable_output_key_checker,
@@ -522,6 +525,7 @@ page(MicroCore* _mcore,
           server_timestamp {std::time(nullptr)},
           nettype {_nettype},
           enable_pusher {_enable_pusher},
+          enable_randomx {_enable_randomx},
           enable_as_hex {_enable_as_hex},
           enable_key_image_checker {_enable_key_image_checker},
           enable_output_key_checker {_enable_output_key_checker},
@@ -1139,7 +1143,8 @@ show_block(uint64_t _blk_height)
             {"delta_time"           , delta_time},
             {"blk_nonce"            , blk.nonce},
             {"blk_pow_hash"         , blk_pow_hash_str},
-            {"is_randomx"           , (blk.major_version >= 12)},
+            {"is_randomx"           , (blk.major_version >= 12
+                                            && enable_randomx == true)},
             {"blk_difficulty"       , blk_difficulty.str()},
             {"age_format"           , age.second},
             {"major_ver"            , std::to_string(blk.major_version)},
@@ -1242,6 +1247,12 @@ show_block(string _blk_hash)
 string
 show_randomx(uint64_t _blk_height)
 {
+    if (enable_randomx == false)
+    {
+        return "RandomX code generation disabled! Use --enable-randomx"
+               " flag to enable if.";
+    }
+
     // get block at the given height i
     block blk;
 
