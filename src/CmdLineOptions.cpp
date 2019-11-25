@@ -29,6 +29,8 @@ namespace xmreg
                  "use stagenet blockchain")
                 ("enable-pusher", value<bool>()->default_value(false)->implicit_value(true),
                  "enable signed transaction pusher")
+                ("enable-randomx", value<bool>()->default_value(false)->implicit_value(true),
+                 "enable generation of randomx code")
                 ("enable-mixin-details", value<bool>()->default_value(false)->implicit_value(true),
                  "enable mixin details for key images, e.g., timescale, mixin of mixins, in tx context")
                 ("enable-key-image-checker", value<bool>()->default_value(false)->implicit_value(true),
@@ -37,14 +39,6 @@ namespace xmreg
                  "enable outputs key file checker")
                 ("enable-json-api", value<bool>()->default_value(false)->implicit_value(true),
                  "enable JSON REST api")
-                ("enable-tx-cache", value<bool>()->default_value(false)->implicit_value(true),
-                 "enable caching of transaction details")
-                ("show-cache-times", value<bool>()->default_value(false)->implicit_value(true),
-                 "show times of getting data from cache vs no cache")
-                ("enable-block-cache", value<bool>()->default_value(false)->implicit_value(true),
-                 "enable caching of block details")
-                ("enable-js", value<bool>()->default_value(false)->implicit_value(true),
-                 "enable checking outputs and proving txs using JavaScript on client side")
                 ("enable-as-hex", value<bool>()->default_value(false)->implicit_value(true),
                  "enable links to provide hex represtations of a tx and a block")
                 ("enable-autorefresh-option", value<bool>()->default_value(false)->implicit_value(true),
@@ -76,7 +70,7 @@ namespace xmreg
                 ("ssl-key-file", value<string>(),
                  "path to key file for ssl (https) functionality")
                 ("deamon-url,d", value<string>()->default_value("http:://127.0.0.1:18081"),
-                 "Monero deamon url");
+                 "Monero daemon url");
 
 
         store(command_line_parser(acc, avv)

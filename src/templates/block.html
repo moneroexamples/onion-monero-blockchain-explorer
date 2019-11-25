@@ -33,6 +33,12 @@
         <tr>
             <td>PoW hash:</td><td>{{blk_pow_hash}}</td>
             <td>Difficulty:</td><td>{{blk_difficulty}}</td>
+            {{#is_randomx}}
+                <td colspan="2"><a href="/randomx/{{blk_height}}">RandomX source code</a></td>
+            {{/is_randomx}}
+            {{^is_randomx}}
+                <td></td>
+            {{/is_randomx}}
             <td></td>
         </tr>
     </table>

@@ -14,7 +14,13 @@ set(SOURCE_FILES
 		CmdLineOptions.cpp
 		page.h
 		rpccalls.cpp rpccalls.h
-		version.h.in CurrentBlockchainStatus.cpp MempoolStatus.cpp MempoolStatus.h)
+		version.h.in 
+        CurrentBlockchainStatus.cpp 
+        MempoolStatus.cpp 
+        MempoolStatus.h)
+
+add_subdirectory(crypto)
+
 
 # make static library called libmyxrm
 # that we are going to link to
@@ -22,3 +28,6 @@ set(SOURCE_FILES
 add_library(myxrm
 		STATIC
 		${SOURCE_FILES})
+
+target_link_libraries(myxrm mycrypto)
+
