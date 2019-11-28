@@ -29,6 +29,7 @@ Tor users:
 
 Clearnet versions:
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
+ - [https://monero.exan.tech/](https://monero.exan.tech/) - https enabled, custom theme.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
  - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
@@ -45,6 +46,7 @@ Testnet version:
 Stagenet version:
  
  - [https://stagenet.xmrchain.net/](https://stagenet.xmrchain.net/)
+ - [https://monero-stagenet.exan.tech/](https://monero-stagenet.exan.tech/)
  - [http://139.162.60.17:8082/](http://139.162.60.17:8082/) 
  - [http://162.210.173.150:8083/](http://162.210.173.150:8083/)
  - [https://community.xmr.to/explorer/stagenet/](https://community.xmr.to/explorer/stagenet/)
