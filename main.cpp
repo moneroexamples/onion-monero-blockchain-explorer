@@ -808,7 +808,7 @@ main(int ac, const char* av[])
         ([&]() {
             uint64_t page_no {0};
             bool refresh_page {true};
-            return xmrblocks.index2(page_no, refresh_page);
+            return myxmr::htmlresponse(xmrblocks.index2(page_no, refresh_page));
         });
     }
 
