@@ -90,7 +90,7 @@ Current development branch:
 
  - https://github.com/moneroexamples/onion-monero-blockchain-explorer/tree/devel
 
-Note: `devel` branch of the explorer follows `master` branch of the monero.
+Note: `devel` branch of the explorer follows `master` branch of the monero!
 
 ## Compilation on Ubuntu 16.04/18.04
 
