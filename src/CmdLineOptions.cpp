@@ -69,6 +69,8 @@ namespace xmreg
                  "path to crt file for ssl (https) functionality")
                 ("ssl-key-file", value<string>(),
                  "path to key file for ssl (https) functionality")
+                ("daemon-login", value<string>(),
+                 "Specify username[:password] for daemon RPC client")
                 ("deamon-url,d", value<string>()->default_value("http:://127.0.0.1:18081"),
                  "Monero daemon url");
 
