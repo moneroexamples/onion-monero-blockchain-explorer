@@ -8,6 +8,8 @@
 
 #include "monero_headers.h"
 
+#include "wipeable_string.h"
+
 #include <mutex>
 #include <utility>
 
@@ -81,7 +83,10 @@ class rpccalls
 
 public:
 
+    using login_opt = boost::optional<epee::net_utils::http::login>;
+
     rpccalls(string _deamon_url = "http:://127.0.0.1:18081",
+             login_opt _login = login_opt {},
              uint64_t _timeout = 200000);
 
     bool

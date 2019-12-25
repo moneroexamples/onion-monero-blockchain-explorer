@@ -7,6 +7,7 @@
 
 
 #include "MicroCore.h"
+#include "rpccalls.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -130,6 +131,8 @@ struct MempoolStatus
     static bf::path blockchain_path;
     static string deamon_url;
     static cryptonote::network_type nettype;
+
+    static rpccalls::login_opt login;
 
     // make object for accessing the blockchain here
     static MicroCore* mcore;

@@ -4,7 +4,6 @@
 
 #include "MempoolStatus.h"
 
-#include "rpccalls.h"
 
 namespace xmreg
 {
@@ -97,7 +96,7 @@ MempoolStatus::start_mempool_status_thread()
 bool
 MempoolStatus::read_mempool()
 {
-    rpccalls rpc {deamon_url};
+    rpccalls rpc {deamon_url, login};
 
     string error_msg;
 
@@ -242,7 +241,7 @@ MempoolStatus::read_mempool()
 bool
 MempoolStatus::read_network_info()
 {
-    rpccalls rpc {deamon_url};
+    rpccalls rpc {deamon_url, login};
 
     COMMAND_RPC_GET_INFO::response rpc_network_info;
 
@@ -352,6 +351,7 @@ atomic<bool>       MempoolStatus::is_running {false};
 boost::thread      MempoolStatus::m_thread;
 Blockchain*        MempoolStatus::core_storage {nullptr};
 xmreg::MicroCore*  MempoolStatus::mcore {nullptr};
+rpccalls::login_opt MempoolStatus::login {};
 vector<MempoolStatus::mempool_tx> MempoolStatus::mempool_txs;
 atomic<MempoolStatus::network_info> MempoolStatus::current_network_info;
 atomic<uint64_t> MempoolStatus::mempool_no {0};   // no of txs

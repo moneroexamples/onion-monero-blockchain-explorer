@@ -518,10 +518,11 @@ page(MicroCore* _mcore,
      uint64_t _mempool_info_timeout,
      string _testnet_url,
      string _stagenet_url,
-     string _mainnet_url)
+     string _mainnet_url,
+     rpccalls::login_opt _daemon_rpc_login)
         : mcore {_mcore},
           core_storage {_core_storage},
-          rpc {_deamon_url},
+          rpc {_deamon_url, _daemon_rpc_login},
           server_timestamp {std::time(nullptr)},
           nettype {_nettype},
           enable_pusher {_enable_pusher},

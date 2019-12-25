@@ -8,7 +8,9 @@ namespace xmreg
 {
 
 
-rpccalls::rpccalls(string _deamon_url,
+rpccalls::rpccalls(
+         string _deamon_url,
+         login_opt login,
          uint64_t _timeout)
         : deamon_url {_deamon_url},
           timeout_time {_timeout}
@@ -17,11 +19,12 @@ rpccalls::rpccalls(string _deamon_url,
 
     port = std::to_string(url.port);
 
-    timeout_time_ms = std::chrono::milliseconds {timeout_time};
+    timeout_time_ms = std::chrono::milliseconds {timeout_time};    
 
-    m_http_client.set_server(
-            deamon_url,
-            boost::optional<epee::net_utils::http::login>{}, epee::net_utils::ssl_support_t::e_ssl_support_disabled);
+     m_http_client.set_server(
+             deamon_url,
+             login,
+             epee::net_utils::ssl_support_t::e_ssl_support_disabled);
 }
 
 bool

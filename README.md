@@ -92,7 +92,7 @@ Current development branch:
 
  - https://github.com/moneroexamples/onion-monero-blockchain-explorer/tree/devel
 
-Note: `devel` branch of the explorer follows `master` branch of the monero.
+Note: `devel` branch of the explorer follows `master` branch of the monero!
 
 ## Compilation on Ubuntu 16.04/18.04
 
@@ -208,6 +208,8 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         functionality
   -d [ --deamon-url ] arg (=http:://127.0.0.1:18081)
                                         Monero daemon url
+  --daemon-login arg                    Specify username[:password] for daemon 
+                                        RPC client
 ```
 
 Example usage, defined as bash aliases.
