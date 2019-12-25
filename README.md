@@ -206,6 +206,8 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         functionality
   -d [ --deamon-url ] arg (=http:://127.0.0.1:18081)
                                         Monero daemon url
+  --daemon-login arg                    Specify username[:password] for daemon 
+                                        RPC client
 ```
 
 Example usage, defined as bash aliases.
