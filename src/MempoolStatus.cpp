@@ -116,7 +116,8 @@ MempoolStatus::read_mempool()
     // get txpool from lmdb database instead of rpc call
     if (!mcore->get_mempool().get_transactions_and_spent_keys_info(
                 mempool_tx_info,
-                pool_key_image_info))
+                pool_key_image_info,
+                true))
     {
         cerr << "Getting mempool failed " << endl;
         return false;
