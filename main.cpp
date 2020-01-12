@@ -192,9 +192,6 @@ main(int ac, const char* av[])
         return EXIT_FAILURE;
     }
 
-    cout << blockchain_path << endl;
-
-
     // create instance of our MicroCore
     // and make pointer to the Blockchain
     xmreg::MicroCore mcore;
