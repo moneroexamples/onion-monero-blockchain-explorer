@@ -330,8 +330,6 @@ struct tx_details
     crypto::hash  payment_id  = null_hash; // normal
     crypto::hash8 payment_id8 = null_hash8; // encrypted
 
-    string payment_id_as_ascii;
-
     std::vector<std::vector<crypto::signature>> signatures;
 
     // key images of inputs
@@ -6038,9 +6036,6 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
     string tx_json = obj_to_json_str(tx);
 
-    // use this regex to remove all non friendly characters in payment_id_as_ascii string
-    static std::regex e {"[^a-zA-Z0-9 ./\\\\!]"};
-
     double tx_size = static_cast<double>(txd.size) / 1024.0;
 
     double payed_for_kB = XMR_AMOUNT(txd.fee) / tx_size;
@@ -6069,7 +6064,6 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
             {"has_payment_id8"       , txd.payment_id8 != null_hash8},
             {"confirmations"         , txd.no_confirmations},
             {"payment_id"            , pid_str},
-            {"payment_id_as_ascii"   , remove_bad_chars(txd.payment_id_as_ascii)},
             {"payment_id8"           , pid8_str},
             {"extra"                 , txd.get_extra_str()},
             {"with_ring_signatures"  , static_cast<bool>(
