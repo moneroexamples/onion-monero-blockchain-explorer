@@ -8,12 +8,13 @@ conducted by [stoffu](https://github.com/moneroexamples/onion-monero-blockchain-
 
 Mainnet
 
- - [https://aeonblocks.com/](https://aeonblocks.com/)
+ - [https://aeonblockexplorer.com](https://aeonblockexplorer.com/)
 
 Alternative block explorers:
 
-- [http://aeon.lol/](http://aeon.lol/)
+- [https://aeonblockchecker.ninja:8081](https://aeonblockchecker.ninja:8081/)
 
+- [http://162.210.173.150](http://162.210.173.150/)
 
 ## Compilation on Ubuntu 16.04
 
