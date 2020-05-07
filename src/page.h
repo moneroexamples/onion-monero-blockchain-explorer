@@ -655,7 +655,7 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
         crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
 
         // get block size in kB
-        double blk_size = static_cast<double>(core_storage->get_db().get_block_size(i))/1024.0;
+        double blk_size = static_cast<double>(core_storage->get_db().get_block_weight(i))/1024.0;
 
         string blk_size_str = fmt::format("{:0.2f}", blk_size);
 
@@ -908,7 +908,6 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
     context["network_info"] = mstch::map {
             {"difficulty"        , make_difficulty(current_network_info.difficulty, current_network_info.difficulty_top64).str()},
             {"hash_rate"         , hash_rate},
-            {"fee_per_kb"        , print_money(current_network_info.fee_per_kb)},
             {"alt_blocks_no"     , current_network_info.alt_blocks_count},
             {"have_alt_block"    , (current_network_info.alt_blocks_count > 0)},
             {"tx_pool_size"      , current_network_info.tx_pool_size},
@@ -1229,7 +1228,7 @@ show_block(uint64_t _blk_height)
     }
 
     // get block size in bytes
-    uint64_t blk_size = core_storage->get_db().get_block_size(_blk_height);
+    uint64_t blk_size = core_storage->get_db().get_block_weight(_blk_height);
 
     // miner reward tx
     transaction coinbase_tx = blk.miner_tx;
@@ -4614,7 +4613,7 @@ json_block(string block_no_or_hash)
 
 
     // get block size in bytes
-    uint64_t blk_size = core_storage->get_db().get_block_size(block_height);
+    uint64_t blk_size = core_storage->get_db().get_block_weight(block_height);
 
     // miner reward tx
     transaction coinbase_tx = blk.miner_tx;
@@ -4843,7 +4842,7 @@ json_transactions(string _page, string _limit)
         }
 
         // get block size in bytes
-        double blk_size = core_storage->get_db().get_block_size(i);
+        double blk_size = core_storage->get_db().get_block_weight(i);
 
         crypto::hash blk_hash = core_storage->get_block_id_by_height(i);
 
@@ -5493,18 +5492,6 @@ json_networkinfo()
         j_response["message"] = "Cant get monero network info";
         return j_response;
     }
-
-    uint64_t fee_estimated {0};
-
-    // get dynamic fee estimate from last 10 blocks
-    if (!get_dynamic_per_kb_fee_estimate(fee_estimated))
-    {
-        j_response["status"]  = "error";
-        j_response["message"] = "Cant get dynamic fee esimate";
-        return j_response;
-    }
-
-    j_info["fee_per_kb"] = fee_estimated;
 
     j_info["tx_pool_size"]        = MempoolStatus::mempool_no.load();
     j_info["tx_pool_size_kbytes"] = MempoolStatus::mempool_size.load();
@@ -6604,30 +6591,10 @@ get_monero_network_info(json& j_info)
        {"block_size_limit"          , local_copy_network_info.block_size_limit},
        {"block_size_median"         , local_copy_network_info.block_size_median},
        {"start_time"                , local_copy_network_info.start_time},
-       {"fee_per_kb"                , local_copy_network_info.fee_per_kb},
        {"current_hf_version"        , local_copy_network_info.current_hf_version}
     };
 
     return local_copy_network_info.current;
-}
-
-bool
-get_dynamic_per_kb_fee_estimate(uint64_t& fee_estimated)
-{
-
-    string error_msg;
-
-    if (!rpc.get_dynamic_per_kb_fee_estimate(
-            FEE_ESTIMATE_GRACE_BLOCKS,
-            fee_estimated, error_msg))
-    {
-        cerr << "rpc.get_dynamic_per_kb_fee_estimate failed" << endl;
-        return false;
-    }
-
-    (void) error_msg;
-
-    return true;
 }
 
 bool

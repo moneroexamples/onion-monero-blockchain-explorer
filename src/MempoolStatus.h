@@ -81,7 +81,6 @@ struct MempoolStatus
 
         uint64_t hash_rate  {0};
         uint64_t hash_rate_top64  {0};
-        uint64_t fee_per_kb  {0};
         uint64_t info_timestamp  {0};
 
         bool current {false};

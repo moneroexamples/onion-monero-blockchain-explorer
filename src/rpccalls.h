@@ -102,12 +102,6 @@ public:
     bool
     get_hardfork_info( COMMAND_RPC_HARD_FORK_INFO::response& res);
 
-    bool
-    get_dynamic_per_kb_fee_estimate(
-            uint64_t grace_blocks,
-            uint64_t& fee,
-            string& error_msg);
-
 
     /**
      * This must be in the header for now, as it will be tempalte function
