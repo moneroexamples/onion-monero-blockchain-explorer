@@ -71,8 +71,9 @@ find_package(Boost COMPONENTS
 find_package(Sanitizers)
 
 if(APPLE)
-    include_directories(/usr/local/opt/openssl/include)
-    link_directories(/usr/local/opt/openssl/lib)
+    include_directories(/usr/local/opt/openssl@1.1/include)
+    link_directories(/usr/local/opt/openssl@1.1/lib)
+    link_directories(/usr/local/lib)
 endif()
 
 
