@@ -76,35 +76,6 @@
 
     {{^have_raw_tx}}
     <div class="center">
-        <div class="tabs">
-
-            <div class="tab">
-                <input type="radio" id="tab-1" name="tab-group-1" checked>
-                <label for="tab-1">Decode outputs</label>
-                <div class="content">
-                    <h5 style="margin: 0px">Check which outputs belong to given Triton address/subaddress and viewkey</h5>
-                    <p style="margin: 0px">
-                        For RingCT transactions, outputs' amounts are also decoded
-                        <br/>
-                        {{#enable_js}}
-                            Note: address/subaddress and viewkey are NOT sent to the server, as the calculations are done on the client side
-                        {{/enable_js}}
-                        {{^enable_js}}
-                            Note: address/subaddress and viewkey are sent to the server, as the calculations are done on the server side
-                        {{/enable_js}}
-                    </p>
-                    <form action="/myoutputs" method="post" style="width:100%; margin-top:2px" class="style-1">
-                        <input type="hidden" class="form-control"  name="tx_hash" value="{{tx_hash}}"><br/>
-                        <input type="text" class="form-control" name="xmr_address" size="110" placeholder="Triton address/subaddress"><br/>
-                        <input type="text" class="form-control" name="viewkey" size="110" placeholder="Private viewkey" style="margin-top:5px"><br/>
-                        <input type="hidden"class="form-control"  name="raw_tx_data" value="{{raw_tx_data}}">
-                        <!--above raw_tx_data field only used when checking raw tx data through tx pusher-->
-
-                        <button type="button" style="padding: 10px;" id="decode-btn" class="btn btn-outline-primary">Decode outputs</button>
-                    </form>
-                </div>
-            </div>
-
     {{/have_raw_tx}}
 
 {{#has_inputs}}
