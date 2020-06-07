@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(PROJECT_NAME
-        tritonblocks)
+        e_exp)
 
 
 project(${PROJECT_NAME})
@@ -14,7 +14,7 @@ endif()
 
 
 if (NOT MONERO_DIR)
-    set(MONERO_DIR ~/TritonProtocol)
+    set(MONERO_DIR ~/e)
 endif()
 
 message(STATUS MONERO_DIR ": ${MONERO_DIR}")
@@ -26,7 +26,7 @@ endif()
 
 if (NOT MONERO_BUILD_DIR)
     # set location of monero build tree
-    set(MONERO_BUILD_DIR ${MONERO_SOURCE_DIR}/build/Linux/development/release/
+    set(MONERO_BUILD_DIR ${MONERO_SOURCE_DIR}/build/Linux/master/release/
           CACHE PATH "Path to the build directory for Monero")
 endif()
 
