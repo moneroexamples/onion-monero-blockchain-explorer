@@ -3,7 +3,7 @@
 		
 
      <h3 style="font-size: 12px; margin-top: 20px">
-	
+	<div class="w-50 p-3">
 	<form action="/search" method="get">
 	    <input type="text" name="value" class="form-control"
 		   placeholder="Block Height, Block Hash, Transaction Hash">
@@ -14,7 +14,7 @@
 		   placeholder="Service Node Public Key">
 	    <input type="submit" class="button btn" value="Search">
 	</form>
-	     
+	     </div>
 	     
         Server time: {{server_timestamp}}  | <a href="/txpool">Transaction pool</a>
          {{#enable_pusher}}
