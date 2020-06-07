@@ -1,20 +1,21 @@
 
 <div class="text-center">
-	<div class="text-center">
-		<form action="/search" method="get">
-		    <input type="text" name="value" class="form-control"
-			   placeholder="Block Height, Block Hash, Transaction Hash">
-		    <input type="submit" class="button btn" value="Search">
-		</form>
-		<form action="/search_service_node" method="get">
-		    <input type="text" name="value" class="form-control"
-			   placeholder="Service Node Public Key">
-		    <input type="submit" class="button btn" value="Search">
-		</form>
-	</div>
+		
 
      <h3 style="font-size: 12px; margin-top: 20px">
-
+	
+	<form action="/search" method="get">
+	    <input type="text" name="value" class="form-control"
+		   placeholder="Block Height, Block Hash, Transaction Hash">
+	    <input type="submit" class="button btn" value="Search">
+	</form>
+	<form action="/search_service_node" method="get">
+	    <input type="text" name="value" class="form-control"
+		   placeholder="Service Node Public Key">
+	    <input type="submit" class="button btn" value="Search">
+	</form>
+	     
+	     
         Server time: {{server_timestamp}}  | <a href="/txpool">Transaction pool</a>
          {{#enable_pusher}}
             | <a href="/rawtx">Transaction pusher </a>
