@@ -1,5 +1,17 @@
 
 <div class="text-center">
+	<div class="search">
+		<form action="/search" method="get" style="width: 100%; margin-top:15px;" class="style-1">
+		    <input type="text" name="value"
+			   placeholder="block height, block hash, transaction hash">
+		    <input type="submit" value="Search" class="pure-button pure-button-active">
+		</form>
+		<form action="/search_service_node" method="get" style="width: 100%; margin-top:15px; margin-bottom: 1em;" class="style-1">
+		  <input type="text" name="value" size="120"
+			 placeholder="Service Node Public Key">
+		  <input type="submit" class="PageButton" value="Search">
+	      </form>
+	      </div>
      <h3>
 
         Server time: {{server_timestamp}} |
