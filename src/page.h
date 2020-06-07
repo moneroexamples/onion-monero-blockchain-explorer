@@ -32,6 +32,7 @@
 #include <future>
 #include <visitor/render_node.hpp>
 
+cn_gpu_hash ctx;
 
 #define TMPL_DIR                    "./templates"
 #define TMPL_PARIALS_DIR            TMPL_DIR "/partials"
@@ -1569,7 +1570,7 @@ show_block(uint64_t _blk_height)
 
     // initalise page tempate map with basic info about blockchain
 
-    string blk_pow_hash_str = pod_to_hex(get_block_longhash(blk, _blk_height));
+    string blk_pow_hash_str = pod_to_hex(get_block_longhash(blk, _blk_height, ctx));
     uint64_t blk_difficulty = core_storage->get_db().get_block_difficulty(_blk_height);
 
     mstch::map context {
