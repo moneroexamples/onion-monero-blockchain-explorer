@@ -54,6 +54,51 @@
 
 
     </table>
+    
+    {{#have_deregister_info}}
+    <h2>Service Node Deregister Metadata</h2>
+    <div class="TitleDivider"></div>
+    <p>Service Node Index: {{deregister_service_node_index}}</p>
+    <p>Block Height: {{deregister_block_height}}</p>
+
+    <table class="Table">
+        <tr class="TableHeader">
+            <td>Voters Quorum Index</td>
+            <td>Signature</td>
+        </tr>
+
+        {{#deregister_vote_array}}
+        <tr>
+            <td>{{deregister_voters_quorum_index}}</td>
+            <td>{{deregister_signature}}</td>
+        </tr>
+        {{/deregister_vote_array}}
+    </table>
+{{/have_deregister_info}}
+
+{{#have_register_info}}
+    <h2>Service Node Register Metadata</h2>
+    <div class="TitleDivider"></div>
+    <p>Portions For Operator: {{register_portions_for_operator}}%</p>
+    <p>Expiration Timestamp: {{register_expiration_timestamp}}</p>
+    <p>Signature: {{register_signature}}</p>
+
+    <table class="Table">
+        <tr class="TableHeader">
+            <td>Spend Key</td>
+            <td>View Key</td>
+            <td>Portions</td>
+        </tr>
+
+        {{#register_array}}
+        <tr>
+            <td>{{register_spend_key}}</td>
+            <td>{{register_view_key}}</td>
+            <td>{{register_portions}}%</td>
+        </tr>
+        {{/register_array}}
+    </table>
+{{/have_register_info}}
 
 
   <h3>{{outputs_no}} output(s) for total of {{outputs_xmr_sum}} XEQ</h3>
