@@ -1,7 +1,5 @@
 # Equilibria Blockchain Explorer
 
-## Onion Monero Blockchain Explorer features
-
 The key features of the Onion Monero Blockchain Explorer are:
 
  - open sourced,
