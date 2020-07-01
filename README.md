@@ -23,10 +23,6 @@ Monero C++ libraries, but also demonstrates how to use:
 
 ## Explorer hosts
 
-Tor users:
-
- - [http://dvwae436pd7nt4bc.onion](http://dvwae436pd7nt4bc.onion) (Down for now: front-end templates are [maintained by @suhz](https://github.com/suhz/onion-monero-blockchain-explorer/tree/moneroexplorer.com/src/templates)).
-
 Clearnet versions:
  - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
@@ -54,7 +50,6 @@ Alternative block explorers:
 
 - [http://moneroblocks.info](http://moneroblocks.info/)
 - [https://monerovision.com](https://monerovision.com)
-- [http://chainradar.com](http://chainradar.com/xmr/blocks)
 
 
 ## Onion Monero Blockchain Explorer features
