@@ -5413,6 +5413,7 @@ json_outputs(string tx_hash_str,
     j_data["address"]  = pod_to_hex(address_info.address);
     j_data["viewkey"]  = pod_to_hex(prv_view_key);
     j_data["tx_prove"] = tx_prove;
+    j_data["tx_confirmations"] = txd.no_confirmations;
 
     j_response["status"] = "success";
 
