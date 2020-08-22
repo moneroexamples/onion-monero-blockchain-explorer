@@ -5406,6 +5406,14 @@ json_outputs(string tx_hash_str,
 
     } // for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
 
+    // if we don't already have the tx_timestamp from the mempool
+    // then read it from the block that the transaction is in
+    if (!tx_timestamp && txd.blk_height > 0) {
+        block blk;
+        mcore->get_block_by_height(txd.blk_height, blk);
+        tx_timestamp = blk.timestamp;
+    }
+
     // return parsed values. can be use to double
     // check if submited data in the request
     // matches to what was used to produce response.
@@ -5414,6 +5422,7 @@ json_outputs(string tx_hash_str,
     j_data["viewkey"]  = pod_to_hex(prv_view_key);
     j_data["tx_prove"] = tx_prove;
     j_data["tx_confirmations"] = txd.no_confirmations;
+    j_data["tx_timestamp"] = tx_timestamp;
 
     j_response["status"] = "success";
 
