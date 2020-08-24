@@ -124,21 +124,22 @@ set(LIBRARIES
         mstch
         wallet
         blockchain_db
+        device
         cryptonote_core
         cryptonote_protocol
         cryptonote_basic
         multisig
         daemonizer
-        cncrypto
         blocks
         lmdb
         ringct
         ringct_basic
-        device
         common
         mnemonics
         easylogging
         checkpoints
+        cncrypto        
+        miniupnpc
         version
         epee
         hardforks
