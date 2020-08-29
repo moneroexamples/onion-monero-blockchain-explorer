@@ -76,13 +76,17 @@ if(APPLE)
     link_directories(/usr/local/lib)
 endif()
 
-
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR WIN32)
+find_library (UNBOUND_LIBRARY unbound)
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR WIN32 OR (${UNBOUND_LIBRARY} STREQUAL "UNBOUND_LIBRARY-NOTFOUND"))
     add_library(unbound STATIC IMPORTED)
     set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/external/unbound/libunbound.a)
 endif()
 
-
+if("${Xmr_WALLET-CRYPTO_LIBRARIES}" STREQUAL "Xmr_WALLET-CRYPTO_LIBRARY-NOTFOUND")
+  set(WALLET_CRYPTO "")
+else()
+  set(WALLET_CRYPTO ${Xmr_WALLET-CRYPTO_LIBRARIES})
+endif()
 
 # include boost headers
 include_directories(${Boost_INCLUDE_DIRS})
@@ -125,6 +129,7 @@ set(LIBRARIES
         wallet
         blockchain_db
         device
+        ${WALLET_CRYPTO}
         cryptonote_core
         cryptonote_protocol
         cryptonote_basic
@@ -158,8 +163,16 @@ else()
     set(LIBRARIES ${LIBRARIES} atomic)
 endif()
 
+find_library(UNWIND_LIBRARY unwind)
+if (${UNWIND_LIBRARY} STREQUAL "UNWIND_LIBRARY-NOTFOUND")
+  message (STATUS "unwind library not found")
+  set (UNWIND_LIBRARY "")
+else ()
+  message (STATUS "Found unwind library: ${UNWIND_LIBRARY}")
+endif ()
+
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND NOT WIN32)
-    set(LIBRARIES ${LIBRARIES} unwind)
+    set(LIBRARIES ${LIBRARIES} ${UNWIND_LIBRARY})
 endif()
 
 if (WIN32)
