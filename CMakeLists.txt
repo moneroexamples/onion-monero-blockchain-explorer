@@ -127,9 +127,9 @@ set(LIBRARIES
         ssl)
 
 if(APPLE)
-    set(LIBRARIES ${LIBRARIES} "-framework IOKit -framework PCSC")
+    set(LIBRARIES ${LIBRARIES} "-framework IOKit -framework Foundation")
 else()
-    set(LIBRARIES ${LIBRARIES} atomic pcsclite)
+    set(LIBRARIES ${LIBRARIES} atomic)
 endif()
 
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND NOT WIN32)
@@ -146,5 +146,8 @@ if (WIN32)
 else()
     set(LIBRARIES ${LIBRARIES} dl)
 endif()
+
+find_package(HIDAPI)
+set(LIBRARIES ${LIBRARIES} ${HIDAPI_LIBRARIES})
 
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
