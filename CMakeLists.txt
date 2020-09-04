@@ -76,8 +76,20 @@ if(APPLE)
     link_directories(/usr/local/lib)
 endif()
 
+MESSAGE(STATUS "Looking for libunbound") # FindUnbound.cmake from monero repo
+
+FIND_PATH(UNBOUND_INCLUDE_DIR
+  NAMES unbound.h
+  PATH_SUFFIXES include/ include/unbound/
+  PATHS "${PROJECT_SOURCE_DIR}"
+  ${UNBOUND_ROOT}
+  $ENV{UNBOUND_ROOT}
+  /usr/local/
+  /usr/
+)
+
 find_library (UNBOUND_LIBRARY unbound)
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR WIN32 OR (${UNBOUND_LIBRARY} STREQUAL "UNBOUND_LIBRARY-NOTFOUND"))
+if (WIN32 OR (${UNBOUND_LIBRARY} STREQUAL "UNBOUND_LIBRARY-NOTFOUND"))
     add_library(unbound STATIC IMPORTED)
     set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/external/unbound/libunbound.a)
 endif()
