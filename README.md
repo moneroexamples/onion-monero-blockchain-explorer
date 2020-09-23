@@ -84,7 +84,7 @@ Current development branch:
 
 Note: `devel` branch of the explorer follows `master` branch of the monero!
 
-## Compilation on Ubuntu 16.04/18.04
+## Compilation on Ubuntu 18.04/20.04
 
 
 #### Monero download and compilation
