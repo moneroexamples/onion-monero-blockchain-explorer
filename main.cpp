@@ -65,7 +65,6 @@ main(int ac, const char* av[])
     auto enable_mixin_details_opt      = opts.get_option<bool>("enable-mixin-details");
     auto enable_json_api_opt           = opts.get_option<bool>("enable-json-api");
     auto enable_as_hex_opt             = opts.get_option<bool>("enable-as-hex");
-    auto concurrency_opt               = opts.get_option<size_t>("concurrency");
     auto enable_emission_monitor_opt   = opts.get_option<bool>("enable-emission-monitor");
 
 
