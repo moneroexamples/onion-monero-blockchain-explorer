@@ -1607,7 +1607,7 @@ show_block(uint64_t _blk_height)
     // initalise page tempate map with basic info about blockchain
     crypto::hash blk_pow_hash;
     string blk_pow_hash_str = pod_to_hex(get_block_longhash(blk, blk_pow_hash, ctx));
-    uint64_t blk_difficulty = core_storage->get_db().get_block_difficulty(_blk_height);
+    cryptonote::difficulty_type blk_difficulty = core_storage->get_db().get_block_difficulty(_blk_height);
 
     mstch::map context {
             {"testnet"              , testnet},
