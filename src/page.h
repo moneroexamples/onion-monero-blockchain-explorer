@@ -4788,7 +4788,7 @@ json_transaction(string tx_hash_str)
 
           get_output_key<BlockchainDB>(in_key.amount,
                                          absolute_offsets,
-                                         mixin_outputs);
+                                         outputs);
         }
         catch (const OUTPUT_DNE &e)
         {
