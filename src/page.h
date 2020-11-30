@@ -6544,9 +6544,9 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
             // offsets seems good, so try to get the outputs for the amount and
             // offsets given
-          get_output_key<BlockchainDB>(in_key.amount,
-                                         absolute_offsets,
-                                         mixin_outputs);
+            get_output_key<BlockchainDB>(in_key.amount,
+                                           absolute_offsets,
+                                           outputs);
         }
         catch (const std::exception& e)
         {
