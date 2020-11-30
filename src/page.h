@@ -1584,7 +1584,7 @@ string
    }
 
 string
-show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0)
+show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0, bool refresh_page = false)
 {
 
     // parse tx hash string to hash object
