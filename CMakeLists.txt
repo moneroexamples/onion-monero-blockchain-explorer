@@ -128,6 +128,7 @@ set(LIBRARIES
         checkpoints
         version
         epee
+        hardforks
         sodium
         ${Boost_LIBRARIES}
         pthread
