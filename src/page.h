@@ -1446,17 +1446,22 @@ show_block_hex(size_t block_height, bool complete_blk)
                 return string {"Failed to obtain complete block data "};
             }
 
-            std::string complete_block_data_str;
+            //std::string complete_block_data_str;
+            epee::byte_slice complete_block_data_slice;
 
             if(!epee::serialization::store_t_to_binary(
-                        complete_block_data, complete_block_data_str))
+                        complete_block_data, complete_block_data_slice))
             {
                 cerr << "Failed to serialize complete_block_data\n";
                 return string {"Failed to obtain complete block data"};
             }
 
+            std::string block_data_str(
+                    complete_block_data_slice.begin(),
+                    complete_block_data_slice.end());
+
             return epee::string_tools
-                    ::buff_to_hex_nodelimer(complete_block_data_str);
+                    ::buff_to_hex_nodelimer(block_data_str);
         }
     }
     catch (std::exception const& e)
@@ -1743,10 +1748,10 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
         return json {"error", "Failed to obtain complete block data "};
     }
 
-    std::string complete_block_data_str;
+    epee::byte_slice complete_block_data_slice;
 
     if(!epee::serialization::store_t_to_binary(
-                complete_block_data, complete_block_data_str))
+                complete_block_data, complete_block_data_slice))
     {
         cerr << "Failed to serialize complete_block_data\n";
         return json {"error", "Failed to obtain complete block data"};
@@ -1757,6 +1762,10 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
     tx_json["payment_id"] = pod_to_hex(txd.payment_id);
     tx_json["payment_id8"] = pod_to_hex(txd.payment_id8);
     tx_json["payment_id8e"] = pod_to_hex(txd.payment_id8);
+
+    std::string complete_block_data_str(
+            complete_block_data_slice.begin(),
+            complete_block_data_slice.end());
 
     tx_json["block"] = epee::string_tools
              ::buff_to_hex_nodelimer(complete_block_data_str);
