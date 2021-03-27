@@ -296,8 +296,8 @@ Partial results shown:
   "data": {
     "block_height": 1268252,
     "coinbase": false,
-    "confirmations": 1,
-    "current_height": 1268253,
+    "confirmations": 1057855,
+    "current_height": 2326107,
     "extra": "01be23e277aed6b5f41f66b05244bf994c13108347366ec678ae16657f0fc3a22b",
     "inputs": [
       {
@@ -306,11 +306,13 @@ Partial results shown:
         "mixins": [
           {
             "block_no": 1238623,
-            "public_key": "0a5b853c55303c10e1326acfb085b9e246e088b1ccac7e37f7a810d46a28a914"
+            "public_key": "0a5b853c55303c10e1326acfb085b9e246e088b1ccac7e37f7a810d46a28a914",
+            "tx_hash": "686555fb053dd53f6f9eb79449e2bdcd377221f823f508158d70d4a1966fe955"
           },
           {
             "block_no": 1246942,
-            "public_key": "527cf86f5abbfb006c970f7c6eb40493786d4751306f8985c6a43f98a88c0dff"
+            "public_key": "527cf86f5abbfb006c970f7c6eb40493786d4751306f8985c6a43f98a88c0dff",
+            "tx_hash": "4fa1999f9e0d2ad031dbe5594f2e8336651b6cad19dd3cee7980a01c47600f91"
           }
         ]
       }
@@ -340,6 +342,7 @@ Partial results shown:
   },
   "status": "success"
 }
+
 ```
 
 #### api/transactions
