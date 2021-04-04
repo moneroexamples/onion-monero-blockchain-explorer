@@ -76,7 +76,7 @@ extern  __thread randomx_vm *rx_vm;
 #define TMPL_MY_CHECKRAWOUTPUTKEYS  TMPL_DIR "/checkrawoutputkeys.html"
 
 #define ONIONEXPLORER_RPC_VERSION_MAJOR 1
-#define ONIONEXPLORER_RPC_VERSION_MINOR 1
+#define ONIONEXPLORER_RPC_VERSION_MINOR 2
 #define MAKE_ONIONEXPLORER_RPC_VERSION(major,minor) (((major)<<16)|(minor))
 #define ONIONEXPLORER_RPC_VERSION \
     MAKE_ONIONEXPLORER_RPC_VERSION(ONIONEXPLORER_RPC_VERSION_MAJOR, ONIONEXPLORER_RPC_VERSION_MINOR)
@@ -4501,10 +4501,41 @@ json_transaction(string tx_hash_str)
 
         json& mixins = inputs.back()["mixins"];
 
-        for (const output_data_t& output_data: outputs)
+        // mixin counter
+        size_t count = 0;
+
+        for (const uint64_t& abs_offset: absolute_offsets)
         {
+
+            // get basic information about mixn's output
+            cryptonote::output_data_t output_data = outputs.at(count++);
+
+            tx_out_index tx_out_idx;
+
+            try
+            {
+                // get pair pair<crypto::hash, uint64_t> where first is tx hash
+                // and second is local index of the output i in that tx
+                tx_out_idx = core_storage->get_db()
+                        .get_output_tx_and_index(in_key.amount, abs_offset);
+            }
+            catch (const OUTPUT_DNE& e)
+            {
+
+                string out_msg = fmt::format(
+                        "Output with amount {:d} and index {:d} does not exist!",
+                        in_key.amount, abs_offset);
+
+                cerr << out_msg << '\n';
+
+                break;
+            }
+
+            string out_pub_key_str = pod_to_hex(output_data.pubkey);
+
             mixins.push_back(json {
                     {"public_key"  , pod_to_hex(output_data.pubkey)},
+                    {"tx_hash"     , pod_to_hex(tx_out_idx.first)},
                     {"block_no"    , output_data.height},
             });
         }
