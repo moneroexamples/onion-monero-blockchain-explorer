@@ -6476,7 +6476,7 @@ get_tx_details(const transaction& tx,
         if (tx.vin.at(0).type() != typeid(txin_gen))
         {
             // get tx fee
-            txd.fee = get_tx_fee(tx);
+            txd.fee = get_tx_miner_fee(tx, false);
         }
     }
 
