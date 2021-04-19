@@ -140,19 +140,21 @@ CurrentBlockchainStatus::calculate_emission_in_blocks(
         vector<transaction> txs;
         vector<crypto::hash> missed_txs;
 
-        uint64_t tx_fee_amount = 0;
+        uint64_t tx_fee_amount_withb = 0;
+        uint64_t tx_fee_amount_withob = 0;
 
         core_storage->get_transactions(blk.tx_hashes, txs, missed_txs);
 
         for(const auto& tx: txs)
         {
-            tx_fee_amount += get_tx_fee(tx);
+            tx_fee_amount_withob += get_tx_miner_fee(tx, false);
+            tx_fee_amount_withb += get_tx_miner_fee(tx, true);
         }
 
         (void) missed_txs;
 
-        emission_calculated.coinbase += coinbase_amount - tx_fee_amount;
-        emission_calculated.fee      += tx_fee_amount;
+        emission_calculated.coinbase += coinbase_amount - tx_fee_amount_withob;
+        emission_calculated.fee      += tx_fee_amount_withob;
 
         ++start_blk;
     }

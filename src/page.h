@@ -503,7 +503,7 @@ void generate_service_node_mapping(mstch::array *array, bool on_homepage, std::v
            COMMAND_RPC_GET_SERVICE_NODES::response::entry const *entry = (*entries)[i];
            num_contributors_str += std::to_string(entry->contributors.size());
            num_contributors_str += "/";
-           num_contributors_str += std::to_string(MAX_NUMBER_OF_CONTRIBUTORS);
+           num_contributors_str += std::to_string(75);
 
            uint64_t contribution_remaining = entry->staking_requirement - entry->total_reserved;
            int operator_cut_in_percent = portions_to_percent(entry->portions_for_operator);
@@ -1495,7 +1495,7 @@ string
        if (entry->total_contributed == entry->staking_requirement)
        {
          time_t expiry_time = calculate_service_node_expiry_timestamp(entry->registration_height);
-                  std::string str = "This service node is registered and active on the network and expires on the ";
+                  std::string str = "This oracle node is registered and active on the network and expires on the ";
 
                   std::string expiry_friendly_timestamp;
                   get_human_readable_timestamp(expiry_time, &expiry_friendly_timestamp);
@@ -1513,7 +1513,7 @@ string
          uint64_t remaining_contribution = entry->staking_requirement - entry->total_reserved;
 
          snprintf(buf, sizeof(buf),
-             "This service node is awaiting to be registered and has: %s triton to be contributed remaining",
+             "This service node is awaiting to be registered and has: %s xeq to be contributed remaining",
              print_money(remaining_contribution).c_str());
 
          page_context[service_node_registered_text_id] = std::string(buf);
