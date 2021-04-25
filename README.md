@@ -129,7 +129,7 @@ You can use `-b` option if its in different location.
 For example:
 
 ```bash
-./xmrblocks -b /home/mwo/non-defult-monero-location/lmdb/
+./xmrblocks -b /home/mwo/non-default-monero-location/lmdb/
 ```
 
 Example output:
