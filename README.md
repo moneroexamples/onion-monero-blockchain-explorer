@@ -5,7 +5,7 @@ special importance to privacy-oriented users:
 
  - they use JavaScript,
  - have images which might be used for [cookieless tracking](http://lucb1e.com/rp/cookielesscookies/),
- - track users activates through google analytics,
+ - track users activities through google analytics,
  - are closed sourced,
  - are not available as hidden services,
  - do not support Monero testnet nor stagenet networks,
@@ -46,7 +46,7 @@ i2p users (main Monero network):
 
 Alternative block explorers:
 
-- [http://moneroblocks.info](http://moneroblocks.info/)
+- [https://localmonero.co/blocks](https://localmonero.co/blocks)
 - [https://monerovision.com](https://monerovision.com)
 
 
@@ -63,7 +63,7 @@ The key features of the Onion Monero Blockchain Explorer are:
  - showing public components of Monero addresses,
  - decoding which outputs and mixins belong to the given Monero address and viewkey,
  - can prove that you send Monero to someone,
- - detailed information about ring members, such as, their age, timescale and their ring sizes,
+ - detailed information about ring members, such as their age, timescale, and ring sizes,
  - showing number of amount output indices,
  - support Monero testnet and stagnet networks,
  - tx checker and pusher for online pushing of transactions,
@@ -231,7 +231,7 @@ Every 10000 blocks, the thread will save current emission in a file, by default,
  is present, read its values, and continue from there if possible. Subsequently, only the initial
  use of the tread is time consuming. Once the thread scans the entire blockchain, it updates
  the emission amount using new blocks as they come. Since the explorer writes this file, there can
- be only one instance of it running for mainnet, testnet and stagenet. Thus, for example, you cant have
+ be only one instance of it running for mainnet, testnet and stagenet. Thus, for example, you can't have
  two explorers for mainnet
  running at the same time, as they will be trying to write and read the same file at the same time,
  leading to unexpected results. Off course having one instance for mainnet and one instance for testnet
@@ -269,7 +269,7 @@ Having the `crt` and `key` files, run `xmrblocks` in the following way:
 ```
 
 Note: Because we generated our own certificate, modern browsers will complain
-about it as they cant verify the signatures against any third party. So probably
+about it as they can't verify the signatures against any third party. So probably
 for any practical use need to have properly issued ssl certificates.
 
 ## JSON API
