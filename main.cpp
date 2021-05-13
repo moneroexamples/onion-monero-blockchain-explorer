@@ -3,7 +3,7 @@
 
 #include "src/page.h"
 
-#include "ext/crow/crow.h"
+#include "ext/crow_all.h"
 #include "src/CmdLineOptions.h"
 #include "src/MicroCore.h"
 
