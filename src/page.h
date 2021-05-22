@@ -27,7 +27,7 @@
 #include "CurrentBlockchainStatus.h"
 #include "MempoolStatus.h"
 
-#include "../ext/crow/crow.h"
+#include "../ext/crow_all.h"
 
 #include "../ext/json.hpp"
 
