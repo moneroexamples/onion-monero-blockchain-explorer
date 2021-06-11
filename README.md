@@ -229,7 +229,7 @@ Every 10000 blocks, the thread will save current emission in a file, by default,
  need to rescan entire blockchain whenever the explorer is restarted. When the
  explorer restarts, the thread will first check if `~/.bitmonero/lmdb/emission_amount.txt`
  is present, read its values, and continue from there if possible. Subsequently, only the initial
- use of the tread is time consuming. Once the thread scans the entire blockchain, it updates
+ use of the thread is time consuming. Once the thread scans the entire blockchain, it updates
  the emission amount using new blocks as they come. Since the explorer writes this file, there can
  be only one instance of it running for mainnet, testnet and stagenet. Thus, for example, you can't have
  two explorers for mainnet
