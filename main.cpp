@@ -1,5 +1,5 @@
 #define CROW_ENABLE_SSL
-
+#define CROW_MAIN
 
 #include "src/page.h"
 
