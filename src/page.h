@@ -1901,6 +1901,8 @@ show_my_outputs(string tx_hash_str,
     boost::trim(viewkey_str);
     boost::trim(raw_tx_data);
 
+    (void) domain; // not used
+
     if (tx_hash_str.empty())
     {
         return string("tx hash not provided!");
@@ -2121,7 +2123,6 @@ show_my_outputs(string tx_hash_str,
             {"payment_id8"          , pid8_str},
             {"decrypted_payment_id8", string{}},
             {"tx_prove"             , tx_prove},
-            {"domain_url"           , domain},
             {"shortcut_url"         , shortcut_url}
     };
 
