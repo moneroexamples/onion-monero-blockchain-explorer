@@ -1446,7 +1446,8 @@ show_block_hex(size_t block_height, bool complete_blk)
                 return string {"Failed to obtain complete block data "};
             }
 
-            std::string complete_block_data_str;
+	    //epee::byte_slice complete_block_data_slice;
+	    std::string complete_block_data_str;
 
             if(!epee::serialization::store_t_to_binary(
                         complete_block_data, complete_block_data_str))
@@ -1455,6 +1456,12 @@ show_block_hex(size_t block_height, bool complete_blk)
                 return string {"Failed to obtain complete block data"};
             }
 
+            //std::string block_data_str(
+	//	complete_block_data_slice.begin(),
+	//	complete_block_data_slice.end());
+
+            //return epee::string_tools
+            //        ::buff_to_hex_nodelimer(block_data_str);
             return epee::string_tools
                     ::buff_to_hex_nodelimer(complete_block_data_str);
         }

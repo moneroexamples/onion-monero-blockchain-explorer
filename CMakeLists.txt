@@ -143,8 +143,9 @@ set(LIBRARIES
         device
         ${WALLET_CRYPTO}
         cryptonote_core
-        cryptonote_protocol
         cryptonote_basic
+        cryptonote_format_utils_basic
+        cryptonote_protocol
         multisig
         daemonizer
         blocks
