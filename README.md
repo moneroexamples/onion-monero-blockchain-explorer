@@ -142,6 +142,42 @@ Example output:
 
 Go to your browser: http://127.0.0.1:8081
 
+## Compiling and running with Docker
+
+The explorer can also be compiled using `docker build` as follows:
+
+```
+docker build --no-cache -t xmrblocks .
+```
+
+- Wait one hour or more
+- The build needs 3 GB space.
+- The final container image is ~200MB
+
+To run it, mount the monero blockchain onto the container as volume.
+
+```
+# either run in foreground
+docker run -it \
+    -v xmrdata:/home/monero/.bitmonero \
+    -p 8081:8081 \
+    xmrblocks
+
+# or in background
+docker run -it -d \
+    -v xmrdata:/home/monero/.bitmonero \
+    -p 8081:8081 \
+    xmrblocks
+```
+
+Example output:
+
+```
+[ec2-user@ip-10-0-0-1 ~]$ docker run --rm -it -v xmrdata:/home/monero/.bitmonero xmrblocks
+Staring in non-ssl mode
+(2020-04-20 16:20:00) [INFO    ] Crow/0.1 server is running at 0.0.0.0:8081 using 1 threads
+```
+
 ## The explorer's command line options
 
 ```
