@@ -438,7 +438,7 @@ page(MicroCore* _mcore,
 	quorum_state_context                           = {};
 	quorum_state_context.num_entries_on_front_page = 1;
 
-    no_of_mempool_tx_of_frontpage = 25;
+    no_of_mempool_tx_of_frontpage = 5;
 
     // read template files for all the pages
     // into template_file map
@@ -1056,7 +1056,7 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
  * Render mempool data
  */
 string
-mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
+mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 5)
 {
     std::vector<MempoolStatus::mempool_tx> mempool_txs;
 
