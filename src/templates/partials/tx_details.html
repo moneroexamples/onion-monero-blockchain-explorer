@@ -28,7 +28,7 @@
 
 
 
-    <table class="table table-striped table-dark">
+    <table class="table" border="0">
         {{^have_raw_tx}}
         <tr>
             <td>Timestamp: {{blk_timestamp_uint}}</td>
@@ -61,7 +61,7 @@
     <p>Service Node Index: {{deregister_service_node_index}}</p>
     <p>Block Height: {{deregister_block_height}}</p>
 
-    <table class="table table-striped table-dark">
+    <table class="table" border="0">
         <tr class="TableHeader">
             <td>Voters Quorum Index</td>
             <td>Signature</td>
@@ -103,7 +103,7 @@
 
   <h3>{{outputs_no}} output(s) for total of {{outputs_xmr_sum}} XEQ</h3>
   <div class="center">
-      <table class="table table-striped table-dark">
+      <table class="table" border="0">
           <tr>
               <td>stealth address</td>
               <td>amount</td>
@@ -157,7 +157,7 @@
     {{/show_part_of_inputs}}
 
     <div class="center">
-       <table class="table table-striped table-dark">
+       <table class="table" border="0">
       {{#inputs}}
         <tr>
           <td style="text-align: left;">
@@ -212,7 +212,7 @@
                  </table>
                 {{/enable_mixins_details}}
                 {{^enable_mixins_details}}
-                <table  clas="table table-striped table-dark">
+                <table  clas="table" border="0">
                     <tr>
                         <td>Ring Members</td>
                         {{#have_raw_tx}}
