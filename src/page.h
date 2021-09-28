@@ -5958,6 +5958,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
     if(get_memo_from_tx_extra(tx.extra, memo))
     {
         context["memo"] = "No Memo";
+        context["have_memo"] = true;
         if(memo.data != "") {
             context["have_memo"] = true;
             context["memo"] = memo.data;
