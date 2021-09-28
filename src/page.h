@@ -1123,24 +1123,24 @@ mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
                                   delta_time[3], delta_time[4]);
         }
 
-
-        // set output page template map
-        txs.push_back(mstch::map {
-                {"timestamp_no"    , mempool_tx.receive_time},
-                {"timestamp"       , mempool_tx.timestamp_str},
-                {"age"             , age_str},
-                {"hash"            , pod_to_hex(mempool_tx.tx_hash)},
-                {"fee"             , mempool_tx.fee_micro_str},
-                {"payed_for_kB"    , mempool_tx.payed_for_kB_micro_str},
-                {"xmr_inputs"      , mempool_tx.xmr_inputs_str},
-                {"xmr_outputs"     , mempool_tx.xmr_outputs_str},
-                {"no_inputs"       , mempool_tx.no_inputs},
-                {"no_outputs"      , mempool_tx.no_outputs},
-                {"pID"             , string {mempool_tx.pID}},
-                {"no_nonrct_inputs", mempool_tx.num_nonrct_inputs},
-                {"mixin"           , mempool_tx.mixin_no},
-                {"txsize"          , mempool_tx.txsize}
-        });
+        if(delta_hours < 1) {
+            txs.push_back(mstch::map {
+                    {"timestamp_no"    , mempool_tx.receive_time},
+                    {"timestamp"       , mempool_tx.timestamp_str},
+                    {"age"             , age_str},
+                    {"hash"            , pod_to_hex(mempool_tx.tx_hash)},
+                    {"fee"             , mempool_tx.fee_micro_str},
+                    {"payed_for_kB"    , mempool_tx.payed_for_kB_micro_str},
+                    {"xmr_inputs"      , mempool_tx.xmr_inputs_str},
+                    {"xmr_outputs"     , mempool_tx.xmr_outputs_str},
+                    {"no_inputs"       , mempool_tx.no_inputs},
+                    {"no_outputs"      , mempool_tx.no_outputs},
+                    {"pID"             , string {mempool_tx.pID}},
+                    {"no_nonrct_inputs", mempool_tx.num_nonrct_inputs},
+                    {"mixin"           , mempool_tx.mixin_no},
+                    {"txsize"          , mempool_tx.txsize}
+            });
+        }
     }
 
     context.insert({"mempool_size_kB",
@@ -1508,7 +1508,7 @@ string
                   str += get_human_time_ago(expiry_time, time(nullptr));
 
                   page_context[service_node_registered_text_id] = str;
-                       }
+                       } 
        else
        {
          char buf[192];
