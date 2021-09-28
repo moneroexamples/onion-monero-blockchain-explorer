@@ -5953,6 +5953,17 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
             {"show_more_details_link", true},
             {"construction_time"     , string {}},
     };
+
+    tx_extra_memo memo;
+    if(get_memo_from_tx_extra(tx.extra, memo))
+    {
+        context["memo"] = "No Memo";
+        if(memo.data != "") {
+            context["have_memo"] = true;
+            context["memo"] = memo.data;
+        }
+    }
+
     if (tx.version == transaction::version_3_per_output_unlock_times)
             {
                 tx_extra_service_node_deregister deregister;
@@ -6005,6 +6016,10 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
                   static std::string parsing_error = "<pubkey parsing error>";
                   context["register_service_node_pubkey"] = parsing_error;
                 }
+
+
+
+
                     context["have_register_info"]             = true;
                     context["register_portions_for_operator"] = portions_to_percent(register_.m_portions_for_operator);
                     context["register_expiration_timestamp_friendly"]  = timestamp_to_str_gm(register_.m_expiration_timestamp);
