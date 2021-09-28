@@ -11,14 +11,14 @@
           <tr class="TableHeader">
               <td>Public Key</td>
               <td>Last Uptime Proof</td>
-              <td>Expiry Date UTC (Estimated)</td>
+              <td>Days Until Expiration</td>
           </tr>
 
           {{#quorum_nodes_array}}
           <tr>
               <td><a href="/service_node/{{public_key}}">{{public_key}}</a></td>
               <td>{{last_uptime_proof}}</td>
-              <td>{{expiration_date}} ({{expiration_time_relative}})</td>
+              <td>{{expiration_time_relative}}</td>
           </tr>
           {{/quorum_nodes_array}}
       </table>
@@ -31,14 +31,14 @@
           <tr class="TableHeader">
               <td>Public Key</td>
               <td>Last Uptime Proof</td>
-              <td>Expiry Date UTC (Estimated)</td>
+              <td>Days Until Expiration</td>
           </tr>
 
           {{#nodes_to_test_array}}
           <tr>
               <td><a href="/service_node/{{public_key}}">{{public_key}}</a></td>
               <td>{{last_uptime_proof}}</td>
-              <td>{{expiration_date}} ({{expiration_time_relative}})</td>
+              <td>{{expiration_time_relative}}</td>
           </tr>
           {{/nodes_to_test_array}}
       </table>

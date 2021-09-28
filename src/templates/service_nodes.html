@@ -13,7 +13,7 @@
               <td>Operator Cut (%)</td>
               <td>Last Reward At Height</td>
               <td>Last Uptime Proof</td>
-              <td>Expiry Date UTC (Estimated)</td>
+              <td>Days Until Expiration</td>
           </tr>
 
           {{#service_node_active_array}}
@@ -23,7 +23,7 @@
               <td>{{operator_cut}}</td>
               <td>{{last_reward_at_block}}</td>
               <td>{{last_uptime_proof}}</td>
-              <td>{{expiration_date}} ({{expiration_time_relative}})</td>
+              <td>{{expiration_time_relative}}</td>
           </tr>
           {{/service_node_active_array}}
       </table>
@@ -38,7 +38,7 @@
               <td>Contributors</td>
               <td>Operator Cut (%)</td>
               <td>Open For Contribution</td>
-              <td>Expiry Date UTC (Estimated)</td>
+              <td>Days Until Expiration</td>
           </tr>
 
           {{#service_node_awaiting_array}}
@@ -47,7 +47,7 @@
               <td>{{num_contributors}}</td>
               <td>{{operator_cut}}</td>
               <td>{{open_for_contribution}}</td>
-              <td>{{expiration_date}} ({{expiration_time_relative}})</td>
+              <td>{{expiration_time_relative}}</td>
           </tr>
           {{/service_node_awaiting_array}}
       </table>
