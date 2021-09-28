@@ -103,10 +103,7 @@
                     <td>Age {{age_format}}<!--(Δm)--></td>
                     <td>Size [kB]<!--(Δm)--></td>
                     <td>Transaction Hash</td>
-                    <td>Fee [&#181;&#x278]</td>
                     <td>Outputs</td>
-                    <td>In/Out/pID</td>
-                    <td>Tx size [kB]</td>
                 </tr>
                 {{#txs}}
                 <tr>
@@ -114,10 +111,7 @@
                     <td>{{age}}<!--{{time_delta}}--></td>
                     <td>{{blk_size}}</td>
                     <td><a href="/tx/{{hash}}">{{hash}}</a></td>
-                    <td>{{fee_micro}}</td>
                     <td>{{sum_outputs_short}}</td>
-                    <td>{{no_inputs}}/{{no_outputs}}/{{pID}}</td>
-                    <td>{{tx_size_short}}</td>
                 </tr>
                 {{/txs}}
             </table>
