@@ -62,22 +62,24 @@
 
 
     {{#network_info}}
-        <h3 style="font-size: 12px; margin-top: 5px; margin-bottom: 3">
+        <h2 style="font-size: 12px; margin-top: 5px; margin-bottom: 3">
             Network difficulty: {{difficulty}}
             | Hard fork: v{{current_hf_version}}
             | Hash rate: {{hash_rate}}
-			| Staking Requirement: {{staking_requirement}}
-            | Fee per byte: {{fee_per_kb}}
-            | Median block size limit: {{block_size_limit}} kB
             {{^is_current_info}}
             | Data from {{age}} {{age_format}} ago
             {{/is_current_info}}
+        </h3>
+        <h3 style="font-size: 12px; margin-top: 5px; margin-bottom: 3">
+            Full Node Requirement: {{staking_requirement}}
+            | Staking Pool Operator Requirement: {{staking_requirement / 4}}
+            | Staking Pool Requirement: {{staking_requirement / 100}}
         </h3>
     {{/network_info}}
 
     {{#emission}}
         <h3 style="font-size: 12px; margin-top: 2px">
-            Equilibria emission (fees/burnt) is {{amount}} ({{fee_amount}}) as of {{blk_no}} block
+            Equilibria emission is {{amount}} as of {{blk_no}} block
         </h3>
     {{/emission}}
 
