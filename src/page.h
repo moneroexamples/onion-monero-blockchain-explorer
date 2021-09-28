@@ -597,8 +597,8 @@ void generate_service_node_mapping(mstch::array *array, bool on_homepage, std::v
        mstch::array& awaiting_array = boost::get<mstch::array>(page_context[awaiting_array_id]);
        generate_service_node_mapping(&awaiting_array, on_homepage, &unregistered);
        generate_service_node_mapping(&active_array, on_homepage, &registered);
-       page_context["service_node_active_size"]   = registered.size();
-       page_context["service_node_awaiting_size"] = unregistered.size();
+       page_context["service_node_active_size"]   = static_cast<uint64_t>(registered.size());
+       page_context["service_node_awaiting_size"] = static_cast<uint64_t>(unregistered.size());
 
        if (on_homepage)
        {
@@ -646,7 +646,7 @@ void generate_service_node_mapping(mstch::array *array, bool on_homepage, std::v
         for (size_t height = block_height; num_quorums_to_render > 0; --num_quorums_to_render, --height)
         {
           mstch::map quorum_part;
-          quorum_part["quorum_height"] = height;
+          quorum_part["quorum_height"] = static_cast<uint64_t>(height);
 
           // TODO(doyle): We should support querying batch quorums for perf
           COMMAND_RPC_GET_QUORUM_STATE::response response = {};
@@ -658,8 +658,8 @@ void generate_service_node_mapping(mstch::array *array, bool on_homepage, std::v
           char const nodes_to_test_array_id[]     = "nodes_to_test_array";
           quorum_part[quorum_node_array_id]       = mstch::array();
           quorum_part[nodes_to_test_array_id]     = mstch::array();
-          quorum_part["quorum_nodes_array_size"]  = response.quorum_nodes.size();
-          quorum_part["nodes_to_test_array_size"] = response.nodes_to_test.size();
+          quorum_part["quorum_nodes_array_size"]  = static_cast<uint64_t>(response.quorum_nodes.size());
+          quorum_part["nodes_to_test_array_size"] = static_cast<uint64_t>(response.nodes_to_test.size());
 
           // Split and sort the entries
           mstch::array& quorum_node_array   = boost::get<mstch::array>(quorum_part[quorum_node_array_id]);
@@ -974,6 +974,9 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
             {"is_current_info"   , current_network_info.current},
             {"is_pool_size_zero" , (current_network_info.tx_pool_size == 0)},
 			{"staking_requirement", print_money(current_network_info.staking_requirement)},
+            {"staking_requirement_1", print_money(current_network_info.staking_requirement / 4)},
+			{"staking_requirement_2", print_money(current_network_info.staking_requirement / 100)},
+
             {"current_hf_version", current_network_info.current_hf_version},
             {"age"               , network_info_age.first},
             {"age_format"        , network_info_age.second},
@@ -1472,7 +1475,7 @@ string
        page_context["operator_address"]     = entry->operator_address;
        page_context["operator_address"]     = entry->operator_address;
        page_context["last_uptime_proof"]    = (entry->last_uptime_proof == 0) ? friendly_uptime_proof_not_received : get_age(server_timestamp, entry->last_uptime_proof).first;
-       page_context["num_contributors"]     = entry->contributors.size();
+       page_context["num_contributors"]     = static_cast<uint64_t>(entry->contributors.size());
        page_context["register_height"]      = entry->registration_height;
 
        // Make contributor render data

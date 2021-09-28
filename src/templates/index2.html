@@ -72,8 +72,8 @@
         </h3>
         <h3 style="font-size: 12px; margin-top: 5px; margin-bottom: 3">
             Full Node Requirement: {{staking_requirement}}
-            | Staking Pool Operator Requirement: {{staking_requirement / 4}}
-            | Staking Pool Requirement: {{staking_requirement / 100}}
+            | Staking Pool Operator Requirement: {{staking_requirement_1}}
+            | Staking Pool Requirement: {{staking_requirement_2}}
         </h3>
     {{/network_info}}
 
@@ -97,7 +97,7 @@
 
     <div class="text-center">
 
-            <table class="table table-striped table-dark" style="border-radius: 5px;width: 90%;margin: 0px auto;float: none;">
+            <table class="table" style="border-radius: 5px;width: 90%;margin: 0px auto;float: none;">
                 <tr>
                     <td>Block Height</td>
                     <td>Age {{age_format}}<!--(Δm)--></td>
