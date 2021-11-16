@@ -138,12 +138,13 @@ set(LIBRARIES
         myext
         mstch
         wallet
+        cryptonote_core
+        cryptonote_basic
+        cryptonote_protocol
+        cryptonote_format_utils_basic
         blockchain_db
         device
-        ${WALLET_CRYPTO}
-        cryptonote_core
-        cryptonote_protocol
-        cryptonote_basic
+        ${WALLET_CRYPTO} 
         multisig
         daemonizer
         blocks
