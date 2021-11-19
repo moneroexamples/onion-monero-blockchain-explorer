@@ -8,7 +8,9 @@ ARG MONERO_BRANCH=release-v0.17
 ENV DEBIAN_FRONTEND="noninteractive"
 
 # Install dependencies for monerod and xmrblocks compilation
-RUN apt-get update && apt install -y --no-install-recommends \
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
     git \
     build-essential \
     cmake \
@@ -65,8 +67,9 @@ FROM ubuntu:20.04
 ENV DEBIAN_FRONTEND="noninteractive"
 
 # Install unzip to handle bundled libs from builder stage
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    unzip \
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends unzip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
