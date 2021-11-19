@@ -94,3 +94,6 @@ VOLUME /home/monero/.bitmonero
 EXPOSE 8081
 
 ENTRYPOINT ["/bin/sh", "-c", "./xmrblocks"]
+
+# Set sane defaults that are overridden if the user passes any commands
+CMD ["--enable-json-api", "--enable-autorefresh-option", "--enable-emission-monitor", "--enable-pusher"]
