@@ -24,11 +24,12 @@ Monero C++ libraries, but also demonstrates how to use:
 ## Explorer hosts
 
 Clearnet versions:
- - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
- - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
+ - [https://xmrchain.net/](https://xmrchain.net/) - HTTPS enabled, most popular, and very stable.
+ - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, HTTPS enabled.
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
- - [https://blox.minexmr.com/](https://blox.minexmr.com/) - - https enabled.
+ - [https://blox.minexmr.com/](https://blox.minexmr.com/) - HTTPS enabled.
  - [https://community.xmr.to/explorer/mainnet/](https://community.xmr.to/explorer/mainnet/)
+ - [https://explore.sethforprivacy.com/](https://explore.sethforprivacy.com/) - HTTPS enabled, JSON API enabled, emission enabled, rawtx enabled.
 
 Testnet version:
 
@@ -43,6 +44,10 @@ Stagenet version:
 i2p users (main Monero network):
 
  - [http://7o4gezpkye6ekibhgpkg7v626ze4idsirapufzrefkdysa6zxhha.b32.i2p/](http://7o4gezpkye6ekibhgpkg7v626ze4idsirapufzrefkdysa6zxhha.b32.i2p/)
+
+Tor versions:
+
+ - [http://exploredv42tq2nowrll6f27nuymenndwupueqvyugaqzbrvmjhhceqd.onion/](http://exploredv42tq2nowrll6f27nuymenndwupueqvyugaqzbrvmjhhceqd.onion/) - Native v3 Onion, JSON API enabled, emission enabled, rawtx enabled.
 
 Alternative block explorers:
 
@@ -150,9 +155,8 @@ The explorer can also be compiled using `docker build` as follows:
 docker build --no-cache -t xmrblocks .
 ```
 
-- Wait one hour or more
 - The build needs 3 GB space.
-- The final container image is ~200MB
+- The final container image is 179MB.
 
 To run it, mount the monero blockchain onto the container as volume.
 
@@ -177,6 +181,60 @@ Example output:
 Staring in non-ssl mode
 (2020-04-20 16:20:00) [INFO    ] Crow/0.1 server is running at 0.0.0.0:8081 using 1 threads
 ```
+
+### Docker Compose example
+
+The explorer can also be built and run using Docker Compose, i.e.:
+
+```yaml
+version: '3'
+services:
+  monerod:
+    image: sethsimmons/simple-monerod:latest
+    restart: unless-stopped
+    container_name: monerod
+    volumes:
+      - xmrdata:/home/monero/.bitmonero
+    ports:
+      - 18080:18080
+      - 18089:18089
+    command:
+      - "--rpc-restricted-bind-ip=0.0.0.0"
+      - "--rpc-restricted-bind-port=18089"
+      - "--public-node"
+      - "--no-igd"
+      - "--enable-dns-blocklist"
+      - "--prune-blockchain"
+
+  explore:
+    image: xmrblocks:latest
+    build: ./onion-monero-blockchain-explorer
+    container_name: explore
+    restart: unless-stopped
+    volumes:
+      - xmrdata:/home/monero/.bitmonero
+    ports:
+      - 8081:8081
+
+  volumes:
+    xmrdata:
+```
+
+To build this image, run the following:
+
+```bash
+git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
+docker-compose build
+```
+
+Or build and run in one step via:
+
+```bash
+git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
+docker-compose up -d
+```
+
+When running via Docker, please use something like [Traefik](https://doc.traefik.io/traefik/) or [enable SSL](#enable-ssl-https) to secure communications.
 
 ## The explorer's command line options
 
