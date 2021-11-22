@@ -213,7 +213,7 @@ services:
       - xmrdata:/home/monero/.bitmonero
     ports:
       - 8081:8081
-    command: "./xmrblocks --daemon-url=monerod:18089 --enable-json-api --enable-autorefresh-option --enable-emission-monitor --enable-pusher"
+    command: ["./xmrblocks --daemon-url=monerod:18089 --enable-json-api --enable-autorefresh-option --enable-emission-monitor --enable-pusher"]
 
   volumes:
     xmrdata:
