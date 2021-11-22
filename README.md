@@ -166,22 +166,16 @@ To run it, mount the monero blockchain onto the container as volume.
 
 ```
 # either run in foreground
-docker run -it \
-    -v xmrdata:/home/monero/.bitmonero \
-    -p 8081:8081 \
-    xmrblocks
+docker run -it -v <path-to-monero-blockckain-on-the-host>:/home/monero/.bitmonero -p 8081:8081  xmrblocks
 
 # or in background
-docker run -it -d \
-    -v xmrdata:/home/monero/.bitmonero \
-    -p 8081:8081 \
-    xmrblocks
+docker run -it -d -v <path-to-monero-blockchain-on-the-host>:/home/monero/.bitmonero -p 8081:8081  xmrblocks
 ```
 
 Example output:
 
 ```
-[ec2-user@ip-10-0-0-1 ~]$ docker run --rm -it -v xmrdata:/home/monero/.bitmonero xmrblocks
+docker run --rm -it -v /mnt/w7/bitmonero:/home/monero/.bitmonero xmrblocks
 Staring in non-ssl mode
 (2020-04-20 16:20:00) [INFO    ] Crow/0.1 server is running at 0.0.0.0:8081 using 1 threads
 ```
