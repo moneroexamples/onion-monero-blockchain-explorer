@@ -152,7 +152,11 @@ Go to your browser: http://127.0.0.1:8081
 The explorer can also be compiled using `docker build` as follows:
 
 ```
+# build using all CPU cores
 docker build --no-cache -t xmrblocks .
+
+# alternatively, specify number of cores to use (e.g. 2)
+docker build --no-cache --build-arg NPROC=2  -t xmrblocks .
 ```
 
 - The build needs 3 GB space.
