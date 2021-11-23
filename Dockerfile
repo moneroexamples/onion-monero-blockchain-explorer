@@ -49,13 +49,10 @@ RUN git clone --recursive --branch ${MONERO_BRANCH} https://github.com/monero-pr
     && test -z "$NPROC" && nproc > /nproc || echo -n "$NPROC" > /nproc && make -j"$(cat /nproc)"
 
 
-# Copy and cmake xmrblocks
+# Copy and cmake/make xmrblocks with all available threads
 COPY . /root/onion-monero-blockchain-explorer/
 WORKDIR /root/onion-monero-blockchain-explorer/build
-RUN cmake ..
-
-# Compile xmrblocks with all available threads
-RUN test -z "$NPROC" && nproc > /nproc || echo -n "$NPROC" > /nproc && make -j"$(cat /nproc)"
+RUN cmake .. && make -j"$(cat /nproc)"
 
 # Use ldd and awk to bundle up dynamic libraries for the final image
 RUN zip /lib.zip $(ldd xmrblocks | grep -E '/[^\ ]*' -o)
