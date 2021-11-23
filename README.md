@@ -213,6 +213,7 @@ services:
       - xmrdata:/home/monero/.bitmonero
     ports:
       - 8081:8081
+    command: ["./xmrblocks --daemon-url=monerod:18089 --enable-json-api --enable-autorefresh-option --enable-emission-monitor --enable-pusher"]
 
   volumes:
     xmrdata:
@@ -301,6 +302,18 @@ alias xmrblocksmainnet='~/onion-monero-blockchain-explorer/build/xmrblocks    --
 # for testnet explorer
 alias xmrblockstestnet='~/onion-monero-blockchain-explorer/build/xmrblocks -t --port 8082 --mainnet-url "http://139.162.32.245:8081" --enable-pusher --enable-emission-monitor'
 ```
+
+Example usage when running via Docker:
+
+```bash
+# Run in foreground
+docker run -it -v <path-to-monero-blockckain-on-the-host>:/home/monero/.bitmonero -p 8081:8081  xmrblocks "./xmrblocks --daemon-url=node.sethforprivacy.com:18089 --enable-json-api --enable-autorefresh-option --enable-emission-monitor --enable-pusher"
+
+# Run in background
+docker run -it -d -v <path-to-monero-blockchain-on-the-host>:/home/monero/.bitmonero -p 8081:8081  xmrblocks "./xmrblocks --daemon-url=node.sethforprivacy.com:18089 --enable-json-api --enable-autorefresh-option --enable-emission-monitor --enable-pusher"
+```
+
+Make sure to always start the portion of command line flags with `./xmrblocks` and set any flags you would like after that, as shown above.
 
 ## Enable Monero emission
 
