@@ -93,4 +93,4 @@ EXPOSE 8081
 ENTRYPOINT ["/bin/sh", "-c"]
 
 # Set sane defaults that are overridden if the user passes any commands
-CMD ["./xmrblocks --enable-json-api --enable-emission-monitor --enable-pusher"]
+CMD ["./xmrblocks --enable-json-api --enable-autorefresh-option  --enable-pusher"]
