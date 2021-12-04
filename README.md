@@ -149,7 +149,8 @@ Go to your browser: http://127.0.0.1:8081
 
 ## Compiling and running with Docker
 
-The explorer can also be compiled using `docker build` as follows:
+The explorer can also be compiled using `docker build` as described below. By default it compiles
+against latest release (`release-v0.17`) branch of monero:
 
 ```
 # build using all CPU cores
@@ -157,6 +158,9 @@ docker build --no-cache -t xmrblocks .
 
 # alternatively, specify number of cores to use (e.g. 2)
 docker build --no-cache --build-arg NPROC=2  -t xmrblocks .
+
+# to build against development branch of monero (i.e. master branch)
+docker build --no-cache --build-arg NPROC=3 -build-arg MONERO_BRANCH=master  -t xmrblocks .
 ```
 
 - The build needs 3 GB space.
@@ -175,7 +179,7 @@ docker run -it -d -v <path-to-monero-blockchain-on-the-host>:/home/monero/.bitmo
 Example output:
 
 ```
-docker run --rm -it -v /mnt/w7/bitmonero:/home/monero/.bitmonero xmrblocks
+docker run --rm -it -v /mnt/w7/bitmonero:/home/monero/.bitmonero -p 8081:8081 xmrblocks
 Staring in non-ssl mode
 (2020-04-20 16:20:00) [INFO    ] Crow/0.1 server is running at 0.0.0.0:8081 using 1 threads
 ```
