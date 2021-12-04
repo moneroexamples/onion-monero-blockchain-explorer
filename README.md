@@ -179,7 +179,7 @@ docker run -it -d -v <path-to-monero-blockchain-on-the-host>:/home/monero/.bitmo
 Example output:
 
 ```
-docker run --rm -it -v /mnt/w7/bitmonero:/home/monero/.bitmonero xmrblocks
+docker run --rm -it -v /mnt/w7/bitmonero:/home/monero/.bitmonero -p 8081:8081 xmrblocks
 Staring in non-ssl mode
 (2020-04-20 16:20:00) [INFO    ] Crow/0.1 server is running at 0.0.0.0:8081 using 1 threads
 ```
