@@ -1900,6 +1900,8 @@ show_my_outputs(string tx_hash_str,
     boost::trim(viewkey_str);
     boost::trim(raw_tx_data);
 
+    cout << "tx hash not provided" << endl;
+
     if (tx_hash_str.empty())
     {
         return string("tx hash not provided!");
@@ -2204,14 +2206,13 @@ show_my_outputs(string tx_hash_str,
                           address_info.address.m_spend_public_key,
                           tx_pubkey);
 
-//        cout << pod_to_hex(derivation) << ", " << output_idx << ", "
-//             << pod_to_hex(address_info.address.m_spend_public_key) << ", "
-//             << pod_to_hex(outp.first.key) << " == "
-//             << pod_to_hex(tx_pubkey) << '\n'  << '\n';
+
 
 
         // check if generated public key matches the current output's key
         bool mine_output = (outp.first.key == tx_pubkey);
+
+
 
         bool with_additional = false;
 
@@ -2228,6 +2229,12 @@ show_my_outputs(string tx_hash_str,
 
             with_additional = true;
         }
+
+//        cout << pod_to_hex(derivation) << ", " << output_idx << ", "
+//             << pod_to_hex(address_info.address.m_spend_public_key) << ", "
+//             << pod_to_hex(outp.first.key) << " == "
+//             << pod_to_hex(tx_pubkey) << ", "  << mine_output
+//             << '\n'  << '\n';
 
         // if mine output has RingCT, i.e., tx version is 2
         if (mine_output && tx.version == 2)
@@ -2254,6 +2261,8 @@ show_my_outputs(string tx_hash_str,
                 {
                     cerr << "\nshow_my_outputs: Cant decode RingCT!\n";
                 }
+
+                //cout << rct_amount << endl;
 
                 outp.second         = rct_amount;
                 money_transfered[output_idx] = rct_amount;
