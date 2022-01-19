@@ -28,18 +28,14 @@ Clearnet versions:
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, HTTPS enabled.
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
  - [https://blox.minexmr.com/](https://blox.minexmr.com/) - HTTPS enabled.
- - [https://community.xmr.to/explorer/mainnet/](https://community.xmr.to/explorer/mainnet/)
- - [https://explore.sethforprivacy.com/](https://explore.sethforprivacy.com/) - HTTPS enabled, JSON API enabled, emission enabled, rawtx enabled.
 
 Testnet version:
 
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
- - [https://community.xmr.to/explorer/testnet/](https://community.xmr.to/explorer/testnet/)
 
 Stagenet version:
  
  - [https://stagenet.xmrchain.net/](https://stagenet.xmrchain.net/)
- - [https://community.xmr.to/explorer/stagenet/](https://community.xmr.to/explorer/stagenet/)
 
 i2p users (main Monero network):
 
