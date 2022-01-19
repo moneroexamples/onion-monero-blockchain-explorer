@@ -28,7 +28,6 @@ Clearnet versions:
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
  - [https://blox.minexmr.com/](https://blox.minexmr.com/) - - https enabled.
- - [https://community.xmr.to/explorer/mainnet/](https://community.xmr.to/explorer/mainnet/)
 
 Testnet version:
 
