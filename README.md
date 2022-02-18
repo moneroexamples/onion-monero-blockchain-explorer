@@ -198,6 +198,7 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         Monero daemon url
   --daemon-login arg                    Specify username[:password] for daemon 
                                         RPC client
+  --enable-mixin-guess [=arg(=1)] (=0)  enable guessing real outputs in key
 ```
 
 Example usage, defined as bash aliases.
