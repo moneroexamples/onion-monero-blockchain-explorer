@@ -473,6 +473,7 @@ bool enable_key_image_checker;
 bool enable_output_key_checker;
 bool enable_mixins_details;
 bool enable_as_hex;
+bool enable_mixin_guess;
 
 bool enable_autorefresh_option;
 
@@ -507,6 +508,7 @@ page(MicroCore* _mcore,
      bool _enable_output_key_checker,
      bool _enable_autorefresh_option,
      bool _enable_mixins_details,
+     bool _enable_mixin_guess,
      uint64_t _no_blocks_on_index,
      uint64_t _mempool_info_timeout,
      string _testnet_url,
@@ -525,6 +527,7 @@ page(MicroCore* _mcore,
           enable_output_key_checker {_enable_output_key_checker},
           enable_autorefresh_option {_enable_autorefresh_option},
           enable_mixins_details {_enable_mixins_details},
+          enable_mixin_guess {_enable_mixin_guess},
           no_blocks_on_index {_no_blocks_on_index},
           mempool_info_timeout {_mempool_info_timeout},
           testnet_url {_testnet_url},
@@ -2278,13 +2281,21 @@ show_my_outputs(string tx_hash_str,
         ++output_idx;
     }
 
+
+    context.emplace("outputs", outputs);
+
+    context["found_our_outputs"] = (sum_xmr > 0);
+    context["sum_xmr"]           = xmreg::xmr_amount_to_str(sum_xmr);
+
     // we can also test ouputs used in mixins for key images
     // this can show possible spending. Only possible, because
     // without a spend key, we cant know for sure. It might be
     // that our output was used by someone else for their mixins.
 
-    bool show_key_images {false};
 
+    if (enable_mixin_guess) {
+
+    bool show_key_images {false};
 
     mstch::array inputs;
 
@@ -2662,10 +2673,9 @@ show_my_outputs(string tx_hash_str,
     } //  for (const txin_to_key& in_key: input_key_imgs)
 
 
-    context.emplace("outputs", outputs);
 
-    context["found_our_outputs"] = (sum_xmr > 0);
-    context["sum_xmr"]           = xmreg::xmr_amount_to_str(sum_xmr);
+
+
 
     context.emplace("inputs", inputs);
 
@@ -2706,6 +2716,8 @@ show_my_outputs(string tx_hash_str,
 
     context["possible_spending"] = xmreg::xmr_amount_to_str(
             possible_spending, "{:0.12f}", false);
+
+    } // if (enable_mixin_guess)
 
     add_css_style(context);
 

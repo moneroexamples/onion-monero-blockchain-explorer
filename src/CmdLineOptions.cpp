@@ -72,7 +72,9 @@ namespace xmreg
                 ("daemon-login", value<string>(),
                  "Specify username[:password] for daemon RPC client")
                 ("deamon-url,d", value<string>()->default_value("http:://127.0.0.1:18081"),
-                 "Monero daemon url");
+                 "Monero daemon url")
+                ("enable-mixin-guess", value<bool>()->default_value(false)->implicit_value(true),
+                 "enable guessing real outputs in key images based on viewkey");
 
 
         store(command_line_parser(acc, avv)

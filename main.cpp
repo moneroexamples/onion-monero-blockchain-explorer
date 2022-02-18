@@ -76,6 +76,7 @@ main(int ac, const char* av[])
     auto enable_mixin_details_opt      = opts.get_option<bool>("enable-mixin-details");
     auto enable_json_api_opt           = opts.get_option<bool>("enable-json-api");
     auto enable_as_hex_opt             = opts.get_option<bool>("enable-as-hex");
+    auto enable_mixin_guess_opt        = opts.get_option<bool>("enable-mixin-guess");
     auto concurrency_opt               = opts.get_option<size_t>("concurrency");
     auto enable_emission_monitor_opt   = opts.get_option<bool>("enable-emission-monitor");
 
@@ -99,10 +100,10 @@ main(int ac, const char* av[])
     bool enable_autorefresh_option    {*enable_autorefresh_option_opt};
     bool enable_output_key_checker    {*enable_output_key_checker_opt};
     bool enable_mixin_details         {*enable_mixin_details_opt};
+    bool enable_mixin_guess           {*enable_mixin_guess_opt};
     bool enable_json_api              {*enable_json_api_opt};
     bool enable_as_hex                {*enable_as_hex_opt};
     bool enable_emission_monitor      {*enable_emission_monitor_opt};
-
 
     // set  monero log output level
     uint32_t log_level = 0;
@@ -308,6 +309,7 @@ main(int ac, const char* av[])
                           enable_output_key_checker,
                           enable_autorefresh_option,
                           enable_mixin_details,
+                          enable_mixin_guess,
                           no_blocks_on_index,
                           mempool_info_timeout,
                           *testnet_url,
