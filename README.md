@@ -156,7 +156,7 @@ docker build --no-cache -t xmrblocks .
 docker build --no-cache --build-arg NPROC=2  -t xmrblocks .
 
 # to build against development branch of monero (i.e. master branch)
-docker build --no-cache --build-arg NPROC=3 -build-arg MONERO_BRANCH=master  -t xmrblocks .
+docker build --no-cache --build-arg NPROC=3 --build-arg MONERO_BRANCH=master  -t xmrblocks .
 ```
 
 - The build needs 3 GB space.
