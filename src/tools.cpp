@@ -345,7 +345,7 @@ sum_money_in_outputs(const json& _json)
 array<uint64_t, 4>
 summary_of_in_out_rct(
         const transaction& tx,
-        vector<pair<txout_to_key, uint64_t>>& output_pub_keys,
+        vector<pair<public_key, uint64_t>>& output_pub_keys,
         vector<txin_to_key>& input_key_imgs)
 {
 
@@ -357,18 +357,15 @@ summary_of_in_out_rct(
 
     for (const tx_out& txout: tx.vout)
     {
-        if (txout.target.type() != typeid(txout_to_key))
+        public_key output_pub_key;
+        if (!cryptonote::get_output_public_key(txout, output_pub_key))
         {
             // push empty pair.
-            output_pub_keys.push_back(pair<txout_to_key, uint64_t>{});
+            output_pub_keys.push_back(pair<public_key, uint64_t>{});
             continue;
         }
 
-        // get tx input key
-        const txout_to_key& txout_key
-                = boost::get<cryptonote::txout_to_key>(txout.target);
-
-        output_pub_keys.push_back(make_pair(txout_key, txout.amount));
+        output_pub_keys.push_back(make_pair(output_pub_key, txout.amount));
 
         xmr_outputs += txout.amount;
     }
@@ -619,49 +616,43 @@ sum_fees_in_txs(const vector<transaction>& txs)
 
 
 
-vector<pair<txout_to_key, uint64_t>>
+vector<pair<public_key, uint64_t>>
 get_ouputs(const transaction& tx)
 {
-    vector<pair<txout_to_key, uint64_t>> outputs;
+    vector<pair<public_key, uint64_t>> outputs;
 
     for (const tx_out& txout: tx.vout)
     {
-        if (txout.target.type() != typeid(txout_to_key))
+        public_key output_pub_key;
+        if (!cryptonote::get_output_public_key(txout, output_pub_key))
         {
             // push empty pair.
-            outputs.push_back(pair<txout_to_key, uint64_t>{});
+            outputs.push_back(pair<public_key, uint64_t>{});
             continue;
         }
 
-        // get tx input key
-        const txout_to_key& txout_key
-                = boost::get<cryptonote::txout_to_key>(txout.target);
-
-        outputs.push_back(make_pair(txout_key, txout.amount));
+        outputs.push_back(make_pair(output_pub_key, txout.amount));
     }
 
     return outputs;
 
 };
 
-vector<tuple<txout_to_key, uint64_t, uint64_t>>
+vector<tuple<public_key, uint64_t, uint64_t>>
 get_ouputs_tuple(const transaction& tx)
 {
-    vector<tuple<txout_to_key, uint64_t, uint64_t>> outputs;
+    vector<tuple<public_key, uint64_t, uint64_t>> outputs;
 
     for (uint64_t n = 0; n < tx.vout.size(); ++n)
     {
 
-        if (tx.vout[n].target.type() != typeid(txout_to_key))
+        public_key output_pub_key;
+        if (!cryptonote::get_output_public_key(tx.vout[n], output_pub_key))
         {
             continue;
         }
 
-        // get tx input key
-        const txout_to_key& txout_key
-                = boost::get<cryptonote::txout_to_key>(tx.vout[n].target);
-
-        outputs.push_back(make_tuple(txout_key, tx.vout[n].amount, n));
+        outputs.push_back(make_tuple(output_pub_key, tx.vout[n].amount, n));
     }
 
     return outputs;
@@ -1166,11 +1157,11 @@ is_output_ours(const size_t& output_index,
     //cout << "\n" << tx.vout.size() << " " << output_index << endl;
 
     // get tx output public key
-    const txout_to_key tx_out_to_key
-            = boost::get<txout_to_key>(tx.vout[output_index].target);
+    public_key output_pub_key;
+    cryptonote::get_output_public_key(tx.vout[output_index], output_pub_key);
 
 
-    if (tx_out_to_key.key == pubkey)
+    if (output_pub_key == pubkey)
     {
         return true;
     }
