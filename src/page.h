@@ -578,21 +578,6 @@ page(MicroCore* _mcore,
 string
 index2(uint64_t page_no = 0, bool refresh_page = false)
 {
-
-    // we get network info, such as current hash rate
-    // but since this makes a rpc call to deamon, we make it as an async
-    // call. this way we dont have to wait with execution of the rest of the
-    // index2 method, until deamon gives as the required result.
-    std::future<json> network_info_ftr = std::async(std::launch::async, [&]
-    {
-        json j_info;
-
-        get_monero_network_info(j_info);
-
-        return j_info;
-    });
-
-
     // get mempool for the front page also using async future
     std::future<string> mempool_ftr = std::async(std::launch::async, [&]
     {

@@ -227,7 +227,10 @@ MempoolStatus::read_network_info()
     COMMAND_RPC_GET_INFO::response rpc_network_info;
 
     if (!rpc.get_network_info(rpc_network_info))
+    {
+        cerr << "rpc.get_network_info(rpc_network_info) failed";
         return false;
+     }
 
     uint64_t fee_estimated;
 
