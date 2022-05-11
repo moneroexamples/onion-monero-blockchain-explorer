@@ -336,7 +336,7 @@ struct tx_details
     vector<txin_to_key> input_key_imgs;
 
     // public keys and xmr amount of outputs
-    vector<pair<public_key, uint64_t>> output_pub_keys;
+    vector<tuple<public_key, uint64_t, view_tag>> output_pub_keys;
 
     mstch::map
     get_mstch_map() const
@@ -2181,7 +2181,7 @@ show_my_outputs(string tx_hash_str,
 
     uint64_t output_idx {0};
 
-    for (pair<public_key, uint64_t>& outp: txd.output_pub_keys)
+    for (tuple<public_key, uint64_t, view_tag>& outp: txd.output_pub_keys)
     {
 
         // get the tx output public key
@@ -2201,7 +2201,7 @@ show_my_outputs(string tx_hash_str,
 
 
         // check if generated public key matches the current output's key
-        bool mine_output = (outp.first == tx_pubkey);
+        bool mine_output = (std::get<0>(outp) == tx_pubkey);
 
         bool with_additional = false;
 
@@ -2214,10 +2214,12 @@ show_my_outputs(string tx_hash_str,
                               tx_pubkey);
 
 
-            mine_output = (outp.first == tx_pubkey);
+            mine_output = (std::get<0>(outp) == tx_pubkey);
 
             with_additional = true;
         }
+
+        uint64_t xmr_amount = std::get<1>(outp);
 
         // if mine output has RingCT, i.e., tx version is 2
         if (mine_output && tx.version == 2)
@@ -2232,10 +2234,12 @@ show_my_outputs(string tx_hash_str,
 
                 bool r;
 
+                auto derivation_to_use = with_additional
+                        ? additional_derivations[output_idx] : derivation;
+
                 r = decode_ringct(
                             tx.rct_signatures,
-                            with_additional
-                              ? additional_derivations[output_idx] : derivation,
+                            derivation_to_use,
                             output_idx,
                             tx.rct_signatures.ecdhInfo[output_idx].mask,
                             rct_amount);
@@ -2245,7 +2249,14 @@ show_my_outputs(string tx_hash_str,
                     cerr << "\nshow_my_outputs: Cant decode RingCT!\n";
                 }
 
-                outp.second         = rct_amount;
+                // decode view key
+//                crypto::view_tag derived_view_tag;
+//                crypto::derive_view_tag(derivation_to_use,
+//                                        output_idx, derived_view_tag);
+
+//                cout << derived_view_tag << endl;
+
+                xmr_amount = rct_amount;
                 money_transfered[output_idx] = rct_amount;
             }
 
@@ -2253,12 +2264,12 @@ show_my_outputs(string tx_hash_str,
 
         if (mine_output)
         {
-            sum_xmr += outp.second;
+            sum_xmr += xmr_amount;
         }
 
         outputs.push_back(mstch::map {
-                {"out_pub_key"           , pod_to_hex(outp.first)},
-                {"amount"                , xmreg::xmr_amount_to_str(outp.second)},
+                {"out_pub_key"           , pod_to_hex(std::get<0>(outp))},
+                {"amount"                , xmreg::xmr_amount_to_str(xmr_amount)},
                 {"mine_output"           , mine_output},
                 {"output_idx"            , fmt::format("{:02d}", output_idx)}
         });
@@ -2543,10 +2554,12 @@ show_my_outputs(string tx_hash_str,
 
                             bool r;
 
+                            auto derivation_to_use = with_additional
+                                    ? additional_derivations[output_idx] : derivation;
+
                             r = decode_ringct(
                                         mixin_tx.rct_signatures,
-                                        with_additional
-                                        ? additional_derivations[output_idx_in_tx] : derivation,
+                                        derivation_to_use,
                                         output_idx_in_tx,
                                         mixin_tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask,
                                         rct_amount);
@@ -2909,7 +2922,7 @@ show_checkrawtx(string raw_tx_data, string action)
 
                     real_output_indices.push_back(tx_source.real_output);
 
-                    public_key real_out_pub_key = real_txd.output_pub_keys[tx_source.real_output_in_tx_index].first;
+                    public_key real_out_pub_key = std::get<0>(real_txd.output_pub_keys[tx_source.real_output_in_tx_index]);
 
                     //cout << "real_txd.hash: "    << pod_to_hex(real_txd.hash) << endl;
                     //cout << "real_txd.pk: "      << pod_to_hex(real_txd.pk) << endl;
@@ -2958,7 +2971,7 @@ show_checkrawtx(string raw_tx_data, string action)
 
                         tx_details txd = get_tx_details(tx);
 
-                        public_key out_pub_key = txd.output_pub_keys[toi.second].first;
+                        public_key out_pub_key = std::get<0>(txd.output_pub_keys[toi.second]);
 
 
                         // get block cointaining this tx
@@ -3252,7 +3265,7 @@ show_checkrawtx(string raw_tx_data, string action)
             {
                 transaction real_source_tx;
 
-                uint64_t index_of_real_output = tx_source.outputs[tx_source.real_output].first;
+                uint64_t index_of_real_output = std::get<0>(tx_source.outputs[tx_source.real_output]);
 
                 uint64_t tx_source_amount = (tx_source.rct ? 0 : tx_source.amount);
 
@@ -3286,7 +3299,7 @@ show_checkrawtx(string raw_tx_data, string action)
                 tx_details real_txd = get_tx_details(real_source_tx);
 
                 public_key real_out_pub_key
-                        = real_txd.output_pub_keys[tx_source.real_output_in_tx_index].first;
+                        = std::get<0>(real_txd.output_pub_keys[tx_source.real_output_in_tx_index]);
 
                 real_output_pub_keys.push_back(
                         REMOVE_HASH_BRAKETS(fmt::format("{:s}",real_out_pub_key))
@@ -4223,11 +4236,11 @@ search_txs(vector<transaction> txs, const string& search_text)
 
         // check if output_public_keys matche the search_text
 
-        vector<pair<public_key, uint64_t>>::iterator it2 =
+        vector<tuple<public_key, uint64_t, view_tag>>::iterator it2 =
                 find_if(begin(txd.output_pub_keys), end(txd.output_pub_keys),
-                        [&](const pair<public_key, uint64_t>& tx_out_pk)
+                        [&](const tuple<public_key, uint64_t, view_tag>& tx_out_pk)
                         {
-                            return pod_to_hex(tx_out_pk.first) == search_text;
+                            return pod_to_hex(std::get<0>(tx_out_pk)) == search_text;
                         });
 
         if (it2 != txd.output_pub_keys.end())
@@ -4457,8 +4470,8 @@ json_transaction(string tx_hash_str)
     for (const auto& output: txd.output_pub_keys)
     {
         outputs.push_back(json {
-                {"public_key", pod_to_hex(output.first)},
-                {"amount"    , output.second}
+                {"public_key", pod_to_hex(std::get<0>(output))},
+                {"amount"    , std::get<1>(output)}
         });
     }
 
@@ -5374,7 +5387,7 @@ json_outputs(string tx_hash_str,
     j_data["outputs"] = json::array();
     json& j_outptus   = j_data["outputs"];
 
-    for (pair<public_key, uint64_t>& outp: txd.output_pub_keys)
+    for (tuple<public_key, uint64_t, view_tag>& outp: txd.output_pub_keys)
     {
 
         // get the tx output public key
@@ -5388,7 +5401,7 @@ json_outputs(string tx_hash_str,
                           tx_pubkey);
 
         // check if generated public key matches the current output's key
-        bool mine_output = (outp.first == tx_pubkey);
+        bool mine_output = (std::get<0>(outp) == tx_pubkey);
         bool with_additional = false;
         if (!mine_output && txd.additional_pks.size() == txd.output_pub_keys.size())
         {
@@ -5396,9 +5409,11 @@ json_outputs(string tx_hash_str,
                               output_idx,
                               address_info.address.m_spend_public_key,
                               tx_pubkey);
-            mine_output = (outp.first == tx_pubkey);
+            mine_output = (std::get<0>(outp) == tx_pubkey);
             with_additional = true;
         }
+
+        uint64_t xmr_amount  = std::get<1>(outp);
 
         // if mine output has RingCT, i.e., tx version is 2
         if (mine_output && tx.version == 2)
@@ -5413,8 +5428,11 @@ json_outputs(string tx_hash_str,
 
                 bool r;
 
+                auto derivation_to_use = with_additional
+                        ? additional_derivations[output_idx] : derivation;
+
                 r = decode_ringct(tx.rct_signatures,
-                                  with_additional ? additional_derivations[output_idx] : derivation,
+                                  derivation_to_use,
                                   output_idx,
                                   tx.rct_signatures.ecdhInfo[output_idx].mask,
                                   rct_amount);
@@ -5424,7 +5442,7 @@ json_outputs(string tx_hash_str,
                     cerr << "\nshow_my_outputs: Cant decode ringCT! " << endl;
                 }
 
-                outp.second         = rct_amount;
+                xmr_amount         = rct_amount;
                 money_transfered[output_idx] = rct_amount;
 
             } // if (!is_coinbase(tx))
@@ -5432,8 +5450,8 @@ json_outputs(string tx_hash_str,
         }  // if (mine_output && tx.version == 2)
 
         j_outptus.push_back(json {
-                {"output_pubkey", pod_to_hex(outp.first)},
-                {"amount"       , outp.second},
+                {"output_pubkey", pod_to_hex(std::get<0>(outp))},
+                {"amount"       , xmr_amount},
                 {"match"        , mine_output},
                 {"output_idx"   , output_idx},
         });
@@ -5845,7 +5863,7 @@ find_our_outputs(
         //j_data["outputs"] = json::array();
         //json& j_outptus   = j_data["outputs"];
 
-        for (pair<public_key, uint64_t> &outp: txd.output_pub_keys)
+        for (tuple<public_key, uint64_t, view_tag> &outp: txd.output_pub_keys)
         {
 
             // get the tx output public key
@@ -5859,7 +5877,7 @@ find_our_outputs(
                               tx_pubkey);
 
             // check if generated public key matches the current output's key
-            bool mine_output = (outp.first == tx_pubkey);
+            bool mine_output = (std::get<0>(outp) == tx_pubkey);
             bool with_additional = false;
             if (!mine_output && txd.additional_pks.size() == txd.output_pub_keys.size())
             {
@@ -5867,9 +5885,11 @@ find_our_outputs(
                                   output_idx,
                                   address.m_spend_public_key,
                                   tx_pubkey);
-                mine_output = (outp.first == tx_pubkey);
+                mine_output = (std::get<0>(outp) == tx_pubkey);
                 with_additional = true;
             }
+
+            uint64_t xmr_amount = std::get<1>(outp);
 
             // if mine output has RingCT, i.e., tx version is 2
             if (mine_output && tx.version == 2)
@@ -5886,8 +5906,11 @@ find_our_outputs(
 
                     rct::key mask = tx.rct_signatures.ecdhInfo[output_idx].mask;
 
+                    auto derivation_to_use = with_additional
+                            ? additional_derivations[output_idx] : derivation;
+
                     r = decode_ringct(tx.rct_signatures,
-                                      with_additional ? additional_derivations[output_idx] : derivation,
+                                      derivation_to_use,
                                       output_idx,
                                       mask,
                                       rct_amount);
@@ -5899,7 +5922,7 @@ find_our_outputs(
                         return false;
                     }
 
-                    outp.second = rct_amount;
+                    xmr_amount = rct_amount;
                     money_transfered[output_idx] = rct_amount;
 
                 } // if (!is_coinbase(tx))
@@ -5911,8 +5934,8 @@ find_our_outputs(
                 string payment_id_str = get_payment_id_as_string(txd, prv_view_key);
 
                 j_outptus.push_back(json {
-                        {"output_pubkey" , pod_to_hex(outp.first)},
-                        {"amount"        , outp.second},
+                        {"output_pubkey" , pod_to_hex(std::get<0>(outp))},
+                        {"amount"        , xmr_amount},
                         {"block_no"      , block_no},
                         {"in_mempool"    , is_mempool},
                         {"output_idx"    , output_idx},
@@ -6433,12 +6456,12 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
     uint64_t outputs_xmr_sum {0};
 
-    for (pair<public_key, uint64_t>& outp: txd.output_pub_keys)
+    for (tuple<public_key, uint64_t, view_tag>& outp: txd.output_pub_keys)
     {
 
         // total number of ouputs in the blockchain for this amount
         uint64_t num_outputs_amount = core_storage->get_db()
-                .get_num_outputs(outp.second);
+                .get_num_outputs(std::get<1>(outp));
 
         string out_amount_index_str {"N/A"};
 
@@ -6450,13 +6473,19 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
                     = std::to_string(out_amount_indices.at(output_idx));
         }
 
-        outputs_xmr_sum += outp.second;
+        outputs_xmr_sum += std::get<1>(outp);
+
+        std::stringstream ss;
+        ss << std::get<2>(outp);
+        string view_tag_str = ss.str();
+
 
         outputs.push_back(mstch::map {
-                {"out_pub_key"           , pod_to_hex(outp.first)},
-                {"amount"                , xmreg::xmr_amount_to_str(outp.second)},
+                {"out_pub_key"           , pod_to_hex(std::get<0>(outp))},
+                {"amount"                , xmreg::xmr_amount_to_str(std::get<1>(outp))},
                 {"amount_idx"            , out_amount_index_str},
                 {"num_outputs"           , num_outputs_amount},
+                {"output_tag"            , view_tag_str},
                 {"unformated_output_idx" , output_idx},
                 {"output_idx"            , fmt::format("{:02d}", output_idx++)}
         });

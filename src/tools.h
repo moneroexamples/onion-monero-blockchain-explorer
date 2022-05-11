@@ -154,7 +154,7 @@ sum_money_in_outputs(const json& _json);
 array<uint64_t, 4>
 summary_of_in_out_rct(
         const transaction& tx,
-        vector<pair<public_key, uint64_t>>& output_pub_keys,
+        vector<tuple<public_key, uint64_t, view_tag>>& output_pub_keys,
         vector<txin_to_key>& input_key_imgs);
 
 // this version for mempool txs from json
@@ -200,7 +200,7 @@ get_mixin_no(const json& _json);
 vector<uint64_t>
 get_mixin_no_in_txs(const vector<transaction>& txs);
 
-vector<pair<public_key, uint64_t>>
+vector<tuple<public_key, uint64_t, view_tag>>
 get_ouputs(const transaction& tx);
 
 vector<tuple<public_key, uint64_t, uint64_t>>

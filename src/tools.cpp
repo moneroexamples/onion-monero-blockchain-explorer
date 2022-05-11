@@ -345,7 +345,7 @@ sum_money_in_outputs(const json& _json)
 array<uint64_t, 4>
 summary_of_in_out_rct(
         const transaction& tx,
-        vector<pair<public_key, uint64_t>>& output_pub_keys,
+        vector<tuple<public_key, uint64_t, view_tag>>& output_pub_keys,
         vector<txin_to_key>& input_key_imgs)
 {
 
@@ -361,11 +361,17 @@ summary_of_in_out_rct(
         if (!cryptonote::get_output_public_key(txout, output_pub_key))
         {
             // push empty pair.
-            output_pub_keys.push_back(pair<public_key, uint64_t>{});
+            output_pub_keys.push_back(tuple<public_key, uint64_t, view_tag>{});
             continue;
         }
 
-        output_pub_keys.push_back(make_pair(output_pub_key, txout.amount));
+        view_tag output_tag {};
+
+         if (txout.target.type() == typeid(txout_to_tagged_key)) {
+             output_tag =  boost::get< txout_to_tagged_key >(txout.target).view_tag;
+         }
+
+        output_pub_keys.push_back(make_tuple(output_pub_key, txout.amount, output_tag));
 
         xmr_outputs += txout.amount;
     }
@@ -616,10 +622,10 @@ sum_fees_in_txs(const vector<transaction>& txs)
 
 
 
-vector<pair<public_key, uint64_t>>
+vector<tuple<public_key, uint64_t, view_tag>>
 get_ouputs(const transaction& tx)
 {
-    vector<pair<public_key, uint64_t>> outputs;
+    vector<tuple<public_key, uint64_t, view_tag>> outputs;
 
     for (const tx_out& txout: tx.vout)
     {
@@ -627,11 +633,17 @@ get_ouputs(const transaction& tx)
         if (!cryptonote::get_output_public_key(txout, output_pub_key))
         {
             // push empty pair.
-            outputs.push_back(pair<public_key, uint64_t>{});
+            outputs.push_back(tuple<public_key, uint64_t, view_tag>{});
             continue;
         }
 
-        outputs.push_back(make_pair(output_pub_key, txout.amount));
+        view_tag output_tag {};
+
+         if (txout.target.type() == typeid(txout_to_tagged_key)) {
+             output_tag =  boost::get< txout_to_tagged_key >(txout.target).view_tag;
+         }
+
+        outputs.push_back(make_tuple(output_pub_key, txout.amount, output_tag));
     }
 
     return outputs;
@@ -928,7 +940,8 @@ decode_ringct(rct::rctSig const& rv,
             case rct::RCTTypeSimple:
             case rct::RCTTypeBulletproof:
             case rct::RCTTypeBulletproof2:
-            case rct::RCTTypeCLSAG:                
+            case rct::RCTTypeCLSAG:
+            case rct::RCTTypeBulletproofPlus:
                 amount = rct::decodeRctSimple(rv,
                                               rct::sk2rct(scalar1),
                                               i,
@@ -937,11 +950,11 @@ decode_ringct(rct::rctSig const& rv,
                 break;
             case rct::RCTTypeFull:
                 amount = rct::decodeRct(rv,
-                                        rct::sk2rct(scalar1),
-                                        i,
-                                        mask,
-                                        hw::get_device("default"));
-                break;
+                                    rct::sk2rct(scalar1),
+                                    i,
+                                    mask,
+                                    hw::get_device("default"));
+            break;
             default:
                 cerr << "Unsupported rct type: " << rv.type << '\n';
                 return false;
