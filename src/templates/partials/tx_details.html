@@ -62,12 +62,14 @@
               <td>stealth address</td>
               <td>amount</td>
               <td>amount idx</td>
+              <td>tag</td>
           </tr>
           {{#outputs}}
           <tr>
               <td>{{output_idx}}: {{out_pub_key}}</td>
               <td>{{amount}}</td>
               <td>{{amount_idx}} of {{num_outputs}}</td>
+              <td>{{view_tag}}</td>
           </tr>
           {{/outputs}}
       </table>
