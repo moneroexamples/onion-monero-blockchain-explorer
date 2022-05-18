@@ -336,7 +336,7 @@ struct tx_details
     vector<txin_to_key> input_key_imgs;
 
     // public keys and xmr amount of outputs
-    vector<tuple<public_key, uint64_t, view_tag>> output_pub_keys;
+    vector<output_tuple_with_tag> output_pub_keys;
 
     mstch::map
     get_mstch_map() const
@@ -2181,7 +2181,7 @@ show_my_outputs(string tx_hash_str,
 
     uint64_t output_idx {0};
 
-    for (tuple<public_key, uint64_t, view_tag>& outp: txd.output_pub_keys)
+    for (output_tuple_with_tag& outp: txd.output_pub_keys)
     {
 
         // get the tx output public key
@@ -4236,9 +4236,9 @@ search_txs(vector<transaction> txs, const string& search_text)
 
         // check if output_public_keys matche the search_text
 
-        vector<tuple<public_key, uint64_t, view_tag>>::iterator it2 =
+        vector<output_tuple_with_tag>::iterator it2 =
                 find_if(begin(txd.output_pub_keys), end(txd.output_pub_keys),
-                        [&](const tuple<public_key, uint64_t, view_tag>& tx_out_pk)
+                        [&](const output_tuple_with_tag& tx_out_pk)
                         {
                             return pod_to_hex(std::get<0>(tx_out_pk)) == search_text;
                         });
@@ -5387,7 +5387,7 @@ json_outputs(string tx_hash_str,
     j_data["outputs"] = json::array();
     json& j_outptus   = j_data["outputs"];
 
-    for (tuple<public_key, uint64_t, view_tag>& outp: txd.output_pub_keys)
+    for (output_tuple_with_tag& outp: txd.output_pub_keys)
     {
 
         // get the tx output public key
@@ -5863,7 +5863,7 @@ find_our_outputs(
         //j_data["outputs"] = json::array();
         //json& j_outptus   = j_data["outputs"];
 
-        for (tuple<public_key, uint64_t, view_tag> &outp: txd.output_pub_keys)
+        for (output_tuple_with_tag &outp: txd.output_pub_keys)
         {
 
             // get the tx output public key
@@ -6456,7 +6456,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
     uint64_t outputs_xmr_sum {0};
 
-    for (tuple<public_key, uint64_t, view_tag>& outp: txd.output_pub_keys)
+    for (output_tuple_with_tag& outp: txd.output_pub_keys)
     {
 
         // total number of ouputs in the blockchain for this amount
@@ -6476,7 +6476,12 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
         outputs_xmr_sum += std::get<1>(outp);
 
         std::stringstream ss;
-        ss << std::get<2>(outp);
+        if (std::get<2>(outp)) {
+            ss << *(std::get<2>(outp));
+        }
+        else {
+          ss << "-";
+        }
         string view_tag_str = ss.str();
 
 

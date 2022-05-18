@@ -170,7 +170,7 @@ MempoolStatus::read_mempool()
         vector<txin_to_key> input_key_imgs;
 
         // public keys and xmr amount of outputs
-        vector<tuple<public_key, uint64_t, view_tag>> output_pub_keys;
+        vector<output_tuple_with_tag> output_pub_keys;
 
         // sum xmr in inputs and ouputs in the given tx
         const array<uint64_t, 4>& sum_data = summary_of_in_out_rct(

@@ -49,6 +49,10 @@ namespace bf = boost::filesystem;
 
 using json = nlohmann::json;
 
+using output_tuple_with_tag = tuple<public_key,
+                              uint64_t,
+                              boost::optional<view_tag>>;
+
 struct outputs_visitor
 {
     std::vector<crypto::public_key >& m_output_keys;
@@ -154,7 +158,7 @@ sum_money_in_outputs(const json& _json);
 array<uint64_t, 4>
 summary_of_in_out_rct(
         const transaction& tx,
-        vector<tuple<public_key, uint64_t, view_tag>>& output_pub_keys,
+        vector<output_tuple_with_tag>& output_pub_keys,
         vector<txin_to_key>& input_key_imgs);
 
 // this version for mempool txs from json
@@ -200,7 +204,7 @@ get_mixin_no(const json& _json);
 vector<uint64_t>
 get_mixin_no_in_txs(const vector<transaction>& txs);
 
-vector<tuple<public_key, uint64_t, view_tag>>
+vector<output_tuple_with_tag>
 get_ouputs(const transaction& tx);
 
 vector<tuple<public_key, uint64_t, uint64_t>>

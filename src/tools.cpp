@@ -345,7 +345,7 @@ sum_money_in_outputs(const json& _json)
 array<uint64_t, 4>
 summary_of_in_out_rct(
         const transaction& tx,
-        vector<tuple<public_key, uint64_t, view_tag>>& output_pub_keys,
+        vector<output_tuple_with_tag>& output_pub_keys,
         vector<txin_to_key>& input_key_imgs)
 {
 
@@ -361,17 +361,24 @@ summary_of_in_out_rct(
         if (!cryptonote::get_output_public_key(txout, output_pub_key))
         {
             // push empty pair.
-            output_pub_keys.push_back(tuple<public_key, uint64_t, view_tag>{});
+            output_pub_keys.push_back(output_tuple_with_tag {
+                                        public_key{},
+                                        uint64_t{},
+                                        boost::none
+                              });
             continue;
         }
 
-        view_tag output_tag {};
+        boost::optional<view_tag> output_tag;
 
          if (txout.target.type() == typeid(txout_to_tagged_key)) {
              output_tag =  boost::get< txout_to_tagged_key >(txout.target).view_tag;
          }
 
-        output_pub_keys.push_back(make_tuple(output_pub_key, txout.amount, output_tag));
+        output_pub_keys.push_back(
+                    make_tuple(output_pub_key,
+                               txout.amount,
+                               output_tag));
 
         xmr_outputs += txout.amount;
     }
@@ -622,28 +629,35 @@ sum_fees_in_txs(const vector<transaction>& txs)
 
 
 
-vector<tuple<public_key, uint64_t, view_tag>>
+vector<output_tuple_with_tag>
 get_ouputs(const transaction& tx)
 {
-    vector<tuple<public_key, uint64_t, view_tag>> outputs;
+    vector<output_tuple_with_tag> outputs;
 
     for (const tx_out& txout: tx.vout)
     {
         public_key output_pub_key;
         if (!cryptonote::get_output_public_key(txout, output_pub_key))
         {
-            // push empty pair.
-            outputs.push_back(tuple<public_key, uint64_t, view_tag>{});
+            // push empty tuple.
+            outputs.push_back(output_tuple_with_tag {
+                                        public_key{},
+                                        uint64_t{},
+                                        boost::none
+                              });
             continue;
         }
 
-        view_tag output_tag {};
+         boost::optional<view_tag> output_tag;
 
          if (txout.target.type() == typeid(txout_to_tagged_key)) {
-             output_tag =  boost::get< txout_to_tagged_key >(txout.target).view_tag;
+             output_tag =  boost::get< txout_to_tagged_key >(txout.target)
+                                    .view_tag;
          }
 
-        outputs.push_back(make_tuple(output_pub_key, txout.amount, output_tag));
+        outputs.push_back(make_tuple(output_pub_key,
+                                     txout.amount,
+                                     output_tag));
     }
 
     return outputs;
