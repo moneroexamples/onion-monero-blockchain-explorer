@@ -142,6 +142,109 @@ Example output:
 
 Go to your browser: http://127.0.0.1:8081
 
+## Compiling and running with Docker
+
+The explorer can also be compiled using `docker build` as described below. By default it compiles
+against latest release (`release-v0.17`) branch of monero:
+
+```
+# build using all CPU cores
+docker build --no-cache -t xmrblocks .
+
+# alternatively, specify number of cores to use (e.g. 2)
+docker build --no-cache --build-arg NPROC=2  -t xmrblocks .
+
+# to build against development branch of monero (i.e. master branch)
+docker build --no-cache --build-arg NPROC=3 --build-arg MONERO_BRANCH=master  -t xmrblocks .
+```
+
+- The build needs 3 GB space.
+- The final container image is 179MB.
+
+To run it, mount the monero blockchain onto the container as volume.
+
+```
+# either run in foreground
+docker run -it -v <path-to-monero-blockckain-on-the-host>:/home/monero/.bitmonero -p 8081:8081  xmrblocks
+
+# or in background
+docker run -it -d -v <path-to-monero-blockchain-on-the-host>:/home/monero/.bitmonero -p 8081:8081  xmrblocks
+```
+
+Example output:
+
+```
+docker run --rm -it -v /mnt/w7/bitmonero:/home/monero/.bitmonero -p 8081:8081 xmrblocks
+Staring in non-ssl mode
+(2020-04-20 16:20:00) [INFO    ] Crow/0.1 server is running at 0.0.0.0:8081 using 1 threads
+```
+
+### Docker Compose example
+
+The explorer can also be built and run using Docker Compose, i.e.:
+
+```yaml
+version: '3'
+services:
+  monerod:
+    image: sethsimmons/simple-monerod:latest
+    restart: unless-stopped
+    container_name: monerod
+    volumes:
+      - xmrdata:/home/monero/.bitmonero
+    ports:
+      - 18080:18080
+      - 18089:18089
+    command:
+      - "--rpc-restricted-bind-ip=0.0.0.0"
+      - "--rpc-restricted-bind-port=18089"
+      - "--public-node"
+      - "--no-igd"
+      - "--enable-dns-blocklist"
+      - "--prune-blockchain"
+
+  explore:
+    image: xmrblocks:latest
+    build: ./onion-monero-blockchain-explorer
+    container_name: explore
+    restart: unless-stopped
+    volumes:
+      - xmrdata:/home/monero/.bitmonero
+    ports:
+      - 8081:8081
+    command: ["./xmrblocks --daemon-url=monerod:18089 --enable-json-api --enable-autorefresh-option --enable-emission-monitor --enable-pusher"]
+
+  volumes:
+    xmrdata:
+```
+
+To build this image, run the following:
+
+```bash
+git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
+docker-compose build
+```
+
+Or build and run in one step via:
+
+```bash
+git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
+docker-compose up -d
+```
+
+When running via Docker, please use something like [Traefik](https://doc.traefik.io/traefik/) or [enable SSL](#enable-ssl-https) to secure communications.
+
+
+
+
+
+
+
+
+
+
+
+
 ## The explorer's command line options
 
 ```
@@ -210,6 +313,19 @@ alias xmrblocksmainnet='~/onion-monero-blockchain-explorer/build/xmrblocks    --
 # for testnet explorer
 alias xmrblockstestnet='~/onion-monero-blockchain-explorer/build/xmrblocks -t --port 8082 --mainnet-url "http://139.162.32.245:8081" --enable-pusher --enable-emission-monitor'
 ```
+
+Example usage when running via Docker:
+
+```bash
+# Run in foreground
+docker run -it -v <path-to-monero-blockckain-on-the-host>:/home/monero/.bitmonero -p 8081:8081  xmrblocks "./xmrblocks --daemon-url=node.sethforprivacy.com:18089 --enable-json-api --enable-autorefresh-option --enable-emission-monitor --enable-pusher"
+
+# Run in background
+docker run -it -d -v <path-to-monero-blockchain-on-the-host>:/home/monero/.bitmonero -p 8081:8081  xmrblocks "./xmrblocks --daemon-url=node.sethforprivacy.com:18089 --enable-json-api --enable-autorefresh-option --enable-emission-monitor --enable-pusher"
+```
+
+Make sure to always start the portion of command line flags with `./xmrblocks` and set any flags you would like after that, as shown above.
+
 
 ## Enable Monero emission
 
