@@ -2,7 +2,7 @@
 FROM ubuntu:20.04 as builder
 
 # Set Monero branch/tag to be used for monerod compilation
-ARG MONERO_BRANCH=master
+ARG MONERO_BRANCH=release-v18
 
 # Added DEBIAN_FRONTEND=noninteractive to workaround tzdata prompt on installation
 ENV DEBIAN_FRONTEND="noninteractive"
