@@ -22,8 +22,7 @@ rpccalls::rpccalls(
     timeout_time_ms = std::chrono::milliseconds {timeout_time};    
 
     m_http_client.set_server(
-             deamon_url,
-
+             daemon_url,
              login,
              epee::net_utils::ssl_support_t::e_ssl_support_disabled);
 }
