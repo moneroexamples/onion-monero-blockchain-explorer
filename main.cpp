@@ -56,7 +56,7 @@ main(int ac, const char* av[])
     auto port_opt                      = opts.get_option<string>("port");
     auto bindaddr_opt                  = opts.get_option<string>("bindaddr");
     auto bc_path_opt                   = opts.get_option<string>("bc-path");
-    auto deamon_url_opt                = opts.get_option<string>("deamon-url");
+    auto daemon_url_opt                = opts.get_option<string>("daemon-url");
     auto ssl_crt_file_opt              = opts.get_option<string>("ssl-crt-file");
     auto ssl_key_file_opt              = opts.get_option<string>("ssl-key-file");
     auto no_blocks_on_index_opt        = opts.get_option<string>("no-blocks-on-index");
@@ -206,13 +206,13 @@ main(int ac, const char* av[])
         return EXIT_FAILURE;
     }
 
-    string deamon_url {*deamon_url_opt};
+    string daemon_url {*daemon_url_opt};
 
     if (testnet && deamon_url == "127.0.0.1:18081")
         deamon_url = "127.0.0.1:28081";
     if (stagenet && deamon_url == "127.0.0.1:18081")
         deamon_url = "127.0.0.1:38081";
-
+        
     uint64_t mempool_info_timeout {5000};
 
     try
@@ -248,8 +248,8 @@ main(int ac, const char* av[])
                 = blockchain_path;
         xmreg::CurrentBlockchainStatus::nettype
                 = nettype;
-        xmreg::CurrentBlockchainStatus::deamon_url
-                = deamon_url;
+        xmreg::CurrentBlockchainStatus::daemon_url
+                = daemon_url;
         xmreg::CurrentBlockchainStatus::set_blockchain_variables(
                 &mcore, core_storage);
 
@@ -265,8 +265,8 @@ main(int ac, const char* av[])
             = blockchain_path;
     xmreg::MempoolStatus::nettype
             = nettype;
-    xmreg::MempoolStatus::deamon_url
-            = deamon_url;
+    xmreg::MempoolStatus::daemon_url
+            = daemon_url;
     xmreg::MempoolStatus::login
             = daemon_rpc_login;
     xmreg::MempoolStatus::set_blockchain_variables(
@@ -300,7 +300,7 @@ main(int ac, const char* av[])
     // contains logic for the website
     xmreg::page xmrblocks(&mcore,
                           core_storage,
-                          deamon_url,
+                          daemon_url,
                           nettype,
                           enable_pusher,
                           enable_randomx,

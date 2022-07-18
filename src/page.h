@@ -499,7 +499,7 @@ public:
 
 page(MicroCore* _mcore,
      Blockchain* _core_storage,
-     string _deamon_url,
+     string _daemon_url,
      cryptonote::network_type _nettype,
      bool _enable_pusher,
      bool _enable_randomx,
@@ -517,7 +517,7 @@ page(MicroCore* _mcore,
      rpccalls::login_opt _daemon_rpc_login)
         : mcore {_mcore},
           core_storage {_core_storage},
-          rpc {_deamon_url, _daemon_rpc_login},
+          rpc {_daemon_url, _daemon_rpc_login},
           server_timestamp {std::time(nullptr)},
           nettype {_nettype},
           enable_pusher {_enable_pusher},
@@ -1436,6 +1436,7 @@ show_block_hex(size_t block_height, bool complete_blk)
 
             epee::byte_slice complete_block_data_slice;
 
+
             if(!epee::serialization::store_t_to_binary(
                         complete_block_data, complete_block_data_slice))
             {
@@ -1446,6 +1447,7 @@ show_block_hex(size_t block_height, bool complete_blk)
             std::string block_data_str(
                     complete_block_data_slice.begin(),
                     complete_block_data_slice.end());
+
 
             return epee::string_tools
                     ::buff_to_hex_nodelimer(block_data_str);
@@ -2202,6 +2204,8 @@ show_my_outputs(string tx_hash_str,
 
         // check if generated public key matches the current output's key
         bool mine_output = (std::get<0>(outp) == tx_pubkey);
+
+
 
         bool with_additional = false;
 

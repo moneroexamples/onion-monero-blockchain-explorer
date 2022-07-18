@@ -71,7 +71,7 @@ namespace xmreg
                  "path to key file for ssl (https) functionality")
                 ("daemon-login", value<string>(),
                  "Specify username[:password] for daemon RPC client")
-                ("deamon-url,d", value<string>()->default_value("127.0.0.1:18081"),
+                ("daemon-url,d", value<string>()->default_value("127.0.0.1:18081"),
                  "Monero daemon url")
                 ("enable-mixin-guess", value<bool>()->default_value(false)->implicit_value(true),
                  "enable guessing real outputs in key images based on viewkey");

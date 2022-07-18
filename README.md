@@ -24,25 +24,26 @@ Monero C++ libraries, but also demonstrates how to use:
 ## Explorer hosts
 
 Clearnet versions:
- - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
- - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
+ - [https://xmrchain.net/](https://xmrchain.net/) - HTTPS enabled, most popular, and very stable.
+ - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, HTTPS enabled.
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
- - [https://blox.minexmr.com/](https://blox.minexmr.com/) - - https enabled.
- - [https://community.xmr.to/explorer/mainnet/](https://community.xmr.to/explorer/mainnet/)
+ - [https://blox.minexmr.com/](https://blox.minexmr.com/) - HTTPS enabled.
 
 Testnet version:
 
  - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
- - [https://community.xmr.to/explorer/testnet/](https://community.xmr.to/explorer/testnet/)
 
 Stagenet version:
  
  - [https://stagenet.xmrchain.net/](https://stagenet.xmrchain.net/)
- - [https://community.xmr.to/explorer/stagenet/](https://community.xmr.to/explorer/stagenet/)
 
 i2p users (main Monero network):
 
  - [http://7o4gezpkye6ekibhgpkg7v626ze4idsirapufzrefkdysa6zxhha.b32.i2p/](http://7o4gezpkye6ekibhgpkg7v626ze4idsirapufzrefkdysa6zxhha.b32.i2p/)
+
+Tor versions:
+
+ - [http://exploredv42tq2nowrll6f27nuymenndwupueqvyugaqzbrvmjhhceqd.onion/](http://exploredv42tq2nowrll6f27nuymenndwupueqvyugaqzbrvmjhhceqd.onion/) - Native v3 Onion, JSON API enabled, emission enabled, rawtx enabled.
 
 Alternative block explorers:
 
@@ -235,16 +236,6 @@ docker-compose up -d
 When running via Docker, please use something like [Traefik](https://doc.traefik.io/traefik/) or [enable SSL](#enable-ssl-https) to secure communications.
 
 
-
-
-
-
-
-
-
-
-
-
 ## The explorer's command line options
 
 ```
@@ -297,7 +288,7 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         functionality
   --ssl-key-file arg                    path to key file for ssl (https)
                                         functionality
-  -d [ --deamon-url ] arg (=127.0.0.1:18081)
+  -d [ --daemon-url ] arg (=http:://127.0.0.1:18081)
                                         Monero daemon url
   --daemon-login arg                    Specify username[:password] for daemon 
                                         RPC client
@@ -325,7 +316,6 @@ docker run -it -d -v <path-to-monero-blockchain-on-the-host>:/home/monero/.bitmo
 ```
 
 Make sure to always start the portion of command line flags with `./xmrblocks` and set any flags you would like after that, as shown above.
-
 
 ## Enable Monero emission
 
