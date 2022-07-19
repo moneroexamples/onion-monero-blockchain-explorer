@@ -211,12 +211,13 @@ MicroCore::find_output_in_tx(const transaction& tx,
     auto it = std::find_if(tx.vout.begin(), tx.vout.end(),
                            [&](const tx_out& o)
                            {
-                               const txout_to_key& tx_in_to_key
-                                       = boost::get<txout_to_key>(o.target);
+                               public_key found_output_pubkey;
+                               cryptonote::get_output_public_key(
+                                    o, found_output_pubkey);
 
                                ++idx;
 
-                               return tx_in_to_key.key == output_pubkey;
+                               return found_output_pubkey == output_pubkey;
                            });
 
     if (it != tx.vout.end())

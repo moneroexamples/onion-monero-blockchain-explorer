@@ -21,7 +21,7 @@ rpccalls::rpccalls(
 
     timeout_time_ms = std::chrono::milliseconds {timeout_time};    
 
-     m_http_client.set_server(
+    m_http_client.set_server(
              daemon_url,
              login,
              epee::net_utils::ssl_support_t::e_ssl_support_disabled);
@@ -183,7 +183,7 @@ rpccalls::get_network_info(COMMAND_RPC_GET_INFO::response& response)
     {
         if (resp_t.result.status == CORE_RPC_STATUS_BUSY)
         {
-            err = "daemon is busy. Please try again later.";
+            err = "Daemon is busy. Please try again later.";
         }
         else if (resp_t.result.status != CORE_RPC_STATUS_OK)
         {

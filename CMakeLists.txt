@@ -49,7 +49,6 @@ list(APPEND CMAKE_MODULE_PATH "${MY_CMAKE_DIR}")
 
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${MONERO_BUILD_DIR}"
         CACHE PATH "Add Monero directory for library searching")
-
 include(MyUtils)
 
 find_package(Monero)
@@ -139,13 +138,13 @@ set(LIBRARIES
         myext
         mstch
         wallet
-        blockchain_db
-        device
-        ${WALLET_CRYPTO}
         cryptonote_core
         cryptonote_basic
-        cryptonote_format_utils_basic
         cryptonote_protocol
+        cryptonote_format_utils_basic
+        blockchain_db
+        device
+        ${WALLET_CRYPTO} 
         multisig
         daemonizer
         blocks

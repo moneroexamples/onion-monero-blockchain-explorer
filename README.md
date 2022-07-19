@@ -235,6 +235,7 @@ docker-compose up -d
 
 When running via Docker, please use something like [Traefik](https://doc.traefik.io/traefik/) or [enable SSL](#enable-ssl-https) to secure communications.
 
+
 ## The explorer's command line options
 
 ```
@@ -291,6 +292,7 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         Monero daemon url
   --daemon-login arg                    Specify username[:password] for daemon 
                                         RPC client
+  --enable-mixin-guess [=arg(=1)] (=0)  enable guessing real outputs in key
 ```
 
 Example usage, defined as bash aliases.

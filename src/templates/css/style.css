@@ -70,7 +70,7 @@ form {
 
 .tabs {
     position: relative;
-    min-height: 220px; /* This part sucks */
+    min-height: 240px; 
     clear: both;
     margin: 25px 0;
 }
@@ -101,6 +101,7 @@ form {
     bottom: 0;
     padding: 20px;
     border: 1px solid #ccc;
+    display: none;
 }
 
 [type=radio]:checked ~ label {
@@ -111,6 +112,11 @@ form {
 
 [type=radio]:checked ~ label ~ .content {
     z-index: 1;
+}
+
+#tab-1:checked ~ .content.tab-1,
+#tab-2:checked ~ .content.tab-2 {
+    display: block;
 }
 
 input#toggle-1[type=checkbox] {

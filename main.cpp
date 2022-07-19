@@ -1,9 +1,9 @@
 #define CROW_ENABLE_SSL
-
+#define CROW_MAIN
 
 #include "src/page.h"
 
-#include "ext/crow/crow.h"
+#include "ext/crow_all.h"
 #include "src/CmdLineOptions.h"
 #include "src/MicroCore.h"
 
@@ -76,6 +76,7 @@ main(int ac, const char* av[])
     auto enable_mixin_details_opt      = opts.get_option<bool>("enable-mixin-details");
     auto enable_json_api_opt           = opts.get_option<bool>("enable-json-api");
     auto enable_as_hex_opt             = opts.get_option<bool>("enable-as-hex");
+    auto enable_mixin_guess_opt        = opts.get_option<bool>("enable-mixin-guess");
     auto concurrency_opt               = opts.get_option<size_t>("concurrency");
     auto enable_emission_monitor_opt   = opts.get_option<bool>("enable-emission-monitor");
 
@@ -99,10 +100,10 @@ main(int ac, const char* av[])
     bool enable_autorefresh_option    {*enable_autorefresh_option_opt};
     bool enable_output_key_checker    {*enable_output_key_checker_opt};
     bool enable_mixin_details         {*enable_mixin_details_opt};
+    bool enable_mixin_guess           {*enable_mixin_guess_opt};
     bool enable_json_api              {*enable_json_api_opt};
     bool enable_as_hex                {*enable_as_hex_opt};
     bool enable_emission_monitor      {*enable_emission_monitor_opt};
-
 
     // set  monero log output level
     uint32_t log_level = 0;
@@ -207,11 +208,11 @@ main(int ac, const char* av[])
 
     string daemon_url {*daemon_url_opt};
 
-    if (testnet && daemon_url == "http:://127.0.0.1:18081")
-        daemon_url = "http:://127.0.0.1:28081";
-    if (stagenet && daemon_url == "http:://127.0.0.1:18081")
-        daemon_url = "http:://127.0.0.1:38081";
-
+    if (testnet && daemon_url == "127.0.0.1:18081")
+        daemon_url = "127.0.0.1:28081";
+    if (stagenet && daemon_url == "127.0.0.1:18081")
+        daemon_url = "127.0.0.1:38081";
+        
     uint64_t mempool_info_timeout {5000};
 
     try
@@ -308,6 +309,7 @@ main(int ac, const char* av[])
                           enable_output_key_checker,
                           enable_autorefresh_option,
                           enable_mixin_details,
+                          enable_mixin_guess,
                           no_blocks_on_index,
                           mempool_info_timeout,
                           *testnet_url,
