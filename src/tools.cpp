@@ -627,8 +627,6 @@ sum_fees_in_txs(const vector<transaction>& txs)
     return fees_sum;
 }
 
-
-
 vector<output_tuple_with_tag>
 get_ouputs(const transaction& tx)
 {

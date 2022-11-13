@@ -5695,17 +5695,29 @@ json_networkinfo()
         return j_response;
     }
 
-    uint64_t fee_estimated {0};
+    uint64_t per_kb_fee_estimated {0};
 
     // get dynamic fee estimate from last 10 blocks
-    if (!get_dynamic_per_kb_fee_estimate(fee_estimated))
+    if (!get_dynamic_per_kb_fee_estimate(per_kb_fee_estimated))
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Cant get dynamic fee esimate";
+        j_response["message"] = "Cant get per kb dynamic fee esimate";
         return j_response;
     }
 
-    j_info["fee_per_kb"] = fee_estimated;
+    uint64_t fee_estimated {0};
+
+    // get dynamic fee estimate from last 10 blocks
+    //@todo: make this work
+//    if (!get_base_fee_estimate(fee_estimated))
+//    {
+//        j_response["status"]  = "error";
+//        j_response["message"] = "Cant get dynamic fee esimate";
+//        return j_response;
+//    }
+
+    j_info["fee_per_kb"] = per_kb_fee_estimated;
+    j_info["fee_estimate"] = fee_estimated;
 
     j_info["tx_pool_size"]        = MempoolStatus::mempool_no.load();
     j_info["tx_pool_size_kbytes"] = MempoolStatus::mempool_size.load();
@@ -6828,6 +6840,25 @@ get_dynamic_per_kb_fee_estimate(uint64_t& fee_estimated)
             fee_estimated, error_msg))
     {
         cerr << "rpc.get_dynamic_per_kb_fee_estimate failed" << endl;
+        return false;
+    }
+
+    (void) error_msg;
+
+    return true;
+}
+
+bool
+get_base_fee_estimate(uint64_t& fee_estimated)
+{
+
+    string error_msg;
+
+    if (!rpc.get_base_fee_estimate(
+            FEE_ESTIMATE_GRACE_BLOCKS,
+            fee_estimated))
+    {
+        cerr << "rpc.get_base_fee_estimate failed" << endl;
         return false;
     }
 
