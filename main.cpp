@@ -105,6 +105,9 @@ main(int ac, const char* av[])
     bool enable_as_hex                {*enable_as_hex_opt};
     bool enable_emission_monitor      {*enable_emission_monitor_opt};
 
+    //temprorary disable randomx
+    enable_randomx = false;
+
     // set  monero log output level
     uint32_t log_level = 0;
     mlog_configure("", true);

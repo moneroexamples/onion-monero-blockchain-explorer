@@ -42,7 +42,7 @@ extern "C" void me_rx_slow_hash(const uint64_t mainheight, const uint64_t seedhe
                              char *hash, int miners, int is_alt);
 //extern "C" void me_rx_reorg(const uint64_t split_height);
 
-extern  __thread randomx_vm *rx_vm;
+extern  __thread randomx_vm *main_vm_full;
 
 #include <algorithm>
 #include <limits>
@@ -6978,18 +6978,18 @@ get_randomx_code(uint64_t blk_height,
 
     std::lock_guard<std::mutex> lk {mtx};
 
-    if (!rx_vm)
+    if (!main_vm_full)
     {
 
         crypto::hash block_hash;
 
-        // this will create rx_vm instance if one
+        // this will create main_vm_full instance if one
         // does not exist
         me_get_block_longhash(core_storage, blk, block_hash, blk_height, 0);
 
-        if (!rx_vm)
+        if (!main_vm_full)
         {
-            cerr << "rx_vm is still null!";
+            cerr << "main_vm_full is still null!";
             return {};
         }
     }
@@ -7000,32 +7000,32 @@ get_randomx_code(uint64_t blk_height,
     alignas(16) uint64_t tempHash[8];
     blake2b(tempHash, sizeof(tempHash), bd.data(), bd.size(), nullptr, 0); 
 
-    rx_vm->initScratchpad(&tempHash);
-    rx_vm->resetRoundingMode();
+    main_vm_full->initScratchpad(&tempHash);
+    main_vm_full->resetRoundingMode();
 
     for (int chain = 0; chain < RANDOMX_PROGRAM_COUNT - 1; ++chain) 
     {
-        rx_vm->run(&tempHash);
+        main_vm_full->run(&tempHash);
 
         blake2b(tempHash, sizeof(tempHash), 
-                rx_vm->getRegisterFile(), 
+                main_vm_full->getRegisterFile(),
                 sizeof(randomx::RegisterFile), nullptr, 0); 
 
         rx_code.push_back({});
 
-        rx_code.back().prog = rx_vm->getProgram();
-    	rx_code.back().reg_file = *(rx_vm->getRegisterFile());
+        rx_code.back().prog = main_vm_full->getProgram();
+        rx_code.back().reg_file = *(main_vm_full->getRegisterFile());
     }   
 
-    rx_vm->run(&tempHash);
+    main_vm_full->run(&tempHash);
 
     rx_code.push_back({});
 
-    rx_code.back().prog = rx_vm->getProgram();
-    rx_code.back().reg_file = *(rx_vm->getRegisterFile());
+    rx_code.back().prog = main_vm_full->getProgram();
+    rx_code.back().reg_file = *(main_vm_full->getRegisterFile());
 
     //crypto::hash res2;
-    //rx_vm->getFinalResult(res2.data, RANDOMX_HASH_SIZE);
+    //main_vm_full->getFinalResult(res2.data, RANDOMX_HASH_SIZE);
     //cout << "pow2: " << pod_to_hex(res2) << endl;
 
     return rx_code;
