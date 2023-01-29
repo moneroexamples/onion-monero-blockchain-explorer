@@ -106,6 +106,9 @@ public:
     get_network_info(COMMAND_RPC_GET_INFO::response& info);
 
     bool
+    get_base_fee_estimate(uint64_t grace_blocks, uint64_t& fee_estimate);
+
+    bool
     get_hardfork_info( COMMAND_RPC_HARD_FORK_INFO::response& res);
 
     bool

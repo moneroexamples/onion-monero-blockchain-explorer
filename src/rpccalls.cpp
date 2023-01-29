@@ -40,6 +40,33 @@ rpccalls::connect_to_monero_daemon()
     return m_http_client.connect(timeout_time_ms);
 }
 
+
+bool
+rpccalls::get_base_fee_estimate(uint64_t grace_blocks,
+                                uint64_t& fee_estimate) {
+
+    cryptonote::COMMAND_RPC_GET_BASE_FEE_ESTIMATE::request req;
+    cryptonote::COMMAND_RPC_GET_BASE_FEE_ESTIMATE::response res;
+
+    req.grace_blocks = grace_blocks;
+
+    if (!connect_to_monero_daemon())
+    {
+        cerr << "get_base_fee_estimate: not connected to daemon" << endl;
+        return false;
+    }
+
+    bool r = epee::net_utils::invoke_http_json(
+            "/get_fee_estimate",
+            req, res, m_http_client, timeout_time_ms);
+
+    fee_estimate = res.fee;
+
+    return r;
+
+
+}
+
 uint64_t
 rpccalls::get_current_height()
 {
