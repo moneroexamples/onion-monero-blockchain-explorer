@@ -72,7 +72,6 @@ The key features of the Onion Monero Blockchain Explorer are:
  - can provide total amount of all miner fees,
  - decoding encrypted payment id,
  - decoding outputs and proving txs sent to sub-address.
- - listing RandomX code for each block
 
 
 ## Development branch
@@ -244,7 +243,6 @@ xmrblocks, Onion Monero Blockchain Explorer:
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
   -s [ --stagenet ] [=arg(=1)] (=0)     use stagenet blockchain
   --enable-pusher [=arg(=1)] (=0)       enable signed transaction pusher
-  --enable-randomx [=arg(=1)] (=0)      enable generation of randomx code
   --enable-mixin-details [=arg(=1)] (=0)
                                         enable mixin details for key images,
                                         e.g., timescale, mixin of mixins, in tx
