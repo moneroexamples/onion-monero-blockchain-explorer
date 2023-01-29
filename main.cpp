@@ -106,7 +106,10 @@ main(int ac, const char* av[])
     bool enable_emission_monitor      {*enable_emission_monitor_opt};
 
     //temprorary disable randomx
-    enable_randomx = false;
+    if (enable_randomx == true) {
+        cout << "Support for randomx code is disabled due to issues with it"<< endl;
+        enable_randomx = false;
+    }
 
     // set  monero log output level
     uint32_t log_level = 0;
