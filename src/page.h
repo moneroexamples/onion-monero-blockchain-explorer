@@ -545,14 +545,14 @@ page(MicroCore* _mcore,
     no_of_mempool_tx_of_frontpage = 25;
 
 
-    //if template_dir is not null and exists, set TMPL_DIR to it otherwise set TMPL_DIR to ./templates
+
     if (!template_dir.empty() && boost::filesystem::exists(template_dir))
     {
         TMPL_DIR = template_dir;
-    }
-    else
+    }else
     {
-        TMPL_DIR = "./templates";
+        cerr << "Template directory " << template_dir << " does not exist.  Please use --template-path option to specify template path." << endl;
+        exit(1);
     }
 
     TMPL_PARIALS_DIR = TMPL_DIR + "/partials";
