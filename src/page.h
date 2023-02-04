@@ -49,31 +49,8 @@ extern  __thread randomx_vm *main_vm_full;
 #include <ctime>
 #include <future>
 #include <type_traits>
+#include <filesystem>
 
-
-#define TMPL_DIR                    "./templates"
-#define TMPL_PARIALS_DIR            TMPL_DIR "/partials"
-#define TMPL_CSS_STYLES             TMPL_DIR "/css/style.css"
-#define TMPL_INDEX                  TMPL_DIR "/index.html"
-#define TMPL_INDEX2                 TMPL_DIR "/index2.html"
-#define TMPL_MEMPOOL                TMPL_DIR "/mempool.html"
-#define TMPL_ALTBLOCKS              TMPL_DIR "/altblocks.html"
-#define TMPL_MEMPOOL_ERROR          TMPL_DIR "/mempool_error.html"
-#define TMPL_HEADER                 TMPL_DIR "/header.html"
-#define TMPL_FOOTER                 TMPL_DIR "/footer.html"
-#define TMPL_BLOCK                  TMPL_DIR "/block.html"
-#define TMPL_RANDOMX                TMPL_DIR "/randomx.html"
-#define TMPL_TX                     TMPL_DIR "/tx.html"
-#define TMPL_ADDRESS                TMPL_DIR "/address.html"
-#define TMPL_MY_OUTPUTS             TMPL_DIR "/my_outputs.html"
-#define TMPL_SEARCH_RESULTS         TMPL_DIR "/search_results.html"
-#define TMPL_MY_RAWTX               TMPL_DIR "/rawtx.html"
-#define TMPL_MY_CHECKRAWTX          TMPL_DIR "/checkrawtx.html"
-#define TMPL_MY_PUSHRAWTX           TMPL_DIR "/pushrawtx.html"
-#define TMPL_MY_RAWKEYIMGS          TMPL_DIR "/rawkeyimgs.html"
-#define TMPL_MY_CHECKRAWKEYIMGS     TMPL_DIR "/checkrawkeyimgs.html"
-#define TMPL_MY_RAWOUTPUTKEYS       TMPL_DIR "/rawoutputkeys.html"
-#define TMPL_MY_CHECKRAWOUTPUTKEYS  TMPL_DIR "/checkrawoutputkeys.html"
 
 #define ONIONEXPLORER_RPC_VERSION_MAJOR 1
 #define ONIONEXPLORER_RPC_VERSION_MINOR 2
@@ -495,6 +472,32 @@ string js_html_files_all_in_one;
 // read operation in OS
 map<string, string> template_file;
 
+std::string TMPL_DIR;
+std::string TMPL_PARIALS_DIR;
+std::string TMPL_CSS_STYLES;
+std::string TMPL_INDEX;
+std::string TMPL_INDEX2;
+std::string TMPL_MEMPOOL;
+std::string TMPL_ALTBLOCKS;
+std::string TMPL_MEMPOOL_ERROR;
+std::string TMPL_HEADER;
+std::string TMPL_FOOTER;
+std::string TMPL_BLOCK;
+std::string TMPL_RANDOMX;
+std::string TMPL_TX;
+std::string TMPL_ADDRESS;
+std::string TMPL_MY_OUTPUTS;
+std::string TMPL_SEARCH_RESULTS;
+std::string TMPL_MY_RAWTX;
+std::string TMPL_MY_CHECKRAWTX;
+std::string TMPL_MY_PUSHRAWTX;
+std::string TMPL_MY_RAWKEYIMGS;
+std::string TMPL_MY_CHECKRAWKEYIMGS;
+std::string TMPL_MY_PUSHRAWKEYIMGS;
+std::string TMPL_MY_RAWOUTPUTKEYS;
+std::string TMPL_MY_CHECKRAWOUTPUTKEYS;
+
+
 public:
 
 page(MicroCore* _mcore,
@@ -514,6 +517,7 @@ page(MicroCore* _mcore,
      string _testnet_url,
      string _stagenet_url,
      string _mainnet_url,
+     string template_dir,
      rpccalls::login_opt _daemon_rpc_login)
         : mcore {_mcore},
           core_storage {_core_storage},
@@ -539,6 +543,40 @@ page(MicroCore* _mcore,
     stagenet = nettype == cryptonote::network_type::STAGENET;
 
     no_of_mempool_tx_of_frontpage = 25;
+
+
+
+    if (!template_dir.empty() && boost::filesystem::exists(template_dir))
+    {
+        TMPL_DIR = template_dir;
+    }else
+    {
+        cerr << "Template directory " << template_dir << " does not exist.  Please use --template-path option to specify template path." << endl;
+        exit(1);
+    }
+
+    TMPL_PARIALS_DIR = TMPL_DIR + "/partials";
+    TMPL_CSS_STYLES = TMPL_DIR + "/css/style.css";
+    TMPL_INDEX = TMPL_DIR + "/index.html";
+    TMPL_INDEX2 = TMPL_DIR + "/index2.html";
+    TMPL_MEMPOOL = TMPL_DIR + "/mempool.html";
+    TMPL_ALTBLOCKS = TMPL_DIR + "/altblocks.html";
+    TMPL_MEMPOOL_ERROR = TMPL_DIR + "/mempool_error.html";
+    TMPL_HEADER = TMPL_DIR + "/header.html";
+    TMPL_FOOTER = TMPL_DIR + "/footer.html";
+    TMPL_BLOCK = TMPL_DIR + "/block.html";
+    TMPL_RANDOMX = TMPL_DIR + "/randomx.html";
+    TMPL_TX = TMPL_DIR + "/tx.html";
+    TMPL_ADDRESS = TMPL_DIR + "/address.html";
+    TMPL_MY_OUTPUTS = TMPL_DIR + "/my_outputs.html";
+    TMPL_SEARCH_RESULTS = TMPL_DIR + "/search_results.html";
+    TMPL_MY_RAWTX = TMPL_DIR + "/rawtx.html";
+    TMPL_MY_CHECKRAWTX = TMPL_DIR + "/checkrawtx.html";
+    TMPL_MY_PUSHRAWTX = TMPL_DIR + "/pushrawtx.html";
+    TMPL_MY_RAWKEYIMGS = TMPL_DIR + "/rawkeyimgs.html";
+    TMPL_MY_CHECKRAWKEYIMGS = TMPL_DIR + "/checkrawkeyimgs.html";
+    TMPL_MY_RAWOUTPUTKEYS = TMPL_DIR + "/rawoutputkeys.html";
+    TMPL_MY_CHECKRAWOUTPUTKEYS = TMPL_DIR + "/checkrawoutputkeys.html";
 
     // read template files for all the pages
     // into template_file map

@@ -280,6 +280,7 @@ xmrblocks, Onion Monero Blockchain Explorer:
   -c [ --concurrency ] arg (=0)         number of threads handling http
                                         queries. Default is 0 which means it is
                                         based you on the cpu
+  --template-path arg                   path to templates folder
   -b [ --bc-path ] arg                  path to lmdb folder of the blockchain,
                                         e.g., ~/.bitmonero/lmdb
   --ssl-crt-file arg                    path to crt file for ssl (https)
