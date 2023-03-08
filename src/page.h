@@ -5980,6 +5980,7 @@ get_tx_json(const transaction& tx, const tx_details& txd)
             {"tx_size"     , txd.size},
             {"xmr_outputs" , txd.xmr_outputs},
             {"xmr_inputs"  , txd.xmr_inputs},
+            {"unlock_time" , txd.unlock_time},
             {"tx_version"  , static_cast<uint64_t>(txd.version)},
             {"rct_type"    , tx.rct_signatures.type},
             {"coinbase"    , is_coinbase(tx)},
