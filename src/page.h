@@ -4862,6 +4862,129 @@ json_block(string block_no_or_hash)
     return j_response;
 }
 
+/*
+ * Lets use this json api convention for success and error
+ * https://labs.omniti.com/labs/jsend
+ */
+json json_blocks(string start_height_str, string end_height_str)
+{
+    json j_response {
+            {"status", "fail"},
+            {"data"  , json {}}
+    };
+
+    // Get a reference to the "data" field of the response
+    nlohmann::json& j_data = j_response["data"];
+
+    // Convert block heights from str to uint64
+    uint64_t start_height;
+    try
+    {
+        start_height  = boost::lexical_cast<uint64_t>(start_height_str);
+    }
+    catch (const boost::bad_lexical_cast& e)
+    {
+        j_data["title"] = fmt::format(
+                "Cant parse block number: {:s}", start_height_str);
+        return j_response;
+    }
+
+    uint64_t end_height;
+    try
+    {
+        end_height  = boost::lexical_cast<uint64_t>(end_height_str);
+    }
+    catch (const boost::bad_lexical_cast& e)
+    {
+        j_data["title"] = fmt::format(
+                "Cant parse block number: {:s}", end_height_str);
+        return j_response;
+    }
+
+    // Get the current height of the blockchain
+    uint64_t current_blockchain_height = core_storage->get_current_blockchain_height();
+
+    // Check if the start height is greater than the end height
+    if (start_height > end_height) {
+        // Set the title of the response to an error message and return the response
+        j_data["title"] = "Invalid input: start height should be less than or equal to end height.";
+        return j_response;
+    }
+
+    // Check if the end height is greater than the current height of the blockchain
+    if (end_height > current_blockchain_height) {
+        // Set the title of the response to an error message with the current and requested heights and return the response
+        j_data["title"] = fmt::format(
+                "Requested end height is higher than blockchain: {:d}, {:d}", end_height, current_blockchain_height);
+        return j_response;
+    }
+
+    // Create a json array to store information about each block within the given range of heights
+    json j_blocks;
+
+    // Iterate over each block within the given range of heights
+    for (uint64_t height = start_height; height <= end_height; height++) {
+        // Declare variables to store information about the current block
+        crypto::hash blk_hash;
+        block blk;
+        uint64_t blk_size = 0;
+        transaction coinbase_tx;
+        vector<crypto::hash> tx_hashes;
+        uint64_t sum_fees = 0;
+        tx_details txd_coinbase;
+        json j_txs;
+
+        // Get the block with the given height from the blockchain
+        if (!mcore->get_block_by_height(height, blk)) {
+            j_data["title"] = fmt::format("Cant get block: {:d}", height);
+            return j_response;
+        }
+
+        // Get the block hash, size, coinbase transaction, and transaction hashes
+        blk_hash = core_storage->get_block_id_by_height(height);
+        blk_size = core_storage->get_db().get_block_weight(height);
+        coinbase_tx = blk.miner_tx;
+        tx_hashes = blk.tx_hashes;
+        // Get the transaction details for the coinbase transaction
+        txd_coinbase = get_tx_details(blk.miner_tx, true, height, current_blockchain_height);
+
+        // Add the coinbase transaction to the list of transactions for the current block
+        j_txs.push_back(get_tx_json(coinbase_tx, txd_coinbase));
+
+        // Iterate over each transaction in the block
+        for (size_t i = 0; i < tx_hashes.size(); ++i) {
+            // Get the transaction with the given hash from the blockchain
+            const crypto::hash &tx_hash = tx_hashes.at(i);
+            transaction tx;
+
+            if (!mcore->get_tx(tx_hash, tx)) {
+                // Set the status and message of the response to an error message and return the response
+                j_response["status"]  = "error";
+                j_response["message"] = fmt::format("Cant get transactions in block: {:d}", height);
+                return j_response;
+            }
+
+            tx_details txd = get_tx_details(tx, false, height, current_blockchain_height);
+            j_txs.push_back(get_tx_json(tx, txd));
+            sum_fees += txd.fee;
+        }
+
+        j_blocks.push_back(json {
+                {"block_height"  , height},
+                {"hash"          , pod_to_hex(blk_hash)},
+                {"timestamp"     , blk.timestamp},
+                {"timestamp_utc" , xmreg::timestamp_to_str_gm(blk.timestamp)},
+                {"block_height"  , height},
+                {"size"          , blk_size},
+                {"txs"           , j_txs},
+                {"current_height", current_blockchain_height}
+        });
+    }
+
+    j_data = j_blocks;
+    j_response["status"] = "success";
+    return j_response;
+}
 
 
 /*

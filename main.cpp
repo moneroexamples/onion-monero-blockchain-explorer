@@ -696,6 +696,14 @@ main(int ac, const char* av[])
             return r;
         });
 
+        CROW_ROUTE(app, "/api/blocks/<string>/<string>")
+        ([&](string start_height, string end_height) {
+
+            myxmr::jsonresponse r{xmrblocks.json_blocks(remove_bad_chars(start_height), remove_bad_chars(end_height))};
+
+            return r;
+        });
+
         CROW_ROUTE(app, "/api/rawblock/<string>")
         ([&](string block_no_or_hash) {
 
