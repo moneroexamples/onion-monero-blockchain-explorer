@@ -287,7 +287,7 @@ xmrblocks, Onion Monero Blockchain Explorer:
                                         functionality
   --ssl-key-file arg                    path to key file for ssl (https)
                                         functionality
-  -d [ --daemon-url ] arg (=http:://127.0.0.1:18081)
+  -d [ --daemon-url ] arg (=http://127.0.0.1:18081)
                                         Monero daemon url
   --daemon-login arg                    Specify username[:password] for daemon 
                                         RPC client
@@ -298,10 +298,10 @@ Example usage, defined as bash aliases.
 
 ```bash
 # for mainnet explorer
-alias xmrblocksmainnet='~/onion-monero-blockchain-explorer/build/xmrblocks    --port 8081 --testnet-url "http://139.162.32.245:8082" --enable-pusher --enable-emission-monitor'
+alias xmrblocksmainnet='~/onion-monero-blockchain-explorer/build/xmrblocks    --port 8081 --mainnet-url "http://139.162.32.245:8082" --enable-pusher --enable-emission-monitor'
 
 # for testnet explorer
-alias xmrblockstestnet='~/onion-monero-blockchain-explorer/build/xmrblocks -t --port 8082 --mainnet-url "http://139.162.32.245:8081" --enable-pusher --enable-emission-monitor'
+alias xmrblockstestnet='~/onion-monero-blockchain-explorer/build/xmrblocks -t --port 8082 --testnet-url "http://139.162.32.245:8081" --enable-pusher --enable-emission-monitor'
 ```
 
 Example usage when running via Docker:

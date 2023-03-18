@@ -127,6 +127,58 @@ MicroCore::get_block_by_height(const uint64_t& height, block& blk)
 }
 
 
+/**
+ * Get blocks by their heights
+ *
+ * This function retrieves multiple blocks from the blockchain_storage based on their heights
+ * and stores them in the provided vector of blocks.
+ *
+ * @param heights The vector of block heights to retrieve
+ * @param blocks The vector of blocks to store the retrieved blocks in
+ *
+ * @return True if all blocks were successfully retrieved, false otherwise.
+ */
+bool
+MicroCore::get_blocks_by_heights(const vector<uint64_t>& heights, vector<block>& blocks)
+{
+    try
+    {
+        // Clear the vector of blocks before retrieving new blocks
+        blocks.clear();
+
+        // Reserve memory for the vector of blocks to avoid reallocations
+        blocks.reserve(heights.size());
+
+        // Loop through the vector of heights and retrieve the corresponding blocks
+        for (const auto& height : heights)
+        {
+            blocks.emplace_back(m_blockchain_storage.get_db().get_block_from_height(height));
+        }
+    }
+    catch (const BLOCK_DNE& e)
+    {
+        cerr << "One or more blocks not found in the blockchain! "
+             << e.what() << endl;
+
+        return false;
+    }
+    catch (const DB_ERROR& e)
+    {
+        cerr << "Blockchain access error when getting blocks. "
+             << e.what() << endl;
+
+        return false;
+    }
+    catch (...)
+    {
+        cerr << "Something went terribly wrong when getting blocks" << endl;
+
+        return false;
+    }
+
+    return true;
+}
+
 
 /**
  * Get transaction tx from the blockchain using it hash
