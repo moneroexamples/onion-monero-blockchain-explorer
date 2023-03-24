@@ -4620,6 +4620,8 @@ json_transaction_private(string tx_hash_prefix_str)
         return j_response;
     }
 
+    json j_txs;
+
     vector<transaction> possible_txs = core_storage->get_db().get_tx_from_range(tx_hash);
     for (size_t i = 0; i < possible_txs.size(); ++i){
         // get transaction
@@ -4774,25 +4776,33 @@ json_transaction_private(string tx_hash_prefix_str)
         {
             no_confirmations = txd.no_confirmations;
         }
+
+        // get basic tx info
+        j_data = get_tx_json(tx, txd);
+
+        // append additional info from block, as we don't
+        // return block data in this function
+        j_data["timestamp"]      = tx_timestamp;
+        j_data["timestamp_utc"]  = blk_timestamp_utc;
+        j_data["block_height"]   = block_height;
+        j_data["confirmations"]  = no_confirmations;
+        j_data["outputs"]        = outputs;
+        j_data["inputs"]         = inputs;
+        j_data["current_height"] = bc_height;
+
+        j_txs.push_back(json {
+                {"timestamp"  ,     tx_timestamp},
+                {"timestamp_utc",   blk_timestamp_utc},
+                {"block_height",    block_height},
+                {"confirmations",   no_confirmations},
+                {"outputs",         outputs},
+                {"inputs",          inputs},
+                {"current_height",  bc_height}
+        });
     }
 
-
-
-    // get basic tx info
-    j_data = get_tx_json(tx, txd);
-
-    // append additional info from block, as we don't
-    // return block data in this function
-    j_data["timestamp"]      = tx_timestamp;
-    j_data["timestamp_utc"]  = blk_timestamp_utc;
-    j_data["block_height"]   = block_height;
-    j_data["confirmations"]  = no_confirmations;
-    j_data["outputs"]        = outputs;
-    j_data["inputs"]         = inputs;
-    j_data["current_height"] = bc_height;
-
+    j_data = j_txs
     j_response["status"] = "success";
-
     return j_response;
 }
 
