@@ -4623,10 +4623,8 @@ json_transaction_private(string tx_hash_prefix_str)
     json j_txs;
 
     vector<transaction> possible_txs = core_storage->get_db().get_tx_from_range(tx_hash);
-    for (size_t i = 0; i < possible_txs.size(); ++i){
+    for (auto tx : possible_txs){
         // get transaction
-        transaction tx = possible_txs[i];
-
         // flag to indicate if tx is in mempool
         bool found_in_mempool {false};
 
@@ -4644,7 +4642,7 @@ json_transaction_private(string tx_hash_prefix_str)
         uint64_t is_coinbase_tx = is_coinbase(tx);
         uint64_t no_confirmations {0};
 
-        if (found_in_mempool == false)
+        if (!found_in_mempool)
         {
 
             block blk;
@@ -4706,7 +4704,7 @@ json_transaction_private(string tx_hash_prefix_str)
                 // before proceeding with getting the outputs based on the amount and absolute offset
                 // check how many outputs there are for that amount
                 // go to next input if a too large offset was found
-                if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
+                if (!are_absolute_offsets_good(absolute_offsets, in_key))
                     continue;
 
                 //core_storage->get_db().get_output_key(in_key.amount,
@@ -4772,7 +4770,7 @@ json_transaction_private(string tx_hash_prefix_str)
             }
         }
 
-        if (found_in_mempool == false)
+        if (!found_in_mempool)
         {
             no_confirmations = txd.no_confirmations;
         }
@@ -4801,7 +4799,7 @@ json_transaction_private(string tx_hash_prefix_str)
         });
     }
 
-    j_data = j_txs
+    j_data = j_txs;
     j_response["status"] = "success";
     return j_response;
 }
