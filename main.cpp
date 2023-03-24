@@ -672,6 +672,14 @@ main(int ac, const char* av[])
             return r;
         });
 
+        CROW_ROUTE(app, "/api/transaction/private/<string>")
+        ([&](string tx_hash_prefix) {
+
+            myxmr::jsonresponse r{xmrblocks.json_transaction_private(remove_bad_chars(tx_hash_prefix))};
+
+            return r;
+        });
+
         CROW_ROUTE(app, "/api/rawtransaction/<string>")
         ([&](string tx_hash) {
 
@@ -726,6 +734,7 @@ main(int ac, const char* av[])
 
             return r;
         });
+
 
         CROW_ROUTE(app, "/api/mempool").methods("GET"_method)
         ([&](const crow::request &req) {

@@ -4586,6 +4586,216 @@ json_transaction(string tx_hash_str)
     return j_response;
 }
 
+/*
+ * Lets use this json api convention for success and error
+ * https://labs.omniti.com/labs/jsend
+ */
+json
+json_transaction_private(string tx_hash_prefix_str)
+{
+    const int HASH_PREFIX_LENGTH = 5;
+    const int TX_HASH_LENGTH = 64;
+    json j_response {
+            {"status", "fail"},
+            {"data"  , json {}}
+    };
+
+    json& j_data = j_response["data"];
+
+    // Make sure that the prefix passed is exactly HASH_PREFIX_LENGTH long
+    if (tx_hash_prefix_str.size() != HASH_PREFIX_LENGTH){
+        j_data["title"] = fmt::format("Cant parse tx hash prefix: {:s}", tx_hash_prefix_str);
+        return j_response;
+    }
+
+    // Pad the rest of the tx hash with 0's (e.x. abcd123 -> acd123000000000000000...0000)
+    string tx_hash_str = tx_hash_prefix_str.append(TX_HASH_LENGTH - HASH_PREFIX_LENGTH, '0');
+
+    // parse tx hash string to hash object
+    crypto::hash tx_hash;
+
+    if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+    {
+        j_data["title"] = fmt::format("Cant parse tx hash: {:s}", tx_hash_str);
+        return j_response;
+    }
+
+    vector<transaction> possible_txs = core_storage->get_db().get_tx_from_range(tx_hash);
+    for (size_t i = 0; i < possible_txs.size(); ++i){
+        // get transaction
+        transaction tx = possible_txs[i];
+
+        // flag to indicate if tx is in mempool
+        bool found_in_mempool {false};
+
+        // for tx in blocks we get block timestamp
+        // for tx in mempool we get recievive time
+        uint64_t tx_timestamp {0};
+
+        if (!find_tx(tx_hash, tx, found_in_mempool, tx_timestamp))
+        {
+            j_data["title"] = fmt::format("Cant find tx hash: {:s}", tx_hash_str);
+            return j_response;
+        }
+
+        uint64_t block_height {0};
+        uint64_t is_coinbase_tx = is_coinbase(tx);
+        uint64_t no_confirmations {0};
+
+        if (found_in_mempool == false)
+        {
+
+            block blk;
+
+            try
+            {
+                // get block cointaining this tx
+                block_height = core_storage->get_db().get_tx_block_height(tx_hash);
+
+                if (!mcore->get_block_by_height(block_height, blk))
+                {
+                    j_data["title"] = fmt::format("Cant get block: {:d}", block_height);
+                    return j_response;
+                }
+
+                tx_timestamp = blk.timestamp;
+            }
+            catch (const exception& e)
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = fmt::format("Tx does not exist in blockchain, "
+                                                    "but was there before: {:s}", tx_hash_str);
+                return j_response;
+            }
+        }
+
+        string blk_timestamp_utc = xmreg::timestamp_to_str_gm(tx_timestamp);
+
+        // get the current blockchain height. Just to check
+        uint64_t bc_height = core_storage->get_current_blockchain_height();
+
+        tx_details txd = get_tx_details(tx, is_coinbase_tx, block_height, bc_height);
+
+        json outputs;
+
+        for (const auto& output: txd.output_pub_keys)
+        {
+            outputs.push_back(json {
+                    {"public_key", pod_to_hex(std::get<0>(output))},
+                    {"amount"    , std::get<1>(output)}
+            });
+        }
+
+        json inputs;
+
+        for (const txin_to_key &in_key: txd.input_key_imgs)
+        {
+
+            // get absolute offsets of mixins
+            std::vector<uint64_t> absolute_offsets
+                    = cryptonote::relative_output_offsets_to_absolute(
+                            in_key.key_offsets);
+
+            // get public keys of outputs used in the mixins that match to the offsets
+            std::vector<output_data_t> outputs;
+
+            try
+            {
+                // before proceeding with getting the outputs based on the amount and absolute offset
+                // check how many outputs there are for that amount
+                // go to next input if a too large offset was found
+                if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
+                    continue;
+
+                //core_storage->get_db().get_output_key(in_key.amount,
+                //absolute_offsets,
+                //outputs);
+
+                get_output_key<BlockchainDB>(in_key.amount,
+                                             absolute_offsets,
+                                             outputs);
+            }
+            catch (const OUTPUT_DNE &e)
+            {
+                j_response["status"]  = "error";
+                j_response["message"] = "Failed to retrive outputs (mixins) used in key images";
+                return j_response;
+            }
+
+            inputs.push_back(json {
+                    {"key_image"  , pod_to_hex(in_key.k_image)},
+                    {"amount"     , in_key.amount},
+                    {"mixins"     , json {}}
+            });
+
+            json& mixins = inputs.back()["mixins"];
+
+            // mixin counter
+            size_t count = 0;
+
+            for (const uint64_t& abs_offset: absolute_offsets)
+            {
+
+                // get basic information about mixins output
+                cryptonote::output_data_t output_data = outputs.at(count++);
+
+                tx_out_index tx_out_idx;
+
+                try
+                {
+                    // get pair pair<crypto::hash, uint64_t> where first is tx hash
+                    // and second is local index of the output i in that tx
+                    tx_out_idx = core_storage->get_db()
+                            .get_output_tx_and_index(in_key.amount, abs_offset);
+                }
+                catch (const OUTPUT_DNE& e)
+                {
+
+                    string out_msg = fmt::format(
+                            "Output with amount {:d} and index {:d} does not exist!",
+                            in_key.amount, abs_offset);
+
+                    cerr << out_msg << '\n';
+
+                    break;
+                }
+
+                string out_pub_key_str = pod_to_hex(output_data.pubkey);
+
+                mixins.push_back(json {
+                        {"public_key"  , pod_to_hex(output_data.pubkey)},
+                        {"tx_hash"     , pod_to_hex(tx_out_idx.first)},
+                        {"block_no"    , output_data.height},
+                });
+            }
+        }
+
+        if (found_in_mempool == false)
+        {
+            no_confirmations = txd.no_confirmations;
+        }
+    }
+
+
+
+    // get basic tx info
+    j_data = get_tx_json(tx, txd);
+
+    // append additional info from block, as we don't
+    // return block data in this function
+    j_data["timestamp"]      = tx_timestamp;
+    j_data["timestamp_utc"]  = blk_timestamp_utc;
+    j_data["block_height"]   = block_height;
+    j_data["confirmations"]  = no_confirmations;
+    j_data["outputs"]        = outputs;
+    j_data["inputs"]         = inputs;
+    j_data["current_height"] = bc_height;
+
+    j_response["status"] = "success";
+
+    return j_response;
+}
+
 
 
 /*
