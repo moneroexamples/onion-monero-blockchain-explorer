@@ -4435,7 +4435,7 @@ json_transaction(string tx_hash_str)
     uint64_t is_coinbase_tx = is_coinbase(tx);
     uint64_t no_confirmations {0};
 
-    if (found_in_mempool == false)
+    if (!found_in_mempool)
     {
 
         block blk;
@@ -4497,7 +4497,7 @@ json_transaction(string tx_hash_str)
             // before proceeding with getting the outputs based on the amount and absolute offset
             // check how many outputs there are for that amount
             // go to next input if a too large offset was found
-            if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
+            if (!are_absolute_offsets_good(absolute_offsets, in_key))
                 continue;
 
             //core_storage->get_db().get_output_key(in_key.amount,
@@ -4563,7 +4563,7 @@ json_transaction(string tx_hash_str)
         }
     }
 
-    if (found_in_mempool == false)
+    if (!found_in_mempool)
     {
         no_confirmations = txd.no_confirmations;
     }
@@ -4593,7 +4593,9 @@ json_transaction(string tx_hash_str)
 json
 json_transaction_private(string tx_hash_postfix)
 {
-    const int HASH_POSTFIX_LENGTH = 5;
+    const int MIN_HASH_POSTFIX_LENGTH = 3;
+    const int MAX_HASH_POSTFIX_LENGTH = 8;
+    const int POSTFIX_LENGTH = tx_hash_postfix.size();
     const int TX_HASH_LENGTH = 64;
 
     json j_response {
@@ -4603,29 +4605,38 @@ json_transaction_private(string tx_hash_postfix)
 
     json& j_data = j_response["data"];
 
-    // Make sure that the postfix passed is exactly HASH_POSTFIX_LENGTH long
-    if (tx_hash_postfix.size() != HASH_POSTFIX_LENGTH){
-        j_data["title"] = fmt::format("Tx hash postfix not {} characters in length: {:s}",HASH_POSTFIX_LENGTH, tx_hash_postfix);
+    // Make sure that the postfix passed is within the range
+    if (POSTFIX_LENGTH < MIN_HASH_POSTFIX_LENGTH || POSTFIX_LENGTH > MAX_HASH_POSTFIX_LENGTH){
+        j_data["title"] = fmt::format("Tx hash postfix not between {} and {} characters in length: {:s}",MIN_HASH_POSTFIX_LENGTH, MAX_HASH_POSTFIX_LENGTH, tx_hash_postfix);
         return j_response;
     }
     // Create the hash template (e.x. abcd123 -> 0000000000000000000000000000acd123)
-    const std::string TX_HASH_TEMPLATE = std::string(TX_HASH_LENGTH - HASH_POSTFIX_LENGTH, '0').append(tx_hash_postfix);
+    const std::string TX_HASH_TEMPLATE = std::string(TX_HASH_LENGTH - POSTFIX_LENGTH, '0').append(tx_hash_postfix);
+    std::cout << TX_HASH_TEMPLATE << std::endl;  //DEBUG
 
     // parse tx hash string to hash object
     crypto::hash tx_hash;
-
     if (!xmreg::parse_str_secret_key(TX_HASH_TEMPLATE, tx_hash))
     {
-        j_data["title"] = fmt::format("Cant parse tx hash: {:s}", TX_HASH_TEMPLATE);
+        j_data["title"] = fmt::format("Can't parse tx hash: {:s}", TX_HASH_TEMPLATE);
         return j_response;
     }
 
     json j_txs;
 
-    vector<crypto::hash> possible_txs = core_storage->get_db().get_txids_loose(tx_hash, HASH_POSTFIX_LENGTH);
-    for (auto tx_hash : possible_txs){
+    // Retrieve all transactions which end with the specified postfix
+    vector<crypto::hash> k_anonymous_tx_set = core_storage->get_db().get_txids_loose(tx_hash, POSTFIX_LENGTH);
+    size_t len = k_anonymous_tx_set.size();  //DEBUG
+    std::cout << "Len " << len << std::endl;  //DEBUG
+    for (auto each_tx_hash : k_anonymous_tx_set){
+        std::stringstream ss;
+        for (const auto& byte : each_tx_hash.data){
+            ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte);
+        }
+        string HEX_TX_HASH = ss.str();
+        std::cout << ss.str() << len << std::endl;  //DEBUG
         // get transaction
-        transaction tx;
+        transaction each_tx;
 
         // flag to indicate if tx is in mempool
         bool found_in_mempool {false};
@@ -4634,14 +4645,14 @@ json_transaction_private(string tx_hash_postfix)
         // for tx in mempool we get receive time
         uint64_t tx_timestamp {0};
 
-        if (!find_tx(tx_hash, tx, found_in_mempool, tx_timestamp))
+        if (!find_tx(each_tx_hash, each_tx, found_in_mempool, tx_timestamp))
         {
-            j_data["title"] = fmt::format("Cant find tx hash: {:s}", TX_HASH_TEMPLATE);
+            j_data["title"] = fmt::format("Cant find tx hash: {:s}", HEX_TX_HASH);
             return j_response;
         }
 
         uint64_t block_height {0};
-        uint64_t is_coinbase_tx = is_coinbase(tx);
+        uint64_t is_coinbase_tx = is_coinbase(each_tx);
         uint64_t no_confirmations {0};
 
         if (!found_in_mempool)
@@ -4650,7 +4661,7 @@ json_transaction_private(string tx_hash_postfix)
             try
             {
                 // get block containing this tx
-                block_height = core_storage->get_db().get_tx_block_height(tx_hash);
+                block_height = core_storage->get_db().get_tx_block_height(each_tx_hash);
 
                 if (!mcore->get_block_by_height(block_height, blk))
                 {
@@ -4664,7 +4675,7 @@ json_transaction_private(string tx_hash_postfix)
             {
                 j_response["status"]  = "error";
                 j_response["message"] = fmt::format("Tx does not exist in blockchain, "
-                                                    "but was there before: {:s}", TX_HASH_TEMPLATE);
+                                                    "but was there before: {:s}", HEX_TX_HASH);
                 return j_response;
             }
         }
@@ -4674,7 +4685,7 @@ json_transaction_private(string tx_hash_postfix)
         // get the current blockchain height. Just to check
         uint64_t bc_height = core_storage->get_current_blockchain_height();
 
-        tx_details txd = get_tx_details(tx, is_coinbase_tx, block_height, bc_height);
+        tx_details txd = get_tx_details(each_tx, is_coinbase_tx, block_height, bc_height);
 
         json outputs;
 
@@ -4776,7 +4787,7 @@ json_transaction_private(string tx_hash_postfix)
         }
 
         // get basic tx info
-        j_data = get_tx_json(tx, txd);
+        j_data = get_tx_json(each_tx, txd);
 
         // append additional info from block, as we don't
         // return block data in this function
@@ -6351,6 +6362,9 @@ find_tx(const crypto::hash& tx_hash,
 
         if (!found_txs.empty())
         {
+            if (found_txs.size() != 1){
+                cerr << "Multiple transactions with the same txid were found in the mempool" << endl;
+            }
             // there should be only one tx found
             tx = found_txs.at(0).tx;
             found_in_mempool = true;
