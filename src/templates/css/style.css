@@ -29,6 +29,7 @@ tr, li, #pages, .info {
 
 td {
     text-align: center;
+    word-break: break-all;
 }
 
 a:link {
