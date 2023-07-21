@@ -4571,7 +4571,7 @@ json_transaction(string tx_hash_str)
     // get basic tx info
     j_data = get_tx_json(tx, txd);
 
-    // append additional info from block, as we don't
+    // append additional info from block, since we don't
     // return block data in this function
     j_data["timestamp"]      = tx_timestamp;
     j_data["timestamp_utc"]  = blk_timestamp_utc;
@@ -4595,7 +4595,7 @@ json
 json_transaction_private(string tx_hash_postfix)
 {
     const int MIN_HASH_POSTFIX_LENGTH = 3;
-    const int MAX_HASH_POSTFIX_LENGTH = 10;
+    const int MAX_HASH_POSTFIX_LENGTH = 12;
     const int POSTFIX_LENGTH = tx_hash_postfix.size();
     const int TX_HASH_LENGTH = 64;
 
@@ -4800,15 +4800,7 @@ json_transaction_private(string tx_hash_postfix)
         j_data["inputs"]         = inputs;
         j_data["current_height"] = bc_height;
 
-        j_txs.push_back(json {
-                {"timestamp"  ,     tx_timestamp},
-                {"timestamp_utc",   blk_timestamp_utc},
-                {"block_height",    block_height},
-                {"confirmations",   no_confirmations},
-                {"outputs",         outputs},
-                {"inputs",          inputs},
-                {"current_height",  bc_height}
-        });
+        j_txs.push_back(j_data);
     }
 
     j_data = j_txs;

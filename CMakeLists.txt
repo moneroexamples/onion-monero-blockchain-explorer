@@ -26,13 +26,13 @@ endif()
 
 if (NOT MONERO_BUILD_DIR)
     # set location of monero build tree
-    set(MONERO_BUILD_DIR /home/dev/monero/build/Linux/k-anonymity/release/bin
+    set(MONERO_BUILD_DIR ${MONERO_SOURCE_DIR}/build/release/
           CACHE PATH "Path to the build directory for Monero")
 
    if (NOT EXISTS ${MONERO_BUILD_DIR})   
         # try different location   
         message(STATUS "Trying different folder for monero libraries")
-        set(MONERO_BUILD_DIR /home/dev/monero/build/Linux/k-anonymity/release/bin
+        set(MONERO_BUILD_DIR ${MONERO_SOURCE_DIR}/build/Linux/master/release/
             CACHE PATH "Path to the build directory for Monero" FORCE)
     endif()
 
