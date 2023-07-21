@@ -4613,7 +4613,6 @@ json_transaction_private(string tx_hash_postfix)
     }
     // Create the hash template (e.x. abcd123 -> 0000000000000000000000000000acd123)
     const std::string TX_HASH_TEMPLATE = std::string(TX_HASH_LENGTH - POSTFIX_LENGTH, '0').append(tx_hash_postfix);
-    std::cout << TX_HASH_TEMPLATE << std::endl;  //DEBUG
 
     // parse tx hash string to hash object
     crypto::hash tx_hash;
@@ -4627,8 +4626,6 @@ json_transaction_private(string tx_hash_postfix)
 
     // Retrieve all transactions which end with the specified postfix
     vector<crypto::hash> k_anonymous_tx_set = core_storage->get_db().get_txids_loose(tx_hash, POSTFIX_LENGTH);
-    size_t len = k_anonymous_tx_set.size();  //DEBUG
-    std::cout << "Len " << len << std::endl;  //DEBUG
     for (auto each_tx_hash : k_anonymous_tx_set){
         // Get the hex representation of the crypto::hash
         std::stringstream ss;
