@@ -4586,6 +4586,7 @@ json_transaction(string tx_hash_str)
     return j_response;
 }
 
+
 /*
  * Lets use this json api convention for success and error
  * https://labs.omniti.com/labs/jsend
@@ -4594,7 +4595,7 @@ json
 json_transaction_private(string tx_hash_postfix)
 {
     const int MIN_HASH_POSTFIX_LENGTH = 3;
-    const int MAX_HASH_POSTFIX_LENGTH = 8;
+    const int MAX_HASH_POSTFIX_LENGTH = 10;
     const int POSTFIX_LENGTH = tx_hash_postfix.size();
     const int TX_HASH_LENGTH = 64;
 
@@ -4629,12 +4630,12 @@ json_transaction_private(string tx_hash_postfix)
     size_t len = k_anonymous_tx_set.size();  //DEBUG
     std::cout << "Len " << len << std::endl;  //DEBUG
     for (auto each_tx_hash : k_anonymous_tx_set){
+        // Get the hex representation of the crypto::hash
         std::stringstream ss;
         for (const auto& byte : each_tx_hash.data){
-            ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte);
+            ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(static_cast<unsigned char>(byte));
         }
-        string HEX_TX_HASH = ss.str();
-        std::cout << ss.str() << len << std::endl;  //DEBUG
+        string HEX_TX_STRING = ss.str();
         // get transaction
         transaction each_tx;
 
@@ -4647,7 +4648,7 @@ json_transaction_private(string tx_hash_postfix)
 
         if (!find_tx(each_tx_hash, each_tx, found_in_mempool, tx_timestamp))
         {
-            j_data["title"] = fmt::format("Cant find tx hash: {:s}", HEX_TX_HASH);
+            j_data["title"] = fmt::format("Cant find tx hash: {:s}", HEX_TX_STRING);
             return j_response;
         }
 
@@ -4675,7 +4676,7 @@ json_transaction_private(string tx_hash_postfix)
             {
                 j_response["status"]  = "error";
                 j_response["message"] = fmt::format("Tx does not exist in blockchain, "
-                                                    "but was there before: {:s}", HEX_TX_HASH);
+                                                    "but was there before: {:s}", HEX_TX_STRING);
                 return j_response;
             }
         }
