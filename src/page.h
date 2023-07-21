@@ -488,7 +488,7 @@ string mainnet_url;
 string js_html_files;
 string js_html_files_all_in_one;
 
-// instead of constatnly reading template files
+// instead of constantly reading template files
 // from hard drive for each request, we can read
 // them only once, when the explorer starts into this map
 // this will improve performance of the explorer and reduce
@@ -596,7 +596,7 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
     // number of last blocks to show
     uint64_t no_of_last_blocks = std::min(no_blocks_on_index + 1, height);
 
-    // initalise page tempate map with basic info about blockchain
+    // initialise page template map with basic info about blockchain
     mstch::map context {
             {"testnet"                  , testnet},
             {"stagenet"                 , stagenet},
@@ -741,7 +741,7 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
     MempoolStatus::network_info current_network_info
         = MempoolStatus::current_network_info;
 
-    // perapre network info mstch::map for the front page
+    // prepare network info mstch::map for the front page
     string hash_rate;
 
     double hr_d;
@@ -860,13 +860,13 @@ mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
     // total size of mempool in bytes
     uint64_t mempool_size_bytes = MempoolStatus::mempool_size;
 
-    // reasign this number, in case no of txs in mempool is smaller
+    // reassign this number, in case no of txs in mempool is smaller
     // than what we requested or we want all txs.
 
 
     uint64_t total_no_of_mempool_tx = MempoolStatus::mempool_no;
 
-    // initalise page tempate map with basic info about mempool
+    // initialise page template map with basic info about mempool
     mstch::map context {
             {"mempool_size"          , static_cast<uint64_t>(total_no_of_mempool_tx)}, // total no of mempool txs
             {"mempool_refresh_time"  , MempoolStatus::mempool_refresh_time}
@@ -898,7 +898,7 @@ mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
                                      delta_hours,
                                      delta_time[3], delta_time[4]);
 
-        // if more than 99 hourse, change formating
+        // if more than 99 hours, change formatting
         // for the template
         if (delta_hours > 99)
         {
@@ -941,7 +941,7 @@ mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
         return mstch::render(template_file["mempool_full"], context);
     }
 
-    // this is for partial disply on front page.
+    // this is for partial display on front page.
 
     context["mempool_fits_on_front_page"]    = (total_no_of_mempool_tx <= mempool_txs.size());
     context["no_of_mempool_tx_of_frontpage"] = no_of_mempool_tx;
@@ -957,7 +957,7 @@ string
 altblocks()
 {
 
-    // initalise page tempate map with basic info about blockchain
+    // initialise page template map with basic info about blockchain
     mstch::map context {
             {"testnet"              , testnet},
             {"stagenet"             , stagenet},
@@ -1088,7 +1088,7 @@ show_block(uint64_t _blk_height)
     // miner reward tx
     transaction coinbase_tx = blk.miner_tx;
 
-    // transcation in the block
+    // transaction in the block
     vector<crypto::hash> tx_hashes = blk.tx_hashes;
 
     bool have_txs = !blk.tx_hashes.empty();
@@ -1100,7 +1100,7 @@ show_block(uint64_t _blk_height)
     tx_details txd_coinbase = get_tx_details(blk.miner_tx, true,
                                              _blk_height, current_blockchain_height);
 
-    // initalise page tempate map with basic info about blockchain
+    // initialise page template map with basic info about blockchain
 
     string blk_pow_hash_str = pod_to_hex(get_block_longhash(core_storage, blk, _blk_height, 0));
     cryptonote::difficulty_type blk_difficulty = core_storage->get_db().get_block_difficulty(_blk_height);
@@ -1327,14 +1327,14 @@ show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0, bool refresh_page
             tx = found_txs.at(0).tx;
 
             // since its tx in mempool, it has no blk yet
-            // so use its recive_time as timestamp to show
+            // so use its receive_time as timestamp to show
 
-            uint64_t tx_recieve_timestamp
+            uint64_t txReceiveTimestamp
                     = found_txs.at(0).receive_time;
 
-            blk_timestamp = xmreg::timestamp_to_str_gm(tx_recieve_timestamp);
+            blk_timestamp = xmreg::timestamp_to_str_gm(txReceiveTimestamp);
 
-            age = get_age(server_timestamp, tx_recieve_timestamp,
+            age = get_age(server_timestamp, txReceiveTimestamp,
                           FULL_AGE_FORMAT);
 
             // for mempool tx, we dont show more details, e.g., json tx representation
@@ -1484,12 +1484,12 @@ show_ringmembers_hex(string const& tx_hash_str)
                         in_key.key_offsets);
 
         // get public keys of outputs used in the mixins that
-        // match to the offests
+        // match to the offsets
         std::vector<cryptonote::output_data_t> mixin_outputs;
 
         try
         {
-            // before proceeding with geting the outputs based on
+            // before proceeding with getting the outputs based on
             // the amount and absolute offset
             // check how many outputs there are for that amount
             // go to next input if a too large offset was found
@@ -1510,7 +1510,7 @@ show_ringmembers_hex(string const& tx_hash_str)
             continue;
         }
 
-        // add accociated amount to these offsets so that we can differentiate
+        // add associated amount to these offsets so that we can differentiate
         // between same offsets, but for different amounts
         absolute_offsets.push_back(in_key.amount);
 
@@ -1543,9 +1543,9 @@ show_ringmemberstx_hex(string const& tx_hash_str)
 
     vector<txin_to_key> input_key_imgs = xmreg::get_key_images(tx);
 
-    // key: constracted from concatenation of in_key.amount and absolute_offsets,
+    // key: constructed from concatenation of in_key.amount and absolute_offsets,
     // value: vector of string where string is transaction hash + output index + tx_hex
-    // will have to cut this string when de-seraializing this data
+    // will have to cut this string when de-serializing this data
     // later in the unit tests
     // transaction hash and output index represent tx_out_index
     std::map<string, vector<string>> all_mixin_txs;
@@ -1630,7 +1630,7 @@ show_ringmemberstx_hex(string const& tx_hash_str)
  *
  * Used for generating json file of txs used in unit testing.
  * Thanks to json output from this function, we can mock
- * a number of blockchain quries about key images
+ * a number of blockchain queries about key images
  *
  * @param tx_hash_str
  * @return
@@ -1670,7 +1670,7 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
 
     // add placeholder for sender and recipient details
     // this is most useful for unit testing on stagenet/testnet
-    // private monero networks, so we can easly put these
+    // private monero networks, so we can easily put these
     // networks accounts details here.
     tx_json["sender"] = json {
                             {"seed", ""},
@@ -1720,7 +1720,7 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
         return json {"error", "Cant get block height"};
     }
 
-    // get block cointaining this tx
+    // get block containing this tx
     block blk;
 
     if ( !mcore->get_block_by_height(tx_blk_height, blk))
@@ -1764,9 +1764,9 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
     tx_json["inputs"] = json::array();
 
 
-    // key: constracted from concatenation of in_key.amount and absolute_offsets,
+    // key: constructed from concatenation of in_key.amount and absolute_offsets,
     // value: vector of string where string is transaction hash + output index + tx_hex
-    // will have to cut this string when de-seraializing this data
+    // will have to cut this string when de-serializing this data
     // later in the unit tests
     // transaction hash and output index represent tx_out_index
     std::map<string, vector<string>> all_mixin_txs;
@@ -1791,7 +1791,7 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
             core_storage->get_db().get_output_tx_and_index(
                         in_key.amount, absolute_offsets, indices);
 
-            // get mining ouput info
+            // get mining output info
             //core_storage->get_db().get_output_key(
                         //in_key.amount,
                         //absolute_offsets,
@@ -1853,7 +1853,7 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
 
            ring_members.push_back(
                    json {
-                          {"ouput_pk", pod_to_hex(mo.pubkey)},
+                          {"output_pk", pod_to_hex(mo.pubkey)},
                           {"tx_hash", pod_to_hex(mixin_tx_hash)},
                           {"output_index_in_tx", txi.second},
                           {"tx_hex", tx_hex},
@@ -1973,7 +1973,7 @@ show_my_outputs(string tx_hash_str,
 
     if (!raw_tx_data.empty())
     {
-        // we want to check outputs of tx submited through tx pusher.
+        // we want to check outputs of tx submitted through tx pusher.
         // it is raw tx data, it is not in blockchain nor in mempool.
         // so we need to reconstruct tx object from this string
 
@@ -2019,15 +2019,15 @@ show_my_outputs(string tx_hash_str,
             tx = found_txs.at(0).tx;
 
             // since its tx in mempool, it has no blk yet
-            // so use its recive_time as timestamp to show
+            // so use its receive_time as timestamp to show
 
-            uint64_t tx_recieve_timestamp
+            uint64_t txReceiveTimestamp
                     = found_txs.at(0).receive_time;
 
-            blk_timestamp = xmreg::timestamp_to_str_gm(tx_recieve_timestamp);
+            blk_timestamp = xmreg::timestamp_to_str_gm(txReceiveTimestamp);
 
             age = get_age(server_timestamp,
-                          tx_recieve_timestamp,
+                          txReceiveTimestamp,
                           FULL_AGE_FORMAT);
         }
         else
@@ -2054,7 +2054,7 @@ show_my_outputs(string tx_hash_str,
              << e.what() << endl;
     }
 
-    // get block cointaining this tx
+    // get block containing this tx
     block blk;
 
     if (tx_blk_found && !mcore->get_block_by_height(tx_blk_height, blk))
@@ -2091,7 +2091,7 @@ show_my_outputs(string tx_hash_str,
     for (size_t i = 3; i < viewkey_str_partial.length() - 2; ++i)
         viewkey_str_partial[i] = '*';
 
-    // initalise page tempate map with basic info about blockchain
+    // initialise page template map with basic info about blockchain
     mstch::map context {
             {"testnet"              , testnet},
             {"stagenet"             , stagenet},
@@ -2161,7 +2161,7 @@ show_my_outputs(string tx_hash_str,
         }
     }
 
-    // decrypt encrypted payment id, as used in integreated addresses
+    // decrypt encrypted payment id, as used in integrated addresses
     crypto::hash8 decrypted_payment_id8 = txd.payment_id8;
 
     if (decrypted_payment_id8 != null_hash8)
@@ -2177,7 +2177,7 @@ show_my_outputs(string tx_hash_str,
 
     uint64_t sum_xmr {0};
 
-    std::vector<uint64_t> money_transfered(tx.vout.size(), 0);
+    std::vector<uint64_t> money_transferred(tx.vout.size(), 0);
 
     //std::deque<rct::key> mask(tx.vout.size());
 
@@ -2228,13 +2228,13 @@ show_my_outputs(string tx_hash_str,
         // if mine output has RingCT, i.e., tx version is 2
         if (mine_output && tx.version == 2)
         {
-            // cointbase txs have amounts in plain sight.
+            // coinbase txs have amounts in plain sight.
             // so use amount from ringct, only for non-coinbase txs
             if (!is_coinbase(tx))
             {
 
                 // initialize with regular amount
-                uint64_t rct_amount = money_transfered[output_idx];
+                uint64_t rct_amount = money_transferred[output_idx];
 
                 bool r;
 
@@ -2261,7 +2261,7 @@ show_my_outputs(string tx_hash_str,
 //                cout << derived_view_tag << endl;
 
                 xmr_amount = rct_amount;
-                money_transfered[output_idx] = rct_amount;
+                money_transferred[output_idx] = rct_amount;
             }
 
         }
@@ -2287,7 +2287,7 @@ show_my_outputs(string tx_hash_str,
     context["found_our_outputs"] = (sum_xmr > 0);
     context["sum_xmr"]           = xmreg::xmr_amount_to_str(sum_xmr);
 
-    // we can also test ouputs used in mixins for key images
+    // we can also test outputs used in mixins for key images
     // this can show possible spending. Only possible, because
     // without a spend key, we cant know for sure. It might be
     // that our output was used by someone else for their mixins.
@@ -2305,12 +2305,12 @@ show_my_outputs(string tx_hash_str,
         // perfectly match mixin public key with outputs in mixn_tx.
         uint64_t sum_mixin_xmr {0};
 
-        // this is used for the final check. we assument that number of
-        // parefct matches must be equal to number of inputs in a tx.
+        // this is used for the final check. we assume that number of
+        // perfect matches must be equal to number of inputs in a tx.
         uint64_t no_of_matched_mixins {0};
 
         // Hold all possible mixins that we found. This is only used so that
-        // we get number of all posibilities, and their total xmr amount
+        // we get number of all possibilities, and their total xmr amount
         // (useful for unit testing)
         //                     public_key    , amount
         std::vector<std::pair<crypto::public_key, uint64_t>> all_possible_mixins;
@@ -2322,13 +2322,13 @@ show_my_outputs(string tx_hash_str,
                     = cryptonote::relative_output_offsets_to_absolute(
                             in_key.key_offsets);
 
-            // get public keys of outputs used in the mixins that match to the offests
+            // get public keys of outputs used in the mixins that match to the offsets
             std::vector<cryptonote::output_data_t> mixin_outputs;
 
 
             try
             {
-                // before proceeding with geting the outputs based on
+                // before proceeding with getting the outputs based on
                 // the amount and absolute offset
                 // check how many outputs there are for that amount
                 // go to next input if a too large offset was found
@@ -2368,15 +2368,15 @@ show_my_outputs(string tx_hash_str,
             // there can be more than one our output used for mixin in a single
             // input. For example, if two outputs are matched (marked by *) in html,
             // one of them will be our real spending, and second will be used as a fake
-            // one. ideally, to determine which is which, spendkey is required.
-            // obvisouly we dont have it here, so we need to pick one in other way.
+            // one. ideally, to determine which is which, spend key is required.
+            // obviously we dont have it here, so we need to pick one in other way.
             // for now I will just pick the first one we find, and threat it as the
             // real spending output. The no_of_output_matches_found variable
-            // is used for this purporse.
+            // is used for this purpose.
             // testnet tx 430b070e213659a864ec82d674fddb5ccf7073cae231b019ba1ebb4bfdc07a15
-            // and testnet wallet details provided earier for spend key,
-            // demonstrate this. this txs has one input that uses two of our ouputs.
-            // without spent key, its imposible to know which one is real spendking
+            // and testnet wallet details provided earlier for spend key,
+            // demonstrate this. this txs has one input that uses two of our outputs.
+            // without spent key, its impossible to know which one is real spend key
             // and which one is fake.
             size_t no_of_output_matches_found {0};
 
@@ -2549,7 +2549,7 @@ show_my_outputs(string tx_hash_str,
 
                     if (mine_output && mixin_tx.version == 2)
                     {
-                        // cointbase txs have amounts in plain sight.
+                        // coinbase txs have amounts in plain sight.
                         // so use amount from ringct, only for non-coinbase txs
                         if (!is_coinbase(mixin_tx))
                         {
@@ -2581,7 +2581,7 @@ show_my_outputs(string tx_hash_str,
                     bool output_match = (output_pub_key == output_data.pubkey);
 
                     // mark only first output_match as the "real" one
-                    // due to luck of better method of gussing which output
+                    // due to luck of better method of guessing which output
                     // is real if two are found in a single input.
                     output_match = output_match && no_of_output_matches_found == 0;
 
@@ -2707,7 +2707,7 @@ show_my_outputs(string tx_hash_str,
 
 
         // show spending only if sum of mixins is more than
-        // what we get + fee, and number of perferctly matched
+        // what we get + fee, and number of perfectly matched
         // mixis is equal to number of inputs
         if (sum_mixin_xmr > (sum_xmr + txd.fee)
             && no_of_matched_mixins == inputs.size())
@@ -2744,7 +2744,7 @@ string
 show_rawtx()
 {
 
-    // initalise page tempate map with basic info about blockchain
+    // initialise page template map with basic info about blockchain
     mstch::map context {
             {"testnet"              , testnet},
             {"stagenet"             , stagenet}
@@ -2776,7 +2776,7 @@ show_checkrawtx(string raw_tx_data, string action)
         unsigned_tx_given = true;
     }
 
-    // initalize page template context map
+    // initialize page template context map
     mstch::map context {
             {"testnet"              , testnet},
             {"stagenet"             , stagenet},
@@ -2978,7 +2978,7 @@ show_checkrawtx(string raw_tx_data, string action)
                         public_key out_pub_key = std::get<0>(txd.output_pub_keys[toi.second]);
 
 
-                        // get block cointaining this tx
+                        // get block containing this tx
                         block blk;
 
                         if (!mcore->get_block_by_height(txd.blk_height, blk))
@@ -3051,7 +3051,7 @@ show_checkrawtx(string raw_tx_data, string action)
     } // if (unsigned_tx_given)
     else
     {
-        // if raw data is not unsigined tx, then assume it is signed tx
+        // if raw data is not unsigned tx, then assume it is signed tx
 
         const size_t magiclen = strlen(SIGNED_TX_PREFIX);
 
@@ -3065,8 +3065,8 @@ show_checkrawtx(string raw_tx_data, string action)
             // used in mymonero and openmonero projects.
 
             // to check this, first we need to encode data back to base64.
-            // the reason is that txs submited to "/sendrawtransaction"
-            // are not base64, and we earlier always asume it is base64.
+            // the reason is that txs submitted to "/sendrawtransaction"
+            // are not base64, and we earlier always assume it is base64.
 
             // string reencoded_raw_tx_data = epee::string_encoding::base64_decode(raw_tx_data);
 
@@ -3110,7 +3110,7 @@ show_checkrawtx(string raw_tx_data, string action)
             //cout << "tx_from_blob.vout.size(): " << tx_from_blob.vout.size() << endl;
 
             // tx has been correctly deserialized. So
-            // we just dispaly it. We dont have any information about real mixins, etc,
+            // we just display it. We dont have any information about real mixins, etc,
             // so there is not much more we can do with tx data.
 
             mstch::map tx_context = construct_tx_context(tx_from_blob);
@@ -3192,7 +3192,7 @@ show_checkrawtx(string raw_tx_data, string action)
             vector<uint64_t> real_ammounts;
             uint64_t outputs_xmr_sum {0};
 
-            // destiantion address for this tx
+            // destination address for this tx
             for (tx_destination_entry& a_dest: ptx.construction_data.splitted_dsts)
             {
                 //stealth_address_amount.insert({dest.addr, dest.amount});
@@ -3352,7 +3352,7 @@ show_checkrawtx(string raw_tx_data, string action)
                     input_map["already_spent"] = core_storage->get_db().has_key_image(key_imgage);
                 }
 
-                // mark real mixings
+                // mark real mixins
 
                 mstch::array& mixins = boost::get<mstch::array>(
                         boost::get<mstch::map>(input_node)["mixins"]
@@ -3400,7 +3400,7 @@ show_pushrawtx(string raw_tx_data, string action)
 {
     clean_post_data(raw_tx_data);
 
-    // initalize page template context map
+    // initialize page template context map
     mstch::map context {
             {"testnet"              , testnet},
             {"stagenet"             , stagenet},
@@ -3510,7 +3510,7 @@ show_pushrawtx(string raw_tx_data, string action)
                 {"tx_hash"          , tx_hash_str}
         };
 
-        // check in mempool already contains tx to be submited
+        // check in mempool already contains tx to be submitted
         vector<MempoolStatus::mempool_tx> found_mempool_txs;
 
         search_mempool(txd.hash, found_mempool_txs);
@@ -3526,7 +3526,7 @@ show_pushrawtx(string raw_tx_data, string action)
             break;
         }
 
-        // check if tx to be submited already exists in the blockchain
+        // check if tx to be submitted already exists in the blockchain
         if (core_storage->have_tx(txd.hash))
         {
             string error_msg = fmt::format("Tx already exist in the blockchain: {:s}\n",
@@ -3538,7 +3538,7 @@ show_pushrawtx(string raw_tx_data, string action)
             break;
         }
 
-        // check if any key images of the tx to be submited are already spend
+        // check if any key images of the tx to be submitted are already spend
         vector<key_image> key_images_spent;
 
         for (const txin_to_key& tx_in: txd.input_key_imgs)
@@ -3604,7 +3604,7 @@ show_pushrawtx(string raw_tx_data, string action)
 string
 show_rawkeyimgs()
 {
-    // initalize page template context map
+    // initialize page template context map
     mstch::map context {
             {"testnet"            , testnet},
             {"stagenet"           , stagenet},
@@ -3619,7 +3619,7 @@ show_rawkeyimgs()
 string
 show_rawoutputkeys()
 {
-    // initalize page template context map
+    // initialize page template context map
     mstch::map context {
             {"testnet"            , testnet},
             {"stagenet"           , stagenet}
@@ -3643,7 +3643,7 @@ show_checkrawkeyimgs(string raw_data, string viewkey_str)
     string decoded_raw_data = epee::string_encoding::base64_decode(raw_data);
     secret_key prv_view_key;
 
-    // initalize page template context map
+    // initialize page template context map
     mstch::map context{
             {"testnet"         , testnet},
             {"stagenet"        , stagenet},
@@ -3701,7 +3701,7 @@ show_checkrawkeyimgs(string raw_data, string viewkey_str)
     if (decoded_raw_data.empty())
     {
         string error_msg = fmt::format("Failed to authenticate key images data. "
-                                               "Maybe wrong viewkey was porvided?");
+                                               "Maybe wrong viewkey was provided?");
 
         context["has_error"] = true;
         context["error_msg"] = error_msg;
@@ -3710,12 +3710,12 @@ show_checkrawkeyimgs(string raw_data, string viewkey_str)
     }
 
     // header is public spend and keys
-    const size_t header_lenght = 2 * sizeof(crypto::public_key);
+    const size_t header_length = 2 * sizeof(crypto::public_key);
     const size_t key_img_size  = sizeof(crypto::key_image);
-    const size_t record_lenght = key_img_size + sizeof(crypto::signature);
+    const size_t record_length = key_img_size + sizeof(crypto::signature);
     const size_t chacha_length = sizeof(crypto::chacha_key);
 
-    if (decoded_raw_data.size() < header_lenght)
+    if (decoded_raw_data.size() < header_length)
     {
         string error_msg = fmt::format("Bad data size from submitted key images raw data.");
 
@@ -3743,7 +3743,7 @@ show_checkrawkeyimgs(string raw_data, string viewkey_str)
     context.insert({"key_imgs"       , mstch::array{}});
 
 
-    size_t no_key_images = (decoded_raw_data.size() - header_lenght) / record_lenght;
+    size_t no_key_images = (decoded_raw_data.size() - header_length) / record_length;
 
     //vector<pair<crypto::key_image, crypto::signature>> signed_key_images;
 
@@ -3751,7 +3751,7 @@ show_checkrawkeyimgs(string raw_data, string viewkey_str)
 
     for (size_t n = 0; n < no_key_images; ++n)
     {
-        const char* record_ptr = decoded_raw_data.data() + header_lenght + n * record_lenght;
+        const char* record_ptr = decoded_raw_data.data() + header_length + n * record_length;
 
         crypto::key_image key_image
                 = *reinterpret_cast<const crypto::key_image*>(record_ptr);
@@ -3789,7 +3789,7 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
     string decoded_raw_data = epee::string_encoding::base64_decode(raw_data);
     secret_key prv_view_key;
 
-    // initalize page template context map
+    // initialize page template context map
     mstch::map context{
             {"testnet"         , testnet},
             {"stagenet"        , stagenet},
@@ -3849,7 +3849,7 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
     if (decoded_raw_data.empty())
     {
         string error_msg = fmt::format("Failed to authenticate outputs data. "
-                                               "Maybe wrong viewkey was porvided?");
+                                               "Maybe wrong viewkey was provided?");
 
         context["has_error"] = true;
         context["error_msg"] = error_msg;
@@ -3859,7 +3859,7 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
 
 
     // header is public spend and keys
-    const size_t header_lenght    = 2 * sizeof(crypto::public_key);
+    const size_t header_length    = 2 * sizeof(crypto::public_key);
 
     // get xmr address stored in this key image file
     const account_public_address* xmr_address =
@@ -3882,7 +3882,7 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
 
     try
     {
-        std::string body(decoded_raw_data, header_lenght);
+        std::string body(decoded_raw_data, header_length);
         std::stringstream iss;
         iss << body;
         boost::archive::portable_binary_iarchive ar(iss);
@@ -3936,7 +3936,7 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
             public_key tx_pub_key = xmreg::get_tx_pub_key_from_received_outs(tx);
             std::vector<public_key> additional_tx_pub_keys = cryptonote::get_additional_tx_pub_keys_from_extra(tx);
 
-            // cointbase txs have amounts in plain sight.
+            // coinbase txs have amounts in plain sight.
             // so use amount from ringct, only for non-coinbase txs
             if (!is_coinbase(tx))
             {
@@ -4113,7 +4113,7 @@ search(string search_text)
 
         if (!get_account_address_from_str(address_info, nettype, search_text))
         {
-            cerr << "Cant parse string integerated address: " << search_text << endl;
+            cerr << "Cant parse string integrated address: " << search_text << endl;
             return string("Cant parse address (probably incorrect format): ")
                    + search_text;
         }
@@ -4124,7 +4124,7 @@ search(string search_text)
     }
 
     // all_possible_tx_hashes was field using custom lmdb database
-    // it was dropped, so all_possible_tx_hashes will be alwasy empty
+    // it was dropped, so all_possible_tx_hashes will be always empty
     // for now
     vector<pair<string, vector<string>>> all_possible_tx_hashes;
 
@@ -4189,7 +4189,7 @@ search_txs(vector<transaction> txs, const string& search_text)
 {
     map<string, vector<string>> tx_hashes;
 
-    // initlizte the map with empty results
+    // initialize the map with empty results
     tx_hashes["key_images"]                             = {};
     tx_hashes["tx_public_keys"]                         = {};
     tx_hashes["payments_id"]                            = {};
@@ -4263,7 +4263,7 @@ show_search_results(const string& search_text,
                     const vector<pair<string, vector<string>>>& all_possible_tx_hashes)
 {
 
-    // initalise page tempate map with basic info about blockchain
+    // initialise page template map with basic info about blockchain
     mstch::map context {
             {"testnet"         , testnet},
             {"stagenet"        , stagenet},
@@ -4335,7 +4335,7 @@ show_search_results(const string& search_text,
                     }
 
                     // tx in mempool have no blk_timestamp
-                    // but can use their recive time
+                    // but can use their receive time
                     blk_timestamp = found_txs.at(0).receive_time;
 
                 }
@@ -4489,12 +4489,12 @@ json_transaction(string tx_hash_str)
                 = cryptonote::relative_output_offsets_to_absolute(
                         in_key.key_offsets);
 
-        // get public keys of outputs used in the mixins that match to the offests
+        // get public keys of outputs used in the mixins that match to the offsets
         std::vector<output_data_t> outputs;
 
         try
         {
-            // before proceeding with geting the outputs based on the amount and absolute offset
+            // before proceeding with getting the outputs based on the amount and absolute offset
             // check how many outputs there are for that amount
             // go to next input if a too large offset was found
             if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
@@ -4511,7 +4511,7 @@ json_transaction(string tx_hash_str)
         catch (const OUTPUT_DNE &e)
         {
             j_response["status"]  = "error";
-            j_response["message"] = "Failed to retrive outputs (mixins) used in key images";
+            j_response["message"] = "Failed to retrieve outputs (mixins) used in key images";
             return j_response;
         }
 
@@ -4649,7 +4649,7 @@ json_transaction_private(string tx_hash_postfix)
             block blk;
             try
             {
-                // get block cointaining this tx
+                // get block containing this tx
                 block_height = core_storage->get_db().get_tx_block_height(tx_hash);
 
                 if (!mcore->get_block_by_height(block_height, blk))
@@ -4718,7 +4718,7 @@ json_transaction_private(string tx_hash_postfix)
             catch (const OUTPUT_DNE &e)
             {
                 j_response["status"]  = "error";
-                j_response["message"] = "Failed to retrive outputs (mixins) used in key images";
+                j_response["message"] = "Failed to retrieve outputs (mixins) used in key images";
                 return j_response;
             }
 
@@ -4835,7 +4835,7 @@ json_rawtransaction(string tx_hash_str)
     bool found_in_mempool {false};
 
     // for tx in blocks we get block timestamp
-    // for tx in mempool we get recievive time
+    // for tx in mempool we get receive time
     uint64_t tx_timestamp {0};
 
     if (!find_tx(tx_hash, tx, found_in_mempool, tx_timestamp))
@@ -4851,7 +4851,7 @@ json_rawtransaction(string tx_hash_str)
 
         try
         {
-            // get block cointaining this tx
+            // get block containing this tx
             uint64_t block_height = core_storage->get_db().get_tx_block_height(tx_hash);
 
             if (!mcore->get_block_by_height(block_height, blk))
@@ -4879,7 +4879,7 @@ json_rawtransaction(string tx_hash_str)
     catch (std::invalid_argument& e)
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Faild parsing raw tx data into json";
+        j_response["message"] = "Failed parsing raw tx data into json";
         return j_response;
     }
 
@@ -5022,7 +5022,7 @@ json_block(string block_no_or_hash)
     // miner reward tx
     transaction coinbase_tx = blk.miner_tx;
 
-    // transcation in the block
+    // transaction in the block
     vector<crypto::hash> tx_hashes = blk.tx_hashes;
 
     // sum of all transactions in the block
@@ -5290,7 +5290,7 @@ json_rawblock(string block_no_or_hash)
     catch (std::invalid_argument& e)
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Faild parsing raw blk data into json";
+        j_response["message"] = "Failed parsing raw blk data into json";
         return j_response;
     }
 
@@ -5507,7 +5507,7 @@ json_mempool(string _page, string _limit)
         // get basic tx info
         json j_tx = get_tx_json(mempool_tx->tx, txd);
 
-        // we add some extra data, for mempool txs, such as recieve timestamp
+        // we add some extra data, for mempool txs, such as receive timestamp
         j_tx["timestamp"]     = mempool_tx->receive_time;
         j_tx["timestamp_utc"] = mempool_tx->timestamp_str;
 
@@ -5685,7 +5685,7 @@ json_outputs(string tx_hash_str,
     bool found_in_mempool {false};
 
     // for tx in blocks we get block timestamp
-    // for tx in mempool we get recievive time
+    // for tx in mempool we get receive time
     uint64_t tx_timestamp {0};
 
     if (!find_tx(tx_hash, tx, found_in_mempool, tx_timestamp))
@@ -5726,10 +5726,9 @@ json_outputs(string tx_hash_str,
 
     uint64_t output_idx {0};
 
-    std::vector<uint64_t> money_transfered(tx.vout.size(), 0);
-
+    std::vector<uint64_t> money_transferred(tx.vout.size(), 0);
     j_data["outputs"] = json::array();
-    json& j_outptus   = j_data["outputs"];
+    json& j_outputs   = j_data["outputs"];
 
     for (output_tuple_with_tag& outp: txd.output_pub_keys)
     {
@@ -5762,13 +5761,13 @@ json_outputs(string tx_hash_str,
         // if mine output has RingCT, i.e., tx version is 2
         if (mine_output && tx.version == 2)
         {
-            // cointbase txs have amounts in plain sight.
+            // coinbase txs have amounts in plain sight.
             // so use amount from ringct, only for non-coinbase txs
             if (!is_coinbase(tx))
             {
 
                 // initialize with regular amount
-                uint64_t rct_amount = money_transfered[output_idx];
+                uint64_t rct_amount = money_transferred[output_idx];
 
                 bool r;
 
@@ -5787,13 +5786,13 @@ json_outputs(string tx_hash_str,
                 }
 
                 xmr_amount         = rct_amount;
-                money_transfered[output_idx] = rct_amount;
+                money_transferred[output_idx] = rct_amount;
 
             } // if (!is_coinbase(tx))
 
         }  // if (mine_output && tx.version == 2)
 
-        j_outptus.push_back(json {
+        j_outputs.push_back(json {
                 {"output_pubkey", pod_to_hex(std::get<0>(outp))},
                 {"amount"       , xmr_amount},
                 {"match"        , mine_output},
@@ -5813,7 +5812,7 @@ json_outputs(string tx_hash_str,
     }
 
     // return parsed values. can be use to double
-    // check if submited data in the request
+    // check if submitted data in the request
     // matches to what was used to produce response.
     j_data["tx_hash"]  = pod_to_hex(txd.hash);
     j_data["address"]  = pod_to_hex(address_info.address);
@@ -5859,7 +5858,7 @@ json_outputsblocks(string _limit,
         return j_response;
     }
 
-    // maxium five last blocks
+    // maximum five last blocks
     no_of_last_blocks = std::min<uint64_t>(no_of_last_blocks, 5ul);
 
     if (address_str.empty())
@@ -5901,8 +5900,7 @@ json_outputsblocks(string _limit,
     string error_msg;
 
     j_data["outputs"] = json::array();
-    json& j_outptus   = j_data["outputs"];
-
+    json& j_outputs   = j_data["outputs"];
 
     if (in_mempool_aswell)
     {
@@ -5928,7 +5926,7 @@ json_outputsblocks(string _limit,
                 address_info.address, prv_view_key,
                 0 /* block_no */, true /*is mempool*/,
                 tmp_vector.cbegin(), tmp_vector.cend(),
-                j_outptus /* found outputs are pushed to this*/,
+                j_outputs /* found outputs are pushed to this*/,
                 error_msg))
         {
             j_response["status"] = "error";
@@ -5939,7 +5937,7 @@ json_outputsblocks(string _limit,
     } // if (in_mempool_aswell)
 
 
-    // and now serach for outputs in last few blocks in the blockchain
+    // and now search for outputs in last few blocks in the blockchain
 
     uint64_t height = core_storage->get_current_blockchain_height();
 
@@ -5985,7 +5983,7 @@ json_outputsblocks(string _limit,
                 address_info.address, prv_view_key,
                 block_no, false /*is mempool*/,
                 blk_txs.cbegin(), blk_txs.cend(),
-                j_outptus /* found outputs are pushed to this*/,
+                j_outputs /* found outputs are pushed to this*/,
                 error_msg))
         {
             j_response["status"] = "error";
@@ -5998,7 +5996,7 @@ json_outputsblocks(string _limit,
     }  //  while (block_no >= start_height)
 
     // return parsed values. can be use to double
-    // check if submited data in the request
+    // check if submitted data in the request
     // matches to what was used to produce response.
     j_data["address"]  = pod_to_hex(address_info.address);
     j_data["viewkey"]  = pod_to_hex(prv_view_key);
@@ -6041,7 +6039,7 @@ json_networkinfo()
     if (!get_dynamic_per_kb_fee_estimate(per_kb_fee_estimated))
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Cant get per kb dynamic fee esimate";
+        j_response["message"] = "Cant get per kb dynamic fee estimate";
         return j_response;
     }
 
@@ -6052,7 +6050,7 @@ json_networkinfo()
 //    if (!get_base_fee_estimate(fee_estimated))
 //    {
 //        j_response["status"]  = "error";
-//        j_response["message"] = "Cant get dynamic fee esimate";
+//        j_response["message"] = "Cant get dynamic fee estimate";
 //        return j_response;
 //    }
 
@@ -6153,7 +6151,7 @@ get_payment_id_as_string(
 {
     string payment_id;
 
-    // decrypt encrypted payment id, as used in integreated addresses
+    // decrypt encrypted payment id, as used in integrated addresses
     crypto::hash8 decrypted_payment_id8 = txd.payment_id8;
 
     if (decrypted_payment_id8 != null_hash8)
@@ -6180,7 +6178,7 @@ find_our_outputs(
         bool const& is_mempool,
         Iterator const& txs_begin,
         Iterator const& txs_end,
-        json& j_outptus,
+        json& j_outputs,
         string& error_msg)
 {
 
@@ -6214,10 +6212,10 @@ find_our_outputs(
 
         uint64_t output_idx{0};
 
-        std::vector<uint64_t> money_transfered(tx.vout.size(), 0);
+        std::vector<uint64_t> money_transferred(tx.vout.size(), 0);
 
         //j_data["outputs"] = json::array();
-        //json& j_outptus   = j_data["outputs"];
+        //json& j_outputs   = j_data["outputs"];
 
         for (output_tuple_with_tag &outp: txd.output_pub_keys)
         {
@@ -6250,13 +6248,13 @@ find_our_outputs(
             // if mine output has RingCT, i.e., tx version is 2
             if (mine_output && tx.version == 2)
             {
-                // cointbase txs have amounts in plain sight.
+                // coinbase txs have amounts in plain sight.
                 // so use amount from ringct, only for non-coinbase txs
                 if (!is_coinbase(tx))
                 {
 
                     // initialize with regular amount
-                    uint64_t rct_amount = money_transfered[output_idx];
+                    uint64_t rct_amount = money_transferred[output_idx];
 
                     bool r {false};
 
@@ -6279,7 +6277,7 @@ find_our_outputs(
                     }
 
                     xmr_amount = rct_amount;
-                    money_transfered[output_idx] = rct_amount;
+                    money_transferred[output_idx] = rct_amount;
 
                 } // if (!is_coinbase(tx))
 
@@ -6289,7 +6287,7 @@ find_our_outputs(
             {
                 string payment_id_str = get_payment_id_as_string(txd, prv_view_key);
 
-                j_outptus.push_back(json {
+                j_outputs.push_back(json {
                         {"output_pubkey" , pod_to_hex(std::get<0>(outp))},
                         {"amount"        , xmr_amount},
                         {"block_no"      , block_no},
@@ -6387,7 +6385,7 @@ mark_real_mixins_on_timescales(
                 boost::get<mstch::map>(timescale_node)["timescale"]
         );
 
-        // claculated number of timescale points
+        // calculated number of timescale points
         // due to resolution, no of points might be lower than no of mixins
         size_t no_points = std::count(timescale.begin(), timescale.end(), '*');
 
@@ -6423,13 +6421,13 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
     if (core_storage->have_tx(tx_hash))
     {
-        // currently get_tx_block_height seems to return a block hight
+        // currently get_tx_block_height seems to return a block height
         // +1. Before it was not like this.
         tx_blk_height = core_storage->get_db().get_tx_block_height(tx_hash);
         tx_blk_found = true;
     }
 
-    // get block cointaining this tx
+    // get block containing this tx
     block blk;
 
     if (tx_blk_found && !mcore->get_block_by_height(tx_blk_height, blk))
@@ -6465,7 +6463,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
     double payed_for_kB = XMR_AMOUNT(txd.fee) / tx_size;
 
-    // initalise page tempate map with basic info about blockchain
+    // initialise page template map with basic info about blockchain
     mstch::map context {
             {"testnet"               , testnet},
             {"stagenet"              , stagenet},
@@ -6526,10 +6524,10 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
     uint64_t inputs_xmr_sum {0};
 
     // ringct inputs can be mixture of known amounts (when old outputs)
-    // are spent, and unknown umounts (makrked in explorer by '?') when
+    // are spent, and unknown umounts (marked in explorer by '?') when
     // ringct outputs are spent. thus we totalling input amounts
     // in such case, we need to show sum of known umounts, and
-    // indicate that this is minium sum, as we dont know the unknown
+    // indicate that this is minimum sum, as we dont know the unknown
     // umounts.
     bool have_any_unknown_amount {false};
 
@@ -6560,12 +6558,12 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
                 = cryptonote::relative_output_offsets_to_absolute(
                         in_key.key_offsets);
 
-        // get public keys of outputs used in the mixins that match to the offests
+        // get public keys of outputs used in the mixins that match to the offsets
         std::vector<cryptonote::output_data_t> outputs;
 
         try
         {
-            // before proceeding with geting the outputs based on the amount and absolute offset
+            // before proceeding with getting the outputs based on the amount and absolute offset
             // check how many outputs there are for that amount
             // go to next input if a too large offset was found
             if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
@@ -6622,7 +6620,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
         if (in_key.amount == 0)
         {
             // if any input has amount equal to zero,
-            // it is really an unkown amount
+            // it is really an unknown amount
             have_any_unknown_amount = true;
         }
 
@@ -6714,7 +6712,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
                         {"mix_is_it_real", false}, // a placeholder for future
                 });
 
-                // get mixin timestamp from its orginal block
+                // get mixin timestamp from its original block
                 mixin_timestamps.push_back(blk.timestamp);
             }
             else //  if (detailed_view)
@@ -6815,7 +6813,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
     for (output_tuple_with_tag& outp: txd.output_pub_keys)
     {
 
-        // total number of ouputs in the blockchain for this amount
+        // total number of outputs in the blockchain for this amount
         uint64_t num_outputs_amount = core_storage->get_db()
                 .get_num_outputs(std::get<1>(outp));
 
@@ -6847,7 +6845,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
                 {"amount_idx"            , out_amount_index_str},
                 {"num_outputs"           , num_outputs_amount},
                 {"output_tag"            , view_tag_str},
-                {"unformated_output_idx" , output_idx},
+                {"unformatted_output_idx" , output_idx},
                 {"output_idx"            , fmt::format("{:02d}", output_idx++)}
         });
 
@@ -6938,13 +6936,13 @@ get_tx_details(const transaction& tx,
 
     // get tx public key from extra
     // this check if there are two public keys
-    // due to previous bug with sining txs:
+    // due to previous bug with signing txs:
     // https://github.com/monero-project/monero/pull/1358/commits/7abfc5474c0f86e16c405f154570310468b635c2
     txd.pk = xmreg::get_tx_pub_key_from_received_outs(tx);
     txd.additional_pks = cryptonote::get_additional_tx_pub_keys_from_extra(tx);
 
 
-    // sum xmr in inputs and ouputs in the given tx
+    // sum xmr in inputs and outputs in the given tx
     const array<uint64_t, 4>& sum_data = summary_of_in_out_rct(
             tx, txd.output_pub_keys, txd.input_key_imgs);
 
@@ -6999,7 +6997,7 @@ get_tx_details(const transaction& tx,
     }
     else
     {
-        // if we know blk_height, and current blockchan height
+        // if we know blk_height, and current blockchain height
         // just use it to get no_confirmations.
 
         txd.no_confirmations = bc_height - (blk_height);
@@ -7212,7 +7210,7 @@ are_absolute_offsets_good(
         std::vector<uint64_t> const& absolute_offsets,
         txin_to_key const& in_key)
 {
-    // before proceeding with geting the outputs based on the amount and absolute offset
+    // before proceeding with getting the outputs based on the amount and absolute offset
     // check how many outputs there are for that amount
     uint64_t no_outputs = core_storage->get_db().get_num_outputs(in_key.amount);
 
@@ -7244,7 +7242,7 @@ string
 get_footer()
 {
     // set last git commit date based on
-    // autogenrated version.h during compilation
+    // autogenerated version.h during compilation
     static const mstch::map footer_context {
             {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
             {"last_git_commit_date", string {GIT_COMMIT_DATETIME}},
