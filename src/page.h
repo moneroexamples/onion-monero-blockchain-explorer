@@ -4615,7 +4615,7 @@ json_transaction_private(string tx_hash_postfix)
     const std::string TX_HASH_TEMPLATE = std::string(TX_HASH_LENGTH - POSTFIX_LENGTH, '0').append(tx_hash_postfix);
 
     // parse tx hash string to hash object
-    crypto::hash tx_hash;
+    crypto::hash tx_hash{};
     if (!xmreg::parse_str_secret_key(TX_HASH_TEMPLATE, tx_hash))
     {
         j_data["title"] = fmt::format("Can't parse tx hash: {:s}", TX_HASH_TEMPLATE);
@@ -4624,17 +4624,28 @@ json_transaction_private(string tx_hash_postfix)
 
     json j_txs;
 
+    std::vector<transaction> found_txs_vec;
+    std::vector<crypto::hash> missed_vec;
     // Retrieve all transactions which end with the specified postfix
     vector<crypto::hash> k_anonymous_tx_set = core_storage->get_db().get_txids_loose(tx_hash, POSTFIX_LENGTH);
-    for (auto each_tx_hash : k_anonymous_tx_set){
+    std::cout << k_anonymous_tx_set.size() << std::endl;
+    // Convert every crypto::hash into a crypto
+    bool r = core_storage->get_transactions(k_anonymous_tx_set, found_txs_vec, missed_vec);
+    std::cout << found_txs_vec.size() << std::endl;
+    std::cout << missed_vec.size() << std::endl;
+    // If get_transactions fails it will return false
+    if (!r || !missed_vec.empty()){
+        j_data["title"] = "Error: Issue retrieving transactions";
+        return j_response;
+    }
+    for (const auto& each_tx : found_txs_vec){
         // Get the hex representation of the crypto::hash
         std::stringstream ss;
-        for (const auto& byte : each_tx_hash.data){
+        for (const auto& byte : each_tx.hash.data){
+            // Convert the byte to hex
             ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(static_cast<unsigned char>(byte));
         }
         string HEX_TX_STRING = ss.str();
-        // get transaction
-        transaction each_tx;
 
         // flag to indicate if tx is in mempool
         bool found_in_mempool {false};
@@ -4642,12 +4653,6 @@ json_transaction_private(string tx_hash_postfix)
         // for tx in blocks we get block timestamp
         // for tx in mempool we get receive time
         uint64_t tx_timestamp {0};
-
-        if (!find_tx(each_tx_hash, each_tx, found_in_mempool, tx_timestamp))
-        {
-            j_data["title"] = fmt::format("Cant find tx hash: {:s}", HEX_TX_STRING);
-            return j_response;
-        }
 
         uint64_t block_height {0};
         uint64_t is_coinbase_tx = is_coinbase(each_tx);
@@ -4659,7 +4664,7 @@ json_transaction_private(string tx_hash_postfix)
             try
             {
                 // get block containing this tx
-                block_height = core_storage->get_db().get_tx_block_height(each_tx_hash);
+                block_height = core_storage->get_db().get_tx_block_height(each_tx.hash);
 
                 if (!mcore->get_block_by_height(block_height, blk))
                 {
