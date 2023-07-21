@@ -673,9 +673,9 @@ main(int ac, const char* av[])
         });
 
         CROW_ROUTE(app, "/api/transaction/private/<string>")
-        ([&](string tx_hash_prefix) {
+        ([&](string tx_hash_postfix) {
 
-            myxmr::jsonresponse r{xmrblocks.json_transaction_private(remove_bad_chars(tx_hash_prefix))};
+            myxmr::jsonresponse r{xmrblocks.json_transaction_private(remove_bad_chars(tx_hash_postfix))};
 
             return r;
         });

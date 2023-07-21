@@ -4422,7 +4422,7 @@ json_transaction(string tx_hash_str)
     bool found_in_mempool {false};
 
     // for tx in blocks we get block timestamp
-    // for tx in mempool we get recievive time
+    // for tx in mempool we get receive time
     uint64_t tx_timestamp {0};
 
     if (!find_tx(tx_hash, tx, found_in_mempool, tx_timestamp))
@@ -4442,7 +4442,7 @@ json_transaction(string tx_hash_str)
 
         try
         {
-            // get block cointaining this tx
+            // get block containing this tx
             block_height = core_storage->get_db().get_tx_block_height(tx_hash);
 
             if (!mcore->get_block_by_height(block_height, blk))
@@ -4591,10 +4591,11 @@ json_transaction(string tx_hash_str)
  * https://labs.omniti.com/labs/jsend
  */
 json
-json_transaction_private(string tx_hash_prefix_str)
+json_transaction_private(string tx_hash_postfix)
 {
-    const int HASH_PREFIX_LENGTH = 5;
+    const int HASH_POSTFIX_LENGTH = 5;
     const int TX_HASH_LENGTH = 64;
+
     json j_response {
             {"status", "fail"},
             {"data"  , json {}}
@@ -4602,39 +4603,40 @@ json_transaction_private(string tx_hash_prefix_str)
 
     json& j_data = j_response["data"];
 
-    // Make sure that the prefix passed is exactly HASH_PREFIX_LENGTH long
-    if (tx_hash_prefix_str.size() != HASH_PREFIX_LENGTH){
-        j_data["title"] = fmt::format("Cant parse tx hash prefix: {:s}", tx_hash_prefix_str);
+    // Make sure that the postfix passed is exactly HASH_POSTFIX_LENGTH long
+    if (tx_hash_postfix.size() != HASH_POSTFIX_LENGTH){
+        j_data["title"] = fmt::format("Tx hash postfix not {} characters in length: {:s}",HASH_POSTFIX_LENGTH, tx_hash_postfix);
         return j_response;
     }
-
-    // Pad the rest of the tx hash with 0's (e.x. abcd123 -> acd123000000000000000...0000)
-    string tx_hash_str = tx_hash_prefix_str.append(TX_HASH_LENGTH - HASH_PREFIX_LENGTH, '0');
+    // Create the hash template (e.x. abcd123 -> 0000000000000000000000000000acd123)
+    const std::string TX_HASH_TEMPLATE = std::string(TX_HASH_LENGTH - HASH_POSTFIX_LENGTH, '0').append(tx_hash_postfix);
 
     // parse tx hash string to hash object
     crypto::hash tx_hash;
 
-    if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+    if (!xmreg::parse_str_secret_key(TX_HASH_TEMPLATE, tx_hash))
     {
-        j_data["title"] = fmt::format("Cant parse tx hash: {:s}", tx_hash_str);
+        j_data["title"] = fmt::format("Cant parse tx hash: {:s}", TX_HASH_TEMPLATE);
         return j_response;
     }
 
     json j_txs;
 
-    vector<transaction> possible_txs = core_storage->get_db().get_tx_from_range(tx_hash);
-    for (auto tx : possible_txs){
+    vector<crypto::hash> possible_txs = core_storage->get_db().get_txids_loose(tx_hash, HASH_POSTFIX_LENGTH);
+    for (auto tx_hash : possible_txs){
         // get transaction
+        transaction tx;
+
         // flag to indicate if tx is in mempool
         bool found_in_mempool {false};
 
         // for tx in blocks we get block timestamp
-        // for tx in mempool we get recievive time
+        // for tx in mempool we get receive time
         uint64_t tx_timestamp {0};
 
         if (!find_tx(tx_hash, tx, found_in_mempool, tx_timestamp))
         {
-            j_data["title"] = fmt::format("Cant find tx hash: {:s}", tx_hash_str);
+            j_data["title"] = fmt::format("Cant find tx hash: {:s}", TX_HASH_TEMPLATE);
             return j_response;
         }
 
@@ -4644,9 +4646,7 @@ json_transaction_private(string tx_hash_prefix_str)
 
         if (!found_in_mempool)
         {
-
             block blk;
-
             try
             {
                 // get block cointaining this tx
@@ -4664,7 +4664,7 @@ json_transaction_private(string tx_hash_prefix_str)
             {
                 j_response["status"]  = "error";
                 j_response["message"] = fmt::format("Tx does not exist in blockchain, "
-                                                    "but was there before: {:s}", tx_hash_str);
+                                                    "but was there before: {:s}", TX_HASH_TEMPLATE);
                 return j_response;
             }
         }
@@ -4803,7 +4803,6 @@ json_transaction_private(string tx_hash_prefix_str)
     j_response["status"] = "success";
     return j_response;
 }
-
 
 
 /*

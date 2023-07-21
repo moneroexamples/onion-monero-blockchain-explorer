@@ -22,7 +22,7 @@ parse_str_secret_key(const string& key_str, T& secret_key)
 
     // hash and keys have same structure, so to parse string of
     // a key, e.g., a view key, we can first parse it into the hash
-    // object using parse_hash256 function, and then copy the reslting
+    // object using parse_hash256 function, and then copy the resulting
     // hash data into secret key.
     crypto::hash hash_;
 
@@ -32,7 +32,7 @@ parse_str_secret_key(const string& key_str, T& secret_key)
         return false;
     }
 
-    // crypto::hash and crypto::secret_key have basicly same
+    // crypto::hash and crypto::secret_key have basically the same
     // structure. They both keep they key/hash as c-style char array
     // of fixed size. Thus we can just copy data from hash
     // to key
