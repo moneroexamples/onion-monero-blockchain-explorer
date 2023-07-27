@@ -4657,7 +4657,7 @@ json_transaction_private(string tx_hash_postfix)
         });
     }
 
-    // get the current blockchain height. Just to check
+    // get the current blockchain height. Just to check 
     uint64_t bc_height = core_storage->get_current_blockchain_height();
     for (auto each_tx : found_txs_vec){
         // Get the hex representation of the crypto::hash
