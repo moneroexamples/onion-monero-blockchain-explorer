@@ -4594,11 +4594,11 @@ json_transaction(string tx_hash_str)
 json
 json_transaction_private(string tx_hash_postfix)
 {
-    const int MIN_HASH_POSTFIX_LENGTH = 3;
+    const int MIN_HASH_POSTFIX_LENGTH = 1;
     const int MAX_HASH_POSTFIX_LENGTH = 12;
-    const int POSTFIX_LENGTH = tx_hash_postfix.size();
     const int TX_HASH_LENGTH = 64;
-
+    int POSTFIX_LENGTH = tx_hash_postfix.size();
+    std::string CHECKED_TX_HASH_POSTFIX;
     json j_response {
             {"status", "fail"},
             {"data"  , json {}}
@@ -4611,11 +4611,17 @@ json_transaction_private(string tx_hash_postfix)
         j_data["title"] = fmt::format("Tx hash postfix not between {} and {} characters in length: {:s}",MIN_HASH_POSTFIX_LENGTH, MAX_HASH_POSTFIX_LENGTH, tx_hash_postfix);
         return j_response;
     }
+    // Check if an even postfix character length is given (important for hex)
+    if (POSTFIX_LENGTH % 2 != 0){
+        CHECKED_TX_HASH_POSTFIX = tx_hash_postfix.substr(1); // Remove the first character to make it even
+        POSTFIX_LENGTH = POSTFIX_LENGTH - 1;
+    }else{
+        CHECKED_TX_HASH_POSTFIX = tx_hash_postfix;
+    }
     // Create the hash template (e.x. abcd123 -> 0000000000000000000000000000acd123)
-    const std::string TX_HASH_TEMPLATE = std::string(TX_HASH_LENGTH - POSTFIX_LENGTH, '0').append(tx_hash_postfix);
-
+    const std::string TX_HASH_TEMPLATE = std::string(TX_HASH_LENGTH - POSTFIX_LENGTH, '0').append(CHECKED_TX_HASH_POSTFIX);
     // parse tx hash string to hash object
-    crypto::hash tx_hash{};
+    crypto::hash tx_hash;
     if (!xmreg::parse_str_secret_key(TX_HASH_TEMPLATE, tx_hash))
     {
         j_data["title"] = fmt::format("Can't parse tx hash: {:s}", TX_HASH_TEMPLATE);
@@ -4626,26 +4632,31 @@ json_transaction_private(string tx_hash_postfix)
 
     std::vector<transaction> found_txs_vec;
     std::vector<crypto::hash> missed_vec;
-    // Retrieve all transactions which end with the specified postfix
-    vector<crypto::hash> k_anonymous_tx_set = core_storage->get_db().get_txids_loose(tx_hash, POSTFIX_LENGTH);
-    std::cout << k_anonymous_tx_set.size() << std::endl;
-    // Convert every crypto::hash into a crypto
+    // Retrieve all transactions which end with the specified postfix (Multiply postfix length * 4 to get the hex number of bits)
+    vector<crypto::hash> k_anonymous_tx_set = core_storage->get_db().get_txids_loose(tx_hash, POSTFIX_LENGTH*4);
+    // Get the transaction information of the hashes
     bool r = core_storage->get_transactions(k_anonymous_tx_set, found_txs_vec, missed_vec);
-    std::cout << found_txs_vec.size() << std::endl;
-    std::cout << missed_vec.size() << std::endl;
-    // If get_transactions fails it will return false
-    if (!r || !missed_vec.empty()){
-        j_data["title"] = "Error: Issue retrieving transactions";
+    std::cout << missed_vec.size() <<std::endl;
+
+    //TODO add missed transactions to the returned data
+    // If get_transactions request fails
+    if (!r){
+        j_data["title"] = "Error: Issue retrieving transactions, which may indicate that your copy of the blockchain is partially corrupt!";
         return j_response;
     }
-    for (const auto& each_tx : found_txs_vec){
+    for (auto each_tx : found_txs_vec){
         // Get the hex representation of the crypto::hash
         std::stringstream ss;
-        for (const auto& byte : each_tx.hash.data){
+        for (auto byte : get_transaction_hash(each_tx).data){
             // Convert the byte to hex
             ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(static_cast<unsigned char>(byte));
         }
         string HEX_TX_STRING = ss.str();
+        // If there is an odd number of characters given, extra txs will be returned (ex 0x00beef -> filtered to only 0xabeef)
+        std::string MATCH_POSTFIX =  HEX_TX_STRING.substr(HEX_TX_STRING.length() - tx_hash_postfix.length());
+        if (MATCH_POSTFIX != tx_hash_postfix){
+            continue;  // Do not return the extra transactions which don't match the full postfix
+        }
 
         // flag to indicate if tx is in mempool
         bool found_in_mempool {false};
@@ -4812,7 +4823,7 @@ json_transaction_private(string tx_hash_postfix)
 
 
 /*
- * Lets use this json api convention for success and error
+ * Let's use this json api convention for success and error
  * https://labs.omniti.com/labs/jsend
  */
 json
