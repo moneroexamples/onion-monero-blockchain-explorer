@@ -4588,7 +4588,7 @@ json_transaction(string tx_hash_str)
 
 
 /*
- * Lets use this json api convention for success and error
+ * Let's use this json api convention for success and error
  * https://labs.omniti.com/labs/jsend
  */
 json
@@ -4598,7 +4598,6 @@ json_transaction_private(string tx_hash_postfix)
     const int MAX_HASH_POSTFIX_LENGTH = 12;
     const int TX_HASH_LENGTH = 64;
     int POSTFIX_LENGTH = tx_hash_postfix.size();
-    std::string CHECKED_TX_HASH_POSTFIX;
     json j_response {
             {"status", "fail"},
             {"data"  , json {}}
@@ -4611,11 +4610,12 @@ json_transaction_private(string tx_hash_postfix)
         j_data["title"] = fmt::format("Tx hash postfix not between {} and {} characters in length: {:s}",MIN_HASH_POSTFIX_LENGTH, MAX_HASH_POSTFIX_LENGTH, tx_hash_postfix);
         return j_response;
     }
-    // Check if an even postfix character length is given (important for hex)
-    if (POSTFIX_LENGTH % 2 != 0){
+    std::string CHECKED_TX_HASH_POSTFIX;
+    // Check if an odd postfix character length is given (important for hex)
+    if (POSTFIX_LENGTH % 2 != 0){  // odd
         CHECKED_TX_HASH_POSTFIX = tx_hash_postfix.substr(1); // Remove the first character to make it even
         POSTFIX_LENGTH = POSTFIX_LENGTH - 1;
-    }else{
+    }else{  // even
         CHECKED_TX_HASH_POSTFIX = tx_hash_postfix;
     }
     // Create the hash template (e.x. abcd123 -> 0000000000000000000000000000acd123)
@@ -4630,24 +4630,39 @@ json_transaction_private(string tx_hash_postfix)
 
     json j_txs;
 
-    std::vector<transaction> found_txs_vec;
-    std::vector<crypto::hash> missed_vec;
     // Retrieve all transactions which end with the specified postfix (Multiply postfix length * 4 to get the hex number of bits)
     vector<crypto::hash> k_anonymous_tx_set = core_storage->get_db().get_txids_loose(tx_hash, POSTFIX_LENGTH*4);
+    std::vector<transaction> found_txs_vec;
+    std::vector<crypto::hash> missed_vec;
     // Get the transaction information of the hashes
     bool r = core_storage->get_transactions(k_anonymous_tx_set, found_txs_vec, missed_vec);
-    std::cout << missed_vec.size() <<std::endl;
 
-    //TODO add missed transactions to the returned data
     // If get_transactions request fails
     if (!r){
-        j_data["title"] = "Error: Issue retrieving transactions, which may indicate that your copy of the blockchain is partially corrupt!";
+        j_data["title"] = "Error: Issue retrieving transactions!";
         return j_response;
     }
+
+    json j_missed_txs;
+    for (auto missed_tx: missed_vec){
+        // Get the hex representation of the crypto::hash
+        std::stringstream ss;
+        for (auto byte : missed_tx.data){
+            // Convert the byte to hex
+            ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(static_cast<unsigned char>(byte));
+        }
+        string HEX_MISSED_TX_STRING = ss.str();
+        j_missed_txs.push_back(json {
+                {"tx_hash", HEX_MISSED_TX_STRING}
+        });
+    }
+
+    // get the current blockchain height. Just to check
+    uint64_t bc_height = core_storage->get_current_blockchain_height();
     for (auto each_tx : found_txs_vec){
         // Get the hex representation of the crypto::hash
         std::stringstream ss;
-        for (auto byte : get_transaction_hash(each_tx).data){
+        for (auto byte : each_tx.hash.data){
             // Convert the byte to hex
             ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(static_cast<unsigned char>(byte));
         }
@@ -4695,9 +4710,6 @@ json_transaction_private(string tx_hash_postfix)
         }
 
         string blk_timestamp_utc = xmreg::timestamp_to_str_gm(tx_timestamp);
-
-        // get the current blockchain height. Just to check
-        uint64_t bc_height = core_storage->get_current_blockchain_height();
 
         tx_details txd = get_tx_details(each_tx, is_coinbase_tx, block_height, bc_height);
 
@@ -4817,6 +4829,7 @@ json_transaction_private(string tx_hash_postfix)
     }
 
     j_data = j_txs;
+    j_data["missed_transactions"] = j_missed_txs;
     j_response["status"] = "success";
     return j_response;
 }
