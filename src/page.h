@@ -4629,14 +4629,45 @@ json_transaction_private(string tx_hash_postfix)
     }
 
     json j_txs;
-
+    auto start = std::chrono::high_resolution_clock::now(); //DEBUG
     // Retrieve all transactions which end with the specified postfix (Multiply postfix length * 4 to get the hex number of bits)
     vector<crypto::hash> k_anonymous_tx_set = core_storage->get_db().get_txids_loose(tx_hash, POSTFIX_LENGTH*4);
+    auto end = std::chrono::high_resolution_clock::now(); //DEBUG
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count(); //DEBUG
+    std::cout << "Elapsed time get_txids_loose: " << duration << " seconds" << std::endl; //DEBUG
+    std::cout << k_anonymous_tx_set.size() << std::endl; //DEBUG
+    vector<crypto::hash> filtered_k_anonymous_tx_set;
+    auto start7 = std::chrono::high_resolution_clock::now(); //DEBUG
+    for (auto possible_tx: k_anonymous_tx_set){
+        // Get the hex representation of the crypto::hash
+        std::stringstream ss;
+        for (auto byte : possible_tx.data){
+            // Convert the byte to hex
+            ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(static_cast<unsigned char>(byte));
+        }
+        string HEX_TX_STRING = ss.str();
+        // If there is an odd number of characters given, extra txs will be returned (ex 0x00beef -> filtered to only 0xabeef)
+        std::string MATCH_POSTFIX =  HEX_TX_STRING.substr(HEX_TX_STRING.size() - tx_hash_postfix.size());
+        if (MATCH_POSTFIX != tx_hash_postfix){
+            continue;  // Do not return the extra transactions which don't match the full postfix
+        }else{
+            filtered_k_anonymous_tx_set.push_back(possible_tx);
+        }
+    }
+    std::cout << filtered_k_anonymous_tx_set.size() << std::endl; //DEBUG
+    auto end7 = std::chrono::high_resolution_clock::now(); //DEBUG
+    auto duration7 = std::chrono::duration_cast<std::chrono::seconds>(end7 - start7).count(); //DEBUG
+    std::cout << "Elapsed time filter txs: " << duration7 << " seconds" << std::endl; //DEBUG
     std::vector<transaction> found_txs_vec;
     std::vector<crypto::hash> missed_vec;
+    auto start2 = std::chrono::high_resolution_clock::now(); //DEBUG
     // Get the transaction information of the hashes
-    bool r = core_storage->get_transactions(k_anonymous_tx_set, found_txs_vec, missed_vec);
-
+    bool r = core_storage->get_transactions(filtered_k_anonymous_tx_set, found_txs_vec, missed_vec);
+    auto end2 = std::chrono::high_resolution_clock::now(); //DEBUG
+    auto duration2 = std::chrono::duration_cast<std::chrono::seconds>(end2 - start2).count(); //DEBUG
+    std::cout << "Elapsed time get_transactions: " << duration2 << " seconds" << std::endl; //DEBUG
+    std::cout << found_txs_vec.size() << std::endl; //DEBUG
+    std::cout << missed_vec.size() << std::endl; //DEBUG
     // If get_transactions request fails
     if (!r){
         j_data["title"] = "Error: Issue retrieving transactions!";
@@ -4644,6 +4675,7 @@ json_transaction_private(string tx_hash_postfix)
     }
 
     json j_missed_txs;
+    auto start3 = std::chrono::high_resolution_clock::now(); //DEBUG
     for (auto missed_tx: missed_vec){
         // Get the hex representation of the crypto::hash
         std::stringstream ss;
@@ -4656,22 +4688,20 @@ json_transaction_private(string tx_hash_postfix)
                 {"tx_hash", HEX_MISSED_TX_STRING}
         });
     }
-
-    // get the current blockchain height. Just to check  
+    auto end3 = std::chrono::high_resolution_clock::now(); //DEBUG
+    auto duration3 = std::chrono::duration_cast<std::chrono::seconds>(end3 - start3).count(); //DEBUG
+    std::cout << "Elapsed time missed_vec: " << duration3 << " seconds" << std::endl; //DEBUG
+    // get the current blockchain height. Just to check
     uint64_t bc_height = core_storage->get_current_blockchain_height();
+    auto start4 = std::chrono::high_resolution_clock::now(); //DEBUG
     for (auto each_tx : found_txs_vec){
         // Get the hex representation of the crypto::hash
         std::stringstream ss;
-        for (auto byte : each_tx.hash.data){
+        for (auto byte : get_transaction_hash(each_tx).data){
             // Convert the byte to hex
             ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(static_cast<unsigned char>(byte));
         }
         string HEX_TX_STRING = ss.str();
-        // If there is an odd number of characters given, extra txs will be returned (ex 0x00beef -> filtered to only 0xabeef)
-        std::string MATCH_POSTFIX =  HEX_TX_STRING.substr(HEX_TX_STRING.length() - tx_hash_postfix.length());
-        if (MATCH_POSTFIX != tx_hash_postfix){
-            continue;  // Do not return the extra transactions which don't match the full postfix
-        }
 
         // flag to indicate if tx is in mempool
         bool found_in_mempool {false};
@@ -4827,9 +4857,12 @@ json_transaction_private(string tx_hash_postfix)
 
         j_txs.push_back(j_data);
     }
+    auto end4 = std::chrono::high_resolution_clock::now(); //DEBUG
+    auto duration4 = std::chrono::duration_cast<std::chrono::seconds>(end4 - start4).count(); //DEBUG
+    std::cout << "Elapsed time found_txs_vec: " << duration4 << " seconds" << std::endl; //DEBUG
 
     j_data = j_txs;
-    j_data["missed_transactions"] = j_missed_txs;
+    j_response["missed_transactions"] = j_missed_txs;
     j_response["status"] = "success";
     return j_response;
 }
