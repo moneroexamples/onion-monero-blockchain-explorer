@@ -4592,9 +4592,9 @@ json_transaction(string tx_hash_str)
  * https://labs.omniti.com/labs/jsend
  */
 json
-json_transaction_private(string tx_hash_postfix)
+json_transactions_private(string tx_hash_postfix)
 {
-    const int MIN_HASH_POSTFIX_LENGTH = 1;
+    const int MIN_HASH_POSTFIX_LENGTH = 2;
     const int MAX_HASH_POSTFIX_LENGTH = 12;
     const int TX_HASH_LENGTH = 64;
     int POSTFIX_LENGTH = tx_hash_postfix.size();
@@ -4628,15 +4628,10 @@ json_transaction_private(string tx_hash_postfix)
         return j_response;
     }
 
-    auto start = std::chrono::high_resolution_clock::now(); //DEBUG
     // Retrieve all transactions which end with the specified postfix (Multiply postfix length * 4 to get the hex number of bits)
     vector<crypto::hash> k_anonymous_tx_set = core_storage->get_db().get_txids_loose(tx_hash, POSTFIX_LENGTH*4);
-    auto end = std::chrono::high_resolution_clock::now(); //DEBUG
-    auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count(); //DEBUG
-    std::cout << "Elapsed time get_txids_loose: " << duration << " seconds" << std::endl; //DEBUG
-    std::cout << k_anonymous_tx_set.size() << std::endl; //DEBUG
     vector<crypto::hash> filtered_k_anonymous_tx_set;
-    auto start7 = std::chrono::high_resolution_clock::now(); //DEBUG
+    // If an odd number of characters is given get_txids_loose() will return more transactions than needed.
     for (auto possible_tx: k_anonymous_tx_set){
         // Get the hex representation of the crypto::hash
         std::stringstream ss;
@@ -4653,20 +4648,11 @@ json_transaction_private(string tx_hash_postfix)
             filtered_k_anonymous_tx_set.push_back(possible_tx);
         }
     }
-    std::cout << filtered_k_anonymous_tx_set.size() << std::endl; //DEBUG
-    auto end7 = std::chrono::high_resolution_clock::now(); //DEBUG
-    auto duration7 = std::chrono::duration_cast<std::chrono::seconds>(end7 - start7).count(); //DEBUG
-    std::cout << "Elapsed time filter txs: " << duration7 << " seconds" << std::endl; //DEBUG
     std::vector<transaction> found_txs_vec;
     std::vector<crypto::hash> missed_vec;
-    auto start2 = std::chrono::high_resolution_clock::now(); //DEBUG
     // Get the transaction information of the hashes
     bool r = core_storage->get_transactions(filtered_k_anonymous_tx_set, found_txs_vec, missed_vec);
-    auto end2 = std::chrono::high_resolution_clock::now(); //DEBUG
-    auto duration2 = std::chrono::duration_cast<std::chrono::seconds>(end2 - start2).count(); //DEBUG
-    std::cout << "Elapsed time get_transactions: " << duration2 << " seconds" << std::endl; //DEBUG
-    std::cout << found_txs_vec.size() << std::endl; //DEBUG
-    std::cout << missed_vec.size() << std::endl; //DEBUG
+
     // If get_transactions request fails
     if (!r){
         j_data["title"] = "Error: Issue retrieving transactions!";
@@ -4674,7 +4660,7 @@ json_transaction_private(string tx_hash_postfix)
     }
 
     json j_missed_txs;
-    auto start3 = std::chrono::high_resolution_clock::now(); //DEBUG
+    // Add the hashes of any missed transactions to the returned JSON
     for (auto missed_tx: missed_vec){
         // Get the hex representation of the crypto::hash
         std::stringstream ss;
@@ -4687,32 +4673,29 @@ json_transaction_private(string tx_hash_postfix)
                 {"tx_hash", HEX_MISSED_TX_STRING}
         });
     }
-    auto end3 = std::chrono::high_resolution_clock::now(); //DEBUG
-    auto duration3 = std::chrono::duration_cast<std::chrono::seconds>(end3 - start3).count(); //DEBUG
-    std::cout << "Elapsed time missed_vec: " << duration3 << " seconds" << std::endl; //DEBUG
+
     if (found_txs_vec.empty()){
         j_data["title"] = "No transactions found with the given postfix.";
         return j_response;
     }
+
     // get the current blockchain height. Just to check
     uint64_t bc_height = core_storage->get_current_blockchain_height();
-    auto start4 = std::chrono::high_resolution_clock::now(); //DEBUG
-
-    // Define the number of threads to use (you can adjust this as needed).
-    int numThreads = 8;
+    int numThreads;
+    // Define the number of threads to use.
+    if (found_txs_vec.size() >= 1000){
+        numThreads = 15;
+    }else{
+        numThreads = 1;
+    }
 
     // Determine the chunk size for each thread.
     int chunkSize = found_txs_vec.size() / numThreads;
-
-    // Create a mutex to protect access to shared data.
-    std::mutex mtx;
-
     // Create a vector to hold the thread objects.
     std::vector<std::thread> threads;
-
     // A vector of vectors to hold individual transaction details for each thread.
     std::vector<std::vector<json>> thread_txs_vec(numThreads);
-    std::cout << "START" << std::endl;
+
     // Create threads and assign them specific ranges of the for loop.
     for (int i = 0; i < numThreads; ++i) {
         int start = i * chunkSize;
@@ -4721,7 +4704,7 @@ json_transaction_private(string tx_hash_postfix)
             // Local vector to store individual transaction details for each thread.
             std::vector<json> thread_txs;
             for (int j = start; j < end; ++j) {
-                json j_data;
+                json j_data_temp;
                 // Perform the processing for each transaction, similar to the original loop code.
                 // No need for locking here, as each thread processes its own data independently.
 
@@ -4755,7 +4738,8 @@ json_transaction_private(string tx_hash_postfix)
 
                         if (!mcore->get_block_by_height(block_height, blk))
                         {
-                            j_data["title"] = fmt::format("Cant get block: {:d}", block_height);
+                            j_data_temp["ERROR"] = fmt::format("Cant get block: {:d}", block_height);
+                            j_data_temp["tx_hash"] = HEX_TX_STRING;
                             return;
                         }
 
@@ -4763,8 +4747,9 @@ json_transaction_private(string tx_hash_postfix)
                     }
                     catch (const exception& e)
                     {
-                        j_data["title"] = fmt::format("Tx does not exist in blockchain, "
+                        j_data_temp["ERROR"] = fmt::format("Tx does not exist in blockchain, "
                                                             "but was there before: {:s}", HEX_TX_STRING);
+                        j_data_temp["tx_hash"] = HEX_TX_STRING;
                         return;
                     }
                 }
@@ -4810,7 +4795,8 @@ json_transaction_private(string tx_hash_postfix)
                     }
                     catch (const OUTPUT_DNE &e)
                     {
-                        j_data["title"] = "Failed to retrieve outputs (mixins) used in key images";
+                        j_data_temp["ERROR"] = "Failed to retrieve outputs (mixins) used in key images";
+                        j_data_temp["tx_hash"] = HEX_TX_STRING;
                         return;
                     }
 
@@ -4866,19 +4852,19 @@ json_transaction_private(string tx_hash_postfix)
                 }
 
                 // get basic tx info
-                j_data = get_tx_json(each_tx, txd);
+                j_data_temp = get_tx_json(each_tx, txd);
 
                 // append additional info from block, as we don't
                 // return block data in this function
-                j_data["timestamp"]      = tx_timestamp;
-                j_data["timestamp_utc"]  = blk_timestamp_utc;
-                j_data["block_height"]   = block_height;
-                j_data["confirmations"]  = no_confirmations;
-                j_data["outputs"]        = outputs;
-                j_data["inputs"]         = inputs;
-                j_data["current_height"] = bc_height;
+                j_data_temp["timestamp"]      = tx_timestamp;
+                j_data_temp["timestamp_utc"]  = blk_timestamp_utc;
+                j_data_temp["block_height"]   = block_height;
+                j_data_temp["confirmations"]  = no_confirmations;
+                j_data_temp["outputs"]        = outputs;
+                j_data_temp["inputs"]         = inputs;
+                j_data_temp["current_height"] = bc_height;
 
-                thread_txs.push_back(j_data);
+                thread_txs.push_back(j_data_temp);
             }
 
             // Move the local vector with individual transaction details to the shared vector.
@@ -4890,8 +4876,6 @@ json_transaction_private(string tx_hash_postfix)
     for (std::thread& t : threads) {
         t.join();
     }
-    std::cout << "HEREEEE" << std::endl;
-
     // Merge the individual transaction details from all threads into the final j_txs vector.
     json j_txs = json::array();
     for (int i = 0; i < numThreads; ++i) {
@@ -4899,10 +4883,6 @@ json_transaction_private(string tx_hash_postfix)
         // std::make_move_iterator converts regular iterators to move iterators.
         std::move(thread_txs_vec[i].begin(), thread_txs_vec[i].end(), std::back_inserter(j_txs));
     }
-
-    auto end4 = std::chrono::high_resolution_clock::now(); //DEBUG
-    auto duration4 = std::chrono::duration_cast<std::chrono::seconds>(end4 - start4).count(); //DEBUG
-    std::cout << "Elapsed time found_txs_vec: " << duration4 << " seconds" << std::endl; //DEBUG
 
     j_data = j_txs;
     j_response["missed_transactions"] = j_missed_txs;
