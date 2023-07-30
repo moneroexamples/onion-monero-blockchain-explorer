@@ -4628,7 +4628,6 @@ json_transaction_private(string tx_hash_postfix)
         return j_response;
     }
 
-    json j_txs;
     auto start = std::chrono::high_resolution_clock::now(); //DEBUG
     // Retrieve all transactions which end with the specified postfix (Multiply postfix length * 4 to get the hex number of bits)
     vector<crypto::hash> k_anonymous_tx_set = core_storage->get_db().get_txids_loose(tx_hash, POSTFIX_LENGTH*4);
@@ -4691,172 +4690,216 @@ json_transaction_private(string tx_hash_postfix)
     auto end3 = std::chrono::high_resolution_clock::now(); //DEBUG
     auto duration3 = std::chrono::duration_cast<std::chrono::seconds>(end3 - start3).count(); //DEBUG
     std::cout << "Elapsed time missed_vec: " << duration3 << " seconds" << std::endl; //DEBUG
+    if (found_txs_vec.empty()){
+        j_data["title"] = "No transactions found with the given postfix.";
+        return j_response;
+    }
     // get the current blockchain height. Just to check
     uint64_t bc_height = core_storage->get_current_blockchain_height();
     auto start4 = std::chrono::high_resolution_clock::now(); //DEBUG
-    for (auto each_tx : found_txs_vec){
-        // Get the hex representation of the crypto::hash
-        std::stringstream ss;
-        for (auto byte : get_transaction_hash(each_tx).data){
-            // Convert the byte to hex
-            ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(static_cast<unsigned char>(byte));
-        }
-        string HEX_TX_STRING = ss.str();
 
-        // flag to indicate if tx is in mempool
-        bool found_in_mempool {false};
+    // Define the number of threads to use (you can adjust this as needed).
+    int numThreads = 8;
 
-        // for tx in blocks we get block timestamp
-        // for tx in mempool we get receive time
-        uint64_t tx_timestamp {0};
+    // Determine the chunk size for each thread.
+    int chunkSize = found_txs_vec.size() / numThreads;
 
-        uint64_t block_height {0};
-        uint64_t is_coinbase_tx = is_coinbase(each_tx);
-        uint64_t no_confirmations {0};
+    // Create a mutex to protect access to shared data.
+    std::mutex mtx;
 
-        if (!found_in_mempool)
-        {
-            block blk;
-            try
-            {
-                // get block containing this tx
-                block_height = core_storage->get_db().get_tx_block_height(each_tx.hash);
+    // Create a vector to hold the thread objects.
+    std::vector<std::thread> threads;
 
-                if (!mcore->get_block_by_height(block_height, blk))
+    // A vector of vectors to hold individual transaction details for each thread.
+    std::vector<std::vector<json>> thread_txs_vec(numThreads);
+    std::cout << "START" << std::endl;
+    // Create threads and assign them specific ranges of the for loop.
+    for (int i = 0; i < numThreads; ++i) {
+        int start = i * chunkSize;
+        int end = (i == numThreads - 1) ? found_txs_vec.size() : (i + 1) * chunkSize;
+        threads.emplace_back([found_txs_vec, start, end, &thread_txs_vec, i, bc_height, this]() {
+            // Local vector to store individual transaction details for each thread.
+            std::vector<json> thread_txs;
+            for (int j = start; j < end; ++j) {
+                json j_data;
+                // Perform the processing for each transaction, similar to the original loop code.
+                // No need for locking here, as each thread processes its own data independently.
+
+                // Get the hex representation of the crypto::hash
+                const transaction& each_tx = found_txs_vec[j];
+                std::stringstream ss;
+                for (auto byte : get_transaction_hash(each_tx).data){
+                    // Convert the byte to hex
+                    ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(static_cast<unsigned char>(byte));
+                }
+                string HEX_TX_STRING = ss.str();
+
+                // flag to indicate if tx is in mempool
+                bool found_in_mempool {false};
+
+                // for tx in blocks we get block timestamp
+                // for tx in mempool we get receive time
+                uint64_t tx_timestamp {0};
+
+                uint64_t block_height {0};
+                uint64_t is_coinbase_tx = is_coinbase(each_tx);
+                uint64_t no_confirmations {0};
+
+                if (!found_in_mempool)
                 {
-                    j_data["title"] = fmt::format("Cant get block: {:d}", block_height);
-                    return j_response;
+                    block blk;
+                    try
+                    {
+                        // get block containing this tx
+                        block_height = core_storage->get_db().get_tx_block_height(each_tx.hash);
+
+                        if (!mcore->get_block_by_height(block_height, blk))
+                        {
+                            j_data["title"] = fmt::format("Cant get block: {:d}", block_height);
+                            return;
+                        }
+
+                        tx_timestamp = blk.timestamp;
+                    }
+                    catch (const exception& e)
+                    {
+                        j_data["title"] = fmt::format("Tx does not exist in blockchain, "
+                                                            "but was there before: {:s}", HEX_TX_STRING);
+                        return;
+                    }
                 }
 
-                tx_timestamp = blk.timestamp;
-            }
-            catch (const exception& e)
-            {
-                j_response["status"]  = "error";
-                j_response["message"] = fmt::format("Tx does not exist in blockchain, "
-                                                    "but was there before: {:s}", HEX_TX_STRING);
-                return j_response;
-            }
-        }
+                string blk_timestamp_utc = xmreg::timestamp_to_str_gm(tx_timestamp);
 
-        string blk_timestamp_utc = xmreg::timestamp_to_str_gm(tx_timestamp);
+                tx_details txd = get_tx_details(each_tx, is_coinbase_tx, block_height, bc_height);
 
-        tx_details txd = get_tx_details(each_tx, is_coinbase_tx, block_height, bc_height);
+                json outputs;
 
-        json outputs;
-
-        for (const auto& output: txd.output_pub_keys)
-        {
-            outputs.push_back(json {
-                    {"public_key", pod_to_hex(std::get<0>(output))},
-                    {"amount"    , std::get<1>(output)}
-            });
-        }
-
-        json inputs;
-
-        for (const txin_to_key &in_key: txd.input_key_imgs)
-        {
-
-            // get absolute offsets of mixins
-            std::vector<uint64_t> absolute_offsets
-                    = cryptonote::relative_output_offsets_to_absolute(
-                            in_key.key_offsets);
-
-            // get public keys of outputs used in the mixins that match to the offsets
-            std::vector<output_data_t> outputs;
-
-            try
-            {
-                // before proceeding with getting the outputs based on the amount and absolute offset
-                // check how many outputs there are for that amount
-                // go to next input if a too large offset was found
-                if (!are_absolute_offsets_good(absolute_offsets, in_key))
-                    continue;
-
-                //core_storage->get_db().get_output_key(in_key.amount,
-                //absolute_offsets,
-                //outputs);
-
-                get_output_key<BlockchainDB>(in_key.amount,
-                                             absolute_offsets,
-                                             outputs);
-            }
-            catch (const OUTPUT_DNE &e)
-            {
-                j_response["status"]  = "error";
-                j_response["message"] = "Failed to retrieve outputs (mixins) used in key images";
-                return j_response;
-            }
-
-            inputs.push_back(json {
-                    {"key_image"  , pod_to_hex(in_key.k_image)},
-                    {"amount"     , in_key.amount},
-                    {"mixins"     , json {}}
-            });
-
-            json& mixins = inputs.back()["mixins"];
-
-            // mixin counter
-            size_t count = 0;
-
-            for (const uint64_t& abs_offset: absolute_offsets)
-            {
-
-                // get basic information about mixins output
-                cryptonote::output_data_t output_data = outputs.at(count++);
-
-                tx_out_index tx_out_idx;
-
-                try
+                for (const auto& output: txd.output_pub_keys)
                 {
-                    // get pair pair<crypto::hash, uint64_t> where first is tx hash
-                    // and second is local index of the output i in that tx
-                    tx_out_idx = core_storage->get_db()
-                            .get_output_tx_and_index(in_key.amount, abs_offset);
-                }
-                catch (const OUTPUT_DNE& e)
-                {
-
-                    string out_msg = fmt::format(
-                            "Output with amount {:d} and index {:d} does not exist!",
-                            in_key.amount, abs_offset);
-
-                    cerr << out_msg << '\n';
-
-                    break;
+                    outputs.push_back(json {
+                            {"public_key", pod_to_hex(std::get<0>(output))},
+                            {"amount"    , std::get<1>(output)}
+                    });
                 }
 
-                string out_pub_key_str = pod_to_hex(output_data.pubkey);
+                json inputs;
 
-                mixins.push_back(json {
-                        {"public_key"  , pod_to_hex(output_data.pubkey)},
-                        {"tx_hash"     , pod_to_hex(tx_out_idx.first)},
-                        {"block_no"    , output_data.height},
-                });
+                for (const txin_to_key &in_key: txd.input_key_imgs)
+                {
+
+                    // get absolute offsets of mixins
+                    std::vector<uint64_t> absolute_offsets
+                            = cryptonote::relative_output_offsets_to_absolute(
+                                    in_key.key_offsets);
+
+                    // get public keys of outputs used in the mixins that match to the offsets
+                    std::vector<output_data_t> outputs;
+
+                    try
+                    {
+                        // before proceeding with getting the outputs based on the amount and absolute offset
+                        // check how many outputs there are for that amount
+                        // go to next input if a too large offset was found
+                        if (!are_absolute_offsets_good(absolute_offsets, in_key)){
+                            continue;
+                        }
+                        get_output_key<BlockchainDB>(in_key.amount,
+                                                     absolute_offsets,
+                                                     outputs);
+                    }
+                    catch (const OUTPUT_DNE &e)
+                    {
+                        j_data["title"] = "Failed to retrieve outputs (mixins) used in key images";
+                        return;
+                    }
+
+                    inputs.push_back(json {
+                            {"key_image"  , pod_to_hex(in_key.k_image)},
+                            {"amount"     , in_key.amount},
+                            {"mixins"     , json {}}
+                    });
+
+                    json& mixins = inputs.back()["mixins"];
+
+                    // mixin counter
+                    size_t count = 0;
+
+                    for (const uint64_t& abs_offset: absolute_offsets)
+                    {
+
+                        // get basic information about mixins output
+                        cryptonote::output_data_t output_data = outputs.at(count++);
+
+                        tx_out_index tx_out_idx;
+
+                        try
+                        {
+                            // get pair pair<crypto::hash, uint64_t> where first is tx hash
+                            // and second is local index of the output i in that tx
+                            tx_out_idx = core_storage->get_db().get_output_tx_and_index(in_key.amount, abs_offset);
+                        }
+                        catch (const OUTPUT_DNE& e)
+                        {
+                            string out_msg = fmt::format(
+                                    "Output with amount {:d} and index {:d} does not exist!",
+                                    in_key.amount, abs_offset);
+
+                            cerr << out_msg << '\n';
+
+                            break;
+                        }
+
+                        string out_pub_key_str = pod_to_hex(output_data.pubkey);
+
+                        mixins.push_back(json {
+                                {"public_key"  , pod_to_hex(output_data.pubkey)},
+                                {"tx_hash"     , pod_to_hex(tx_out_idx.first)},
+                                {"block_no"    , output_data.height},
+                        });
+                    }
+                }
+
+                if (!found_in_mempool)
+                {
+                    no_confirmations = txd.no_confirmations;
+                }
+
+                // get basic tx info
+                j_data = get_tx_json(each_tx, txd);
+
+                // append additional info from block, as we don't
+                // return block data in this function
+                j_data["timestamp"]      = tx_timestamp;
+                j_data["timestamp_utc"]  = blk_timestamp_utc;
+                j_data["block_height"]   = block_height;
+                j_data["confirmations"]  = no_confirmations;
+                j_data["outputs"]        = outputs;
+                j_data["inputs"]         = inputs;
+                j_data["current_height"] = bc_height;
+
+                thread_txs.push_back(j_data);
             }
-        }
 
-        if (!found_in_mempool)
-        {
-            no_confirmations = txd.no_confirmations;
-        }
-
-        // get basic tx info
-        j_data = get_tx_json(each_tx, txd);
-
-        // append additional info from block, as we don't
-        // return block data in this function
-        j_data["timestamp"]      = tx_timestamp;
-        j_data["timestamp_utc"]  = blk_timestamp_utc;
-        j_data["block_height"]   = block_height;
-        j_data["confirmations"]  = no_confirmations;
-        j_data["outputs"]        = outputs;
-        j_data["inputs"]         = inputs;
-        j_data["current_height"] = bc_height;
-
-        j_txs.push_back(j_data);
+            // Move the local vector with individual transaction details to the shared vector.
+            thread_txs_vec[i] = std::move(thread_txs);
+        });
     }
+
+    // Wait for all threads to finish their tasks.
+    for (std::thread& t : threads) {
+        t.join();
+    }
+    std::cout << "HEREEEE" << std::endl;
+
+    // Merge the individual transaction details from all threads into the final j_txs vector.
+    json j_txs = json::array();
+    for (int i = 0; i < numThreads; ++i) {
+        // Move the elements from thread_txs_vec[i] to j_txs using std::move.
+        // std::make_move_iterator converts regular iterators to move iterators.
+        std::move(thread_txs_vec[i].begin(), thread_txs_vec[i].end(), std::back_inserter(j_txs));
+    }
+
     auto end4 = std::chrono::high_resolution_clock::now(); //DEBUG
     auto duration4 = std::chrono::duration_cast<std::chrono::seconds>(end4 - start4).count(); //DEBUG
     std::cout << "Elapsed time found_txs_vec: " << duration4 << " seconds" << std::endl; //DEBUG
@@ -6990,7 +7033,7 @@ get_tx_details(const transaction& tx,
     tx_details txd;
 
     // get tx hash
-    
+
     if (!tx.pruned)
     {
         txd.hash = get_transaction_hash(tx);
