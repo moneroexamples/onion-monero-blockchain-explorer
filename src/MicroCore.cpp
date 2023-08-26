@@ -19,10 +19,9 @@ namespace xmreg
  *
  * The same is done in cryptonode::core.
  */
-MicroCore::MicroCore():
-        m_mempool(m_blockchain_storage),
-        m_blockchain_storage(m_mempool)
+MicroCore::MicroCore()
 {
+    core_storage = std::make_unique<BlockchainAndPool>();
     m_device = &hw::get_device("default");
 }
 
@@ -67,7 +66,7 @@ MicroCore::init(const string& _blockchain_path, network_type nt)
 
     // initialize Blockchain object to manage
     // the database.
-    return m_blockchain_storage.init(db, nettype);
+    return core_storage->blockchain.init(db, nettype);
 }
 
 /**
@@ -77,13 +76,13 @@ MicroCore::init(const string& _blockchain_path, network_type nt)
 Blockchain&
 MicroCore::get_core()
 {
-    return m_blockchain_storage;
+    return core_storage->blockchain;
 }
 
 tx_memory_pool&
 MicroCore::get_mempool()
 {
-    return m_mempool;
+    return core_storage->tx_pool;
 }
 
 /**
@@ -96,7 +95,7 @@ MicroCore::get_block_by_height(const uint64_t& height, block& blk)
 {
     try
     {
-        blk = m_blockchain_storage.get_db().get_block_from_height(height);
+        blk = core_storage->blockchain.get_db().get_block_from_height(height);
     }
     catch (const BLOCK_DNE& e)
     {
@@ -152,7 +151,7 @@ MicroCore::get_blocks_by_heights(const vector<uint64_t>& heights, vector<block>&
         // Loop through the vector of heights and retrieve the corresponding blocks
         for (const auto& height : heights)
         {
-            blocks.emplace_back(m_blockchain_storage.get_db().get_block_from_height(height));
+            blocks.emplace_back(core_storage->blockchain.get_db().get_block_from_height(height));
         }
     }
     catch (const BLOCK_DNE& e)
@@ -186,19 +185,19 @@ MicroCore::get_blocks_by_heights(const vector<uint64_t>& heights, vector<block>&
 bool
 MicroCore::get_tx(const crypto::hash& tx_hash, transaction& tx)
 {
-    if (m_blockchain_storage.have_tx(tx_hash))
+    if (core_storage->blockchain.have_tx(tx_hash))
     {
         // get transaction with given hash
         try
         {
-            tx = m_blockchain_storage.get_db().get_tx(tx_hash);
+            tx = core_storage->blockchain.get_db().get_tx(tx_hash);
         }
         catch (TX_DNE const& e)
         {
             try 
             {
                 // coinbase txs are not considered pruned
-                tx = m_blockchain_storage.get_db().get_pruned_tx(tx_hash);
+                tx = core_storage->blockchain.get_db().get_pruned_tx(tx_hash);
                 return true;
             }
             catch (TX_DNE const& e)
@@ -312,7 +311,7 @@ MicroCore::get_blk_timestamp(uint64_t blk_height)
 MicroCore::~MicroCore()
 {
     //m_blockchain_storage.get_db().close();
-    delete &m_blockchain_storage.get_db();
+    delete &core_storage->blockchain.get_db();
 }
 
 

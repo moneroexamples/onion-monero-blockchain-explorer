@@ -9,6 +9,7 @@
 
 #include "monero_headers.h"
 #include "tools.h"
+#include <memory>
 
 namespace xmreg
 {
@@ -28,8 +29,7 @@ namespace xmreg
 
         string blockchain_path;
 
-        tx_memory_pool m_mempool;
-        Blockchain m_blockchain_storage;
+        std::unique_ptr<BlockchainAndPool> core_storage;
 
         hw::device* m_device;
 
