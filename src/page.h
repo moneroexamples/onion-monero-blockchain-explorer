@@ -5692,7 +5692,7 @@ json_networkinfo()
     {
         j_response["status"]  = "error";
         j_response["message"] = "Cant get monero network info";
-        return j_response;
+    //    return j_response;
     }
 
     uint64_t per_kb_fee_estimated {0};
@@ -5702,19 +5702,10 @@ json_networkinfo()
     {
         j_response["status"]  = "error";
         j_response["message"] = "Cant get per kb dynamic fee esimate";
-        return j_response;
+    //    return j_response;
     }
 
     uint64_t fee_estimated {0};
-
-    // get dynamic fee estimate from last 10 blocks
-    //@todo: make this work
-//    if (!get_base_fee_estimate(fee_estimated))
-//    {
-//        j_response["status"]  = "error";
-//        j_response["message"] = "Cant get dynamic fee esimate";
-//        return j_response;
-//    }
 
     j_info["fee_per_kb"] = per_kb_fee_estimated;
     j_info["fee_estimate"] = fee_estimated;
