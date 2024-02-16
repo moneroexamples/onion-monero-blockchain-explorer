@@ -214,8 +214,8 @@ services:
       - 8081:8081
     command: ["./xmrblocks --daemon-url=monerod:18089 --enable-json-api --enable-autorefresh-option --enable-emission-monitor --enable-pusher"]
 
-  volumes:
-    xmrdata:
+volumes:
+  xmrdata:
 ```
 
 To build this image, run the following:
