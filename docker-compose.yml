@@ -1,0 +1,31 @@
+version: '3'
+services:
+  monerod:
+    image: sethsimmons/simple-monerod:latest
+    container_name: monerod
+    restart: unless-stopped
+    volumes:
+      - xmrdata:/home/monero/.bitmonero
+    ports:
+      - 18080:18080
+      - 18089:18089
+    command:
+      - "--rpc-restricted-bind-ip=0.0.0.0"
+      - "--rpc-restricted-bind-port=18089"
+      - "--public-node"
+      - "--no-igd"
+      - "--enable-dns-blocklist"
+      - "--prune-blockchain"
+
+  explore:
+    image: dawe35/xmrblocks:latest
+    container_name: explore
+    restart: unless-stopped
+    volumes:
+      - xmrdata:/home/monero/.bitmonero
+    ports:
+      - 8081:8081
+    command: ["./xmrblocks --daemon-url=monerod:18089 --enable-json-api --enable-autorefresh-option --enable-emission-monitor --enable-pusher"]
+
+volumes:
+  xmrdata:
