@@ -202,6 +202,7 @@ services:
       - "--no-igd"
       - "--enable-dns-blocklist"
       - "--prune-blockchain"
+      - "--sync-pruned-blocks"
 
   explore:
     image: xmrblocks:latest
