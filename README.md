@@ -195,6 +195,8 @@ services:
     ports:
       - 18080:18080
       - 18089:18089
+    depends_on:
+        - explore
     command:
       - "--rpc-restricted-bind-ip=0.0.0.0"
       - "--rpc-restricted-bind-port=18089"
