@@ -23,7 +23,7 @@ CurrentBlockchainStatus::set_blockchain_variables(MicroCore* _mcore,
 void
 CurrentBlockchainStatus::start_monitor_blockchain_thread()
 {
-    total_emission_atomic = Emission {0, 0, 0};
+    total_emission = Emission {0, 0, 0};
 
     string emmision_saved_file = get_output_file_path().string();
 
@@ -53,7 +53,7 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
                {
                    while (true)
                    {
-                       Emission current_emission = total_emission_atomic;
+                       Emission current_emission = total_emission;
 
                        current_height = core_storage->get_current_blockchain_height();
 
@@ -98,7 +98,7 @@ void
 CurrentBlockchainStatus::update_current_emission_amount()
 {
 
-    Emission current_emission = total_emission_atomic;
+    Emission current_emission = total_emission;
 
     uint64_t blk_no = current_emission.blk_no;
 
@@ -120,7 +120,7 @@ CurrentBlockchainStatus::update_current_emission_amount()
     current_emission.fee      += emission_calculated.fee;
     current_emission.blk_no    = emission_calculated.blk_no;
 
-    total_emission_atomic = current_emission;
+    total_emission = current_emission;
 }
 
 CurrentBlockchainStatus::Emission
@@ -177,7 +177,7 @@ CurrentBlockchainStatus::save_current_emission_amount()
         return false;
     }
 
-    Emission current_emission = total_emission_atomic;
+    Emission current_emission = total_emission;
 
     out << string(current_emission) << flush;
 
@@ -211,14 +211,14 @@ CurrentBlockchainStatus::load_current_emission_amount()
 
     Emission emission_loaded {0, 0, 0};
 
-    uint64_t read_check_sum {0};
+    boost::multiprecision::uint128_t read_check_sum {0};
 
     try
     {
         emission_loaded.blk_no   = boost::lexical_cast<uint64_t>(strs.at(0));
-        emission_loaded.coinbase = boost::lexical_cast<uint64_t>(strs.at(1));
-        emission_loaded.fee      = boost::lexical_cast<uint64_t>(strs.at(2));
-        read_check_sum           = boost::lexical_cast<uint64_t>(strs.at(3));
+        emission_loaded.coinbase = boost::multiprecision::uint128_t(strs.at(1));
+        emission_loaded.fee      = boost::multiprecision::uint128_t(strs.at(2));
+        read_check_sum           = boost::multiprecision::uint128_t(strs.at(3));
     }
     catch (boost::bad_lexical_cast &e)
     {
@@ -235,7 +235,7 @@ CurrentBlockchainStatus::load_current_emission_amount()
         return false;
     }
 
-    total_emission_atomic = emission_loaded;
+    total_emission = emission_loaded;
 
     return true;
 
@@ -252,7 +252,7 @@ CurrentBlockchainStatus::Emission
 CurrentBlockchainStatus::get_emission()
 {
     // get current emission
-    Emission current_emission = total_emission_atomic;
+    Emission current_emission = total_emission;
 
     // this emission will be few blocks behind current blockchain
     // height. By default 3 blocks. So we need to calcualate here
@@ -311,7 +311,7 @@ uint64_t  CurrentBlockchainStatus::blockchain_chunk_gap {3};
 
 atomic<uint64_t> CurrentBlockchainStatus::current_height {0};
 
-atomic<CurrentBlockchainStatus::Emission> CurrentBlockchainStatus::total_emission_atomic;
+CurrentBlockchainStatus::Emission CurrentBlockchainStatus::total_emission;
 
 boost::thread      CurrentBlockchainStatus::m_thread;
 
