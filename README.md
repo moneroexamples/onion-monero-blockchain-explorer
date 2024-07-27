@@ -27,7 +27,6 @@ Clearnet versions:
  - [https://xmrchain.net/](https://xmrchain.net/) - HTTPS enabled, most popular, and very stable.
  - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, HTTPS enabled.
  - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
- - [https://blox.minexmr.com/](https://blox.minexmr.com/) - HTTPS enabled.
 
 Testnet version:
 

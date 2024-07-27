@@ -27,11 +27,12 @@ struct CurrentBlockchainStatus
 
     struct Emission
     {
-        uint64_t coinbase;
-        uint64_t fee;
+        boost::multiprecision::uint128_t coinbase;
+        boost::multiprecision::uint128_t fee;
+
         uint64_t blk_no;
 
-        inline uint64_t
+        inline boost::multiprecision::uint128_t
         checksum() const
         {
             return coinbase + fee + blk_no;
@@ -69,7 +70,8 @@ struct CurrentBlockchainStatus
     static atomic<uint64_t> current_height;
 
 
-    static atomic<Emission> total_emission_atomic;
+    //static atomic<Emission> total_emission_atomic;
+    static Emission total_emission;
 
 
     static boost::thread m_thread;
