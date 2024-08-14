@@ -42,7 +42,7 @@ struct CurrentBlockchainStatus
         std::string() const
         {
             return to_string(blk_no) + "," + to_string_uint128(coinbase)
-                   + "," + to_string_uint128(fee) + "," + to_string(checksum());
+                   + "," + to_string_uint128(fee) + "," + to_string_uint128(checksum());
         }
     };
 
