@@ -383,6 +383,9 @@ get_metric_prefix(cryptonote::difficulty_type hr, double& hr_d, char& prefix);
 cryptonote::difficulty_type
 make_difficulty(uint64_t low, uint64_t high);
 
+string
+to_string_uint128(const boost::multiprecision::uint128_t &amount);
+
 }
 
 #endif //XMREG01_TOOLS_H

@@ -1316,4 +1316,11 @@ make_difficulty(uint64_t low, uint64_t high)
     return (cryptonote::difficulty_type(high) << 64) + low;
 }
 
+string
+to_string_uint128(const boost::multiprecision::uint128_t &amount) {
+    std::stringstream ss;
+    ss << amount;
+    return ss.str();
+}
+
 }
