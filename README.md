@@ -144,7 +144,7 @@ Go to your browser: http://127.0.0.1:8081
 ## Compiling and running with Docker
 
 The explorer can also be compiled using `docker build` as described below. By default it compiles
-against latest release (`release-v0.17`) branch of monero:
+against latest release tag (i.e. `v0.18.3.4`) branch of monero:
 
 ```
 # build using all CPU cores
@@ -186,7 +186,7 @@ The explorer can also be built and run using Docker Compose, i.e.:
 version: '3'
 services:
   monerod:
-    image: sethsimmons/simple-monerod:latest
+    image: ghcr.io/sethforprivacy/simple-monerod:latest
     restart: unless-stopped
     container_name: monerod
     volumes:
@@ -222,6 +222,7 @@ To build this image, run the following:
 
 ```bash
 git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
+cd onion-monero-blockchain-explorer
 docker-compose build
 ```
 
@@ -229,6 +230,7 @@ Or build and run in one step via:
 
 ```bash
 git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
+cd onion-monero-blockchain-explorer
 docker-compose up -d
 ```
 
