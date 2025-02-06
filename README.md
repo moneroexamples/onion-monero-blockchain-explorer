@@ -144,7 +144,7 @@ Go to your browser: http://127.0.0.1:8081
 ## Compiling and running with Docker
 
 The explorer can also be compiled using `docker build` as described below. By default it compiles
-against latest release tag (i.e. `v0.18.3.4`) branch of monero:
+against latest release tag (i.e. `v0.18.3.4`) of monero:
 
 ```
 # build using all CPU cores
