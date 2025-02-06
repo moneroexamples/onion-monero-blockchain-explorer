@@ -1,9 +1,8 @@
-# Use ubuntu:20.04 as base for builder stage image
-FROM ubuntu:20.04 as builder
+# Use ubuntu:latest as base for builder stage image
+FROM ubuntu:latest as builder
 
 # Set Monero branch/tag to be used for monerod compilation
-
-ARG MONERO_BRANCH=release-v0.18
+ARG MONERO_BRANCH=v0.18.3.4
 
 # Added DEBIAN_FRONTEND=noninteractive to workaround tzdata prompt on installation
 ENV DEBIAN_FRONTEND="noninteractive"
@@ -58,8 +57,8 @@ RUN cmake .. && make -j"$(cat /nproc)"
 # Use ldd and awk to bundle up dynamic libraries for the final image
 RUN zip /lib.zip $(ldd xmrblocks | grep -E '/[^\ ]*' -o)
 
-# Use ubuntu:20.04 as base for final image
-FROM ubuntu:20.04
+# Use ubuntu:latest as base for final image
+FROM ubuntu:latest AS final
 
 # Added DEBIAN_FRONTEND=noninteractive to workaround tzdata prompt on installation
 ENV DEBIAN_FRONTEND="noninteractive"
@@ -72,7 +71,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /lib.zip .
-RUN unzip -o lib.zip && rm -rf lib.zip
+RUN unzip -o lib.zip \
+    && rm -rf lib.zip \
+    && apt purge -y unzip
 
 # Add user and setup directories for monerod and xmrblocks
 RUN useradd -ms /bin/bash monero \
