@@ -31,23 +31,22 @@ RUN apt-get update \
     libsodium-dev \
     libhidapi-dev \
     libhidapi-libusb0 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Set compilation environment variables
 ENV CFLAGS='-fPIC'
 ENV CXXFLAGS='-fPIC'
-ENV USE_SINGLE_BUILDDIR 1
-ENV BOOST_DEBUG         1
+ENV USE_SINGLE_BUILDDIR=1
+ENV BOOST_DEBUG=1
 
 WORKDIR /root
 
 # Clone and compile monerod with all available threads
 ARG NPROC
-RUN git clone --recursive --branch ${MONERO_BRANCH} https://github.com/monero-project/monero.git \
+RUN git clone --recursive --branch ${MONERO_BRANCH} \
+    --depth 1 --shallow-submodules https://github.com/monero-project/monero.git \
     && cd monero \
     && test -z "$NPROC" && nproc > /nproc || echo -n "$NPROC" > /nproc && make -j"$(cat /nproc)"
-
 
 # Copy and cmake/make xmrblocks with all available threads
 COPY . /root/onion-monero-blockchain-explorer/
@@ -63,12 +62,11 @@ FROM ubuntu:latest AS final
 # Added DEBIAN_FRONTEND=noninteractive to workaround tzdata prompt on installation
 ENV DEBIAN_FRONTEND="noninteractive"
 
-# Install unzip to handle bundled libs from builder stage
+# Update Ubuntu packages and install unzip to handle bundled libs from builder stage
 RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends unzip \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY --from=builder /lib.zip .
 RUN unzip -o lib.zip \
