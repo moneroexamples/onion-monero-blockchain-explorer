@@ -74,7 +74,8 @@ RUN unzip -o lib.zip \
     && apt purge -y unzip
 
 # Add user and setup directories for monerod and xmrblocks
-RUN useradd -ms /bin/bash monero \
+RUN touch /var/mail/ubuntu && chown ubuntu /var/mail/ubuntu && userdel -r ubuntu \
+    && useradd -ms /bin/bash monero \
     && mkdir -p /home/monero/.bitmonero \
     && chown -R monero:monero /home/monero/.bitmonero
 USER monero
