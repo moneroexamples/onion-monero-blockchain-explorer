@@ -20,8 +20,9 @@ namespace xmreg
  * The same is done in cryptonode::core.
  */
 MicroCore::MicroCore():
-        m_mempool(m_blockchain_storage),
-        m_blockchain_storage(m_mempool)
+        m_bap(),
+        m_mempool(m_bap.tx_pool),
+        m_blockchain_storage(m_bap.blockchain)
 {
     m_device = &hw::get_device("default");
 }
