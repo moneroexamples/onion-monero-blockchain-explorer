@@ -1163,7 +1163,8 @@ is_output_ours(const size_t& output_index,
     {
         cerr << "Cant get dervied key for: "  << "\n"
              << "pub_tx_key: " << pub_tx_key  << " and "
-             << "prv_view_key" << private_view_key << endl;
+             << "prv_view_key" << epee::string_tools::pod_to_hex(unwrap(unwrap(private_view_key)))
+             << endl;
 
         return false;
     }

@@ -21,8 +21,7 @@
 #include "net/http_client.h"
 #include "storages/http_abstract_invoke.h"
 
-#include "cryptonote_core/tx_pool.h"
-#include "cryptonote_core/blockchain.h"
+#include "cryptonote_core/blockchain_and_pool.h"
 #include "blockchain_db/lmdb/db_lmdb.h"
 #include "device/device_default.hpp"
 
