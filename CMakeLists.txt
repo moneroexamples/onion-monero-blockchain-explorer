@@ -165,7 +165,6 @@ set(LIBRARIES
         ${Boost_LIBRARIES}
         pthread
         unbound
-        curl
         crypto
         ssl)
 
