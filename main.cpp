@@ -798,8 +798,11 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/outputsblocks").methods("GET"_method)
         ([&](const crow::request &req) {
 
-            string limit = regex_search(req.raw_url, regex {"limit=\\d+"}) ?
-                           req.url_params.get("limit") : "3";
+            string startblock = regex_search(req.raw_url, regex {"startblock=\\d+"}) ?
+                           req.url_params.get("startblock") : "";
+
+            string endblock = regex_search(req.raw_url, regex {"endblock=\\d+"}) ?
+                           req.url_params.get("endblock") : "";
 
             string address = regex_search(req.raw_url, regex {"address=\\w+"}) ?
                              req.url_params.get("address") : "";
@@ -824,7 +827,8 @@ main(int ac, const char* av[])
             }
 
             myxmr::jsonresponse r{xmrblocks.json_outputsblocks(
-                    remove_bad_chars(limit),
+                    remove_bad_chars(startblock),
+                    remove_bad_chars(endblock),
                     remove_bad_chars(address),
                     remove_bad_chars(viewkey),
                     in_mempool_aswell)};
