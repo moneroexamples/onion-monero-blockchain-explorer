@@ -5490,12 +5490,14 @@ json_outputs(string tx_hash_str,
 
 
 json
-json_outputsblocks(string _limit,
+json_outputsblocks(string startblock,
+                   string endblock,
                    string address_str,
                    string viewkey_str,
                    bool in_mempool_aswell = false)
 {
-    boost::trim(_limit);
+    boost::trim(startblock);
+    boost::trim(endblock);
     boost::trim(address_str);
     boost::trim(viewkey_str);
 
@@ -5506,21 +5508,51 @@ json_outputsblocks(string _limit,
 
     json& j_data = j_response["data"];
 
-    uint64_t no_of_last_blocks {3};
+    uint64_t start_block;
+    uint64_t end_block;
 
     try
     {
-        no_of_last_blocks = boost::lexical_cast<uint64_t>(_limit);
+        start_block = boost::lexical_cast<uint64_t>(startblock);
     }
     catch (const boost::bad_lexical_cast& e)
     {
-        j_data["title"] = fmt::format(
-                "Cant parse page and/or limit numbers: {:s}", _limit);
+        j_data["title"] = fmt::format("Cant parse startblock number: {:s}", startblock);
         return j_response;
     }
 
-    // maxium five last blocks
-    no_of_last_blocks = std::min<uint64_t>(no_of_last_blocks, 5ul);
+    try
+    {
+        end_block = boost::lexical_cast<uint64_t>(endblock);
+    }
+    catch (const boost::bad_lexical_cast& e)
+    {
+        j_data["title"] = fmt::format("Cant parse endblock number: {:s}", endblock);
+        return j_response;
+    }
+
+    uint64_t height = core_storage->get_current_blockchain_height() - 1ul;
+
+    if (start_block > end_block)
+    {
+        j_response["status"]  = "error";
+        j_response["message"] = fmt::format("Start block {:d} cannot be higher than end block: {:d}", start_block, end_block);
+        return j_response;
+    }
+
+    if (end_block > height)
+    {
+        j_response["status"]  = "error";
+        j_response["message"] = fmt::format("Start block {:d} is higher than current blockchain height: {:d}", start_block, height);
+        return j_response;
+    }
+
+    if (end_block - start_block >= 5ul)
+    {
+        j_response["status"]  = "error";
+        j_response["message"] = fmt::format("Cant check more than 5 blocks at time");
+        return j_response;
+    }
 
     if (address_str.empty())
     {
@@ -5599,24 +5631,13 @@ json_outputsblocks(string _limit,
     } // if (in_mempool_aswell)
 
 
-    // and now serach for outputs in last few blocks in the blockchain
-
-    uint64_t height = core_storage->get_current_blockchain_height();
-
-    // calculate starting and ending block numbers to show
-    int64_t start_height = height - no_of_last_blocks;
-
-    // check if start height is not below range
-    start_height = start_height < 0 ? 0 : start_height;
-
-    int64_t end_height = start_height + no_of_last_blocks - 1;
+    // and now serach for outputs in few blocks in the blockchain
 
     // loop index
-    int64_t block_no = end_height;
-
+    int64_t block_no = end_block;
 
     // iterate over last no_of_last_blocks of blocks
-    while (block_no >= start_height)
+    while (block_no >= start_block)
     {
         // get block at the given height block_no
         block blk;
@@ -5662,7 +5683,8 @@ json_outputsblocks(string _limit,
     // matches to what was used to produce response.
     j_data["address"]  = pod_to_hex(address_info.address);
     j_data["viewkey"]  = pod_to_hex(unwrap(unwrap(prv_view_key)));
-    j_data["limit"]    = _limit;
+    j_data["startblock"] = start_block;
+    j_data["endblock"] = end_block;
     j_data["height"]   = height;
     j_data["mempool"]  = in_mempool_aswell;
 
