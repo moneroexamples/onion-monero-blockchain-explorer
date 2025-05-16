@@ -657,6 +657,7 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
         double blk_size = static_cast<double>(core_storage->get_db().get_block_weight(i))/1024.0;
 
         string blk_size_str = fmt::format("{:0.2f}", blk_size);
+        string blk_no_txs_str = std::to_string(blk.tx_hashes.size());
 
         blk_sizes.push_back(blk_size);
 
@@ -704,6 +705,7 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
             txd_map.insert({"is_ringct" , (tx.version > 1)});
             txd_map.insert({"rct_type"  , tx.rct_signatures.type});
             txd_map.insert({"blk_size"  , blk_size_str});
+            txd_map.insert({"no_txs"    , blk_no_txs_str});
 
 
             // do not show block info for other than first tx in a block
@@ -712,6 +714,7 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
                 txd_map["height"]     = string("");
                 txd_map["age"]        = string("");
                 txd_map["blk_size"]   = string("");
+                txd_map["no_txs"]     = string("");
             }
 
             txd_pairs.emplace_back(txd.hash, txd_map);
