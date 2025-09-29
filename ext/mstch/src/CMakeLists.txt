@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.10)
+
 find_package(Boost 1.54 REQUIRED)
 
 set(mstch_INCLUDE_DIR

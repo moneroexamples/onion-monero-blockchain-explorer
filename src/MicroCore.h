@@ -10,6 +10,7 @@
 #include "monero_headers.h"
 #include "tools.h"
 
+
 namespace xmreg
 {
     using namespace cryptonote;
@@ -28,8 +29,10 @@ namespace xmreg
 
         string blockchain_path;
 
-        tx_memory_pool m_mempool;
-        Blockchain m_blockchain_storage;
+        BlockchainAndPool blockchainAndPool;
+
+        tx_memory_pool& m_mempool = blockchainAndPool.tx_pool;
+        Blockchain& m_blockchain_storage = blockchainAndPool.blockchain;
 
         hw::device* m_device;
 

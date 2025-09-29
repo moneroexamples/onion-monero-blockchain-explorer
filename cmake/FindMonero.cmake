@@ -31,7 +31,8 @@
 set(LIBS common;blocks;cryptonote_basic;cryptonote_core;multisig;
 		cryptonote_protocol;daemonizer;mnemonics;epee;lmdb;device;wallet-crypto;
 		blockchain_db;ringct;wallet;cncrypto;easylogging;version;
-        checkpoints;randomx;hardforks;miniupnpc)
+        checkpoints;randomx;hardforks;miniupnpc;fcmp_pp;carrot_core;carrot_impl;
+		mx25519;seraphis_crypto)
 
 set(Xmr_INCLUDE_DIRS "${CPP_MONERO_DIR}")
 
@@ -72,6 +73,20 @@ if (EXISTS ${MONERO_BUILD_DIR}/src/cryptonote_basic/libcryptonote_format_utils_b
         add_library(cryptonote_format_utils_basic STATIC IMPORTED)
         set_property(TARGET cryptonote_format_utils_basic
                 PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/src/cryptonote_basic/libcryptonote_format_utils_basic.a)
+endif()
+
+if (EXISTS ${MONERO_BUILD_DIR}/src/fcmp_pp/fcmp_pp_rust/libfcmp_pp_rust.a)
+        message(STATUS FindMonero " found libfcmp_pp_rust.a")
+        add_library(fcmp_pp_rust STATIC IMPORTED)
+        set_property(TARGET fcmp_pp_rust
+                PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/src/fcmp_pp/fcmp_pp_rust/libfcmp_pp_rust.a)
+endif()
+
+if (EXISTS ${MONERO_BUILD_DIR}/external/mx25519/libmx25519.a)
+        message(STATUS FindMonero " found libmx25519.a")
+        add_library(mx25519_static STATIC IMPORTED)
+        set_property(TARGET mx25519_static
+                PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/external/mx25519/libmx25519.a)
 endif()
 
 

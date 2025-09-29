@@ -87,6 +87,9 @@ FIND_PATH(UNBOUND_INCLUDE_DIR
   /usr/
 )
 
+include_directories(${MONERO_DIR}/external/mx25519/include)
+
+
 find_library (UNBOUND_LIBRARY unbound)
 if (WIN32 OR (${UNBOUND_LIBRARY} STREQUAL "UNBOUND_LIBRARY-NOTFOUND"))
     add_library(unbound STATIC IMPORTED)
@@ -137,11 +140,15 @@ set(LIBRARIES
         myxrm
         myext
         mstch
-        wallet
+        wallet     
         cryptonote_core
         cryptonote_basic
         cryptonote_protocol
-        cryptonote_format_utils_basic
+        cryptonote_format_utils_basic                   
+        seraphis_crypto                                 
+        carrot_impl        
+        carrot_core               
+        mx25519_static                    
         blockchain_db
         device
         ${WALLET_CRYPTO} 
@@ -152,10 +159,12 @@ set(LIBRARIES
         ringct
         ringct_basic
         common
+        fcmp_pp
+        fcmp_pp_rust   
         mnemonics
         easylogging
         checkpoints
-        cncrypto        
+        cncrypto     
         miniupnpc
         version
         epee

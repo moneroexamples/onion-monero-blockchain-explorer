@@ -23,8 +23,10 @@
 
 #include "cryptonote_core/tx_pool.h"
 #include "cryptonote_core/blockchain.h"
+#include "cryptonote_core/blockchain_and_pool.h"
 #include "blockchain_db/lmdb/db_lmdb.h"
 #include "device/device_default.hpp"
+
 
 #include "wallet/wallet2.h"
 
