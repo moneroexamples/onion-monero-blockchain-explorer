@@ -70,10 +70,10 @@ MempoolStatus::start_mempool_status_thread()
 
              if (MempoolStatus::read_mempool())
              {
-                 vector<mempool_tx> current_mempool_txs = get_mempool_txs();
+                 auto current_mempool_txs = get_mempool_txs();
 
                  cout << "mempool status txs: "
-                      << current_mempool_txs.size()
+                      << (current_mempool_txs ? current_mempool_txs->size() : 0)
                       << endl;
              }
 
@@ -213,14 +213,13 @@ MempoolStatus::read_mempool()
 
     Guard lck (mempool_mutx);
 
-    // clear current mempool txs vector
-    // repopulate it with each execution of read_mempool()
-    // not very efficient but good enough for now.
-
+    // Copy-on-write pattern: create new shared_ptr and swap atomically
+    // This avoids expensive deep copies when multiple request handlers
+    // read the mempool simultaneously
     mempool_no   = local_copy_of_mempool_txs.size();
     mempool_size = mempool_size_kB;
 
-    mempool_txs = std::move(local_copy_of_mempool_txs);
+    mempool_txs = std::make_shared<vector<mempool_tx>>(std::move(local_copy_of_mempool_txs));
 
     return true;
 }
@@ -318,21 +317,28 @@ MempoolStatus::read_network_info()
     return true;
 }
 
-vector<MempoolStatus::mempool_tx>
+MempoolStatus::mempool_txs_ptr
 MempoolStatus::get_mempool_txs()
 {
     Guard lck (mempool_mutx);
+    // Return shared_ptr - just increments reference count, no deep copy
     return mempool_txs;
 }
 
-vector<MempoolStatus::mempool_tx>
+MempoolStatus::mempool_txs_ptr
 MempoolStatus::get_mempool_txs(uint64_t no_of_tx)
 {
     Guard lck (mempool_mutx);
 
-    no_of_tx = std::min<uint64_t>(no_of_tx, mempool_txs.size());
+    if (!mempool_txs)
+        return std::make_shared<vector<mempool_tx>>();
 
-    return vector<mempool_tx>(mempool_txs.begin(), mempool_txs.begin() + no_of_tx);
+    no_of_tx = std::min<uint64_t>(no_of_tx, mempool_txs->size());
+
+    // For partial access, we still need to create a new vector
+    // but this is rare and typically for small subsets
+    return std::make_shared<vector<mempool_tx>>(
+        mempool_txs->begin(), mempool_txs->begin() + no_of_tx);
 }
 
 bool
@@ -350,7 +356,7 @@ Blockchain*        MempoolStatus::core_storage {nullptr};
 xmreg::MicroCore*  MempoolStatus::mcore {nullptr};
 rpccalls::login_opt MempoolStatus::login {};
 std::unique_ptr<rpccalls> MempoolStatus::rpc_ptr {nullptr};
-vector<MempoolStatus::mempool_tx> MempoolStatus::mempool_txs;
+MempoolStatus::mempool_txs_ptr MempoolStatus::mempool_txs {std::make_shared<vector<MempoolStatus::mempool_tx>>()};
 atomic<MempoolStatus::network_info> MempoolStatus::current_network_info;
 atomic<uint64_t> MempoolStatus::mempool_no {0};   // no of txs
 atomic<uint64_t> MempoolStatus::mempool_size {0}; // size in bytes.
