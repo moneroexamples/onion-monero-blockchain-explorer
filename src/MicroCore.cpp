@@ -26,6 +26,16 @@ MicroCore::MicroCore():
     m_device = &hw::get_device("default");
 }
 
+/**
+ * Destructor - properly clean up blockchain resources.
+ * The Blockchain::deinit() method closes the database and frees
+ * the BlockchainDB pointer that was allocated in init().
+ */
+MicroCore::~MicroCore()
+{
+    m_blockchain_storage.deinit();
+}
+
 
 /**
  * Initialized the MicroCore object.

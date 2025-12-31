@@ -37,6 +37,7 @@ namespace xmreg
 
     public:
         MicroCore();
+        ~MicroCore();
 
         bool
         init(const string& _blockchain_path, network_type nt);
