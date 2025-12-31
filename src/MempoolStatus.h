@@ -130,6 +130,9 @@ struct MempoolStatus
 
     static rpccalls::login_opt login;
 
+    // persistent RPC client to avoid creating new connections every refresh cycle
+    static std::unique_ptr<rpccalls> rpc_ptr;
+
     // make object for accessing the blockchain here
     static MicroCore* mcore;
     static Blockchain* core_storage;

@@ -28,6 +28,13 @@ MempoolStatus::start_mempool_status_thread()
 
     if (!is_running)
     {
+        // Initialize the persistent RPC client once to avoid memory leak
+        // from creating ~420 instances/hour
+        if (!rpc_ptr)
+        {
+            rpc_ptr = std::make_unique<rpccalls>(daemon_url, login);
+        }
+
         m_thread = boost::thread{[]()
         {
          try
@@ -96,9 +103,9 @@ MempoolStatus::start_mempool_status_thread()
 bool
 MempoolStatus::read_mempool()
 {
-    rpccalls rpc {daemon_url, login};
-
-    string error_msg;
+    // Note: rpccalls is not needed here - mempool is read directly from LMDB
+    // Removed unused rpccalls instance to prevent memory leak from
+    // creating ~360 HTTP client instances per hour
 
     // we populate this variable instead of global mempool_txs
     // mempool_txs will be changed only when this function completes.
@@ -222,11 +229,17 @@ MempoolStatus::read_mempool()
 bool
 MempoolStatus::read_network_info()
 {
-    rpccalls rpc {daemon_url, login};
+    // Use persistent RPC client to avoid memory leak from creating
+    // ~60 HTTP client instances per hour
+    if (!rpc_ptr)
+    {
+        cerr << "read_network_info: rpc_ptr not initialized" << endl;
+        return false;
+    }
 
     COMMAND_RPC_GET_INFO::response rpc_network_info;
 
-    if (!rpc.get_network_info(rpc_network_info))
+    if (!rpc_ptr->get_network_info(rpc_network_info))
     {
         cerr << "rpc.get_network_info(rpc_network_info) failed";
         return false;
@@ -236,11 +249,11 @@ MempoolStatus::read_network_info()
 
     string error_msg;
 
-    if (!rpc.get_dynamic_per_kb_fee_estimate(
+    if (!rpc_ptr->get_dynamic_per_kb_fee_estimate(
             FEE_ESTIMATE_GRACE_BLOCKS,
             fee_estimated, error_msg))
     {
-        cerr << "rpc.get_dynamic_per_kb_fee_estimate failed" << endl;
+        cerr << "rpc_ptr->get_dynamic_per_kb_fee_estimate failed" << endl;
         return false;
     }
 
@@ -248,7 +261,7 @@ MempoolStatus::read_network_info()
 
     COMMAND_RPC_HARD_FORK_INFO::response rpc_hardfork_info;
 
-    if (!rpc.get_hardfork_info(rpc_hardfork_info))
+    if (!rpc_ptr->get_hardfork_info(rpc_hardfork_info))
         return false;
 
 
@@ -336,6 +349,7 @@ boost::thread      MempoolStatus::m_thread;
 Blockchain*        MempoolStatus::core_storage {nullptr};
 xmreg::MicroCore*  MempoolStatus::mcore {nullptr};
 rpccalls::login_opt MempoolStatus::login {};
+std::unique_ptr<rpccalls> MempoolStatus::rpc_ptr {nullptr};
 vector<MempoolStatus::mempool_tx> MempoolStatus::mempool_txs;
 atomic<MempoolStatus::network_info> MempoolStatus::current_network_info;
 atomic<uint64_t> MempoolStatus::mempool_no {0};   // no of txs
