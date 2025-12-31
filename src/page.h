@@ -42,7 +42,27 @@ extern "C" void me_rx_slow_hash(const uint64_t mainheight, const uint64_t seedhe
                              char *hash, int miners, int is_alt);
 //extern "C" void me_rx_reorg(const uint64_t split_height);
 
+// Cleanup function for RandomX thread-local VMs - must be called when threads exit
+extern "C" void me_rx_slow_hash_free_state();
+
 extern  __thread randomx_vm *main_vm_full;
+
+// RAII wrapper to ensure RandomX VM cleanup when threads exit
+// This is thread_local so each worker thread gets its own instance
+// and the destructor is called when the thread terminates
+namespace xmreg {
+struct RandomXThreadCleanup {
+    bool initialized = false;
+    void mark_initialized() { initialized = true; }
+    ~RandomXThreadCleanup() {
+        if (initialized) {
+            me_rx_slow_hash_free_state();
+        }
+    }
+};
+// Declared static thread_local so each thread has its own instance
+inline thread_local RandomXThreadCleanup rx_thread_cleanup;
+}
 
 #include <algorithm>
 #include <limits>
@@ -295,6 +315,10 @@ me_get_block_longhash(const Blockchain *pbc,
     me_rx_slow_hash(main_height, seed_height,
                     hash.data, bd.data(),
                     bd.size(), res.data, miners, 0);
+
+    // Mark this thread as having used RandomX so cleanup happens on thread exit
+    // (VMs allocated inside me_rx_slow_hash will be freed by the destructor)
+    rx_thread_cleanup.mark_initialized();
   }
   return true;
 }
@@ -7008,6 +7032,10 @@ get_randomx_code(uint64_t blk_height,
             cerr << "main_vm_full is still null!";
             return {};
         }
+
+        // Mark this thread as having allocated a RandomX VM so it will be
+        // cleaned up when the thread exits (prevents ~2GB memory leak per thread)
+        rx_thread_cleanup.mark_initialized();
     }
 
 
