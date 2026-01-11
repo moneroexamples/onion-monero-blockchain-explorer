@@ -130,14 +130,19 @@ struct MempoolStatus
 
     static rpccalls::login_opt login;
 
+    // persistent RPC client to avoid creating new connections every refresh cycle
+    static std::unique_ptr<rpccalls> rpc_ptr;
+
     // make object for accessing the blockchain here
     static MicroCore* mcore;
     static Blockchain* core_storage;
 
-    // vector of mempool transactions that all threads
-    // can refer to
-    //           <recieved_time, transaction>
-    static vector<mempool_tx> mempool_txs;
+    // Shared pointer to mempool transactions - uses copy-on-write pattern
+    // to avoid expensive deep copies when multiple request handlers access
+    // the mempool simultaneously. Readers get a reference-counted pointer,
+    // writer creates a new vector and atomically swaps the pointer.
+    using mempool_txs_ptr = std::shared_ptr<vector<mempool_tx>>;
+    static mempool_txs_ptr mempool_txs;
 
     static atomic<network_info> current_network_info;
 
@@ -154,11 +159,12 @@ struct MempoolStatus
     static bool
     read_network_info();
 
-    static vector<mempool_tx>
+    // Returns shared pointer to mempool - cheap reference copy, no deep copy
+    static mempool_txs_ptr
     get_mempool_txs();
 
-    // get first no_of_tx from the vector
-    static vector<mempool_tx>
+    // Returns first no_of_tx transactions (still uses shared_ptr internally)
+    static mempool_txs_ptr
     get_mempool_txs(uint64_t no_of_tx);
 
     static bool

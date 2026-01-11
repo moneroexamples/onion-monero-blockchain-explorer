@@ -42,7 +42,27 @@ extern "C" void me_rx_slow_hash(const uint64_t mainheight, const uint64_t seedhe
                              char *hash, int miners, int is_alt);
 //extern "C" void me_rx_reorg(const uint64_t split_height);
 
+// Cleanup function for RandomX thread-local VMs - must be called when threads exit
+extern "C" void me_rx_slow_hash_free_state();
+
 extern  __thread randomx_vm *main_vm_full;
+
+// RAII wrapper to ensure RandomX VM cleanup when threads exit
+// This is thread_local so each worker thread gets its own instance
+// and the destructor is called when the thread terminates
+namespace xmreg {
+struct RandomXThreadCleanup {
+    bool initialized = false;
+    void mark_initialized() { initialized = true; }
+    ~RandomXThreadCleanup() {
+        if (initialized) {
+            me_rx_slow_hash_free_state();
+        }
+    }
+};
+// Declared static thread_local so each thread has its own instance
+inline thread_local RandomXThreadCleanup rx_thread_cleanup;
+}
 
 #include <algorithm>
 #include <limits>
@@ -295,6 +315,10 @@ me_get_block_longhash(const Blockchain *pbc,
     me_rx_slow_hash(main_height, seed_height,
                     hash.data, bd.data(),
                     bd.size(), res.data, miners, 0);
+
+    // Mark this thread as having used RandomX so cleanup happens on thread exit
+    // (VMs allocated inside me_rx_slow_hash will be freed by the destructor)
+    rx_thread_cleanup.mark_initialized();
   }
   return true;
 }
@@ -845,19 +869,21 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
 string
 mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
 {
-    std::vector<MempoolStatus::mempool_tx> mempool_txs;
+    // Use shared_ptr to avoid deep copy of mempool transactions
+    auto mempool_txs = add_header_and_footer
+        ? MempoolStatus::get_mempool_txs()
+        : MempoolStatus::get_mempool_txs(no_of_mempool_tx);
+
+    if (!mempool_txs)
+        mempool_txs = std::make_shared<std::vector<MempoolStatus::mempool_tx>>();
 
     if (add_header_and_footer)
     {
-        // get all memmpool txs
-        mempool_txs = MempoolStatus::get_mempool_txs();
-        no_of_mempool_tx = mempool_txs.size();
+        no_of_mempool_tx = mempool_txs->size();
     }
     else
     {
-        // get only first no_of_mempool_tx txs
-        mempool_txs = MempoolStatus::get_mempool_txs(no_of_mempool_tx);
-        no_of_mempool_tx = std::min<uint64_t>(no_of_mempool_tx, mempool_txs.size());
+        no_of_mempool_tx = std::min<uint64_t>(no_of_mempool_tx, mempool_txs->size());
     }
 
     // total size of mempool in bytes
@@ -886,7 +912,7 @@ mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
     for (size_t i = 0; i < no_of_mempool_tx; ++i)
     {
         // get transaction info of the tx in the mempool
-        const MempoolStatus::mempool_tx& mempool_tx = mempool_txs.at(i);
+        const MempoolStatus::mempool_tx& mempool_tx = mempool_txs->at(i);
 
         // calculate difference between tx in mempool and server timestamps
         array<size_t, 5> delta_time = timestamp_difference(
@@ -946,7 +972,7 @@ mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
 
     // this is for partial disply on front page.
 
-    context["mempool_fits_on_front_page"]    = (total_no_of_mempool_tx <= mempool_txs.size());
+    context["mempool_fits_on_front_page"]    = (total_no_of_mempool_tx <= mempool_txs->size());
     context["no_of_mempool_tx_of_frontpage"] = no_of_mempool_tx;
 
     context["partial_mempool_shown"] = true;
@@ -5125,11 +5151,10 @@ json_mempool(string _page, string _limit)
 
     uint64_t height = core_storage->get_current_blockchain_height();
 
-    // get mempool tx from mempoolstatus thread
-    vector<MempoolStatus::mempool_tx> mempool_data
-            = MempoolStatus::get_mempool_txs();
+    // get mempool tx from mempoolstatus thread (shared_ptr avoids deep copy)
+    auto mempool_data = MempoolStatus::get_mempool_txs();
 
-    uint64_t no_mempool_txs = mempool_data.size();
+    uint64_t no_mempool_txs = mempool_data ? mempool_data->size() : 0;
 
     // calculate starting and ending block numbers to show
     int64_t start_height = limit * page;
@@ -5155,7 +5180,7 @@ json_mempool(string _page, string _limit)
 
         try
         {
-            mempool_tx = &(mempool_data.at(i));
+            mempool_tx = &(mempool_data->at(i));
         }
         catch (const std::out_of_range& e)
         {
@@ -5602,11 +5627,10 @@ json_outputsblocks(string startblock,
     if (in_mempool_aswell)
     {
         // first check if there is something for us in the mempool
-        // get mempool tx from mempoolstatus thread
-        vector<MempoolStatus::mempool_tx> mempool_txs
-                = MempoolStatus::get_mempool_txs();
+        // get mempool tx from mempoolstatus thread (shared_ptr avoids deep copy)
+        auto mempool_txs = MempoolStatus::get_mempool_txs();
 
-        uint64_t no_mempool_txs = mempool_txs.size();
+        uint64_t no_mempool_txs = mempool_txs ? mempool_txs->size() : 0;
 
         // need to use vector<transactions>,
         // not vector<MempoolStatus::mempool_tx>
@@ -5616,7 +5640,8 @@ json_outputsblocks(string startblock,
         for (size_t i = 0; i < no_mempool_txs; ++i)
         {
             // get transaction info of the tx in the mempool
-            tmp_vector.push_back(std::move(mempool_txs.at(i).tx));
+            // Note: we copy the tx here since the shared_ptr data is read-only
+            tmp_vector.push_back(mempool_txs->at(i).tx);
         }
 
         if (!find_our_outputs(
@@ -6735,17 +6760,19 @@ search_mempool(crypto::hash tx_hash,
 
 
 
-    // get mempool tx from mempoolstatus thread
-    vector<MempoolStatus::mempool_tx> mempool_txs
-            = MempoolStatus::get_mempool_txs();
+    // get mempool tx from mempoolstatus thread (shared_ptr avoids deep copy)
+    auto mempool_txs = MempoolStatus::get_mempool_txs();
+
+    if (!mempool_txs)
+        return true;
 
     // if dont have tx_blob member, construct tx
     // from json obtained from the rpc call
 
-    for (size_t i = 0; i < mempool_txs.size(); ++i)
+    for (size_t i = 0; i < mempool_txs->size(); ++i)
     {
         // get transaction info of the tx in the mempool
-        const MempoolStatus::mempool_tx& mempool_tx = mempool_txs.at(i);
+        const MempoolStatus::mempool_tx& mempool_tx = mempool_txs->at(i);
 
         if (tx_hash == mempool_tx.tx_hash || tx_hash == null_hash)
         {
@@ -6755,7 +6782,7 @@ search_mempool(crypto::hash tx_hash,
                 break;
         }
 
-    } // for (size_t i = 0; i < mempool_txs.size(); ++i)
+    } // for (size_t i = 0; i < mempool_txs->size(); ++i)
 
     return true;
 }
@@ -7008,6 +7035,10 @@ get_randomx_code(uint64_t blk_height,
             cerr << "main_vm_full is still null!";
             return {};
         }
+
+        // Mark this thread as having allocated a RandomX VM so it will be
+        // cleaned up when the thread exits (prevents ~2GB memory leak per thread)
+        rx_thread_cleanup.mark_initialized();
     }
 
 
