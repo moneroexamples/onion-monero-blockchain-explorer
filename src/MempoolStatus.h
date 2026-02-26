@@ -7,6 +7,7 @@
 
 
 #include "MicroCore.h"
+#include "rpccalls.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -38,14 +39,13 @@ struct MempoolStatus
         uint64_t mixin_no {0};
 
         string fee_str;
+        string fee_micro_str;
+        string payed_for_kB_str;
+        string payed_for_kB_micro_str;
         string xmr_inputs_str;
         string xmr_outputs_str;
         string timestamp_str;
         string txsize;
-
-        char     pID; // '-' - no payment ID,
-                      // 'l' - legacy, long 64 character payment id,
-                      // 'e' - encrypted, short, from integrated addresses
     };
 
 
@@ -58,6 +58,7 @@ struct MempoolStatus
         uint64_t height  {0};
         uint64_t target_height  {0};
         uint64_t difficulty  {0};
+        uint64_t difficulty_top64  {0};
         uint64_t target  {0};
         uint64_t tx_count  {0};
         uint64_t tx_pool_size  {0};
@@ -66,14 +67,20 @@ struct MempoolStatus
         uint64_t incoming_connections_count  {0};
         uint64_t white_peerlist_size  {0};
         uint64_t grey_peerlist_size  {0};
-        bool testnet {false};
+        cryptonote::network_type nettype {cryptonote::network_type::MAINNET};
         crypto::hash top_block_hash;
         uint64_t cumulative_difficulty  {0};
+        uint64_t cumulative_difficulty_top64  {0};
         uint64_t block_size_limit  {0};
+        uint64_t block_size_median  {0};
+        uint64_t block_weight_limit {0};
+        char block_size_limit_str[10];   // needs to be trivially copyable
+        char block_size_median_str[10];  // std::string is not trivially copyable
         uint64_t start_time  {0};
         uint64_t current_hf_version {0};
 
         uint64_t hash_rate  {0};
+        uint64_t hash_rate_top64  {0};
         uint64_t fee_per_kb  {0};
         uint64_t info_timestamp  {0};
 
@@ -119,7 +126,9 @@ struct MempoolStatus
 
     static bf::path blockchain_path;
     static string deamon_url;
-    static bool testnet;
+    static cryptonote::network_type nettype;
+
+    static rpccalls::login_opt login;
 
     // make object for accessing the blockchain here
     static MicroCore* mcore;

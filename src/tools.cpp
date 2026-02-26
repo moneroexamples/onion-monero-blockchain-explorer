@@ -78,10 +78,10 @@ get_tx_pub_key_from_str_hash(Blockchain& core_storage, const string& hash_str, t
 bool
 parse_str_address(const string& address_str,
                   address_parse_info& address_info,
-                  bool testnet)
+                  cryptonote::network_type nettype)
 {
 
-    if (!get_account_address_from_str(address_info, testnet, address_str))
+    if (!get_account_address_from_str(address_info, nettype, address_str))
     {
         cerr << "Error getting address: " << address_str << endl;
         return false;
@@ -95,10 +95,10 @@ parse_str_address(const string& address_str,
 * Return string representation of monero address
 */
 string
-print_address(const address_parse_info& address_info, bool testnet)
+print_address(const address_parse_info& address_info, cryptonote::network_type nettype)
 {
     return "<" + get_account_address_as_str(
-            testnet, address_info.is_subaddress, address_info.address)
+            nettype, address_info.is_subaddress, address_info.address)
            + ">";
 }
 
@@ -180,7 +180,7 @@ timestamp_to_str_gm(time_t timestamp, const char* format)
 ostream&
 operator<< (ostream& os, const address_parse_info& addr_info)
 {
-    os << get_account_address_as_str(false, addr_info.is_subaddress, addr_info.address);
+    os << get_account_address_as_str(network_type::MAINNET, addr_info.is_subaddress, addr_info.address);
     return os;
 }
 
@@ -237,14 +237,16 @@ generate_key_image(const crypto::key_derivation& derivation,
 
 
 string
-get_default_lmdb_folder(bool testnet)
+get_default_lmdb_folder(cryptonote::network_type nettype)
 {
     // default path to monero folder
     // on linux this is /home/<username>/.bitmonero
     string default_monero_dir = tools::get_default_data_dir();
 
-    if (testnet)
+    if (nettype == cryptonote::network_type::TESTNET)
         default_monero_dir += "/testnet";
+    if (nettype == cryptonote::network_type::STAGENET)
+        default_monero_dir += "/stagenet";
 
 
     // the default folder of the lmdb blockchain database
@@ -261,10 +263,10 @@ get_default_lmdb_folder(bool testnet)
 bool
 get_blockchain_path(const boost::optional<string>& bc_path,
                     bf::path& blockchain_path,
-                    bool testnet)
+                    cryptonote::network_type nettype)
 {
     // the default folder of the lmdb blockchain database
-    string default_lmdb_dir   = xmreg::get_default_lmdb_folder(testnet);
+    string default_lmdb_dir   = xmreg::get_default_lmdb_folder(nettype);
 
     blockchain_path = bc_path
                       ? bf::path(*bc_path)
@@ -933,18 +935,21 @@ decode_ringct(rct::rctSig const& rv,
         switch (rv.type)
         {
             case rct::RCTTypeSimple:
-            case rct::RCTTypeSimpleBulletproof:
+            case rct::RCTTypeBulletproof:
+            case rct::RCTTypeBulletproof2:
+            case rct::RCTTypeCLSAG:                
                 amount = rct::decodeRctSimple(rv,
                                               rct::sk2rct(scalar1),
                                               i,
-                                              mask);
+                                              mask,
+                                              hw::get_device("default"));
                 break;
             case rct::RCTTypeFull:
-            case rct::RCTTypeFullBulletproof:
                 amount = rct::decodeRct(rv,
                                         rct::sk2rct(scalar1),
                                         i,
-                                        mask);
+                                        mask,
+                                        hw::get_device("default"));
                 break;
             default:
                 cerr << "Unsupported rct type: " << rv.type << '\n';
@@ -1035,7 +1040,7 @@ decrypt(const std::string &ciphertext,
         bool authenticated)
 {
 
-    const size_t prefix_size = sizeof(chacha8_iv)
+    const size_t prefix_size = sizeof(chacha_iv)
                                + (authenticated ? sizeof(crypto::signature) : 0);
     if (ciphertext.size() < prefix_size)
     {
@@ -1043,10 +1048,10 @@ decrypt(const std::string &ciphertext,
         return {};
     }
 
-    crypto::chacha8_key key;
-    crypto::generate_chacha8_key(&skey, sizeof(skey), key);
+    crypto::chacha_key key;
+    crypto::generate_chacha_key(&skey, sizeof(skey), key, 1);
 
-    const crypto::chacha8_iv &iv = *(const crypto::chacha8_iv*)&ciphertext[0];
+    const crypto::chacha_iv &iv = *(const crypto::chacha_iv*)&ciphertext[0];
 
     std::string plaintext;
 
@@ -1071,7 +1076,7 @@ decrypt(const std::string &ciphertext,
 
     }
 
-    crypto::chacha8(ciphertext.data() + sizeof(iv),
+    crypto::chacha20(ciphertext.data() + sizeof(iv),
                     ciphertext.size() - prefix_size,
                     key, iv, &plaintext[0]);
 
@@ -1260,6 +1265,39 @@ pause_execution(uint64_t no_seconds, const string& text)
     }
 
     cout << endl;
+}
+
+string
+tx_to_hex(transaction const& tx)
+{
+    return epee::string_tools::buff_to_hex_nodelimer(t_serializable_object_to_blob(tx));
+}
+
+void get_metric_prefix(cryptonote::difficulty_type hr, double& hr_d, char& prefix)
+{
+  if (hr < 1000)
+  {
+    prefix = 0;
+    return;
+  }
+  static const char metric_prefixes[4] = { 'k', 'M', 'G', 'T' };
+  for (size_t i = 0; i < sizeof(metric_prefixes); ++i)
+  {
+    if (hr < 1000000)
+    {
+      hr_d = hr.convert_to<double>() / 1000;
+      prefix = metric_prefixes[i];
+      return;
+    }
+    hr /= 1000;
+  }
+  prefix = 0;
+}
+
+cryptonote::difficulty_type
+make_difficulty(uint64_t low, uint64_t high)
+{
+    return (cryptonote::difficulty_type(high) << 64) + low;
 }
 
 }

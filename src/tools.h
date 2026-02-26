@@ -77,14 +77,18 @@ bool
 parse_str_secret_key(const string& key_str, std::vector<T>& secret_keys)
 {
     const size_t num_keys = key_str.size() / 64;
+
     if (num_keys * 64 != key_str.size())
         return false;
+
     secret_keys.resize(num_keys);
+
     for (size_t i = 0; i < num_keys; ++i)
     {
         if (!parse_str_secret_key(key_str.substr(64*i, 64), secret_keys[i]))
             return false;
     }
+
     return true;
 }
 
@@ -97,14 +101,14 @@ get_tx_pub_key_from_str_hash(Blockchain& core_storage,
 bool
 parse_str_address(const string& address_str,
                   address_parse_info& address_info,
-                  bool testnet = false);
+                  cryptonote::network_type nettype = cryptonote::network_type::MAINNET);
 
 inline bool
 is_separator(char c);
 
 string
 print_address(const address_parse_info& address,
-              bool testnet = false);
+              cryptonote::network_type nettype = cryptonote::network_type::MAINNET);
 
 string
 print_sig (const signature& sig);
@@ -123,7 +127,7 @@ operator<< (ostream& os, const address_parse_info& addr_info);
 
 
 string
-get_default_lmdb_folder(bool testnet = false);
+get_default_lmdb_folder(cryptonote::network_type nettype = cryptonote::network_type::MAINNET);
 
 bool
 generate_key_image(const crypto::key_derivation& derivation,
@@ -135,7 +139,7 @@ generate_key_image(const crypto::key_derivation& derivation,
 bool
 get_blockchain_path(const boost::optional<string>& bc_path,
                     bf::path& blockchain_path,
-                    bool testnet = false);
+                    cryptonote::network_type nettype = cryptonote::network_type::MAINNET);
 
 uint64_t
 sum_money_in_outputs(const transaction& tx);
@@ -334,7 +338,7 @@ void chunks(Iterator begin,
  */
 template <typename T>
 inline string
-remove_bad_chars(T&& in_str, std::regex const& rgx = std::regex ("[^a-zA-Z0-9]"))
+remove_bad_chars(T&& in_str, std::regex const& rgx = std::regex ("[^a-zA-Z0-9+/=]"))
 {
     return std::regex_replace(std::forward<T>(in_str), rgx, "");
 }
@@ -365,6 +369,15 @@ calc_median(It it_begin, It it_end)
 
 void
 pause_execution(uint64_t no_seconds, const string& text = "now");
+
+string
+tx_to_hex(transaction const& tx);
+
+void
+get_metric_prefix(cryptonote::difficulty_type hr, double& hr_d, char& prefix);
+
+cryptonote::difficulty_type
+make_difficulty(uint64_t low, uint64_t high);
 
 }
 

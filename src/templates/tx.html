@@ -1,4 +1,15 @@
 
+<div class="center">
+     <h3 style="font-size: 12px; margin-top: 20px">
+     {{#refresh}}
+         <a href="/tx/{{tx_hash}}">Autorefresh is ON (10 s)</a>
+     {{/refresh}}
+     {{^refresh}}
+        <a href="/tx/{{tx_hash}}/autorefresh">Autorefresh is OFF</a>
+     {{/refresh}}
+     </h3>
+</div>
+
 <div>
 
     {{#has_error}}

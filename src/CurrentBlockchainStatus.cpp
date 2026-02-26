@@ -137,8 +137,8 @@ CurrentBlockchainStatus::calculate_emission_in_blocks(
 
         uint64_t coinbase_amount = get_outs_money_amount(blk.miner_tx);
 
-        std::list<transaction> txs;
-        std::list<crypto::hash> missed_txs;
+        vector<transaction> txs;
+        vector<crypto::hash> missed_txs;
 
         uint64_t tx_fee_amount = 0;
 
@@ -299,7 +299,7 @@ CurrentBlockchainStatus::is_thread_running()
 
 bf::path CurrentBlockchainStatus::blockchain_path {"/home/mwo/.bitmonero/lmdb"};
 
-bool   CurrentBlockchainStatus::testnet {false};
+cryptonote::network_type CurrentBlockchainStatus::nettype {cryptonote::network_type::MAINNET};
 
 string CurrentBlockchainStatus::output_file {"emission_amount.txt"};
 

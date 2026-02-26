@@ -8,7 +8,9 @@ namespace xmreg
 {
 
 
-rpccalls::rpccalls(string _deamon_url,
+rpccalls::rpccalls(
+         string _deamon_url,
+         login_opt login,
          uint64_t _timeout)
         : deamon_url {_deamon_url},
           timeout_time {_timeout}
@@ -17,11 +19,12 @@ rpccalls::rpccalls(string _deamon_url,
 
     port = std::to_string(url.port);
 
-    timeout_time_ms = std::chrono::milliseconds {timeout_time};
+    timeout_time_ms = std::chrono::milliseconds {timeout_time};    
 
-    m_http_client.set_server(
-            deamon_url,
-            boost::optional<epee::net_utils::http::login>{});
+     m_http_client.set_server(
+             deamon_url,
+             login,
+             epee::net_utils::ssl_support_t::e_ssl_support_disabled);
 }
 
 bool
@@ -208,14 +211,76 @@ rpccalls::get_network_info(COMMAND_RPC_GET_INFO::response& response)
 
 
 bool
+rpccalls::get_hardfork_info(COMMAND_RPC_HARD_FORK_INFO::response& response)
+{
+    epee::json_rpc::request<cryptonote::COMMAND_RPC_HARD_FORK_INFO::request> req_t = AUTO_VAL_INIT(req_t);
+    epee::json_rpc::response<cryptonote::COMMAND_RPC_HARD_FORK_INFO::response, std::string> resp_t = AUTO_VAL_INIT(resp_t);
+
+
+    bool r {false};
+
+    req_t.jsonrpc = "2.0";
+    req_t.id = epee::serialization::storage_entry(0);
+    req_t.method = "hard_fork_info";
+
+    {
+        std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
+
+        if (!connect_to_monero_deamon())
+        {
+            cerr << "get_hardfork_info: not connected to deamon" << endl;
+            return false;
+        }
+
+        r = epee::net_utils::invoke_http_json("/json_rpc",
+                                              req_t, resp_t,
+                                              m_http_client);
+    }
+
+
+    string err;
+
+    if (r)
+    {
+        if (resp_t.result.status == CORE_RPC_STATUS_BUSY)
+        {
+            err = "daemon is busy. Please try again later.";
+        }
+        else if (resp_t.result.status != CORE_RPC_STATUS_OK)
+        {
+            err = resp_t.result.status;
+        }
+
+        if (!err.empty())
+        {
+            cerr << "Error connecting to Monero deamon due to "
+                 << err << endl;
+            return false;
+        }
+    }
+    else
+    {
+        cerr << "Error connecting to Monero deamon at "
+             << deamon_url << endl;
+        return false;
+    }
+
+    response = resp_t.result;
+
+    return true;
+}
+
+
+
+bool
 rpccalls::get_dynamic_per_kb_fee_estimate(
         uint64_t grace_blocks,
         uint64_t& fee,
         string& error_msg)
 {
-    epee::json_rpc::request<COMMAND_RPC_GET_PER_KB_FEE_ESTIMATE::request>
+    epee::json_rpc::request<COMMAND_RPC_GET_BASE_FEE_ESTIMATE::request>
             req_t = AUTO_VAL_INIT(req_t);
-    epee::json_rpc::response<COMMAND_RPC_GET_PER_KB_FEE_ESTIMATE::response, std::string>
+    epee::json_rpc::response<COMMAND_RPC_GET_BASE_FEE_ESTIMATE::response, std::string>
             resp_t = AUTO_VAL_INIT(resp_t);
 
 

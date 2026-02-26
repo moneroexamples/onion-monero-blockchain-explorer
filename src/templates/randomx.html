@@ -1,0 +1,71 @@
+<div>
+
+    <H4>Block hash (height): {{blk_hash}} ({{blk_height}})</H4>
+    <h4>
+        Eight RandomX and correspoding assembly x86 programs used
+        to calcualte the PoW hash of the block.<br/>
+	    The RandomX programs are executed on RandomX virtual machine. 
+    </h4>
+    <h5>
+    	 Values of the integer and floating point registers
+         are also provided.
+    </h5>
+
+    {{#rx_codes}}
+    <h3> Program #{{rx_code_idx}}</h3>
+    <table class="center" style="width: 60%; margin-top:10px">
+    {{#first_program}}
+    <tr>
+	    <td colspan="2">
+		    Integer registers R:<br/><br/>
+		    r0: 0x0000000000000000, r1: 0x0000000000000000, r2: 0x0000000000000000, r3: 0x0000000000000000<br/>
+		    r4: 0x0000000000000000, r5: 0x0000000000000000, r6: 0x0000000000000000, r7: 0x0000000000000000<br/><br/>
+
+		    Floating point registers F {lo, hi}:<br/><br/>
+		    	Initial values not accessible<br/><br/>
+
+		    Floating point registers E {lo, hi}:<br/><br/>
+		    	Initial values not accessible<br/><br/>
+
+		    Floating point registers A {lo, hi}:<br/><br/>
+		    a0: {{a0}},  a1: {{a1}}<br/>
+		    a2: {{a2}},  a3: {{a3}}<br/><br/>
+        {{/first_program}}
+        </td>
+    </tr>
+
+        <tr>
+            <td style="text-align: left;">RandomX code</td>
+            <td style="text-align: left;">ASM x86</td>
+        </tr>
+    <tr>
+        <td style="text-align: left;vertical-align: top;">
+            <pre>{{rx_code}}</pre>
+         </td>
+        <td style="text-align: left;vertical-align: top;">
+            <pre>{{rx_code_asm}}</pre>
+        </td>
+    </tr>
+    <tr>
+	    <td colspan="2">
+		    Integer registers R:<br/><br/>
+		    r0: {{r0}}, r1: {{r1}}, r2: {{r2}}, r3: {{r3}}<br/>
+		    r4: {{r4}}, r5: {{r5}}, r6: {{r6}}, r7: {{r7}}<br/><br/>
+
+		    Floating point registers F {lo, hi}:<br/><br/>
+		    f0: {{f0}},  f1: {{f1}}<br/>
+		    f2: {{f2}},  f3: {{f3}}<br/><br/>
+
+		    Floating point registers E {lo, hi}:<br/><br/>
+		    e0: {{e0}},  e1: {{e1}}<br/>
+		    e2: {{e2}},  e3: {{e3}}<br/><br/>
+
+		    Floating point registers A {lo, hi}:<br/><br/>
+		    a0: {{a0}},  a1: {{a1}}<br/>
+		    a2: {{a2}},  a3: {{a3}}<br/><br/>
+		    <br/>
+	    </td>
+    </tr>
+    </table>
+    {{/rx_codes}}
+</div>

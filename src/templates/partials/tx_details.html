@@ -5,15 +5,15 @@
     {{#enable_mixins_details}}
         <H5 style="margin:5px">Tx prefix hash: {{tx_prefix_hash}}</H5>
     {{/enable_mixins_details}}
-    <H5 style="margin:5px">Tx public key: {{tx_pub_key}}</H5>
+    <H5 style="margin:5px">Tx public key: <span id="tx_pub_key">{{tx_pub_key}}</span></H5>
+    <span id="add_tx_pub_keys" style="display: none;">{{add_tx_pub_keys}}</span>
 
     {{#has_payment_id}}
-        <H5 style="margin:5px">Payment id: {{payment_id}}</H5>
-        <H5 style="margin:5px">Payment id as ascii: {{payment_id_as_ascii}}</H5>
+        <H5 style="margin:5px">Payment id: <span id="payment_id">{{payment_id}}</span></H5>
     {{/has_payment_id}}
 
     {{#has_payment_id8}}
-        <H5 style="margin:5px">Payment id (encrypted): {{payment_id8}}</H5>
+        <H5 style="margin:5px">Payment id (encrypted): <span id="payment_id">{{payment_id8}}</span></H5>
     {{/has_payment_id8}}
 
 
@@ -37,7 +37,7 @@
         {{/have_raw_tx}}
         <tr>
             <td>Block: <a href="/block/{{blk_height}}">{{blk_height}}</a></td>
-            <td>Fee: {{tx_fee}}</td>
+            <td>Fee (per_kB): {{tx_fee}} ({{payed_for_kB}})</td>
             <td>Tx size: {{tx_size}} kB</td>
         </tr>
         <tr>
@@ -48,7 +48,7 @@
 
 
         <tr>
-            <td colspan="3">Extra: {{extra}}</td>
+            <td colspan="3" style="max-width:700px">Extra: {{extra}}</td>
         </tr>
 
 
@@ -89,8 +89,8 @@
                     </h5>
                     <form action="/myoutputs" method="post" style="width:100%; margin-top:2px" class="style-1">
                         <input type="hidden" name="tx_hash" value="{{tx_hash}}"><br/>
-                        <input type="text" name="xmr_address" size="90" placeholder="Monero address/subaddress"><br/>
-                        <input type="text" name="viewkey" size="90" placeholder="Private viewkey" style="margin-top:5px"><br/>
+                        <input type="text" name="xmr_address" size="110" placeholder="Monero address/subaddress"><br/>
+                        <input type="text" name="viewkey" size="110" placeholder="Private viewkey" style="margin-top:5px"><br/>
                         <input type="hidden" name="raw_tx_data" value="{{raw_tx_data}}">
                         <!--above raw_tx_data field only used when checking raw tx data through tx pusher-->
                         <input type="submit" value="Decode outputs" style="margin-top:5px" >
@@ -112,10 +112,10 @@
                     </h5>
                     <form action="/prove" method="post" style="width:100%;margin-top:2px" class="style-1">
                        <input type="hidden" name="txhash" value="{{tx_hash}}"><br/>
-                       <input type="text" name="txprvkey" size="90" placeholder="Tx private key"><br/>
+                       <input type="text" name="txprvkey" size="120" placeholder="Tx private key"><br/>
                         <input type="hidden" name="raw_tx_data" value="{{raw_tx_data}}">
                         <!--above raw_tx_data field only used when checking raw tx data through tx pusher-->
-                       <input type="text" name="xmraddress" size="90" placeholder="Recipient's monero address/subaddress" style="margin-top:5px"><br/>
+                       <input type="text" name="xmraddress" size="120" placeholder="Recipient's monero address/subaddress" style="margin-top:5px"><br/>
                        <input type="submit" value="Prove sending" style="margin-top:5px">
                     </form>
                 </div>
@@ -123,7 +123,6 @@
         </div>
     </div>
     {{/have_raw_tx}}
-
 
 
 {{#has_inputs}}
@@ -275,7 +274,14 @@
 {{^have_raw_tx}}
     {{^with_ring_signatures}}
         {{#show_more_details_link}}
-            <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}/1">More details</a></h5>
+            <h5 style="margin-top:1px">
+                <a href="/tx/{{tx_hash}}/1">More details</a>
+                {{#enable_as_hex}}
+                    | <a href="/txhex/{{tx_hash}}">Tx as hex</a>
+                    | <a href="/ringmembershex/{{tx_hash}}">Ring member outputs/mixins as hex</a>
+                    | <a href="/ringmemberstxhex/{{tx_hash}}">Full ring member txs as hex</a>
+                {{/enable_as_hex}}
+            </h5>
         {{/show_more_details_link}}
     {{/with_ring_signatures}}
     {{#with_ring_signatures}}
@@ -292,19 +298,5 @@
         <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}">Less details</a></h5>
     {{/with_ring_signatures}}
 {{/have_raw_tx}}
-
-
-{{#show_cache_times}}
-    <div class="center">
-        {{#construction_time}}
-            <h6 style="margin-top: 1px;color:#949490">
-                Tx details construction time: {{construction_time}} s
-                {{#from_cache}}
-                    <br/>Tx read from the tx cache
-                {{/from_cache}}
-            </h6>
-        {{/construction_time}}
-    </div>
-{{/show_cache_times}}
 
 </div>

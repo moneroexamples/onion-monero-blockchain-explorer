@@ -30,6 +30,17 @@
             <td>Total fees:</td><td>{{sum_fees}}</td>
             <td>No of txs:</td><td>{{no_txs}}</td>
         </tr>
+        <tr>
+            <td>PoW hash:</td><td>{{blk_pow_hash}}</td>
+            <td>Difficulty:</td><td>{{blk_difficulty}}</td>
+            {{#is_randomx}}
+                <td colspan="2"><a href="/randomx/{{blk_height}}">RandomX source code</a></td>
+            {{/is_randomx}}
+            {{^is_randomx}}
+                <td></td>
+            {{/is_randomx}}
+            <td></td>
+        </tr>
     </table>
 
     <h3>Miner reward transaction</h3>
@@ -59,8 +70,7 @@
             <tr>
                 <td>hash</td>
                 <td>outputs</td>
-                <td>fee</td>
-                <td>ring size</td>
+                <td>fee [&#181;&#x271]</td>
                 <td>in/out</td>
                 <td>size [kB]</td>
                 <td>version</td>
@@ -69,14 +79,21 @@
                 <tr>
                     <td><a href="/tx/{{hash}}">{{hash}}</a></td>
                     <td>{{sum_outputs}}</td>
-                    <td>{{tx_fee}}</td>
-                    <td>{{mixin}}</td>
+                    <td>{{fee_micro}}</td>
                     <td>{{no_inputs}}/{{no_outputs}}</td>                    
                     <td>{{tx_size}}</td>
                     <td>{{version}}</td>
                 </tr>
             {{/blk_txs}}
         </table>
-    {{/have_txs}}
+    {{/have_txs}}    
+
+
+    {{#enable_as_hex}}
+        <h5 style="margin-top:1px">
+            <a href="/blockhex/{{blk_height}}">Block as hex</a>
+            | <a href="/blockhexcomplete/{{blk_height}}">Complete block as hex</a>
+        </h5>
+    {{/enable_as_hex}}
 
 </div>

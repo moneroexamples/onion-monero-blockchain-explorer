@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0.2)
 
 set(PROJECT_NAME
         xmrblocks)
@@ -6,9 +6,7 @@ set(PROJECT_NAME
 
 project(${PROJECT_NAME})
 
-set(CMAKE_CXX_FLAGS
-        "${CMAKE_CXX_FLAGS} -std=c++14")
-
+set(CMAKE_CXX_STANDARD 11)
 
 if (WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wa,-mbig-obj -O3")
@@ -21,12 +19,28 @@ endif()
 
 message(STATUS MONERO_DIR ": ${MONERO_DIR}")
 
-set(MONERO_SOURCE_DIR ${MONERO_DIR}
-        CACHE PATH "Path to the root directory for Monero")
+if (NOT MONERO_SOURCE_DIR)
+    set(MONERO_SOURCE_DIR ${MONERO_DIR}
+          CACHE PATH "Path to the root directory for Monero")
+endif()
 
-# set location of monero build tree
-set(MONERO_BUILD_DIR ${MONERO_SOURCE_DIR}/build/release/
-        CACHE PATH "Path to the build directory for Monero")
+if (NOT MONERO_BUILD_DIR)
+    # set location of monero build tree
+    set(MONERO_BUILD_DIR ${MONERO_SOURCE_DIR}/build/release/
+          CACHE PATH "Path to the build directory for Monero")
+
+   if (NOT EXISTS ${MONERO_BUILD_DIR})   
+        # try different location   
+        message(STATUS "Trying different folder for monero libraries")
+        set(MONERO_BUILD_DIR ${MONERO_SOURCE_DIR}/build/Linux/master/release/
+            CACHE PATH "Path to the build directory for Monero" FORCE)
+    endif()
+
+endif()
+
+if (NOT EXISTS ${MONERO_BUILD_DIR})   
+  message(FATAL_ERROR "Monero libraries not found in: ${MONERO_BUILD_DIR}")
+endif()
 
 set(MY_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake"
         CACHE PATH "The path to the cmake directory of the current project")
@@ -57,19 +71,43 @@ find_package(Boost COMPONENTS
 find_package(Sanitizers)
 
 if(APPLE)
-    include_directories(/usr/local/opt/openssl/include)
-    link_directories(/usr/local/opt/openssl/lib)
+    include_directories(/usr/local/opt/openssl@1.1/include)
+    link_directories(/usr/local/opt/openssl@1.1/lib)
+    link_directories(/usr/local/lib)
 endif()
 
+MESSAGE(STATUS "Looking for libunbound") # FindUnbound.cmake from monero repo
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR WIN32)
+FIND_PATH(UNBOUND_INCLUDE_DIR
+  NAMES unbound.h
+  PATH_SUFFIXES include/ include/unbound/
+  PATHS "${PROJECT_SOURCE_DIR}"
+  ${UNBOUND_ROOT}
+  $ENV{UNBOUND_ROOT}
+  /usr/local/
+  /usr/
+)
+
+find_library (UNBOUND_LIBRARY unbound)
+if (WIN32 OR (${UNBOUND_LIBRARY} STREQUAL "UNBOUND_LIBRARY-NOTFOUND"))
     add_library(unbound STATIC IMPORTED)
     set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/external/unbound/libunbound.a)
 endif()
 
+if("${Xmr_WALLET-CRYPTO_LIBRARIES}" STREQUAL "Xmr_WALLET-CRYPTO_LIBRARY-NOTFOUND")
+  set(WALLET_CRYPTO "")
+else()
+  set(WALLET_CRYPTO ${Xmr_WALLET-CRYPTO_LIBRARIES})
+endif()
+
 # include boost headers
 include_directories(${Boost_INCLUDE_DIRS})
+
+# include monero
+include_directories(${MONERO_SOURCE_DIR}/build)
+
 include_directories("ext/mstch/include")
+include_directories("ext/mstch/include/src")
 include_directories("ext/crow")
 
 # add ext/ subfolder
@@ -94,6 +132,7 @@ create_git_version()
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates ${CMAKE_CURRENT_BINARY_DIR}/templates)
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates/css ${CMAKE_CURRENT_BINARY_DIR}/templates/css)
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates/partials ${CMAKE_CURRENT_BINARY_DIR}/templates/partials)
+configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates/js ${CMAKE_CURRENT_BINARY_DIR}/templates/js)
 
 set(LIBRARIES
         myxrm
@@ -101,20 +140,28 @@ set(LIBRARIES
         mstch
         wallet
         blockchain_db
+        device
+        ${WALLET_CRYPTO}
         cryptonote_core
         cryptonote_protocol
         cryptonote_basic
+        multisig
         daemonizer
-        cncrypto
         blocks
         lmdb
         ringct
+        ringct_basic
         common
         mnemonics
         easylogging
         checkpoints
+        cncrypto        
+        miniupnpc
         version
         epee
+        hardforks
+        randomx
+        sodium
         ${Boost_LIBRARIES}
         pthread
         unbound
@@ -123,13 +170,21 @@ set(LIBRARIES
         ssl)
 
 if(APPLE)
-    set(LIBRARIES ${LIBRARIES} "-framework IOKit")
+    set(LIBRARIES ${LIBRARIES} "-framework IOKit -framework Foundation")
 else()
     set(LIBRARIES ${LIBRARIES} atomic)
 endif()
 
+find_library(UNWIND_LIBRARY unwind)
+if (${UNWIND_LIBRARY} STREQUAL "UNWIND_LIBRARY-NOTFOUND")
+  message (STATUS "unwind library not found")
+  set (UNWIND_LIBRARY "")
+else ()
+  message (STATUS "Found unwind library: ${UNWIND_LIBRARY}")
+endif ()
+
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND NOT WIN32)
-    set(LIBRARIES ${LIBRARIES} unwind)
+    set(LIBRARIES ${LIBRARIES} ${UNWIND_LIBRARY})
 endif()
 
 if (WIN32)
@@ -142,5 +197,8 @@ if (WIN32)
 else()
     set(LIBRARIES ${LIBRARIES} dl)
 endif()
+
+find_package(HIDAPI)
+set(LIBRARIES ${LIBRARIES} ${HIDAPI_LIBRARIES})
 
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
