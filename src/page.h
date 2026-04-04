@@ -1131,7 +1131,13 @@ show_block(uint64_t _blk_height)
 
     // initalise page tempate map with basic info about blockchain
 
-    string blk_pow_hash_str = pod_to_hex(get_block_longhash(core_storage, blk, _blk_height, 0));
+    // Only compute expensive PoW hash if RandomX is enabled
+    string blk_pow_hash_str;
+    if (enable_randomx) {
+        blk_pow_hash_str = pod_to_hex(get_block_longhash(core_storage, blk, _blk_height, 0));
+    } else {
+        blk_pow_hash_str = "N/A (disabled)";
+    }
     cryptonote::difficulty_type blk_difficulty = core_storage->get_db().get_block_difficulty(_blk_height);
 
     mstch::map context {
