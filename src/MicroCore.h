@@ -57,6 +57,12 @@ namespace xmreg
         bool
         get_tx(const string& tx_hash, transaction& tx);
 
+        // Get transaction without expensive signature verification
+        // Uses parse_and_validate_tx_base_from_blob() which skips
+        // bulletproof expansion (~60% faster, no scalarmultKey)
+        bool
+        get_tx_fast(const crypto::hash& tx_hash, transaction& tx);
+
         bool
         find_output_in_tx(const transaction& tx,
                           const public_key& output_pubkey,

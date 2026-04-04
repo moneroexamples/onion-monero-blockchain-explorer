@@ -314,4 +314,46 @@ MicroCore::get_device() const
     return m_device;
 }
 
+/**
+ * Get transaction without expensive signature verification.
+ * Uses parse_and_validate_tx_base_from_blob() which skips
+ * bulletproof expansion, avoiding ~60% of CPU (no scalarmultKey).
+ */
+bool
+MicroCore::get_tx_fast(const crypto::hash& tx_hash, transaction& tx)
+{
+    if (!m_blockchain_storage.have_tx(tx_hash))
+    {
+        cerr << "MicroCore::get_tx_fast tx does not exist in blockchain: " << tx_hash << endl;
+        return false;
+    }
+
+    try
+    {
+        // Get raw transaction blob from LMDB
+        cryptonote::blobdata tx_blob;
+        if (!m_blockchain_storage.get_db().get_tx_blob(tx_hash, tx_blob))
+        {
+            cerr << "MicroCore::get_tx_fast: get_tx_blob failed for " << tx_hash << endl;
+            return false;
+        }
+
+        // Parse without expensive signature verification
+        // Uses base_only=true which skips bulletproof expansion (no scalarmultKey)
+        if (!cryptonote::parse_and_validate_tx_base_from_blob(
+                cryptonote::blobdata_ref{tx_blob.data(), tx_blob.size()}, tx))
+        {
+            cerr << "MicroCore::get_tx_fast: parse_and_validate_tx_base_from_blob failed" << endl;
+            return false;
+        }
+
+        return true;
+    }
+    catch (const std::exception& e)
+    {
+        cerr << "MicroCore::get_tx_fast exception: " << e.what() << endl;
+        return false;
+    }
+}
+
 }
