@@ -9,3 +9,9 @@ tests/
 build/
 cmake-build-debug/
 .ycm_extra_conf.py
+.asaas-smoke/
+__pycache__/
+*.sqlite3
+*.token
+!tools/asaas/tests/
+!tools/asaas/tests/*.py

@@ -337,6 +337,15 @@ main(int ac, const char* av[])
         return myxmr::htmlresponse(xmrblocks.index2());
     });
 
+    CROW_ROUTE(app, "/swap")
+    ([&]() {
+        crow::response response {307};
+        // The authenticated swap sidecar binds loopback by default.
+        // Remote operators should reach it through an SSH tunnel.
+        response.add_header("Location", "http://127.0.0.1:8117/");
+        return response;
+    });
+
     CROW_ROUTE(app, "/page/<uint>")
     ([&](size_t page_no) {
         return myxmr::htmlresponse(xmrblocks.index2(page_no));
