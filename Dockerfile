@@ -1,5 +1,6 @@
-# Use ubuntu:latest as base for builder stage image
-FROM ubuntu:latest as builder
+# Pin the documented Ubuntu release so Monero v0.18.4.0 is not
+# unexpectedly built with an incompatible future CMake toolchain.
+FROM ubuntu:24.04 AS builder
 
 # Set Monero branch/tag to be used for monerod compilation
 ARG MONERO_BRANCH=v0.18.4.0
@@ -56,8 +57,8 @@ RUN cmake .. && make -j"$(cat /nproc)"
 # Use ldd and awk to bundle up dynamic libraries for the final image
 RUN zip /lib.zip $(ldd xmrblocks | grep -E '/[^\ ]*' -o)
 
-# Use ubuntu:latest as base for final image
-FROM ubuntu:latest AS final
+# Keep the runtime ABI aligned with the builder image.
+FROM ubuntu:24.04 AS final
 
 # Added DEBIAN_FRONTEND=noninteractive to workaround tzdata prompt on installation
 ENV DEBIAN_FRONTEND="noninteractive"
