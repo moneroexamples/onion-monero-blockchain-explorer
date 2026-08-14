@@ -49,6 +49,13 @@ RUN git clone --recursive --branch ${MONERO_BRANCH} \
     && cd monero \
     && test -z "$NPROC" && nproc > /nproc || echo -n "$NPROC" > /nproc && make -j"$(cat /nproc)"
 
+# Crow is configured for standalone Asio and includes <asio.hpp> directly.
+# Install it after the expensive Monero build so dependency-only changes keep
+# that layer cacheable.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libasio-dev \
+    && apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 # Copy and cmake/make xmrblocks with all available threads
 COPY . /root/onion-monero-blockchain-explorer/
 WORKDIR /root/onion-monero-blockchain-explorer/build
