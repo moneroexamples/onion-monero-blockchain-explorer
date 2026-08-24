@@ -53,8 +53,7 @@ MicroCore::init(const string& _blockchain_path, network_type nt)
 
     nettype = nt;
 
-    db_flags |= MDB_RDONLY;
-    db_flags |= MDB_NOLOCK;
+    db_flags |= DBF_RDONLY;
 
     BlockchainDB* db = nullptr;
     db = new BlockchainLMDB();
