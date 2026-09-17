@@ -48,6 +48,7 @@ extern  __thread randomx_vm *main_vm_full;
 #include <limits>
 #include <ctime>
 #include <future>
+#include <thread>
 #include <type_traits>
 #include <filesystem>
 
@@ -4628,6 +4629,372 @@ json_transaction(string tx_hash_str)
     return j_response;
 }
 
+
+/*
+ * Expand a single transaction into the same representation that
+ * json_transaction returns, without the jsend envelope around it.
+ *
+ * Problems with one tx are reported inside the object returned for that tx,
+ * rather than thrown, so that a single bad tx does not sink a whole
+ * k-anonymous batch.
+ */
+json
+json_transaction_details(transaction const& tx, uint64_t bc_height)
+{
+    string const tx_hash_str = pod_to_hex(get_transaction_hash(tx));
+
+    uint64_t block_height {0};
+    uint64_t tx_timestamp {0};
+
+    block blk;
+
+    try
+    {
+        // get block cointaining this tx
+        block_height = core_storage->get_db()
+                .get_tx_block_height(get_transaction_hash(tx));
+
+        if (!mcore->get_block_by_height(block_height, blk))
+        {
+            return json {{"tx_hash", tx_hash_str},
+                         {"error"  , fmt::format("Cant get block: {:d}",
+                                                 block_height)}};
+        }
+
+        tx_timestamp = blk.timestamp;
+    }
+    catch (const exception& e)
+    {
+        return json {{"tx_hash", tx_hash_str},
+                     {"error"  , fmt::format("Tx does not exist in blockchain, "
+                                             "but was there before: {:s}",
+                                             tx_hash_str)}};
+    }
+
+    tx_details txd = get_tx_details(tx, is_coinbase(tx),
+                                    block_height, bc_height);
+
+    json outputs;
+
+    for (const auto& output: txd.output_pub_keys)
+    {
+        outputs.push_back(json {
+                {"public_key", pod_to_hex(std::get<0>(output))},
+                {"amount"    , std::get<1>(output)}
+        });
+    }
+
+    json inputs;
+
+    for (const txin_to_key &in_key: txd.input_key_imgs)
+    {
+
+        // get absolute offsets of mixins
+        std::vector<uint64_t> absolute_offsets
+                = cryptonote::relative_output_offsets_to_absolute(
+                        in_key.key_offsets);
+
+        // get public keys of outputs used in the mixins that match to the offests
+        std::vector<output_data_t> mixin_outputs;
+
+        try
+        {
+            // before proceeding with geting the outputs based on the amount and absolute offset
+            // check how many outputs there are for that amount
+            // go to next input if a too large offset was found
+            if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
+                continue;
+
+            get_output_key<BlockchainDB>(in_key.amount,
+                                           absolute_offsets,
+                                           mixin_outputs);
+        }
+        catch (const OUTPUT_DNE &e)
+        {
+            return json {{"tx_hash", tx_hash_str},
+                         {"error"  , "Failed to retrive outputs (mixins) "
+                                     "used in key images"}};
+        }
+
+        inputs.push_back(json {
+                {"key_image"  , pod_to_hex(in_key.k_image)},
+                {"amount"     , in_key.amount},
+                {"mixins"     , json {}}
+        });
+
+        json& mixins = inputs.back()["mixins"];
+
+        // mixin counter
+        size_t count = 0;
+
+        for (const uint64_t& abs_offset: absolute_offsets)
+        {
+
+            // get basic information about mixins output
+            cryptonote::output_data_t output_data = mixin_outputs.at(count++);
+
+            tx_out_index tx_out_idx;
+
+            try
+            {
+                // get pair pair<crypto::hash, uint64_t> where first is tx hash
+                // and second is local index of the output i in that tx
+                tx_out_idx = core_storage->get_db()
+                        .get_output_tx_and_index(in_key.amount, abs_offset);
+            }
+            catch (const OUTPUT_DNE& e)
+            {
+                cerr << fmt::format(
+                        "Output with amount {:d} and index {:d} does not exist!",
+                        in_key.amount, abs_offset) << '\n';
+
+                break;
+            }
+
+            mixins.push_back(json {
+                    {"public_key"  , pod_to_hex(output_data.pubkey)},
+                    {"tx_hash"     , pod_to_hex(tx_out_idx.first)},
+                    {"block_no"    , output_data.height},
+            });
+        }
+    }
+
+    // get basic tx info
+    json j_tx = get_tx_json(tx, txd);
+
+    // append additional info from block, as we don't
+    // return block data in this function
+    j_tx["timestamp"]      = tx_timestamp;
+    j_tx["timestamp_utc"]  = xmreg::timestamp_to_str_gm(tx_timestamp);
+    j_tx["block_height"]   = block_height;
+    j_tx["confirmations"]  = txd.no_confirmations;
+    j_tx["outputs"]        = outputs;
+    j_tx["inputs"]         = inputs;
+    j_tx["current_height"] = bc_height;
+
+    return j_tx;
+}
+
+
+/*
+ * Return every transaction whose hash ends with a given hex postfix.
+ *
+ * The caller asks for a postfix instead of a full tx hash and picks the tx
+ * it actually wanted out of the response itself. The explorer therefore
+ * never learns which of the returned txs the caller was after, which gives
+ * the caller k-anonymity, k being the size of the returned set.
+ *
+ * Lets use this json api convention for success and error
+ * https://labs.omniti.com/labs/jsend
+ */
+json
+json_transactions_private(string tx_hash_postfix)
+{
+    // shorter than this and the response is huge, longer than this and the
+    // matching set is almost always a single tx, i.e. no anonymity at all
+    static constexpr size_t MIN_POSTFIX_LENGTH {2};
+    static constexpr size_t MAX_POSTFIX_LENGTH {12};
+
+    // an upper bound on how many txs we are willing to expand into json for
+    // a single request, so that a short postfix on a large blockchain cannot
+    // be used to make the explorer do an unbounded amount of work
+    static constexpr uint64_t MAX_MATCHING_TXS {1000};
+
+    // only bother spreading the work over several threads once the matching
+    // set is big enough for the thread setup to pay for itself
+    static constexpr size_t MIN_TXS_PER_THREAD {64};
+
+    static constexpr size_t TX_HASH_LENGTH {64};
+
+    json j_response {
+            {"status", "fail"},
+            {"data"  , json {}}
+    };
+
+    json& j_data = j_response["data"];
+
+    // tx hashes are printed in lower case hex, so normalize the postfix
+    // before it is used for anything
+    std::transform(tx_hash_postfix.begin(), tx_hash_postfix.end(),
+                   tx_hash_postfix.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+
+    if (tx_hash_postfix.size() < MIN_POSTFIX_LENGTH
+            || tx_hash_postfix.size() > MAX_POSTFIX_LENGTH)
+    {
+        j_data["title"] = fmt::format(
+                "Tx hash postfix not between {:d} and {:d} "
+                "characters in length: {:s}",
+                MIN_POSTFIX_LENGTH, MAX_POSTFIX_LENGTH, tx_hash_postfix);
+        return j_response;
+    }
+
+    if (tx_hash_postfix.find_first_not_of("0123456789abcdef") != string::npos)
+    {
+        j_data["title"] = fmt::format(
+                "Tx hash postfix is not hex: {:s}", tx_hash_postfix);
+        return j_response;
+    }
+
+    // the db matches on a number of bits, but a hash template can only be
+    // built out of whole bytes. for an odd number of hex characters we
+    // search on one character less and filter the surplus txs out below
+    size_t const searched_length
+            = tx_hash_postfix.size() - (tx_hash_postfix.size() % 2);
+
+    // e.g. abcde -> 00000000000000000000000000000000000000000000000000000000bcde
+    string const hash_template
+            = string(TX_HASH_LENGTH - searched_length, '0')
+              .append(tx_hash_postfix.substr(
+                      tx_hash_postfix.size() - searched_length));
+
+    // parse the template into a hash object
+    crypto::hash tx_hash_template;
+
+    if (!xmreg::parse_str_secret_key(hash_template, tx_hash_template))
+    {
+        j_data["title"] = fmt::format("Cant parse tx hash: {:s}", hash_template);
+        return j_response;
+    }
+
+    // retrieve every txid, on chain and in the mempool, ending with the
+    // postfix. four bits per hex character
+    vector<crypto::hash> matching_txids;
+
+    try
+    {
+        matching_txids = core_storage->get_db().get_txids_loose(
+                tx_hash_template, searched_length * 4, MAX_MATCHING_TXS);
+    }
+    catch (const TX_EXISTS& e)
+    {
+        j_data["title"] = fmt::format(
+                "More than {:d} transactions end with {:s}. "
+                "Please use a longer postfix.",
+                MAX_MATCHING_TXS, tx_hash_postfix);
+        return j_response;
+    }
+    catch (const exception& e)
+    {
+        j_response["status"]  = "error";
+        j_response["message"] = "Failed to search for matching transactions";
+        return j_response;
+    }
+
+    // an odd postfix is searched for one character short, so drop the txs
+    // that only match the shorter postfix, e.g. 0xa0beef for 0xabeef
+    if (searched_length != tx_hash_postfix.size())
+    {
+        matching_txids.erase(
+                std::remove_if(
+                        matching_txids.begin(), matching_txids.end(),
+                        [&tx_hash_postfix](crypto::hash const& txid)
+                        {
+                            string const txid_str = pod_to_hex(txid);
+                            return txid_str.compare(
+                                    TX_HASH_LENGTH - tx_hash_postfix.size(),
+                                    tx_hash_postfix.size(),
+                                    tx_hash_postfix) != 0;
+                        }),
+                matching_txids.end());
+    }
+
+    std::vector<transaction> found_txs;
+    std::vector<crypto::hash> missed_txs;
+
+    // get the transactions themselves. mempool txs are not in the blockchain
+    // db, so any match that is still in the mempool comes back as missed
+    if (!core_storage->get_transactions(matching_txids, found_txs, missed_txs))
+    {
+        j_response["status"]  = "error";
+        j_response["message"] = "Failed to retrive matching transactions";
+        return j_response;
+    }
+
+    json j_missed_txs = json::array();
+
+    for (crypto::hash const& missed_tx: missed_txs)
+    {
+        j_missed_txs.push_back(json {
+                {"tx_hash", pod_to_hex(missed_tx)}
+        });
+    }
+
+    if (found_txs.empty())
+    {
+        j_data["title"] = fmt::format(
+                "No transactions found ending with: {:s}", tx_hash_postfix);
+        j_response["missed_transactions"] = j_missed_txs;
+        return j_response;
+    }
+
+    // get the current blockchain height. Just to check
+    uint64_t const bc_height = core_storage->get_current_blockchain_height();
+
+    // expanding a tx is mostly random reads from the db, so for a larger
+    // matching set it pays to spread the txs over a few threads
+    size_t num_threads = std::max<size_t>(
+            1, found_txs.size() / MIN_TXS_PER_THREAD);
+
+    num_threads = std::min<size_t>(
+            num_threads, std::max<size_t>(1, std::thread::hardware_concurrency()));
+
+    size_t const chunk_size = found_txs.size() / num_threads;
+
+    // one vector per thread, so that the threads never touch each others data
+    std::vector<std::vector<json>> thread_txs(num_threads);
+
+    std::vector<std::thread> threads;
+    threads.reserve(num_threads);
+
+    for (size_t i = 0; i < num_threads; ++i)
+    {
+        size_t const start = i * chunk_size;
+        size_t const end   = (i == num_threads - 1)
+                             ? found_txs.size() : (i + 1) * chunk_size;
+
+        threads.emplace_back([&, i, start, end]()
+        {
+            thread_txs[i].reserve(end - start);
+
+            for (size_t j = start; j < end; ++j)
+            {
+                // a thread that throws would take the whole explorer with
+                // it, so nothing is allowed to escape from here
+                try
+                {
+                    thread_txs[i].push_back(
+                            json_transaction_details(found_txs[j], bc_height));
+                }
+                catch (const exception& e)
+                {
+                    thread_txs[i].push_back(json {
+                            {"tx_hash", pod_to_hex(
+                                    get_transaction_hash(found_txs[j]))},
+                            {"error"  , "Failed to get transaction details"}
+                    });
+                }
+            }
+        });
+    }
+
+    for (std::thread& t: threads)
+        t.join();
+
+    json j_txs = json::array();
+
+    for (std::vector<json>& txs: thread_txs)
+    {
+        std::move(txs.begin(), txs.end(), std::back_inserter(j_txs));
+    }
+
+    j_data = j_txs;
+
+    j_response["missed_transactions"] = j_missed_txs;
+    j_response["status"] = "success";
+
+    return j_response;
+}
 
 
 /*
