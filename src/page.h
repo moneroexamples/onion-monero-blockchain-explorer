@@ -4975,7 +4975,6 @@ json_transactions_private(string tx_hash_postfix)
     {
         j_data["title"] = fmt::format(
                 "No transactions found ending with: {:s}", tx_hash_postfix);
-        j_response["missed_transactions"] = j_missed_txs;
         return j_response;
     }
 
@@ -5061,9 +5060,9 @@ json_transactions_private(string tx_hash_postfix)
         }
     }
 
-    j_data = j_txs;
+    j_data["txs"]        = j_txs;
+    j_data["missed_txs"] = j_missed_txs;
 
-    j_response["missed_transactions"] = j_missed_txs;
     j_response["status"] = "success";
 
     return j_response;
