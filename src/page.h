@@ -4716,8 +4716,18 @@ json_transactions_private(string tx_hash_postfix)
     static constexpr size_t MIN_POSTFIX_LENGTH {2};
     static constexpr size_t MAX_POSTFIX_LENGTH {12};
 
-    // fewest txs a postfix has to be expected to match to be worth serving
-    static constexpr uint64_t MIN_ANONYMITY_SET {2};
+    // fewest txs a postfix has to be expected to match to be worth serving.
+    //
+    // this is what decides how long a postfix the chain will accept, since
+    // each further character divides the expected set by sixteen, and it has
+    // to be well clear of one rather than merely above it: how many txs
+    // actually share a postfix is poisson around the expected number, and at
+    // an expected 2 a request has a 40% chance of coming back with one tx or
+    // none, which is no anonymity at all. at 20 that is 4 in 100 million.
+    //
+    // on mainnet this allows 5 characters and refuses 6, so the smallest set
+    // the endpoint will serve is around 40 txs
+    static constexpr uint64_t MIN_ANONYMITY_SET {20};
 
     // only bother spreading the work over several threads once the matching
     // set is big enough for the thread setup to pay for itself
