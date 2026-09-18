@@ -4513,6 +4513,37 @@ json_transaction(string tx_hash_str)
 
 
 /*
+ * The txid of a tx that may have been fetched pruned. A pruned tx cannot be
+ * hashed directly, its hash is built from the hash of the part that was
+ * pruned away, which the fetcher records on it.
+ */
+crypto::hash
+tx_hash_of(transaction const& tx)
+{
+    return tx.pruned
+            ? get_pruned_transaction_hash(tx, tx.prunable_hash)
+            : get_transaction_hash(tx);
+}
+
+
+/*
+ * Whether a tx blob holds a version 1 tx, which is what tells a blob the db
+ * returned whole from one it returned pruned. The version is the leading
+ * varint of the blob, same as the db layer reads it.
+ */
+bool
+is_v1_tx_blob(cryptonote::blobdata const& tx_blob)
+{
+    uint64_t version {0};
+
+    char const* begin = tx_blob.data();
+    char const* end   = begin + tx_blob.size();
+
+    return tools::read_varint(begin, end, version) > 0 && version <= 1;
+}
+
+
+/*
  * Build the json for a tx's outputs, and for its inputs together with the
  * ring members each one spends against.
  *
@@ -4620,7 +4651,7 @@ json_transaction_details(transaction const& tx, uint64_t bc_height,
     if (found_in_mempool == false)
     {
         block_height = core_storage->get_db()
-                .get_tx_block_height(get_transaction_hash(tx));
+                .get_tx_block_height(tx_hash_of(tx));
 
         if (found_block_height)
             *found_block_height = block_height;
@@ -4640,6 +4671,19 @@ json_transaction_details(transaction const& tx, uint64_t bc_height,
 
     // get basic tx info
     json j_tx = get_tx_json(tx, txd);
+
+    // a pruned tx never had its signatures here, so what get_tx_details
+    // measured is not the size of the tx that was broadcast. report the
+    // size that was actually measured, under a name that says so, rather
+    // than a wrong number under the usual one.
+    //
+    // a tx with no rct signatures has nothing to prune, so its size is the
+    // real one whether it was fetched pruned or not
+    if (tx.pruned && tx.rct_signatures.type != rct::RCTTypeNull)
+    {
+        j_tx["pruned_tx_size"] = tx.blob_size;
+        j_tx.erase("tx_size");
+    }
 
     // append additional info from block, as we don't
     // return block data in this function
@@ -4806,14 +4850,58 @@ json_transactions_private(string tx_hash_postfix)
     std::vector<transaction> found_txs;
     std::vector<crypto::hash> missed_txs;
 
-    // get the transactions themselves. the search covers the mempool as
-    // well, and mempool txs are not in the blockchain db, so they come
-    // back as missed here and are picked up from the mempool below
-    if (!core_storage->get_transactions(matching_txids, found_txs, missed_txs))
+    // fetch the txs pruned. nothing reported below comes from the part that
+    // pruning drops, and on a real chain that part is most of a tx: on
+    // stagenet it is 79% of a bulletproof plus tx and 83% of a bulletproof
+    // one, all of it read off disk and parsed only to be discarded.
+    //
+    // the blob form is used rather than get_transactions, because that one
+    // parses every blob as if it were pruned, which breaks v1 txs, and it
+    // never fills in the prunable hash, without which a pruned tx hashes to
+    // the wrong txid. get_transactions_blobs handles both.
+    //
+    // the search covers the mempool as well, and mempool txs are not in the
+    // blockchain db, so they come back as missed here and are picked up
+    // from the mempool below
+    std::vector<cryptonote::tx_blob_entry> tx_blobs;
+
+    if (!core_storage->get_transactions_blobs(matching_txids, tx_blobs,
+                                              missed_txs, true))
     {
         j_response["status"]  = "error";
         j_response["message"] = "Failed to retrive matching transactions";
         return j_response;
+    }
+
+    found_txs.reserve(tx_blobs.size());
+
+    for (cryptonote::tx_blob_entry const& tx_blob: tx_blobs)
+    {
+        // v1 txs have nothing to prune, so the db hands those back whole
+        // and everything else with its prunable part left behind
+        bool const is_pruned = !is_v1_tx_blob(tx_blob.blob);
+
+        transaction tx;
+
+        if (!(is_pruned
+                ? parse_and_validate_tx_base_from_blob(tx_blob.blob, tx)
+                : parse_and_validate_tx_from_blob(tx_blob.blob, tx)))
+        {
+            cerr << "Cant parse tx from the blockchain, skipping it\n";
+            continue;
+        }
+
+        if (is_pruned)
+        {
+            // what was pruned away is still needed to work out the txid
+            tx.set_prunable_hash(tx_blob.prunable_hash);
+        }
+
+        // the blob is right here, so record its size rather than letting
+        // get_tx_details serialize the tx again to measure it
+        tx.set_blob_size(tx_blob.blob.size());
+
+        found_txs.push_back(std::move(tx));
     }
 
     // a tx is in the mempool for a while before it is mined, and that is
@@ -4896,7 +4984,7 @@ json_transactions_private(string tx_hash_postfix)
                 {
                     thread_txs[i].push_back(json {
                             {"tx_hash", pod_to_hex(
-                                    get_transaction_hash(found_txs[j]))},
+                                    tx_hash_of(found_txs[j]))},
                             {"error"  , "Failed to get transaction details"}
                     });
                 }
@@ -4926,7 +5014,7 @@ json_transactions_private(string tx_hash_postfix)
         {
             j_txs.push_back(json {
                     {"tx_hash", pod_to_hex(
-                            get_transaction_hash(mempool_tx.first))},
+                            tx_hash_of(mempool_tx.first))},
                     {"error"  , "Failed to get transaction details"}
             });
         }
@@ -7100,7 +7188,10 @@ get_tx_details(const transaction& tx,
     get_payment_id(tx, txd.payment_id, txd.payment_id8);
 
     // get tx size in bytes
-    txd.size = get_object_blobsize(tx);
+    // serializing the tx again just to measure it is wasted work when
+    // whoever fetched it already knows how big its blob was
+    txd.size = tx.is_blob_size_valid() ? tx.blob_size
+                                       : get_object_blobsize(tx);
 
     txd.extra = tx.extra;
 
