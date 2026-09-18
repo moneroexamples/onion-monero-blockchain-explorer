@@ -685,8 +685,12 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/transaction/private/<string>")
         ([&](string tx_hash_postfix) {
 
+            // not passed through remove_bad_chars, which would drop the
+            // characters that make a postfix invalid and answer a different
+            // question than the one asked. the postfix is checked for being
+            // hex where it is used, which is stricter than that anyway
             myxmr::jsonresponse r{xmrblocks.json_transactions_private(
-                    remove_bad_chars(tx_hash_postfix))};
+                    tx_hash_postfix)};
 
             return r;
         });
