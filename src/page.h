@@ -4802,6 +4802,9 @@ json_transactions_private(string tx_hash_postfix)
     static constexpr size_t MIN_POSTFIX_LENGTH {2};
     static constexpr size_t MAX_POSTFIX_LENGTH {12};
 
+    // fewest txs a postfix has to be expected to match to be worth serving
+    static constexpr uint64_t MIN_ANONYMITY_SET {2};
+
     // only bother spreading the work over several threads once the matching
     // set is big enough for the thread setup to pay for itself
     static constexpr size_t MIN_TXS_PER_THREAD {64};
@@ -4842,6 +4845,20 @@ json_transactions_private(string tx_hash_postfix)
     {
         j_data["title"] = fmt::format(
                 "Tx hash postfix is not hex: {:s}", tx_hash_postfix);
+        return j_response;
+    }
+
+    // four bits per hex character, so this is how many txs the chain is
+    // expected to hold for the postfix. a postfix long enough that hardly
+    // anything else shares it hands over the txid and gives nothing back,
+    // so refuse it instead of quietly answering with a set of one
+    uint64_t const tx_count = core_storage->get_db().get_tx_count();
+
+    if ((tx_count >> (tx_hash_postfix.size() * 4)) < MIN_ANONYMITY_SET)
+    {
+        j_data["title"] = fmt::format(
+                "Tx hash postfix {:s} is too long to be anonymous on a chain "
+                "of {:d} transactions", tx_hash_postfix, tx_count);
         return j_response;
     }
 
