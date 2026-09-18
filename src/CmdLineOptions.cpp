@@ -61,6 +61,8 @@ namespace xmreg
                  "maximum time, in milliseconds, to wait for mempool data for the front page")
                 ("max-private-tx-matches", value<string>()->default_value("1000"),
                  "maximum number of transactions /api/transaction/private will return for one postfix")
+                ("recent-tx-blocks", value<string>()->default_value("30"),
+                 "how many of the most recent blocks /api/transactions/recent returns. a larger window covers lookups of older txs but costs bandwidth in proportion: on a chain doing 25k txs a day the default hour is around 1000 txs, a day of them would be 25 times that")
                 ("mempool-refresh-time", value<string>()->default_value("5"),
                  "time, in seconds, for each refresh of mempool state")
                 ("concurrency,c", value<size_t>()->default_value(0),

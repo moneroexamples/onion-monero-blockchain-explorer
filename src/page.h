@@ -458,6 +458,7 @@ bool enable_autorefresh_option;
 uint64_t no_of_mempool_tx_of_frontpage;
 uint64_t no_blocks_on_index;
 uint64_t max_private_tx_matches;
+uint64_t recent_tx_blocks;
 uint64_t mempool_info_timeout;
 
 string testnet_url;
@@ -516,6 +517,7 @@ page(MicroCore* _mcore,
      bool _enable_mixin_guess,
      uint64_t _no_blocks_on_index,
      uint64_t _max_private_tx_matches,
+     uint64_t _recent_tx_blocks,
      uint64_t _mempool_info_timeout,
      string _testnet_url,
      string _stagenet_url,
@@ -537,6 +539,7 @@ page(MicroCore* _mcore,
           enable_mixin_guess {_enable_mixin_guess},
           no_blocks_on_index {_no_blocks_on_index},
           max_private_tx_matches {_max_private_tx_matches},
+          recent_tx_blocks {_recent_tx_blocks},
           mempool_info_timeout {_mempool_info_timeout},
           testnet_url {_testnet_url},
           stagenet_url {_stagenet_url},
@@ -4698,6 +4701,163 @@ json_transaction_details(transaction const& tx, uint64_t bc_height,
 
 
 /*
+ * Fetch txs by id, without the part of them that pruning drops.
+ *
+ * Nothing either tx endpoint reports comes out of that part, but all of it
+ * was being read off disk and parsed anyway. On stagenet it is 83% of a
+ * bulletproof tx and 79% of a bulletproof plus one.
+ *
+ * get_transactions cannot be used for this. It parses every blob as if it
+ * were pruned, which throws on v1 txs, and it never fills in the prunable
+ * hash, without which a pruned tx hashes to the wrong txid: not a crash,
+ * just a plausible looking wrong value in the one field a caller needs. The
+ * blob form handles both, so the blobs are parsed here instead.
+ */
+bool
+get_txs_pruned(vector<crypto::hash> const& txids,
+               vector<transaction>& txs,
+               vector<crypto::hash>& missed_txs)
+{
+    std::vector<cryptonote::tx_blob_entry> tx_blobs;
+
+    if (!core_storage->get_transactions_blobs(txids, tx_blobs,
+                                              missed_txs, true))
+    {
+        return false;
+    }
+
+    txs.reserve(tx_blobs.size());
+
+    for (cryptonote::tx_blob_entry const& tx_blob: tx_blobs)
+    {
+        // v1 txs have nothing to prune, so the db hands those back whole
+        // and everything else with its prunable part left behind
+        bool const is_pruned = !is_v1_tx_blob(tx_blob.blob);
+
+        transaction tx;
+
+        if (!(is_pruned
+                ? parse_and_validate_tx_base_from_blob(tx_blob.blob, tx)
+                : parse_and_validate_tx_from_blob(tx_blob.blob, tx)))
+        {
+            cerr << "Cant parse tx from the blockchain, skipping it\n";
+            continue;
+        }
+
+        if (is_pruned)
+        {
+            // what was pruned away is still needed to work out the txid
+            tx.set_prunable_hash(tx_blob.prunable_hash);
+        }
+
+        // the blob is right here, so record its size rather than letting
+        // get_tx_details serialize the tx again to measure it
+        tx.set_blob_size(tx_blob.blob.size());
+
+        txs.push_back(std::move(tx));
+    }
+
+    return true;
+}
+
+
+/*
+ * A tx waiting to be expanded into json, together with what the expansion
+ * needs to know about where it came from.
+ */
+struct tx_to_expand
+{
+    transaction tx;
+    bool found_in_mempool;
+    uint64_t timestamp;
+};
+
+
+/*
+ * Expand a set of txs into json, spread over a few threads.
+ *
+ * Expanding a tx is mostly random reads from the db, so for a larger set it
+ * pays to spread them, and a tx that cannot be expanded is reported in place
+ * rather than sinking the whole set.
+ */
+json
+expand_txs_json(std::vector<tx_to_expand> const& txs, uint64_t bc_height)
+{
+    // only bother spreading the work over several threads once the set is
+    // big enough for the thread setup to pay for itself
+    static constexpr size_t MIN_TXS_PER_THREAD {64};
+
+    // every one of these threads holds an lmdb read slot for as long as it
+    // runs, and so does every crow thread serving a request. lmdb allows 126
+    // readers by default, so this has to stay a small constant rather than
+    // scale with the core count, or a busy explorer on a big machine runs
+    // itself out of read slots
+    static constexpr size_t MAX_EXPANSION_THREADS {4};
+
+    json j_txs = json::array();
+
+    if (txs.empty())
+        return j_txs;
+
+    size_t num_threads = std::max<size_t>(1, txs.size() / MIN_TXS_PER_THREAD);
+
+    num_threads = std::min<size_t>(num_threads, MAX_EXPANSION_THREADS);
+
+    num_threads = std::min<size_t>(
+            num_threads, std::max<size_t>(1, std::thread::hardware_concurrency()));
+
+    size_t const chunk_size = txs.size() / num_threads;
+
+    // one vector per thread, so that the threads never touch each others data
+    std::vector<std::vector<json>> thread_txs(num_threads);
+
+    // futures rather than threads, so that a failure to start one of them
+    // waits for the rest instead of terminating the process
+    std::vector<std::future<void>> workers;
+    workers.reserve(num_threads);
+
+    for (size_t i = 0; i < num_threads; ++i)
+    {
+        size_t const start = i * chunk_size;
+        size_t const end   = (i == num_threads - 1)
+                             ? txs.size() : (i + 1) * chunk_size;
+
+        workers.push_back(std::async(std::launch::async, [&, i, start, end]()
+        {
+            thread_txs[i].reserve(end - start);
+
+            for (size_t j = start; j < end; ++j)
+            {
+                // a thread that throws would take the whole explorer with
+                // it, so nothing is allowed to escape from here
+                try
+                {
+                    thread_txs[i].push_back(json_transaction_details(
+                            txs[j].tx, bc_height,
+                            txs[j].found_in_mempool, txs[j].timestamp));
+                }
+                catch (const exception& e)
+                {
+                    thread_txs[i].push_back(json {
+                            {"tx_hash", pod_to_hex(tx_hash_of(txs[j].tx))},
+                            {"error"  , "Failed to get transaction details"}
+                    });
+                }
+            }
+        }));
+    }
+
+    for (std::future<void>& w: workers)
+        w.get();
+
+    for (std::vector<json>& chunk: thread_txs)
+        std::move(chunk.begin(), chunk.end(), std::back_inserter(j_txs));
+
+    return j_txs;
+}
+
+
+/*
  * Return every transaction whose hash ends with a given hex postfix.
  *
  * The caller asks for a postfix instead of a full tx hash and picks the tx
@@ -4728,17 +4888,6 @@ json_transactions_private(string tx_hash_postfix)
     // on mainnet this allows 5 characters and refuses 6, so the smallest set
     // the endpoint will serve is around 40 txs
     static constexpr uint64_t MIN_ANONYMITY_SET {20};
-
-    // only bother spreading the work over several threads once the matching
-    // set is big enough for the thread setup to pay for itself
-    static constexpr size_t MIN_TXS_PER_THREAD {64};
-
-    // every one of these threads holds an lmdb read slot for as long as it
-    // runs, and so does every crow thread serving a request. lmdb allows 126
-    // readers by default, so this has to stay a small constant rather than
-    // scale with the core count, or a busy explorer on a big machine runs
-    // itself out of read slots
-    static constexpr size_t MAX_EXPANSION_THREADS {4};
 
     static constexpr size_t TX_HASH_LENGTH {64};
 
@@ -4871,45 +5020,11 @@ json_transactions_private(string tx_hash_postfix)
     // the search covers the mempool as well, and mempool txs are not in the
     // blockchain db, so they come back as missed here and are picked up
     // from the mempool below
-    std::vector<cryptonote::tx_blob_entry> tx_blobs;
-
-    if (!core_storage->get_transactions_blobs(matching_txids, tx_blobs,
-                                              missed_txs, true))
+    if (!get_txs_pruned(matching_txids, found_txs, missed_txs))
     {
         j_response["status"]  = "error";
         j_response["message"] = "Failed to retrive matching transactions";
         return j_response;
-    }
-
-    found_txs.reserve(tx_blobs.size());
-
-    for (cryptonote::tx_blob_entry const& tx_blob: tx_blobs)
-    {
-        // v1 txs have nothing to prune, so the db hands those back whole
-        // and everything else with its prunable part left behind
-        bool const is_pruned = !is_v1_tx_blob(tx_blob.blob);
-
-        transaction tx;
-
-        if (!(is_pruned
-                ? parse_and_validate_tx_base_from_blob(tx_blob.blob, tx)
-                : parse_and_validate_tx_from_blob(tx_blob.blob, tx)))
-        {
-            cerr << "Cant parse tx from the blockchain, skipping it\n";
-            continue;
-        }
-
-        if (is_pruned)
-        {
-            // what was pruned away is still needed to work out the txid
-            tx.set_prunable_hash(tx_blob.prunable_hash);
-        }
-
-        // the blob is right here, so record its size rather than letting
-        // get_tx_details serialize the tx again to measure it
-        tx.set_blob_size(tx_blob.blob.size());
-
-        found_txs.push_back(std::move(tx));
     }
 
     // a tx is in the mempool for a while before it is mined, and that is
@@ -4939,6 +5054,14 @@ json_transactions_private(string tx_hash_postfix)
                                  found_mempool_txs.at(0).receive_time);
     }
 
+    // both the chain matches and the mempool ones go through the same
+    // expansion, so collect them together first
+    std::vector<tx_to_expand> to_expand;
+    to_expand.reserve(found_txs.size() + mempool_txs.size());
+
+    for (auto const& mempool_tx: mempool_txs)
+        to_expand.push_back({mempool_tx.first, true, mempool_tx.second});
+
     if (found_txs.empty() && mempool_txs.empty())
     {
         j_data["title"] = fmt::format(
@@ -4949,87 +5072,110 @@ json_transactions_private(string tx_hash_postfix)
     // get the current blockchain height. Just to check
     uint64_t const bc_height = core_storage->get_current_blockchain_height();
 
-    // expanding a tx is mostly random reads from the db, so for a larger
-    // matching set it pays to spread the txs over a few threads
-    size_t num_threads = std::max<size_t>(
-            1, found_txs.size() / MIN_TXS_PER_THREAD);
+    for (transaction& tx: found_txs)
+        to_expand.push_back({std::move(tx), false, 0});
 
-    num_threads = std::min<size_t>(num_threads, MAX_EXPANSION_THREADS);
-
-    num_threads = std::min<size_t>(
-            num_threads, std::max<size_t>(1, std::thread::hardware_concurrency()));
-
-    size_t const chunk_size = found_txs.size() / num_threads;
-
-    // one vector per thread, so that the threads never touch each others data
-    std::vector<std::vector<json>> thread_txs(num_threads);
-
-    // futures rather than threads, so that a failure to start one of them
-    // waits for the rest instead of terminating the process
-    std::vector<std::future<void>> workers;
-    workers.reserve(num_threads);
-
-    for (size_t i = 0; i < num_threads; ++i)
-    {
-        size_t const start = i * chunk_size;
-        size_t const end   = (i == num_threads - 1)
-                             ? found_txs.size() : (i + 1) * chunk_size;
-
-        workers.push_back(std::async(std::launch::async, [&, i, start, end]()
-        {
-            thread_txs[i].reserve(end - start);
-
-            for (size_t j = start; j < end; ++j)
-            {
-                // a thread that throws would take the whole explorer with
-                // it, so nothing is allowed to escape from here
-                try
-                {
-                    thread_txs[i].push_back(json_transaction_details(
-                            found_txs[j], bc_height, false, 0));
-                }
-                catch (const exception& e)
-                {
-                    thread_txs[i].push_back(json {
-                            {"tx_hash", pod_to_hex(
-                                    tx_hash_of(found_txs[j]))},
-                            {"error"  , "Failed to get transaction details"}
-                    });
-                }
-            }
-        }));
-    }
-
-    for (std::future<void>& w: workers)
-        w.get();
-
-    json j_txs = json::array();
-
-    for (std::vector<json>& txs: thread_txs)
-    {
-        std::move(txs.begin(), txs.end(), std::back_inserter(j_txs));
-    }
-
-    // the handful of mempool matches are cheap, do them on this thread
-    for (auto const& mempool_tx: mempool_txs)
-    {
-        try
-        {
-            j_txs.push_back(json_transaction_details(
-                    mempool_tx.first, bc_height, true, mempool_tx.second));
-        }
-        catch (const exception& e)
-        {
-            j_txs.push_back(json {
-                    {"tx_hash", pod_to_hex(
-                            tx_hash_of(mempool_tx.first))},
-                    {"error"  , "Failed to get transaction details"}
-            });
-        }
-    }
+    json j_txs = expand_txs_json(to_expand, bc_height);
 
     j_data["txs"]        = j_txs;
     j_data["missed_txs"] = j_missed_txs;
+
+    j_response["status"] = "success";
+
+    return j_response;
+}
+
+
+/*
+ * Return every transaction in the mempool and in the last few blocks.
+ *
+ * The postfix lookup draws its set from the whole chain, so its members are
+ * spread over the chain's whole history while the tx someone is looking up
+ * is usually a recent one. That makes the newest member of a set the one
+ * that was wanted: on stagenet the newest member of a set of sixty is a
+ * month old on average, so anything newer than that stands alone and the
+ * postfix bought the caller nothing.
+ *
+ * Selecting on how recent a tx is instead of on its hash gives a set whose
+ * members are all equally recent, which is the case the postfix lookup
+ * cannot serve. A caller after a recent tx asks for this and finds it in
+ * here, and the explorer learns only that they wanted one of the txs from
+ * the window.
+ *
+ * How wide the window is decides both how old a tx it can serve and what it
+ * costs to serve it, and that balance depends on how busy the chain is, so
+ * recent_tx_blocks is left to the operator. The default hour is about a
+ * thousand txs on a chain doing 25k a day.
+ *
+ * Every tx in the window is returned rather than a sample of them, because
+ * a sample is one the explorer picked and could therefore tell apart from
+ * the one the caller was after.
+ *
+ * Lets use this json api convention for success and error
+ * https://labs.omniti.com/labs/jsend
+ */
+json
+json_transactions_recent()
+{
+    json j_response {
+            {"status", "fail"},
+            {"data"  , json {}}
+    };
+
+    json& j_data = j_response["data"];
+
+    uint64_t const bc_height = core_storage->get_current_blockchain_height();
+
+    uint64_t const from_height = recent_tx_blocks < bc_height
+                                 ? bc_height - recent_tx_blocks : 0;
+
+    // the mempool first, as those are more recent than any mined tx
+    std::vector<tx_to_expand> to_expand;
+
+    vector<MempoolStatus::mempool_tx> mempool_txs;
+
+    search_mempool(null_hash, mempool_txs);
+
+    for (MempoolStatus::mempool_tx const& mempool_tx: mempool_txs)
+        to_expand.push_back({mempool_tx.tx, true, mempool_tx.receive_time});
+
+    // then every txid in the window, the miner tx of each block included,
+    // so that the set really is all of it
+    vector<crypto::hash> txids;
+
+    for (uint64_t height = from_height; height < bc_height; ++height)
+    {
+        block blk;
+
+        if (!mcore->get_block_by_height(height, blk))
+        {
+            j_data["title"] = fmt::format("Cant get block: {:d}", height);
+            return j_response;
+        }
+
+        txids.push_back(get_transaction_hash(blk.miner_tx));
+
+        txids.insert(txids.end(), blk.tx_hashes.begin(), blk.tx_hashes.end());
+    }
+
+    vector<transaction> found_txs;
+    vector<crypto::hash> missed_txs;
+
+    if (!get_txs_pruned(txids, found_txs, missed_txs))
+    {
+        j_response["status"]  = "error";
+        j_response["message"] = "Failed to retrive transactions";
+        return j_response;
+    }
+
+    for (transaction& tx: found_txs)
+        to_expand.push_back({std::move(tx), false, 0});
+
+    j_data["txs"]           = expand_txs_json(to_expand, bc_height);
+    j_data["mempool_txs_no"] = mempool_txs.size();
+    j_data["from_height"]   = from_height;
+    j_data["to_height"]     = bc_height - 1;
+    j_data["current_height"] = bc_height;
 
     j_response["status"] = "success";
 
