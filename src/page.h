@@ -4477,75 +4477,34 @@ json_transaction(string tx_hash_str)
         return j_response;
     }
 
-    uint64_t block_height {0};
-    uint64_t is_coinbase_tx = is_coinbase(tx);
-    uint64_t no_confirmations {0};
-
-    if (found_in_mempool == false)
-    {
-
-        block blk;
-
-        try
-        {
-            // get block cointaining this tx
-            block_height = core_storage->get_db().get_tx_block_height(tx_hash);
-
-            if (!mcore->get_block_by_height(block_height, blk))
-            {
-                j_data["title"] = fmt::format("Cant get block: {:d}", block_height);
-                return j_response;
-            }
-
-            tx_timestamp = blk.timestamp;
-        }
-        catch (const exception& e)
-        {
-            j_response["status"]  = "error";
-            j_response["message"] = fmt::format("Tx does not exist in blockchain, "
-                                                        "but was there before: {:s}", tx_hash_str);
-            return j_response;
-        }
-    }
-
-    string blk_timestamp_utc = xmreg::timestamp_to_str_gm(tx_timestamp);
-
     // get the current blockchain height. Just to check
     uint64_t bc_height = core_storage->get_current_blockchain_height();
 
-    tx_details txd = get_tx_details(tx, is_coinbase_tx, block_height, bc_height);
-
-    json outputs;
-    json inputs;
+    uint64_t block_height {0};
 
     try
     {
-        get_outputs_and_inputs_json(txd, outputs, inputs);
+        j_data = json_transaction_details(tx, bc_height, found_in_mempool,
+                                          tx_timestamp, &block_height);
     }
-    catch (const OUTPUT_DNE &e)
+    catch (const BLOCK_DNE& e)
+    {
+        j_data["title"] = fmt::format("Cant get block: {:d}", block_height);
+        return j_response;
+    }
+    catch (const OUTPUT_DNE& e)
     {
         j_response["status"]  = "error";
         j_response["message"] = "Failed to retrive outputs (mixins) used in key images";
         return j_response;
     }
-
-    if (found_in_mempool == false)
+    catch (const exception& e)
     {
-        no_confirmations = txd.no_confirmations;
+        j_response["status"]  = "error";
+        j_response["message"] = fmt::format("Tx does not exist in blockchain, "
+                                                    "but was there before: {:s}", tx_hash_str);
+        return j_response;
     }
-
-    // get basic tx info
-    j_data = get_tx_json(tx, txd);
-
-    // append additional info from block, as we don't
-    // return block data in this function
-    j_data["timestamp"]      = tx_timestamp;
-    j_data["timestamp_utc"]  = blk_timestamp_utc;
-    j_data["block_height"]   = block_height;
-    j_data["confirmations"]  = no_confirmations;
-    j_data["outputs"]        = outputs;
-    j_data["inputs"]         = inputs;
-    j_data["current_height"] = bc_height;
 
     j_response["status"] = "success";
 
@@ -4643,45 +4602,32 @@ get_outputs_and_inputs_json(tx_details const& txd, json& outputs, json& inputs)
  * Expand a single transaction into the same representation that
  * json_transaction returns, without the jsend envelope around it.
  *
- * Problems with one tx are reported inside the object returned for that tx,
- * rather than thrown, so that a single bad tx does not sink a whole
- * k-anonymous batch.
+ * BLOCK_DNE, OUTPUT_DNE and the rest are left to escape rather than being
+ * turned into an error here, because the single tx endpoint fails the whole
+ * request on them while the k-anonymous one reports them against the one tx
+ * and carries on.
+ *
+ * found_block_height is for the caller that wants to name the block in an
+ * error message, so it is written as soon as it is known.
  */
 json
 json_transaction_details(transaction const& tx, uint64_t bc_height,
-                         bool found_in_mempool, uint64_t tx_timestamp)
+                         bool found_in_mempool, uint64_t tx_timestamp,
+                         uint64_t* found_block_height = nullptr)
 {
-    string const tx_hash_str = pod_to_hex(get_transaction_hash(tx));
-
     uint64_t block_height {0};
 
     if (found_in_mempool == false)
     {
+        block_height = core_storage->get_db()
+                .get_tx_block_height(get_transaction_hash(tx));
 
-        block blk;
+        if (found_block_height)
+            *found_block_height = block_height;
 
-        try
-        {
-            // get block cointaining this tx
-            block_height = core_storage->get_db()
-                    .get_tx_block_height(get_transaction_hash(tx));
-
-            if (!mcore->get_block_by_height(block_height, blk))
-            {
-                return json {{"tx_hash", tx_hash_str},
-                             {"error"  , fmt::format("Cant get block: {:d}",
-                                                     block_height)}};
-            }
-
-            tx_timestamp = blk.timestamp;
-        }
-        catch (const exception& e)
-        {
-            return json {{"tx_hash", tx_hash_str},
-                         {"error"  , fmt::format(
-                                 "Tx does not exist in blockchain, "
-                                 "but was there before: {:s}", tx_hash_str)}};
-        }
+        // only the timestamp is wanted, so do not read the whole block
+        tx_timestamp = core_storage->get_db()
+                .get_block_timestamp(block_height);
     }
 
     tx_details txd = get_tx_details(tx, is_coinbase(tx),
@@ -4690,16 +4636,7 @@ json_transaction_details(transaction const& tx, uint64_t bc_height,
     json outputs;
     json inputs;
 
-    try
-    {
-        get_outputs_and_inputs_json(txd, outputs, inputs);
-    }
-    catch (const OUTPUT_DNE &e)
-    {
-        return json {{"tx_hash", tx_hash_str},
-                     {"error"  , "Failed to retrive outputs (mixins) "
-                                 "used in key images"}};
-    }
+    get_outputs_and_inputs_json(txd, outputs, inputs);
 
     // get basic tx info
     json j_tx = get_tx_json(tx, txd);
