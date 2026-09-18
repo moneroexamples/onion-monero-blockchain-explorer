@@ -202,4 +202,9 @@ endif()
 find_package(HIDAPI)
 set(LIBRARIES ${LIBRARIES} ${HIDAPI_LIBRARIES})
 
+# crow only compiles its gzip support in when this is defined
+find_package(ZLIB REQUIRED)
+add_definitions(-DCROW_ENABLE_COMPRESSION)
+set(LIBRARIES ${LIBRARIES} ZLIB::ZLIB)
+
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})

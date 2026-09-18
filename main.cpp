@@ -871,6 +871,10 @@ main(int ac, const char* av[])
         });
     }
 
+    // json responses are mostly repeated hex, which gzips very well. crow
+    // only uses this for clients that ask for it
+    app.use_compression(crow::compression::algorithm::GZIP);
+
     // run the crow http server
 
     if (use_ssl)
