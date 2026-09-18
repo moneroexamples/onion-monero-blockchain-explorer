@@ -4887,10 +4887,16 @@ json_transactions_private(string tx_hash_postfix)
     // postfix. four bits per hex character
     vector<crypto::hash> matching_txids;
 
+    // an odd postfix searches one hex character wider and is filtered below,
+    // so the limit has to be scaled to match, or the caller is held to a
+    // limit sixteen times stricter than the one they asked for
+    uint64_t const search_limit = max_private_tx_matches
+            * (searched_length == tx_hash_postfix.size() ? 1 : 16);
+
     try
     {
         matching_txids = core_storage->get_db().get_txids_loose(
-                tx_hash_template, searched_length * 4, max_private_tx_matches);
+                tx_hash_template, searched_length * 4, search_limit);
     }
     catch (const TX_EXISTS& e)
     {
