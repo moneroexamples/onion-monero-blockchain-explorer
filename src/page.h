@@ -4516,97 +4516,17 @@ json_transaction(string tx_hash_str)
     tx_details txd = get_tx_details(tx, is_coinbase_tx, block_height, bc_height);
 
     json outputs;
-
-    for (const auto& output: txd.output_pub_keys)
-    {
-        outputs.push_back(json {
-                {"public_key", pod_to_hex(std::get<0>(output))},
-                {"amount"    , std::get<1>(output)}
-        });
-    }
-
     json inputs;
 
-    for (const txin_to_key &in_key: txd.input_key_imgs)
+    try
     {
-
-        // get absolute offsets of mixins
-        std::vector<uint64_t> absolute_offsets
-                = cryptonote::relative_output_offsets_to_absolute(
-                        in_key.key_offsets);
-
-        // get public keys of outputs used in the mixins that match to the offests
-        std::vector<output_data_t> outputs;
-
-        try
-        {
-            // before proceeding with geting the outputs based on the amount and absolute offset
-            // check how many outputs there are for that amount
-            // go to next input if a too large offset was found
-            if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
-                continue;
-
-            //core_storage->get_db().get_output_key(in_key.amount,
-                                                  //absolute_offsets,
-                                                  //outputs);
-
-            get_output_key<BlockchainDB>(in_key.amount,
-                                           absolute_offsets,
-                                           outputs);
-        }
-        catch (const OUTPUT_DNE &e)
-        {
-            j_response["status"]  = "error";
-            j_response["message"] = "Failed to retrive outputs (mixins) used in key images";
-            return j_response;
-        }
-
-        inputs.push_back(json {
-                {"key_image"  , pod_to_hex(in_key.k_image)},
-                {"amount"     , in_key.amount},
-                {"mixins"     , json {}}
-        });
-
-        json& mixins = inputs.back()["mixins"];
-
-        // mixin counter
-        size_t count = 0;
-
-        for (const uint64_t& abs_offset: absolute_offsets)
-        {
-
-            // get basic information about mixn's output
-            cryptonote::output_data_t output_data = outputs.at(count++);
-
-            tx_out_index tx_out_idx;
-
-            try
-            {
-                // get pair pair<crypto::hash, uint64_t> where first is tx hash
-                // and second is local index of the output i in that tx
-                tx_out_idx = core_storage->get_db()
-                        .get_output_tx_and_index(in_key.amount, abs_offset);
-            }
-            catch (const OUTPUT_DNE& e)
-            {
-
-                string out_msg = fmt::format(
-                        "Output with amount {:d} and index {:d} does not exist!",
-                        in_key.amount, abs_offset);
-
-                cerr << out_msg << '\n';
-
-                break;
-            }
-
-            string out_pub_key_str = pod_to_hex(output_data.pubkey);
-
-            mixins.push_back(json {
-                    {"public_key"  , pod_to_hex(output_data.pubkey)},
-                    {"tx_hash"     , pod_to_hex(tx_out_idx.first)},
-                    {"block_no"    , output_data.height},
-            });
-        }
+        get_outputs_and_inputs_json(txd, outputs, inputs);
+    }
+    catch (const OUTPUT_DNE &e)
+    {
+        j_response["status"]  = "error";
+        j_response["message"] = "Failed to retrive outputs (mixins) used in key images";
+        return j_response;
     }
 
     if (found_in_mempool == false)
@@ -4630,6 +4550,92 @@ json_transaction(string tx_hash_str)
     j_response["status"] = "success";
 
     return j_response;
+}
+
+
+/*
+ * Build the json for a tx's outputs, and for its inputs together with the
+ * ring members each one spends against.
+ *
+ * OUTPUT_DNE is left to escape, because the callers report it differently.
+ */
+void
+get_outputs_and_inputs_json(tx_details const& txd, json& outputs, json& inputs)
+{
+    for (const auto& output: txd.output_pub_keys)
+    {
+        outputs.push_back(json {
+                {"public_key", pod_to_hex(std::get<0>(output))},
+                {"amount"    , std::get<1>(output)}
+        });
+    }
+
+    for (const txin_to_key &in_key: txd.input_key_imgs)
+    {
+
+        // get absolute offsets of mixins
+        std::vector<uint64_t> absolute_offsets
+                = cryptonote::relative_output_offsets_to_absolute(
+                        in_key.key_offsets);
+
+        // get public keys of outputs used in the mixins that match to the offests
+        std::vector<output_data_t> mixin_outputs;
+
+        // before proceeding with geting the outputs based on the amount and absolute offset
+        // check how many outputs there are for that amount
+        // go to next input if a too large offset was found
+        if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
+            continue;
+
+        get_output_key<BlockchainDB>(in_key.amount,
+                                       absolute_offsets,
+                                       mixin_outputs);
+
+        inputs.push_back(json {
+                {"key_image"  , pod_to_hex(in_key.k_image)},
+                {"amount"     , in_key.amount},
+                {"mixins"     , json {}}
+        });
+
+        json& mixins = inputs.back()["mixins"];
+
+        // mixin counter
+        size_t count = 0;
+
+        for (const uint64_t& abs_offset: absolute_offsets)
+        {
+
+            // get basic information about mixn's output
+            cryptonote::output_data_t output_data = mixin_outputs.at(count++);
+
+            tx_out_index tx_out_idx;
+
+            try
+            {
+                // get pair pair<crypto::hash, uint64_t> where first is tx hash
+                // and second is local index of the output i in that tx
+                tx_out_idx = core_storage->get_db()
+                        .get_output_tx_and_index(in_key.amount, abs_offset);
+            }
+            catch (const OUTPUT_DNE& e)
+            {
+
+                string out_msg = fmt::format(
+                        "Output with amount {:d} and index {:d} does not exist!",
+                        in_key.amount, abs_offset);
+
+                cerr << out_msg << '\n';
+
+                break;
+            }
+
+            mixins.push_back(json {
+                    {"public_key"  , pod_to_hex(output_data.pubkey)},
+                    {"tx_hash"     , pod_to_hex(tx_out_idx.first)},
+                    {"block_no"    , output_data.height},
+            });
+        }
+    }
 }
 
 
@@ -4682,88 +4688,17 @@ json_transaction_details(transaction const& tx, uint64_t bc_height,
                                     block_height, bc_height);
 
     json outputs;
-
-    for (const auto& output: txd.output_pub_keys)
-    {
-        outputs.push_back(json {
-                {"public_key", pod_to_hex(std::get<0>(output))},
-                {"amount"    , std::get<1>(output)}
-        });
-    }
-
     json inputs;
 
-    for (const txin_to_key &in_key: txd.input_key_imgs)
+    try
     {
-
-        // get absolute offsets of mixins
-        std::vector<uint64_t> absolute_offsets
-                = cryptonote::relative_output_offsets_to_absolute(
-                        in_key.key_offsets);
-
-        // get public keys of outputs used in the mixins that match to the offests
-        std::vector<output_data_t> mixin_outputs;
-
-        try
-        {
-            // before proceeding with geting the outputs based on the amount and absolute offset
-            // check how many outputs there are for that amount
-            // go to next input if a too large offset was found
-            if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
-                continue;
-
-            get_output_key<BlockchainDB>(in_key.amount,
-                                           absolute_offsets,
-                                           mixin_outputs);
-        }
-        catch (const OUTPUT_DNE &e)
-        {
-            return json {{"tx_hash", tx_hash_str},
-                         {"error"  , "Failed to retrive outputs (mixins) "
-                                     "used in key images"}};
-        }
-
-        inputs.push_back(json {
-                {"key_image"  , pod_to_hex(in_key.k_image)},
-                {"amount"     , in_key.amount},
-                {"mixins"     , json {}}
-        });
-
-        json& mixins = inputs.back()["mixins"];
-
-        // mixin counter
-        size_t count = 0;
-
-        for (const uint64_t& abs_offset: absolute_offsets)
-        {
-
-            // get basic information about mixins output
-            cryptonote::output_data_t output_data = mixin_outputs.at(count++);
-
-            tx_out_index tx_out_idx;
-
-            try
-            {
-                // get pair pair<crypto::hash, uint64_t> where first is tx hash
-                // and second is local index of the output i in that tx
-                tx_out_idx = core_storage->get_db()
-                        .get_output_tx_and_index(in_key.amount, abs_offset);
-            }
-            catch (const OUTPUT_DNE& e)
-            {
-                cerr << fmt::format(
-                        "Output with amount {:d} and index {:d} does not exist!",
-                        in_key.amount, abs_offset) << '\n';
-
-                break;
-            }
-
-            mixins.push_back(json {
-                    {"public_key"  , pod_to_hex(output_data.pubkey)},
-                    {"tx_hash"     , pod_to_hex(tx_out_idx.first)},
-                    {"block_no"    , output_data.height},
-            });
-        }
+        get_outputs_and_inputs_json(txd, outputs, inputs);
+    }
+    catch (const OUTPUT_DNE &e)
+    {
+        return json {{"tx_hash", tx_hash_str},
+                     {"error"  , "Failed to retrive outputs (mixins) "
+                                 "used in key images"}};
     }
 
     // get basic tx info
