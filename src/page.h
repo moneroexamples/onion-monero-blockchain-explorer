@@ -4589,39 +4589,37 @@ get_outputs_and_inputs_json(tx_details const& txd, json& outputs, json& inputs)
 
         json& mixins = inputs.back()["mixins"];
 
-        // mixin counter
-        size_t count = 0;
+        // get, for each ring member, the pair<crypto::hash, uint64_t> where
+        // first is tx hash and second is local index of the output in that
+        // tx. asking for the whole ring at once lets the db walk the offsets
+        // on one cursor, rather than opening one per ring member
+        std::vector<tx_out_index> mixin_tx_indices;
 
-        for (const uint64_t& abs_offset: absolute_offsets)
+        try
         {
+            core_storage->get_db().get_output_tx_and_index(
+                    in_key.amount, absolute_offsets, mixin_tx_indices);
+        }
+        catch (const OUTPUT_DNE& e)
+        {
+            // asking for the ring at once means giving up on all of it when
+            // any one member is missing, where asking one at a time used to
+            // keep the members found before the missing one
+            cerr << fmt::format(
+                    "An output of amount {:d} used in a ring does not exist!",
+                    in_key.amount) << '\n';
 
+            continue;
+        }
+
+        for (size_t m = 0; m < absolute_offsets.size(); ++m)
+        {
             // get basic information about mixn's output
-            cryptonote::output_data_t output_data = mixin_outputs.at(count++);
-
-            tx_out_index tx_out_idx;
-
-            try
-            {
-                // get pair pair<crypto::hash, uint64_t> where first is tx hash
-                // and second is local index of the output i in that tx
-                tx_out_idx = core_storage->get_db()
-                        .get_output_tx_and_index(in_key.amount, abs_offset);
-            }
-            catch (const OUTPUT_DNE& e)
-            {
-
-                string out_msg = fmt::format(
-                        "Output with amount {:d} and index {:d} does not exist!",
-                        in_key.amount, abs_offset);
-
-                cerr << out_msg << '\n';
-
-                break;
-            }
+            cryptonote::output_data_t const& output_data = mixin_outputs.at(m);
 
             mixins.push_back(json {
                     {"public_key"  , pod_to_hex(output_data.pubkey)},
-                    {"tx_hash"     , pod_to_hex(tx_out_idx.first)},
+                    {"tx_hash"     , pod_to_hex(mixin_tx_indices.at(m).first)},
                     {"block_no"    , output_data.height},
             });
         }
