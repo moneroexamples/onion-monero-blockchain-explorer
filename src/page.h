@@ -4808,6 +4808,13 @@ json_transactions_private(string tx_hash_postfix)
     // set is big enough for the thread setup to pay for itself
     static constexpr size_t MIN_TXS_PER_THREAD {64};
 
+    // every one of these threads holds an lmdb read slot for as long as it
+    // runs, and so does every crow thread serving a request. lmdb allows 126
+    // readers by default, so this has to stay a small constant rather than
+    // scale with the core count, or a busy explorer on a big machine runs
+    // itself out of read slots
+    static constexpr size_t MAX_EXPANSION_THREADS {4};
+
     static constexpr size_t TX_HASH_LENGTH {64};
 
     json j_response {
@@ -4958,6 +4965,8 @@ json_transactions_private(string tx_hash_postfix)
     // matching set it pays to spread the txs over a few threads
     size_t num_threads = std::max<size_t>(
             1, found_txs.size() / MIN_TXS_PER_THREAD);
+
+    num_threads = std::min<size_t>(num_threads, MAX_EXPANSION_THREADS);
 
     num_threads = std::min<size_t>(
             num_threads, std::max<size_t>(1, std::thread::hardware_concurrency()));
