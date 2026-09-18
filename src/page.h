@@ -4639,36 +4639,40 @@ json_transaction(string tx_hash_str)
  * k-anonymous batch.
  */
 json
-json_transaction_details(transaction const& tx, uint64_t bc_height)
+json_transaction_details(transaction const& tx, uint64_t bc_height,
+                         bool found_in_mempool, uint64_t tx_timestamp)
 {
     string const tx_hash_str = pod_to_hex(get_transaction_hash(tx));
 
     uint64_t block_height {0};
-    uint64_t tx_timestamp {0};
 
-    block blk;
-
-    try
+    if (found_in_mempool == false)
     {
-        // get block cointaining this tx
-        block_height = core_storage->get_db()
-                .get_tx_block_height(get_transaction_hash(tx));
 
-        if (!mcore->get_block_by_height(block_height, blk))
+        block blk;
+
+        try
+        {
+            // get block cointaining this tx
+            block_height = core_storage->get_db()
+                    .get_tx_block_height(get_transaction_hash(tx));
+
+            if (!mcore->get_block_by_height(block_height, blk))
+            {
+                return json {{"tx_hash", tx_hash_str},
+                             {"error"  , fmt::format("Cant get block: {:d}",
+                                                     block_height)}};
+            }
+
+            tx_timestamp = blk.timestamp;
+        }
+        catch (const exception& e)
         {
             return json {{"tx_hash", tx_hash_str},
-                         {"error"  , fmt::format("Cant get block: {:d}",
-                                                 block_height)}};
+                         {"error"  , fmt::format(
+                                 "Tx does not exist in blockchain, "
+                                 "but was there before: {:s}", tx_hash_str)}};
         }
-
-        tx_timestamp = blk.timestamp;
-    }
-    catch (const exception& e)
-    {
-        return json {{"tx_hash", tx_hash_str},
-                     {"error"  , fmt::format("Tx does not exist in blockchain, "
-                                             "but was there before: {:s}",
-                                             tx_hash_str)}};
     }
 
     tx_details txd = get_tx_details(tx, is_coinbase(tx),
@@ -4767,7 +4771,7 @@ json_transaction_details(transaction const& tx, uint64_t bc_height)
     j_tx["timestamp"]      = tx_timestamp;
     j_tx["timestamp_utc"]  = xmreg::timestamp_to_str_gm(tx_timestamp);
     j_tx["block_height"]   = block_height;
-    j_tx["confirmations"]  = txd.no_confirmations;
+    j_tx["confirmations"]  = found_in_mempool ? 0 : txd.no_confirmations;
     j_tx["outputs"]        = outputs;
     j_tx["inputs"]         = inputs;
     j_tx["current_height"] = bc_height;
@@ -4902,8 +4906,9 @@ json_transactions_private(string tx_hash_postfix)
     std::vector<transaction> found_txs;
     std::vector<crypto::hash> missed_txs;
 
-    // get the transactions themselves. mempool txs are not in the blockchain
-    // db, so any match that is still in the mempool comes back as missed
+    // get the transactions themselves. the search covers the mempool as
+    // well, and mempool txs are not in the blockchain db, so they come
+    // back as missed here and are picked up from the mempool below
     if (!core_storage->get_transactions(matching_txids, found_txs, missed_txs))
     {
         j_response["status"]  = "error";
@@ -4911,16 +4916,34 @@ json_transactions_private(string tx_hash_postfix)
         return j_response;
     }
 
+    // a tx is in the mempool for a while before it is mined, and that is
+    // exactly when someone is most likely to be looking it up. leaving
+    // those out would push the caller back onto the non private endpoint
+    std::vector<std::pair<transaction, uint64_t>> mempool_txs;
+
     json j_missed_txs = json::array();
 
     for (crypto::hash const& missed_tx: missed_txs)
     {
-        j_missed_txs.push_back(json {
-                {"tx_hash", pod_to_hex(missed_tx)}
-        });
+        vector<MempoolStatus::mempool_tx> found_mempool_txs;
+
+        search_mempool(missed_tx, found_mempool_txs);
+
+        if (found_mempool_txs.empty())
+        {
+            // not on the chain and not in the mempool. most likely mined
+            // in between the two lookups, so just report the hash
+            j_missed_txs.push_back(json {
+                    {"tx_hash", pod_to_hex(missed_tx)}
+            });
+            continue;
+        }
+
+        mempool_txs.emplace_back(found_mempool_txs.at(0).tx,
+                                 found_mempool_txs.at(0).receive_time);
     }
 
-    if (found_txs.empty())
+    if (found_txs.empty() && mempool_txs.empty())
     {
         j_data["title"] = fmt::format(
                 "No transactions found ending with: {:s}", tx_hash_postfix);
@@ -4963,8 +4986,8 @@ json_transactions_private(string tx_hash_postfix)
                 // it, so nothing is allowed to escape from here
                 try
                 {
-                    thread_txs[i].push_back(
-                            json_transaction_details(found_txs[j], bc_height));
+                    thread_txs[i].push_back(json_transaction_details(
+                            found_txs[j], bc_height, false, 0));
                 }
                 catch (const exception& e)
                 {
@@ -4986,6 +5009,24 @@ json_transactions_private(string tx_hash_postfix)
     for (std::vector<json>& txs: thread_txs)
     {
         std::move(txs.begin(), txs.end(), std::back_inserter(j_txs));
+    }
+
+    // the handful of mempool matches are cheap, do them on this thread
+    for (auto const& mempool_tx: mempool_txs)
+    {
+        try
+        {
+            j_txs.push_back(json_transaction_details(
+                    mempool_tx.first, bc_height, true, mempool_tx.second));
+        }
+        catch (const exception& e)
+        {
+            j_txs.push_back(json {
+                    {"tx_hash", pod_to_hex(
+                            get_transaction_hash(mempool_tx.first))},
+                    {"error"  , "Failed to get transaction details"}
+            });
+        }
     }
 
     j_data = j_txs;
