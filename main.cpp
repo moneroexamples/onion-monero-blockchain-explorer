@@ -61,6 +61,8 @@ main(int ac, const char* av[])
     auto ssl_crt_file_opt              = opts.get_option<string>("ssl-crt-file");
     auto ssl_key_file_opt              = opts.get_option<string>("ssl-key-file");
     auto no_blocks_on_index_opt        = opts.get_option<string>("no-blocks-on-index");
+    auto max_private_tx_matches_opt    = opts.get_option<string>("max-private-tx-matches");
+    auto recent_tx_blocks_opt          = opts.get_option<string>("recent-tx-blocks");
     auto testnet_url                   = opts.get_option<string>("testnet-url");
     auto stagenet_url                  = opts.get_option<string>("stagenet-url");
     auto mainnet_url                   = opts.get_option<string>("mainnet-url");
@@ -125,6 +127,10 @@ main(int ac, const char* av[])
 
     // cast no_blocks_on_index_opt to uint
     uint64_t no_blocks_on_index = boost::lexical_cast<uint64_t>(*no_blocks_on_index_opt);
+
+    uint64_t max_private_tx_matches = boost::lexical_cast<uint64_t>(*max_private_tx_matches_opt);
+
+    uint64_t recent_tx_blocks = boost::lexical_cast<uint64_t>(*recent_tx_blocks_opt);
 
     bool use_ssl {false};
 
@@ -318,6 +324,8 @@ main(int ac, const char* av[])
                           enable_mixin_details,
                           enable_mixin_guess,
                           no_blocks_on_index,
+                          max_private_tx_matches,
+                          recent_tx_blocks,
                           mempool_info_timeout,
                           *testnet_url,
                           *stagenet_url,
@@ -674,6 +682,27 @@ main(int ac, const char* av[])
             return r;
         });
 
+        CROW_ROUTE(app, "/api/transaction/private/<string>")
+        ([&](string tx_hash_postfix) {
+
+            // not passed through remove_bad_chars, which would drop the
+            // characters that make a postfix invalid and answer a different
+            // question than the one asked. the postfix is checked for being
+            // hex where it is used, which is stricter than that anyway
+            myxmr::jsonresponse r{xmrblocks.json_transactions_private(
+                    tx_hash_postfix)};
+
+            return r;
+        });
+
+        CROW_ROUTE(app, "/api/transactions/recent")
+        ([&]() {
+
+            myxmr::jsonresponse r{xmrblocks.json_transactions_recent()};
+
+            return r;
+        });
+
         CROW_ROUTE(app, "/api/rawtransaction/<string>")
         ([&](string tx_hash) {
 
@@ -861,6 +890,10 @@ main(int ac, const char* av[])
             return myxmr::htmlresponse(xmrblocks.index2(page_no, refresh_page));
         });
     }
+
+    // json responses are mostly repeated hex, which gzips very well. crow
+    // only uses this for clients that ask for it
+    app.use_compression(crow::compression::algorithm::GZIP);
 
     // run the crow http server
 
