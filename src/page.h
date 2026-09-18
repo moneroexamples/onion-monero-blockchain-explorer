@@ -4976,8 +4976,10 @@ json_transactions_private(string tx_hash_postfix)
     // one vector per thread, so that the threads never touch each others data
     std::vector<std::vector<json>> thread_txs(num_threads);
 
-    std::vector<std::thread> threads;
-    threads.reserve(num_threads);
+    // futures rather than threads, so that a failure to start one of them
+    // waits for the rest instead of terminating the process
+    std::vector<std::future<void>> workers;
+    workers.reserve(num_threads);
 
     for (size_t i = 0; i < num_threads; ++i)
     {
@@ -4985,7 +4987,7 @@ json_transactions_private(string tx_hash_postfix)
         size_t const end   = (i == num_threads - 1)
                              ? found_txs.size() : (i + 1) * chunk_size;
 
-        threads.emplace_back([&, i, start, end]()
+        workers.push_back(std::async(std::launch::async, [&, i, start, end]()
         {
             thread_txs[i].reserve(end - start);
 
@@ -5007,11 +5009,11 @@ json_transactions_private(string tx_hash_postfix)
                     });
                 }
             }
-        });
+        }));
     }
 
-    for (std::thread& t: threads)
-        t.join();
+    for (std::future<void>& w: workers)
+        w.get();
 
     json j_txs = json::array();
 
