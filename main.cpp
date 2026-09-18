@@ -61,6 +61,7 @@ main(int ac, const char* av[])
     auto ssl_crt_file_opt              = opts.get_option<string>("ssl-crt-file");
     auto ssl_key_file_opt              = opts.get_option<string>("ssl-key-file");
     auto no_blocks_on_index_opt        = opts.get_option<string>("no-blocks-on-index");
+    auto max_private_tx_matches_opt    = opts.get_option<string>("max-private-tx-matches");
     auto testnet_url                   = opts.get_option<string>("testnet-url");
     auto stagenet_url                  = opts.get_option<string>("stagenet-url");
     auto mainnet_url                   = opts.get_option<string>("mainnet-url");
@@ -125,6 +126,8 @@ main(int ac, const char* av[])
 
     // cast no_blocks_on_index_opt to uint
     uint64_t no_blocks_on_index = boost::lexical_cast<uint64_t>(*no_blocks_on_index_opt);
+
+    uint64_t max_private_tx_matches = boost::lexical_cast<uint64_t>(*max_private_tx_matches_opt);
 
     bool use_ssl {false};
 
@@ -318,6 +321,7 @@ main(int ac, const char* av[])
                           enable_mixin_details,
                           enable_mixin_guess,
                           no_blocks_on_index,
+                          max_private_tx_matches,
                           mempool_info_timeout,
                           *testnet_url,
                           *stagenet_url,

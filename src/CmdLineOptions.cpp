@@ -59,6 +59,8 @@ namespace xmreg
                  "number of last blocks to be shown on index page")
                 ("mempool-info-timeout", value<string>()->default_value("5000"),
                  "maximum time, in milliseconds, to wait for mempool data for the front page")
+                ("max-private-tx-matches", value<string>()->default_value("1000"),
+                 "maximum number of transactions /api/transaction/private will return for one postfix")
                 ("mempool-refresh-time", value<string>()->default_value("5"),
                  "time, in seconds, for each refresh of mempool state")
                 ("concurrency,c", value<size_t>()->default_value(0),

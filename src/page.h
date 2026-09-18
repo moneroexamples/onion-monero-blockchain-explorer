@@ -457,6 +457,7 @@ bool enable_autorefresh_option;
 
 uint64_t no_of_mempool_tx_of_frontpage;
 uint64_t no_blocks_on_index;
+uint64_t max_private_tx_matches;
 uint64_t mempool_info_timeout;
 
 string testnet_url;
@@ -514,6 +515,7 @@ page(MicroCore* _mcore,
      bool _enable_mixins_details,
      bool _enable_mixin_guess,
      uint64_t _no_blocks_on_index,
+     uint64_t _max_private_tx_matches,
      uint64_t _mempool_info_timeout,
      string _testnet_url,
      string _stagenet_url,
@@ -534,6 +536,7 @@ page(MicroCore* _mcore,
           enable_mixins_details {_enable_mixins_details},
           enable_mixin_guess {_enable_mixin_guess},
           no_blocks_on_index {_no_blocks_on_index},
+          max_private_tx_matches {_max_private_tx_matches},
           mempool_info_timeout {_mempool_info_timeout},
           testnet_url {_testnet_url},
           stagenet_url {_stagenet_url},
@@ -4799,11 +4802,6 @@ json_transactions_private(string tx_hash_postfix)
     static constexpr size_t MIN_POSTFIX_LENGTH {2};
     static constexpr size_t MAX_POSTFIX_LENGTH {12};
 
-    // an upper bound on how many txs we are willing to expand into json for
-    // a single request, so that a short postfix on a large blockchain cannot
-    // be used to make the explorer do an unbounded amount of work
-    static constexpr uint64_t MAX_MATCHING_TXS {1000};
-
     // only bother spreading the work over several threads once the matching
     // set is big enough for the thread setup to pay for itself
     static constexpr size_t MIN_TXS_PER_THREAD {64};
@@ -4875,14 +4873,14 @@ json_transactions_private(string tx_hash_postfix)
     try
     {
         matching_txids = core_storage->get_db().get_txids_loose(
-                tx_hash_template, searched_length * 4, MAX_MATCHING_TXS);
+                tx_hash_template, searched_length * 4, max_private_tx_matches);
     }
     catch (const TX_EXISTS& e)
     {
         j_data["title"] = fmt::format(
                 "More than {:d} transactions end with {:s}. "
                 "Please use a longer postfix.",
-                MAX_MATCHING_TXS, tx_hash_postfix);
+                max_private_tx_matches, tx_hash_postfix);
         return j_response;
     }
     catch (const exception& e)
