@@ -1,3 +1,8 @@
+# CMake >= 3.30 removed the built-in FindBoost module (policy CMP0167):
+# use Boost's own package config files instead.
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
 find_package(Boost 1.54 REQUIRED)
 
 set(mstch_INCLUDE_DIR

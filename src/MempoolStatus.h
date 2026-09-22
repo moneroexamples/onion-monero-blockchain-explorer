@@ -109,7 +109,7 @@ struct MempoolStatus
                 return CORE_RPC_STATUS_BUSY;
 
             // default
-            return 0;
+            return "";
         }
     };
 

@@ -203,7 +203,7 @@ CurrentBlockchainStatus::load_current_emission_amount()
     vector<string> strs;
     boost::split(strs, last_saved_emmision, boost::is_any_of(","));
 
-    if (strs.empty())
+    if (strs.size() < 4)
     {
         cerr << "Problem spliting string values form  emission_amount." << endl;
         return false;
@@ -220,9 +220,10 @@ CurrentBlockchainStatus::load_current_emission_amount()
         emission_loaded.fee      = boost::lexical_cast<uint64_t>(strs.at(2));
         read_check_sum           = boost::lexical_cast<uint64_t>(strs.at(3));
     }
-    catch (boost::bad_lexical_cast &e)
+    catch (const std::exception &e)
     {
-        cerr << "Cant parse to number date from string: " << last_saved_emmision << endl;
+        cerr << "Cant parse to number date from string: " << last_saved_emmision
+             << ": " << e.what() << endl;
         return false;
     }
 

@@ -1,0 +1,5 @@
+# Don't send local build trees into the Docker build context.
+# `build/` contains an absolute-path CMakeCache.txt (e.g. /mnt/w7/...)
+# which breaks `cmake ..` inside the container (builder step 7/8).
+build/
+cmake-build-debug/

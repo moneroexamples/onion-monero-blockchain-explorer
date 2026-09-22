@@ -143,18 +143,27 @@ Go to your browser: http://127.0.0.1:8081
 
 ## Compiling and running with Docker
 
-The explorer can also be compiled using `docker build` as described below. By default it compiles
-against latest release tag (i.e. `v0.18.4.0`) of monero:
+The explorer can also be compiled using `docker buildx build` (BuildKit, the replacement
+for the deprecated legacy `docker build`) as described below. By default it compiles
+against the release tag defined by `ARG MONERO_BRANCH` in the `Dockerfile`:
 
 ```
 # build using all CPU cores
-docker build --no-cache -t xmrblocks .
+docker buildx build --no-cache -t xmrblocks --load .
 
 # alternatively, specify number of cores to use (e.g. 2)
-docker build --no-cache --build-arg NPROC=2  -t xmrblocks .
+docker buildx build --no-cache --build-arg NPROC=2 -t xmrblocks --load .
 
 # to build against development branch of monero (i.e. master branch)
-docker build --no-cache --build-arg NPROC=3 --build-arg MONERO_BRANCH=master  -t xmrblocks .
+docker buildx build --no-cache --build-arg NPROC=3 --build-arg MONERO_BRANCH=master -t xmrblocks --load .
+```
+
+Note: `--load` is required so the built image is loaded into your local `docker images`.
+If `buildx` is missing, install it and create a builder, e.g.:
+
+```bash
+sudo apt-get install -y docker-buildx-plugin
+docker buildx create --use
 ```
 
 - The build needs 3 GB space.
@@ -223,7 +232,7 @@ To build this image, run the following:
 ```bash
 git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
 cd onion-monero-blockchain-explorer
-docker-compose build
+docker compose build
 ```
 
 Or build and run in one step via:
@@ -231,7 +240,7 @@ Or build and run in one step via:
 ```bash
 git clone https://github.com/moneroexamples/onion-monero-blockchain-explorer.git
 cd onion-monero-blockchain-explorer
-docker-compose up -d
+docker compose up -d --build
 ```
 
 When running via Docker, please use something like [Traefik](https://doc.traefik.io/traefik/) or [enable SSL](#enable-ssl-https) to secure communications.

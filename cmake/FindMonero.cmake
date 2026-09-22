@@ -77,8 +77,11 @@ endif()
 
 message(STATUS ${MONERO_SOURCE_DIR}/build)
 
-# include monero headers
-include_directories(
+# include monero headers as SYSTEM so deprecation warnings from inside
+# monero's vendored headers (e.g. boost::asio::deadline_timer in
+# abstract_tcp_server2.h) don't spam our build output. Warnings in our
+# own code are still shown.
+include_directories(SYSTEM
 		${MONERO_SOURCE_DIR}/src
                 ${MONERO_SOURCE_DIR}/src/crypto
                 ${MONERO_SOURCE_DIR}/src/crypto/wallet

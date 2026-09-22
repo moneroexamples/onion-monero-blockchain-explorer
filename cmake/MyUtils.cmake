@@ -53,8 +53,8 @@ macro(create_git_version)
 
 
     configure_file(
-            ${CMAKE_SOURCE_DIR}/src/version.h.in
-            ${CMAKE_BINARY_DIR}/gen/version.h
+            ${CMAKE_SOURCE_DIR}/src/xmrblocks_version.h.in
+            ${CMAKE_BINARY_DIR}/gen/xmrblocks_version.h
     )
 
     include_directories(${CMAKE_BINARY_DIR}/gen)

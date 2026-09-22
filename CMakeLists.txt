@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.2)
+cmake_minimum_required(VERSION 3.10)
 
 set(PROJECT_NAME
         xmrblocks)
@@ -7,6 +7,11 @@ set(PROJECT_NAME
 project(${PROJECT_NAME})
 
 set(CMAKE_CXX_STANDARD 17)
+
+# Crow must use the Boost.Asio backend (CROW_USE_BOOST), otherwise it
+# includes standalone <asio.hpp> which conflicts with Monero's
+# <boost/asio/...> headers (duplicate asio:: vs boost::asio:: symbols).
+add_definitions(-DCROW_USE_BOOST)
 
 if (WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wa,-mbig-obj -O3")
@@ -53,9 +58,18 @@ include(MyUtils)
 
 find_package(Monero)
 
+# CMake >= 3.30 removed the built-in FindBoost module (policy CMP0167):
+# use Boost's own package config files instead.
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
+
 # find boost
+# Note: `system` is intentionally omitted: since Boost 1.69 it is
+# header-only and Boost >= 1.85 (e.g. Ubuntu resolute's 1.90) no longer
+# ships boost_systemConfig.cmake, so requesting it fails the configure
+# step under CMake >= 3.30 (policy CMP0167, Boost's own config files).
 find_package(Boost COMPONENTS
-        system
         filesystem
         thread
         date_time
@@ -63,7 +77,6 @@ find_package(Boost COMPONENTS
         regex
         serialization
         program_options
-        date_time
         REQUIRED)
 
 #info https://github.com/arsenm/sanitizers-cmake
@@ -109,6 +122,12 @@ include_directories("ext/mstch/include")
 include_directories("ext/mstch/include/src")
 include_directories("ext/crow")
 
+# Generate build/gen/xmrblocks_version.h and put build/gen on the include
+# path BEFORE subdirectories are added, so all targets (including src/myxrm)
+# can find it. (Subdirectories snapshot parent includes at
+# add_subdirectory() time.)
+create_git_version()
+
 # add ext/ subfolder
 add_subdirectory(ext/)
 
@@ -126,12 +145,31 @@ add_executable(${PROJECT_NAME}
 
 add_sanitizers(${PROJECT_NAME})
 
-create_git_version()
-
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates ${CMAKE_CURRENT_BINARY_DIR}/templates)
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates/css ${CMAKE_CURRENT_BINARY_DIR}/templates/css)
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates/partials ${CMAKE_CURRENT_BINARY_DIR}/templates/partials)
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/src/templates/js ${CMAKE_CURRENT_BINARY_DIR}/templates/js)
+
+# Monero no longer always vendors miniupnpc in its build tree, so
+# FindMonero.cmake may create a `miniupnpc` imported target pointing at
+# Xmr_MINIUPNPC_LIBRARY-NOTFOUND. Repair it to use the system library.
+find_library(SYSTEM_MINIUPNPC_LIB miniupnpc)
+if(TARGET miniupnpc)
+    get_target_property(_miniupnpc_loc miniupnpc IMPORTED_LOCATION)
+    if(NOT _miniupnpc_loc OR _miniupnpc_loc MATCHES "NOTFOUND$")
+        if(SYSTEM_MINIUPNPC_LIB)
+            message(STATUS "Repairing miniupnpc target -> ${SYSTEM_MINIUPNPC_LIB}")
+            set_property(TARGET miniupnpc PROPERTY IMPORTED_LOCATION ${SYSTEM_MINIUPNPC_LIB})
+        else()
+            message(STATUS "miniupnpc not found anywhere")
+        endif()
+    endif()
+    unset(_miniupnpc_loc)
+elseif(SYSTEM_MINIUPNPC_LIB)
+    message(STATUS "Using system miniupnpc: ${SYSTEM_MINIUPNPC_LIB}")
+    add_library(miniupnpc UNKNOWN IMPORTED)
+    set_property(TARGET miniupnpc PROPERTY IMPORTED_LOCATION ${SYSTEM_MINIUPNPC_LIB})
+endif()
 
 set(LIBRARIES
         myxrm

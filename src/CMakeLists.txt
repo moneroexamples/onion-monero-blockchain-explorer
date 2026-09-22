@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.2)
+cmake_minimum_required(VERSION 3.10)
 
 project(myxrm)
 
@@ -14,7 +14,7 @@ set(SOURCE_FILES
 		CmdLineOptions.cpp
 		page.h
 		rpccalls.cpp rpccalls.h
-		version.h.in 
+		xmrblocks_version.h.in 
         CurrentBlockchainStatus.cpp 
         MempoolStatus.cpp 
         MempoolStatus.h)

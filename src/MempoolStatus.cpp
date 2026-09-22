@@ -291,16 +291,17 @@ MempoolStatus::read_network_info()
     local_copy.start_time                 = rpc_network_info.start_time;
 
 
-    strncpy(local_copy.block_size_limit_str, fmt::format("{:0.2f}",
-                                             static_cast<double>(
-                                             local_copy.block_size_limit ) / 2.0 / 1024.0).c_str(),
-                                             sizeof(local_copy.block_size_limit_str));
+    // snprintf always NUL-terminates; strncpy(dst, src, sizeof dst) does not,
+    // and these values are daemon-supplied so their formatted length is not
+    // under our control.
+    snprintf(local_copy.block_size_limit_str,
+             sizeof(local_copy.block_size_limit_str), "%0.2f",
+             static_cast<double>(local_copy.block_size_limit) / 2.0 / 1024.0);
 
 
-    strncpy(local_copy.block_size_median_str, fmt::format("{:0.2f}",
-                                              static_cast<double>(
-                                              local_copy.block_size_median) / 1024.0).c_str(),
-                                              sizeof(local_copy.block_size_median_str));
+    snprintf(local_copy.block_size_median_str,
+             sizeof(local_copy.block_size_median_str), "%0.2f",
+             static_cast<double>(local_copy.block_size_median) / 1024.0);
 
     epee::string_tools::hex_to_pod(rpc_network_info.top_block_hash,
                                    local_copy.top_block_hash);

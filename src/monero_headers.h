@@ -16,7 +16,9 @@
 
 #define FEE_ESTIMATE_GRACE_BLOCKS 10 // estimate fee valid for that many blocks
 
-#include "version.h"
+#include "xmrblocks_version.h"
+
+#include "version.h" // monero's version.h (MONERO_VERSION_FULL)
 
 #include "net/http_client.h"
 #include "storages/http_abstract_invoke.h"

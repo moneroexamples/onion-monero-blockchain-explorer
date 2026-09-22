@@ -1,5 +1,5 @@
 # first build mstch template library
-cmake_minimum_required(VERSION 3.5.2)
+cmake_minimum_required(VERSION 3.10)
 add_subdirectory("mstch")
 
 

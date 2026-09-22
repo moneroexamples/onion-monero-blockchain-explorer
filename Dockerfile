@@ -1,8 +1,8 @@
 # Use ubuntu:latest as base for builder stage image
-FROM ubuntu:latest as builder
+FROM ubuntu:latest AS builder
 
 # Set Monero branch/tag to be used for monerod compilation
-ARG MONERO_BRANCH=v0.18.4.0
+ARG MONERO_BRANCH=v0.18.5.1
 
 # Added DEBIAN_FRONTEND=noninteractive to workaround tzdata prompt on installation
 ENV DEBIAN_FRONTEND="noninteractive"
@@ -15,6 +15,7 @@ RUN apt-get update \
     build-essential \
     cmake \
     miniupnpc \
+    libminiupnpc-dev \
     graphviz \
     doxygen \
     pkg-config \
@@ -51,7 +52,7 @@ RUN git clone --recursive --branch ${MONERO_BRANCH} \
 # Copy and cmake/make xmrblocks with all available threads
 COPY . /root/onion-monero-blockchain-explorer/
 WORKDIR /root/onion-monero-blockchain-explorer/build
-RUN cmake .. && make -j"$(cat /nproc)"
+RUN cmake -DCMAKE_BUILD_TYPE=Release .. && make -j"$(cat /nproc)"
 
 # Use ldd and awk to bundle up dynamic libraries for the final image
 RUN zip /lib.zip $(ldd xmrblocks | grep -E '/[^\ ]*' -o)

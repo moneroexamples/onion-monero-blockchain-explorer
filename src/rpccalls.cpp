@@ -201,7 +201,7 @@ rpccalls::get_network_info(COMMAND_RPC_GET_INFO::response& response)
 
         r = epee::net_utils::invoke_http_json("/json_rpc",
                                               req_t, resp_t,
-                                              m_http_client);
+                                              m_http_client, timeout_time_ms);
     }
 
     string err;
@@ -261,7 +261,7 @@ rpccalls::get_hardfork_info(COMMAND_RPC_HARD_FORK_INFO::response& response)
 
         r = epee::net_utils::invoke_http_json("/json_rpc",
                                               req_t, resp_t,
-                                              m_http_client);
+                                              m_http_client, timeout_time_ms);
     }
 
 
@@ -329,7 +329,7 @@ rpccalls::get_dynamic_per_kb_fee_estimate(
 
         r = epee::net_utils::invoke_http_json("/json_rpc",
                                               req_t, resp_t,
-                                              m_http_client);
+                                              m_http_client, timeout_time_ms);
     }
 
     string err;
@@ -392,7 +392,7 @@ rpccalls::get_block(string const& blk_hash, block& blk, string& error_msg)
 
         r = epee::net_utils::invoke_http_json("/json_rpc",
                                               req_t, resp_t,
-                                              m_http_client);
+                                              m_http_client, timeout_time_ms);
     }
 
     string err;

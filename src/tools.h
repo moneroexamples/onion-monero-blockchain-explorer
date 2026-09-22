@@ -247,14 +247,14 @@ bool
 decode_ringct(const rct::rctSig & rv,
               const crypto::public_key pub,
               const crypto::secret_key &sec,
-              unsigned int i,
+              uint64_t i,
               rct::key & mask,
               uint64_t & amount);
 
 bool
 decode_ringct(const rct::rctSig & rv,
               const crypto::key_derivation &derivation,
-              unsigned int i,
+              uint64_t i,
               rct::key & mask,
               uint64_t & amount);
 
