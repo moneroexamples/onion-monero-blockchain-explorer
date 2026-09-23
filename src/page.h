@@ -1985,7 +1985,8 @@ show_my_outputs(string tx_hash_str,
 
     if (!xmreg::parse_str_secret_key(viewkey_str, multiple_tx_secret_keys))
     {
-        cerr << "Cant parse the private key: " << viewkey_str << endl;
+        cerr << "Cant parse the private key: "
+             << mask_secret(viewkey_str) << endl;
         return string("Cant parse private key: " + viewkey_str);
     }
     if (multiple_tx_secret_keys.size() == 1)
@@ -2127,18 +2128,17 @@ show_my_outputs(string tx_hash_str,
     string pid_str   = pod_to_hex(txd.payment_id);
     string pid8_str  = pod_to_hex(txd.payment_id8);
 
-    string shortcut_url = tx_prove 
-                    ? string("/prove") : string("/myoutputs")
-                          + '/' + tx_hash_str
-                          + '/' + xmr_address_str
-                          + '/' + viewkey_str;
+    // The shortcut link used to embed the private view key in the URL, which
+    // leaks it through Referer, browser history and any access log along the
+    // way. Link to the form instead; the user re-enters the key there.
+    //
+    // (The old expression also had a precedence bug: ?: binds looser than +,
+    // so the concatenation applied only to the /myoutputs branch and the prove
+    // shortcut collapsed to the bare string "/prove".)
+    string shortcut_url = tx_prove ? string("/prove") : string("/myoutputs");
 
 
-    string viewkey_str_partial = viewkey_str;
-
-    // dont show full private keys. Only file first and last letters
-    for (size_t i = 3; i < viewkey_str_partial.length() - 2; ++i)
-        viewkey_str_partial[i] = '*';
+    string viewkey_str_partial = mask_secret(viewkey_str);
 
     // initalise page tempate map with basic info about blockchain
     mstch::map context {
@@ -2191,7 +2191,8 @@ show_my_outputs(string tx_hash_str,
     {
         cerr << "Cant get derived key for: "  << "\n"
              << "pub_tx_key: " << pub_key << " and "
-             << "prv_view_key" << pod_to_hex(unwrap(unwrap(prv_view_key))) << endl;
+             << "prv_view_key " << mask_secret(
+                    pod_to_hex(unwrap(unwrap(prv_view_key)))) << endl;
 
         return string("Cant get key_derivation");
     }
@@ -2204,7 +2205,8 @@ show_my_outputs(string tx_hash_str,
         {
             cerr << "Cant get derived key for: "  << "\n"
                  << "pub_tx_key: " << txd.additional_pks[i] << " and "
-                 << "prv_view_key" << pod_to_hex(unwrap(unwrap(prv_view_key))) << endl;
+                 << "prv_view_key " << mask_secret(
+                        pod_to_hex(unwrap(unwrap(prv_view_key)))) << endl;
 
             return string("Cant get key_derivation");
         }
@@ -2939,6 +2941,23 @@ show_checkrawtx(string raw_tx_data, string action)
                     //cout << "tx_source.real_out_tx_key: "         << tx_source.real_out_tx_key << endl;
                     //cout << "tx_source.real_output_in_tx_index: " << tx_source.real_output_in_tx_index << endl;
 
+                    // real_output indexes `outputs` and arrives from the
+                    // submitted blob. Reject rather than clamp: clamping would
+                    // let a malformed source reach the timescale code below,
+                    // which cannot cope with an empty mixin group.
+                    if (tx_source.real_output >= tx_source.outputs.size())
+                    {
+                        string out_msg = fmt::format(
+                                "Real output index {:d} is out of range "
+                                "({:d} ring members)",
+                                tx_source.real_output,
+                                tx_source.outputs.size());
+
+                        cerr << out_msg << endl;
+
+                        return string(out_msg);
+                    }
+
                     uint64_t index_of_real_output = tx_source.outputs[tx_source.real_output].first;
 
                     tx_out_index real_toi;
@@ -2978,6 +2997,21 @@ show_checkrawtx(string raw_tx_data, string action)
                     tx_details real_txd = get_tx_details(real_source_tx);
 
                     real_output_indices.push_back(tx_source.real_output);
+
+                    if (tx_source.real_output_in_tx_index
+                            >= real_txd.output_pub_keys.size())
+                    {
+                        string out_msg = fmt::format(
+                                "Output index {:d} is out of range for source "
+                                "tx {:s} ({:d} outputs)",
+                                tx_source.real_output_in_tx_index,
+                                pod_to_hex(real_txd.hash),
+                                real_txd.output_pub_keys.size());
+
+                        cerr << out_msg << endl;
+
+                        return string(out_msg);
+                    }
 
                     public_key real_out_pub_key = std::get<0>(real_txd.output_pub_keys[tx_source.real_output_in_tx_index]);
 
@@ -3323,6 +3357,18 @@ show_checkrawtx(string raw_tx_data, string action)
             {
                 transaction real_source_tx;
 
+                if (tx_source.real_output >= tx_source.outputs.size())
+                {
+                    string out_msg = fmt::format(
+                            "Real output index {:d} is out of range "
+                            "({:d} ring members)",
+                            tx_source.real_output, tx_source.outputs.size());
+
+                    cerr << out_msg << endl;
+
+                    return string(out_msg);
+                }
+
                 uint64_t index_of_real_output = std::get<0>(tx_source.outputs[tx_source.real_output]);
 
                 uint64_t tx_source_amount = (tx_source.rct ? 0 : tx_source.amount);
@@ -3355,6 +3401,21 @@ show_checkrawtx(string raw_tx_data, string action)
                 }
 
                 tx_details real_txd = get_tx_details(real_source_tx);
+
+                if (tx_source.real_output_in_tx_index
+                        >= real_txd.output_pub_keys.size())
+                {
+                    string out_msg = fmt::format(
+                            "Output index {:d} is out of range for source "
+                            "tx {:s} ({:d} outputs)",
+                            tx_source.real_output_in_tx_index,
+                            pod_to_hex(real_txd.hash),
+                            real_txd.output_pub_keys.size());
+
+                    cerr << out_msg << endl;
+
+                    return string(out_msg);
+                }
 
                 public_key real_out_pub_key
                         = std::get<0>(real_txd.output_pub_keys[tx_source.real_output_in_tx_index]);
@@ -3791,8 +3852,8 @@ show_checkrawkeyimgs(string raw_data, string viewkey_str)
 
     context.insert({"address"        , REMOVE_HASH_BRAKETS(
             xmreg::print_address(address_info, nettype))});
-    context.insert({"viewkey"        , REMOVE_HASH_BRAKETS(
-            fmt::format("{:s}", pod_to_hex(unwrap(unwrap(prv_view_key)))))});
+    context.insert({"viewkey"        , mask_secret(REMOVE_HASH_BRAKETS(
+            fmt::format("{:s}", pod_to_hex(unwrap(unwrap(prv_view_key))))))});
     context.insert({"has_total_xmr"  , false});
     context.insert({"total_xmr"      , string{}});
     context.insert({"key_imgs"       , mstch::array{}});
@@ -3916,6 +3977,17 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
     // header is public spend and keys
     const size_t header_lenght    = 2 * sizeof(crypto::public_key);
 
+    if (decoded_raw_data.size() < header_lenght)
+    {
+        string error_msg = fmt::format(
+                "Bad data size from submitted output keys raw data.");
+
+        context["has_error"] = true;
+        context["error_msg"] = error_msg;
+
+        return mstch::render(full_page, context);
+    }
+
     // get xmr address stored in this key image file
     const account_public_address* xmr_address =
             reinterpret_cast<const account_public_address*>(
@@ -3925,7 +3997,8 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
 
     context.insert({"address"        , REMOVE_HASH_BRAKETS(
             xmreg::print_address(address_info, nettype))});
-    context.insert({"viewkey"        , pod_to_hex(unwrap(unwrap(prv_view_key)))});
+    context.insert({"viewkey"        , mask_secret(
+            pod_to_hex(unwrap(unwrap(prv_view_key))))});
     context.insert({"has_total_xmr"  , false});
     context.insert({"total_xmr"      , string{}});
     context.insert({"output_keys"    , mstch::array{}});
@@ -7453,6 +7526,20 @@ get_tx_details(const transaction& tx,
     }
 
     return txd;
+}
+
+// Show only the first and last few characters of a secret. Used everywhere a
+// submitted view key or tx secret key would otherwise be echoed back to the
+// client or written to a log.
+string
+mask_secret(string const& secret)
+{
+    if (secret.length() <= 8)
+        return string(secret.length(), '*');
+
+    return secret.substr(0, 3)
+           + string(secret.length() - 5, '*')
+           + secret.substr(secret.length() - 2);
 }
 
 void
