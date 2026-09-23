@@ -9,10 +9,10 @@
 #define BLOCKCHAIN_DB DB_LMDB
 
 
-#define UNSIGNED_TX_PREFIX "Monero unsigned tx set\003"
-#define SIGNED_TX_PREFIX "Monero signed tx set\003"
+#define UNSIGNED_TX_PREFIX "Monero unsigned tx set\005"
+#define SIGNED_TX_PREFIX "Monero signed tx set\005"
 #define KEY_IMAGE_EXPORT_FILE_MAGIC "Monero key image export\002"
-#define OUTPUT_EXPORT_FILE_MAGIC "Monero output export\003"
+#define OUTPUT_EXPORT_FILE_MAGIC "Monero output export\004"
 
 #define FEE_ESTIMATE_GRACE_BLOCKS 10 // estimate fee valid for that many blocks
 
@@ -28,8 +28,11 @@
 #include "device/device_default.hpp"
 
 #include "wallet/wallet2.h"
+#include "wallet/wallet2_basic/wallet2_boost_serialization.h"
+#include "wallet/wallet2_basic/wallet2_serialization.h"
 
 #include "serialization/binary_utils.h"
+#include "serialization/binary_archive.h"
 
 #include "ringct/rctTypes.h"
 #include "ringct/rctOps.h"

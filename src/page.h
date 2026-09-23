@@ -2279,7 +2279,7 @@ show_my_outputs(string tx_hash_str,
         {
             // cointbase txs have amounts in plain sight.
             // so use amount from ringct, only for non-coinbase txs
-            if (!is_coinbase(tx))
+            if (!tx.is_coinbase())
             {
 
                 // initialize with regular amount
@@ -2600,7 +2600,7 @@ show_my_outputs(string tx_hash_str,
                     {
                         // cointbase txs have amounts in plain sight.
                         // so use amount from ringct, only for non-coinbase txs
-                        if (!is_coinbase(mixin_tx))
+                        if (!mixin_tx.is_coinbase())
                         {
                             // initialize with regular amount
                             uint64_t rct_amount = amount;
@@ -2854,11 +2854,15 @@ show_checkrawtx(string raw_tx_data, string action)
 
         try
         {
-            std::istringstream iss(s);
-            boost::archive::portable_binary_iarchive ar(iss);
-            ar >> exported_txs;
-
-            r = true;
+            // monero master uses binary_archive (v005, encrypted with view key).
+            // without the view key we can only try raw deserialize; encrypted
+            // blobs will fail here and report an error below.
+            binary_archive<false> ar{epee::strspan<std::uint8_t>(s)};
+            if (::serialization::serialize(ar, exported_txs)
+                && ::serialization::check_stream_state(ar))
+                r = true;
+            else
+                cerr << "Failed to parse unsigned tx data " << endl;
         }
         catch (...)
         {
@@ -3204,11 +3208,12 @@ show_checkrawtx(string raw_tx_data, string action)
 
         try
         {
-            std::istringstream iss(s);
-            boost::archive::portable_binary_iarchive ar(iss);
-            ar >> signed_txs;
-
-            r = true;
+            binary_archive<false> ar{epee::strspan<std::uint8_t>(s)};
+            if (::serialization::serialize(ar, signed_txs)
+                && ::serialization::check_stream_state(ar))
+                r = true;
+            else
+                cerr << "Failed to parse signed tx data " << endl;
         }
         catch (...)
         {
@@ -3516,11 +3521,12 @@ show_pushrawtx(string raw_tx_data, string action)
 
         try
         {
-            std::istringstream iss(s);
-            boost::archive::portable_binary_iarchive ar(iss);
-            ar >> signed_txs;
-
-            r = true;
+            binary_archive<false> ar{epee::strspan<std::uint8_t>(s)};
+            if (::serialization::serialize(ar, signed_txs)
+                && ::serialization::check_stream_state(ar))
+                r = true;
+            else
+                cerr << "Failed to parse signed tx data " << endl;
         }
         catch (...)
         {
@@ -3927,19 +3933,44 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
     mstch::array& output_keys_ctx = boost::get<mstch::array>(context["output_keys"]);
 
 
-    std::vector<tools::wallet2::transfer_details> outputs;
+    std::tuple<uint64_t, uint64_t,
+        std::vector<tools::wallet2::exported_transfer_details>> new_outputs;
+    std::tuple<uint64_t, uint64_t,
+        std::vector<tools::wallet2::transfer_details>> outputs_tuple;
+    bool have_new_outputs {false};
+    bool have_old_outputs {false};
 
     try
     {
         std::string body(decoded_raw_data, header_lenght);
-        std::stringstream iss;
-        iss << body;
-        boost::archive::portable_binary_iarchive ar(iss);
-        //boost::archive::binary_iarchive ar(iss);
 
-        ar >> outputs;
+        // try new format first (exported_transfer_details), then legacy
+        // transfer_details tuple, mirroring wallet2::import_outputs_from_str
+        try
+        {
+            binary_archive<false> ar{epee::strspan<std::uint8_t>(body)};
+            if (::serialization::serialize(ar, new_outputs)
+                && ::serialization::check_stream_state(ar)
+                && !std::get<2>(new_outputs).empty())
+                have_new_outputs = true;
+        }
+        catch (...) {}
 
-        //size_t n_outputs = m_wallet->import_outputs(outputs);
+        if (!have_new_outputs)
+        {
+            try
+            {
+                binary_archive<false> ar{epee::strspan<std::uint8_t>(body)};
+                if (::serialization::serialize(ar, outputs_tuple)
+                    && ::serialization::check_stream_state(ar)
+                    && !std::get<2>(outputs_tuple).empty())
+                    have_old_outputs = true;
+            }
+            catch (...) {}
+        }
+
+        if (!have_new_outputs && !have_old_outputs)
+            throw std::runtime_error("failed to deserialize outputs (new nor legacy format)");
     }
     catch (const std::exception &e)
     {
@@ -3955,6 +3986,40 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
     uint64_t output_no {0};
 
     context["are_key_images_known"] = false;
+
+    // new format only carries exported data (no key images / tx blobs),
+    // so render a reduced view and return early
+    if (have_new_outputs)
+    {
+        for (const auto& etd: std::get<2>(new_outputs))
+        {
+            uint64_t xmr_amount = etd.m_amount;
+
+            mstch::map output_info {
+                    {"output_no"           , fmt::format("{:03d}", output_no)},
+                    {"output_pub_key"      , REMOVE_HASH_BRAKETS(fmt::format("{:s}", etd.m_pubkey))},
+                    {"amount"              , xmreg::xmr_amount_to_str(xmr_amount)},
+                    {"tx_hash"             , string("[exported outputs have no tx hash]")},
+                    {"timestamp"           , string("unknown")},
+                    {"is_spent"            , static_cast<bool>(etd.m_flags.m_spent)},
+                    {"is_ringct"           , static_cast<bool>(etd.m_flags.m_rct)}
+            };
+
+            ++output_no;
+            total_xmr += xmr_amount;
+            output_keys_ctx.push_back(output_info);
+        }
+
+        if (total_xmr > 0)
+        {
+            context["has_total_xmr"] = true;
+            context["total_xmr"] = xmreg::xmr_amount_to_str(total_xmr);
+        }
+
+        return mstch::render(full_page, context);
+    }
+
+    const std::vector<tools::wallet2::transfer_details>& outputs = std::get<2>(outputs_tuple);
 
     for (const tools::wallet2::transfer_details& td: outputs)
     {
@@ -3987,7 +4052,7 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
 
             // cointbase txs have amounts in plain sight.
             // so use amount from ringct, only for non-coinbase txs
-            if (!is_coinbase(tx))
+            if (!tx.is_coinbase())
             {
 
                 bool r = decode_ringct(tx.rct_signatures,
@@ -4015,7 +4080,7 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
                     return mstch::render(full_page, context);
                 }
 
-            } //  if (!is_coinbase(tx))
+            } //  if (!tx.is_coinbase())
 
         } // if (td.is_rct())
 
@@ -4523,9 +4588,14 @@ json_transaction(string tx_hash_str)
 crypto::hash
 tx_hash_of(transaction const& tx)
 {
-    return tx.pruned
-            ? get_pruned_transaction_hash(tx, tx.prunable_hash)
-            : get_transaction_hash(tx);
+    if (tx.pruned)
+    {
+        crypto::hash res;
+        if (!get_pruned_transaction_hash(tx, tx.prunable_hash, res))
+            return null_hash;
+        return res;
+    }
+    return get_transaction_hash(tx);
 }
 
 
@@ -4662,7 +4732,7 @@ json_transaction_details(transaction const& tx, uint64_t bc_height,
                 .get_block_timestamp(block_height);
     }
 
-    tx_details txd = get_tx_details(tx, is_coinbase(tx),
+    tx_details txd = get_tx_details(tx, tx.is_coinbase(),
                                     block_height, bc_height);
 
     json outputs;
@@ -4969,7 +5039,8 @@ json_transactions_private(string tx_hash_postfix)
     try
     {
         matching_txids = core_storage->get_db().get_txids_loose(
-                tx_hash_template, searched_length * 4, search_limit);
+                tx_hash_template, searched_length * 4,
+                cryptonote::relay_category::all, search_limit);
     }
     catch (const TX_EXISTS& e)
     {
@@ -6142,7 +6213,7 @@ json_outputs(string tx_hash_str,
         {
             // cointbase txs have amounts in plain sight.
             // so use amount from ringct, only for non-coinbase txs
-            if (!is_coinbase(tx))
+            if (!tx.is_coinbase())
             {
 
                 // initialize with regular amount
@@ -6167,7 +6238,7 @@ json_outputs(string tx_hash_str,
                 xmr_amount         = rct_amount;
                 money_transfered[output_idx] = rct_amount;
 
-            } // if (!is_coinbase(tx))
+            } // if (!tx.is_coinbase())
 
         }  // if (mine_output && tx.version == 2)
 
@@ -6624,7 +6695,7 @@ find_our_outputs(
             {
                 // cointbase txs have amounts in plain sight.
                 // so use amount from ringct, only for non-coinbase txs
-                if (!is_coinbase(tx))
+                if (!tx.is_coinbase())
                 {
 
                     // initialize with regular amount
@@ -6653,7 +6724,7 @@ find_our_outputs(
                     xmr_amount = rct_amount;
                     money_transfered[output_idx] = rct_amount;
 
-                } // if (!is_coinbase(tx))
+                } // if (!tx.is_coinbase())
 
             }  // if (mine_output && tx.version == 2)
 
@@ -6694,9 +6765,8 @@ get_tx_json(const transaction& tx, const tx_details& txd)
             {"xmr_inputs"  , txd.xmr_inputs},
             {"unlock_time" , txd.unlock_time},
             {"tx_version"  , static_cast<uint64_t>(txd.version)},
-            {"rct_type"    , tx.rct_signatures.type},
-            {"coinbase"    , is_coinbase(tx)},
-            {"mixin"       , txd.mixin_no},
+            {"rct_type"    , static_cast<int>(tx.rct_signatures.type)},
+            {"coinbase"    , tx.is_coinbase()},
             {"extra"       , txd.get_extra_str()},
             {"payment_id"  , (txd.payment_id  != null_hash  ? pod_to_hex(txd.payment_id)  : "")},
             {"payment_id8" , (txd.payment_id8 != null_hash8 ? pod_to_hex(txd.payment_id8) : "")},
@@ -7306,7 +7376,8 @@ get_tx_details(const transaction& tx,
     }
     else
     {
-        txd.hash = get_pruned_transaction_hash(tx, tx.prunable_hash);
+        if (!get_pruned_transaction_hash(tx, tx.prunable_hash, txd.hash))
+            txd.hash = null_hash;
     }
 
     // get tx public key from extra

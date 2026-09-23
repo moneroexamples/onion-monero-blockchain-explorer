@@ -954,12 +954,6 @@ decode_ringct(rct::rctSig const& rv,
             case rct::RCTTypeBulletproof2:
             case rct::RCTTypeCLSAG:
             case rct::RCTTypeBulletproofPlus:
-                amount = rct::decodeRctSimple(rv,
-                                              rct::sk2rct(scalar1),
-                                              i,
-                                              mask,
-                                              hw::get_device("default"));
-                break;
             case rct::RCTTypeFull:
                 amount = rct::decodeRct(rv,
                                     rct::sk2rct(scalar1),

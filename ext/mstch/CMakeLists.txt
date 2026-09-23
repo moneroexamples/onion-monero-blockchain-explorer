@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.10)
 project(mstch)
 
 option(WITH_UNIT_TESTS "enable building unit test executable" OFF)

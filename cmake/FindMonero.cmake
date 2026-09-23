@@ -74,6 +74,49 @@ if (EXISTS ${MONERO_BUILD_DIR}/src/cryptonote_basic/libcryptonote_format_utils_b
                 PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/src/cryptonote_basic/libcryptonote_format_utils_basic.a)
 endif()
 
+# monero master new libs (fcmp++, polyseed, utf8proc, serialization)
+if (EXISTS ${MONERO_BUILD_DIR}/src/fcmp_pp/libfcmp_pp.a)
+        message(STATUS FindMonero " found libfcmp_pp.a")
+        add_library(fcmp_pp STATIC IMPORTED)
+        set_property(TARGET fcmp_pp
+                        PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/src/fcmp_pp/libfcmp_pp.a)
+endif()
+
+if (EXISTS ${MONERO_BUILD_DIR}/src/fcmp_pp/fcmp_pp_rust/libfcmp_pp_rust.a)
+        message(STATUS FindMonero " found libfcmp_pp_rust.a")
+        add_library(fcmp_pp_rust STATIC IMPORTED)
+        set_property(TARGET fcmp_pp_rust
+                        PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/src/fcmp_pp/fcmp_pp_rust/libfcmp_pp_rust.a)
+endif()
+
+if (EXISTS ${MONERO_BUILD_DIR}/src/mnemonics/polyseed/libpolyseed_wrapper.a)
+        message(STATUS FindMonero " found libpolyseed_wrapper.a")
+        add_library(polyseed_wrapper STATIC IMPORTED)
+        set_property(TARGET polyseed_wrapper
+                        PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/src/mnemonics/polyseed/libpolyseed_wrapper.a)
+endif()
+
+if (EXISTS ${MONERO_BUILD_DIR}/external/polyseed/libpolyseed.a)
+        message(STATUS FindMonero " found libpolyseed.a")
+        add_library(polyseed STATIC IMPORTED)
+        set_property(TARGET polyseed
+                        PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/external/polyseed/libpolyseed.a)
+endif()
+
+if (EXISTS ${MONERO_BUILD_DIR}/external/utf8proc/libutf8proc.a)
+        message(STATUS FindMonero " found libutf8proc.a")
+        add_library(utf8proc STATIC IMPORTED)
+        set_property(TARGET utf8proc
+                        PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/external/utf8proc/libutf8proc.a)
+endif()
+
+if (EXISTS ${MONERO_BUILD_DIR}/src/serialization/libserialization.a)
+        message(STATUS FindMonero " found libserialization.a")
+        add_library(serialization STATIC IMPORTED)
+        set_property(TARGET serialization
+                        PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/src/serialization/libserialization.a)
+endif()
+
 
 message(STATUS ${MONERO_SOURCE_DIR}/build)
 
@@ -88,4 +131,6 @@ include_directories(
 		${MONERO_SOURCE_DIR}/external/easylogging++
 		${MONERO_SOURCE_DIR}/contrib/epee/include
                 ${MONERO_SOURCE_DIR}/external/db_drivers/liblmdb
-                ${MONERO_SOURCE_DIR}/generated_include/crypto/wallet)
+                ${MONERO_SOURCE_DIR}/generated_include/crypto/wallet
+		${MONERO_SOURCE_DIR}/external/polyseed/include
+		${MONERO_SOURCE_DIR}/external/utf8proc)
