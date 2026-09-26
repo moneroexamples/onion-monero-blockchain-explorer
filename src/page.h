@@ -104,6 +104,12 @@ inline thread_local RandomXThreadCleanup rx_thread_cleanup;
 
 #define ONIONEXPLORER_RPC_VERSION_MAJOR 1
 #define ONIONEXPLORER_RPC_VERSION_MINOR 3
+// App-layer DoS bounds (F5): independent of the 2 MiB POST body cap, so a
+// just-under-the-limit body still cannot buy unbounded CPU. Real mainnet
+// txs are far below these (outputs typically < 100, ring size 16).
+#define MAX_TX_VOUT_LOOKUP 2048u
+#define MAX_TX_VIN_LOOKUP 1024u
+#define MAX_RING_MEMBERS_LOOKUP 256u
 #define MAKE_ONIONEXPLORER_RPC_VERSION(major,minor) (((major)<<16)|(minor))
 #define ONIONEXPLORER_RPC_VERSION \
     MAKE_ONIONEXPLORER_RPC_VERSION(ONIONEXPLORER_RPC_VERSION_MAJOR, ONIONEXPLORER_RPC_VERSION_MINOR)
@@ -1142,7 +1148,9 @@ show_block(uint64_t _blk_height)
 
     // initalise page tempate map with basic info about blockchain
 
-    string blk_pow_hash_str = pod_to_hex(get_block_longhash(core_storage, blk, _blk_height, 0));
+    // PoW longhash omitted here: recomputing RandomX per /block view is a CPU-DoS
+    // vector (see /randomx for the on-demand view). Show the block id instead.
+    string blk_pow_hash_str = blk_hash_str;
     cryptonote::difficulty_type blk_difficulty = core_storage->get_db().get_block_difficulty(_blk_height);
 
     mstch::map context {
@@ -2085,6 +2093,20 @@ show_my_outputs(string tx_hash_str,
     }
 
     tx_details txd = get_tx_details(tx);
+
+    // Bound per-request CPU (F5): a single crafted tx must not buy seconds
+    // of key derivations + DB lookups, even if it fits the POST body cap.
+    if (tx.vout.size() > MAX_TX_VOUT_LOOKUP)
+        return string("Transaction has too many outputs to check");
+    if (tx.vin.size() > MAX_TX_VIN_LOOKUP)
+        return string("Transaction has too many inputs to check");
+    for (const auto& vin : tx.vin)
+    {
+        if (vin.type() == typeid(cryptonote::txin_to_key)
+            && boost::get<cryptonote::txin_to_key>(vin).key_offsets.size()
+                > MAX_RING_MEMBERS_LOOKUP)
+            return string("Transaction ring size too large to check");
+    }
 
     uint64_t tx_blk_height {0};
 
@@ -4051,6 +4073,15 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
 
         ar >> outputs;
 
+        // Bound per-request CPU: a crafted export must not buy unbounded
+        // per-output work below. Covers the body cap like the tx path.
+        if (outputs.size() > MAX_TX_VOUT_LOOKUP)
+        {
+            context["has_error"] = true;
+            context["error_msg"] = "Too many outputs to check";
+            return mstch::render(full_page, context);
+        }
+
         //size_t n_outputs = m_wallet->import_outputs(outputs);
     }
     catch (const std::exception &e)
@@ -5900,13 +5931,9 @@ json_networkinfo()
 
     uint64_t per_kb_fee_estimated {0};
 
-    // get dynamic fee estimate from last 10 blocks
-    if (!get_dynamic_per_kb_fee_estimate(per_kb_fee_estimated))
-    {
-        j_response["status"]  = "error";
-        j_response["message"] = "Cant get per kb dynamic fee esimate";
-    //    return j_response;
-    }
+    // use the fee cached by the mempool thread, not a per-request daemon RPC
+    // (the live call is serialized under a 200s-timeout mutex -> worker starvation)
+    per_kb_fee_estimated = MempoolStatus::current_network_info.load().fee_per_kb;
 
     j_info["fee_per_kb"] = per_kb_fee_estimated;
     j_info["fee_estimate"] = per_kb_fee_estimated;
@@ -5954,20 +5981,11 @@ json_feeestimate(string grace_blocks_str)
         }
     }
 
-    uint64_t fee_estimated {0};
-    string error_msg;
-
-    if (!rpc.get_dynamic_per_kb_fee_estimate(
-            grace_blocks,
-            fee_estimated,
-            error_msg))
-    {
-        j_response["status"] = "error";
-        j_response["message"] = error_msg.empty()
-                                ? "Cant get dynamic fee estimate"
-                                : error_msg;
-        return j_response;
-    }
+    // Use the fee cached by the mempool thread, not a per-request daemon
+    // RPC (the live call is serialized under a 200s-timeout mutex, letting
+    // one slow daemon stall all Crow workers — same fix as json_networkinfo).
+    // grace_blocks is kept in the response for API compatibility.
+    uint64_t fee_estimated = MempoolStatus::current_network_info.load().fee_per_kb;
 
     j_data = json {
             {"fee", fee_estimated},

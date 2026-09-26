@@ -37,10 +37,7 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
                  << " restart the explorer or disable emission monitoring."
                  << endl;
 
-            cerr << "Press ENTER to continue without emission monitoring or Ctr+C to exit" << endl;
-
-            cin.get();
-
+            // dont block startup waiting on stdin; just skip monitoring
             return;
         }
     }
@@ -111,7 +108,8 @@ CurrentBlockchainStatus::update_current_emission_amount()
     // the emission in the top few blocks will be calcalted
     // later
     end_block = end_block > current_blockchain_height
-                ? current_blockchain_height - blockchain_chunk_gap
+                ? (current_blockchain_height > blockchain_chunk_gap        // avoid underflow
+                   ? current_blockchain_height - blockchain_chunk_gap : 0)
                 : end_block;
 
     Emission emission_calculated = calculate_emission_in_blocks(blk_no, end_block);
@@ -168,6 +166,13 @@ CurrentBlockchainStatus::save_current_emission_amount()
 {
 
     string emmision_saved_file = get_output_file_path().string();
+
+    // dont follow a symlink planted at the emission file path
+    if (boost::filesystem::is_symlink(emmision_saved_file))
+    {
+        cerr << "Emission file is a symlink; refusing to write." << endl;
+        return false;
+    }
 
     ofstream out(emmision_saved_file);
 

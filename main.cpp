@@ -18,6 +18,23 @@ using xmreg::remove_bad_chars;
 
 using namespace std;
 
+namespace
+{
+// App-layer replacement for the vendored Crow body cap (ext/crow_all.h
+// is vendored and must not be patched): reject oversized POST bodies
+// before parse_crow_post_data makes extra copies (F1), and bound the
+// CPU amplification from crafted txs (F5).
+constexpr size_t MAX_POST_BODY_SIZE = 2u * 1024u * 1024u; // 2 MiB
+
+inline bool
+post_body_too_large(const crow::request& req)
+{
+    return req.body.size() > MAX_POST_BODY_SIZE;
+}
+
+inline const char* BODY_TOO_LARGE_MSG = "Request body too large (2 MiB limit)";
+}
+
 namespace myxmr
 {
 struct htmlresponse: public crow::response
@@ -166,6 +183,12 @@ main(int ac, const char* av[])
 
 
     // check if ssl enabled and files exist
+
+    if (bool(ssl_crt_file_opt) != bool(ssl_key_file_opt))
+    {
+        cerr << "Both --ssl-crt-file and --ssl-key-file are required for SSL!" << endl;
+        return EXIT_FAILURE;
+    }
 
     if (ssl_crt_file_opt && ssl_key_file_opt)
     {
@@ -329,6 +352,9 @@ main(int ac, const char* av[])
     // crow instance
     crow::SimpleApp app;
 
+    // dont log request/response URLs (they carry view keys, tx keys, client IPs)
+    app.loglevel(crow::LogLevel::Warning);
+
     // get domian url based on the request
     // crow's url_params.get() returns nullptr for an absent key, and
     // constructing std::string from nullptr is undefined behaviour (libstdc++
@@ -449,6 +475,8 @@ main(int ac, const char* av[])
     CROW_ROUTE(app, "/myoutputs").methods("POST"_method)
     ([&](const crow::request& req) -> myxmr::htmlresponse
      {
+        if (post_body_too_large(req))
+            return string(BODY_TOO_LARGE_MSG);
 
         map<std::string, std::string> post_body
                 = xmreg::parse_crow_post_data(req.body);
@@ -478,24 +506,14 @@ main(int ac, const char* av[])
         return myxmr::htmlresponse(std::move(response));
     });
 
-    CROW_ROUTE(app, "/myoutputs/<string>/<string>/<string>")
-    ([&](const crow::request& req, string tx_hash,
-        string xmr_address, string viewkey)
-     {
-
-        string domain = get_domain(req);
-
-        return myxmr::htmlresponse(xmrblocks.show_my_outputs(
-                                         remove_bad_chars(tx_hash),
-                                         remove_bad_chars(xmr_address),
-                                         remove_bad_chars(viewkey),
-                                         string {},
-                                         domain));
-    });
+    // GET /myoutputs/<tx>/<addr>/<viewkey> removed: it puts the secret view key
+    // in the URL (Referer, history, access logs). Use the POST form instead.
 
     CROW_ROUTE(app, "/prove").methods("POST"_method)
-        ([&](const crow::request& req) -> myxmr::htmlresponse 
+        ([&](const crow::request& req) -> myxmr::htmlresponse
          {
+            if (post_body_too_large(req))
+                return string(BODY_TOO_LARGE_MSG);
 
             map<std::string, std::string> post_body
                     = xmreg::parse_crow_post_data(req.body);
@@ -526,20 +544,8 @@ main(int ac, const char* av[])
     });
 
 
-    CROW_ROUTE(app, "/prove/<string>/<string>/<string>")
-    ([&](const crow::request& req, string tx_hash,
-         string xmr_address, string tx_prv_key) 
-     {
-
-        string domain = get_domain(req);
-
-        return myxmr::htmlresponse(xmrblocks.show_prove(
-                                    remove_bad_chars(tx_hash),
-                                    remove_bad_chars(xmr_address),
-                                    remove_bad_chars(tx_prv_key),
-                                    string {},
-                                    domain));
-    });
+    // GET /prove/<tx>/<addr>/<txprvkey> removed: it puts the secret tx private key
+    // in the URL. Use the POST form instead.
 
     if (enable_pusher)
     {
@@ -551,6 +557,8 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/checkandpush").methods("POST"_method)
         ([&](const crow::request& req) -> myxmr::htmlresponse
          {
+            if (post_body_too_large(req))
+                return string(BODY_TOO_LARGE_MSG);
 
             map<std::string, std::string> post_body
                     = xmreg::parse_crow_post_data(req.body);
@@ -585,6 +593,8 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/checkrawkeyimgs").methods("POST"_method)
         ([&](const crow::request& req) -> myxmr::htmlresponse
          {
+            if (post_body_too_large(req))
+                return string(BODY_TOO_LARGE_MSG);
 
             map<std::string, std::string> post_body
                     = xmreg::parse_crow_post_data(req.body);
@@ -618,6 +628,8 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/checkrawoutputkeys").methods("POST"_method)
         ([&](const crow::request& req) -> myxmr::htmlresponse
          {
+            if (post_body_too_large(req))
+                return string(BODY_TOO_LARGE_MSG);
 
             map<std::string, std::string> post_body
                     = xmreg::parse_crow_post_data(req.body);
