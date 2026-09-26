@@ -2278,7 +2278,7 @@ show_my_outputs(string tx_hash_str,
         {
             // cointbase txs have amounts in plain sight.
             // so use amount from ringct, only for non-coinbase txs
-            if (!is_coinbase(tx))
+            if (!tx.is_coinbase())
             {
 
                 // initialize with regular amount
@@ -2606,7 +2606,7 @@ show_my_outputs(string tx_hash_str,
                     {
                         // cointbase txs have amounts in plain sight.
                         // so use amount from ringct, only for non-coinbase txs
-                        if (!is_coinbase(mixin_tx))
+                        if (!mixin_tx.is_coinbase())
                         {
                             // initialize with regular amount
                             uint64_t rct_amount = amount;
@@ -2866,11 +2866,10 @@ show_checkrawtx(string raw_tx_data, string action)
 
         try
         {
-            std::istringstream iss(s);
-            boost::archive::portable_binary_iarchive ar(iss);
-            ar >> exported_txs;
-
-            r = true;
+            binary_archive<false> ar{epee::strspan<std::uint8_t>(s)};
+            r = ::serialization::serialize(ar, exported_txs);
+            if (!r)
+                cerr << "Failed to parse unsigned tx data " << endl;
         }
         catch (...)
         {
@@ -3248,11 +3247,10 @@ show_checkrawtx(string raw_tx_data, string action)
 
         try
         {
-            std::istringstream iss(s);
-            boost::archive::portable_binary_iarchive ar(iss);
-            ar >> signed_txs;
-
-            r = true;
+            binary_archive<false> ar{epee::strspan<std::uint8_t>(s)};
+            r = ::serialization::serialize(ar, signed_txs);
+            if (!r)
+                cerr << "Failed to parse signed tx data " << endl;
         }
         catch (...)
         {
@@ -3619,11 +3617,10 @@ show_pushrawtx(string raw_tx_data, string action)
 
         try
         {
-            std::istringstream iss(s);
-            boost::archive::portable_binary_iarchive ar(iss);
-            ar >> signed_txs;
-
-            r = true;
+            binary_archive<false> ar{epee::strspan<std::uint8_t>(s)};
+            r = ::serialization::serialize(ar, signed_txs);
+            if (!r)
+                cerr << "Failed to parse signed tx data " << endl;
         }
         catch (...)
         {
@@ -4102,7 +4099,7 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
 
             // cointbase txs have amounts in plain sight.
             // so use amount from ringct, only for non-coinbase txs
-            if (!is_coinbase(tx))
+            if (!tx.is_coinbase())
             {
 
                 // m_internal_output_index is attacker-controlled: it arrives
@@ -4151,7 +4148,7 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
                     return mstch::render(full_page, context);
                 }
 
-            } //  if (!is_coinbase(tx))
+            } //  if (!tx.is_coinbase())
 
         } // if (td.is_rct())
 
@@ -4617,7 +4614,7 @@ json_transaction(string tx_hash_str)
     }
 
     uint64_t block_height {0};
-    uint64_t is_coinbase_tx = is_coinbase(tx);
+    uint64_t is_coinbase_tx = tx.is_coinbase();
     uint64_t no_confirmations {0};
 
     if (found_in_mempool == false)
@@ -5608,7 +5605,7 @@ json_outputs(string tx_hash_str,
         {
             // cointbase txs have amounts in plain sight.
             // so use amount from ringct, only for non-coinbase txs
-            if (!is_coinbase(tx))
+            if (!tx.is_coinbase())
             {
 
                 // initialize with regular amount
@@ -5633,7 +5630,7 @@ json_outputs(string tx_hash_str,
                 xmr_amount         = rct_amount;
                 money_transfered[output_idx] = rct_amount;
 
-            } // if (!is_coinbase(tx))
+            } // if (!tx.is_coinbase())
 
         }  // if (mine_output && tx.version == 2)
 
@@ -6167,7 +6164,7 @@ find_our_outputs(
             {
                 // cointbase txs have amounts in plain sight.
                 // so use amount from ringct, only for non-coinbase txs
-                if (!is_coinbase(tx))
+                if (!tx.is_coinbase())
                 {
 
                     // initialize with regular amount
@@ -6196,7 +6193,7 @@ find_our_outputs(
                     xmr_amount = rct_amount;
                     money_transfered[output_idx] = rct_amount;
 
-                } // if (!is_coinbase(tx))
+                } // if (!tx.is_coinbase())
 
             }  // if (mine_output && tx.version == 2)
 
@@ -6237,7 +6234,7 @@ get_tx_json(const transaction& tx, const tx_details& txd)
             {"xmr_inputs"  , txd.xmr_inputs},
             {"tx_version"  , static_cast<uint64_t>(txd.version)},
             {"rct_type"    , tx.rct_signatures.type},
-            {"coinbase"    , is_coinbase(tx)},
+            {"coinbase"    , tx.is_coinbase()},
             {"mixin"       , txd.mixin_no},
             {"extra"       , txd.get_extra_str()},
             {"payment_id"  , (txd.payment_id  != null_hash  ? pod_to_hex(txd.payment_id)  : "")},

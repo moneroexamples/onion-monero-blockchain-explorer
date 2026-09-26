@@ -189,8 +189,13 @@ set(LIBRARIES
         lmdb
         ringct
         ringct_basic
+        fcmp_pp
+        fcmp_pp_rust
         common
         mnemonics
+        polyseed_wrapper
+        polyseed
+        utf8proc
         easylogging
         checkpoints
         cncrypto        
