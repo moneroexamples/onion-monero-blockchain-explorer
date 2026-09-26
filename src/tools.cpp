@@ -28,7 +28,7 @@ parse_str_secret_key(const string& key_str, T& secret_key)
 
     if(!parse_hash256(key_str, hash_))
     {
-        cerr << "Cant parse a key (e.g. viewkey): " << key_str << endl;
+        cerr << "Cant parse a key (e.g. viewkey)" << endl;
         return false;
     }
 

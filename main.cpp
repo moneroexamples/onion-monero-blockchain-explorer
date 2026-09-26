@@ -171,6 +171,14 @@ main(int ac, const char* av[])
 
     // check if ssl enabled and files exist
 
+    if (bool(ssl_crt_file_opt) != bool(ssl_key_file_opt))
+    {
+        cerr << "Both --ssl-crt-file and --ssl-key-file are required for SSL!"
+             << endl;
+
+        return EXIT_FAILURE;
+    }
+
     if (ssl_crt_file_opt && ssl_key_file_opt)
     {
         if (!boost::filesystem::exists(boost::filesystem::path(*ssl_crt_file_opt)))
@@ -336,6 +344,8 @@ main(int ac, const char* av[])
     // crow instance
     crow::SimpleApp app;
 
+    app.loglevel(crow::LogLevel::Warning);
+
     // get domian url based on the request
     auto get_domain = [&use_ssl](crow::request const& req) {
         return (use_ssl ? "https://" : "http://")
@@ -356,11 +366,7 @@ main(int ac, const char* av[])
     ([&](size_t block_height) {
         return myxmr::htmlresponse(xmrblocks.show_block(block_height));
     });
-    
-    CROW_ROUTE(app, "/randomx/<uint>")
-    ([&](size_t block_height) {
-        return myxmr::htmlresponse(xmrblocks.show_randomx(block_height));
-    });
+
 
     CROW_ROUTE(app, "/block/<string>")
     ([&](string block_hash) {
@@ -474,20 +480,6 @@ main(int ac, const char* av[])
         return myxmr::htmlresponse(std::move(response));
     });
 
-    CROW_ROUTE(app, "/myoutputs/<string>/<string>/<string>")
-    ([&](const crow::request& req, string tx_hash,
-        string xmr_address, string viewkey)
-     {
-
-        string domain = get_domain(req);
-
-        return myxmr::htmlresponse(xmrblocks.show_my_outputs(
-                                         remove_bad_chars(tx_hash),
-                                         remove_bad_chars(xmr_address),
-                                         remove_bad_chars(viewkey),
-                                         string {},
-                                         domain));
-    });
 
     CROW_ROUTE(app, "/prove").methods("POST"_method)
         ([&](const crow::request& req) -> myxmr::htmlresponse 
@@ -522,20 +514,6 @@ main(int ac, const char* av[])
     });
 
 
-    CROW_ROUTE(app, "/prove/<string>/<string>/<string>")
-    ([&](const crow::request& req, string tx_hash,
-         string xmr_address, string tx_prv_key) 
-     {
-
-        string domain = get_domain(req);
-
-        return myxmr::htmlresponse(xmrblocks.show_prove(
-                                    remove_bad_chars(tx_hash),
-                                    remove_bad_chars(xmr_address),
-                                    remove_bad_chars(tx_prv_key),
-                                    string {},
-                                    domain));
-    });
 
     if (enable_pusher)
     {

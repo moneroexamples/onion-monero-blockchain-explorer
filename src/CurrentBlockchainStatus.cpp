@@ -37,10 +37,6 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
                  << " restart the explorer or disable emission monitoring."
                  << endl;
 
-            cerr << "Press ENTER to continue without emission monitoring or Ctr+C to exit" << endl;
-
-            cin.get();
-
             return;
         }
     }
@@ -65,7 +61,8 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
 
                        save_current_emission_amount();
 
-                       if (current_emission.blk_no < current_height - blockchain_chunk_size)
+                       if (current_height > blockchain_chunk_size
+                           && current_emission.blk_no < current_height - blockchain_chunk_size)
                        {
                            // while we scan the blockchain from scrach, every 10000
                            // blocks take 1 second break
@@ -111,7 +108,8 @@ CurrentBlockchainStatus::update_current_emission_amount()
     // the emission in the top few blocks will be calcalted
     // later
     end_block = end_block > current_blockchain_height
-                ? current_blockchain_height - blockchain_chunk_gap
+                ? (current_blockchain_height > blockchain_chunk_gap
+                   ? current_blockchain_height - blockchain_chunk_gap : 0)
                 : end_block;
 
     Emission emission_calculated = calculate_emission_in_blocks(blk_no, end_block);
@@ -164,10 +162,37 @@ CurrentBlockchainStatus::calculate_emission_in_blocks(
 
 
 bool
+emission_file_is_safe_to_write(const string& path)
+{
+    boost::system::error_code ec;
+
+    if (boost::filesystem::is_symlink(path, ec))
+    {
+        cerr << "Emission file path is a symlink: " << path
+             << "; refusing to write." << endl;
+        return false;
+    }
+
+    if (ec && ec != boost::system::errc::no_such_file_or_directory)
+    {
+        cerr << "Emission file path could not be inspected: " << path
+             << " (" << ec.message() << "); refusing to write." << endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool
 CurrentBlockchainStatus::save_current_emission_amount()
 {
 
     string emmision_saved_file = get_output_file_path().string();
+
+    if (!emission_file_is_safe_to_write(emmision_saved_file))
+    {
+        return false;
+    }
 
     ofstream out(emmision_saved_file);
 

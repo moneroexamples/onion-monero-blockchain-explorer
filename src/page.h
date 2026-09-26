@@ -1151,7 +1151,6 @@ show_block(uint64_t _blk_height)
 
     // initalise page tempate map with basic info about blockchain
 
-    string blk_pow_hash_str = pod_to_hex(get_block_longhash(core_storage, blk, _blk_height, 0));
     cryptonote::difficulty_type blk_difficulty = core_storage->get_db().get_block_difficulty(_blk_height);
 
     mstch::map context {
@@ -1172,9 +1171,6 @@ show_block(uint64_t _blk_height)
             {"blk_age"              , age.first},
             {"delta_time"           , delta_time},
             {"blk_nonce"            , blk.nonce},
-            {"blk_pow_hash"         , blk_pow_hash_str},
-            {"is_randomx"           , (blk.major_version >= 12
-                                            && enable_randomx == true)},
             {"blk_difficulty"       , blk_difficulty.str()},
             {"age_format"           , age.second},
             {"major_ver"            , std::to_string(blk.major_version)},
@@ -6549,25 +6545,27 @@ json_networkinfo()
 
     json j_info;
 
+    bool ok {true};
+
     // get basic network info
     if (!get_monero_network_info(j_info))
     {
-        j_response["status"]  = "error";
+        ok = false;
         j_response["message"] = "Cant get monero network info";
-        //return j_response;
     }
 
-    uint64_t per_kb_fee_estimated {0};
+    MempoolStatus::network_info cached_network_info
+        = MempoolStatus::current_network_info;
 
-    // get dynamic fee estimate from last 10 blocks
-    if (!get_dynamic_per_kb_fee_estimate(per_kb_fee_estimated))
+    uint64_t per_kb_fee_estimated {cached_network_info.fee_per_kb};
+
+    uint64_t fee_estimated {cached_network_info.fee_per_kb};
+
+    if (!cached_network_info.current)
     {
-        j_response["status"]  = "error";
-        j_response["message"] = "Cant get per kb dynamic fee esimate";
-        //return j_response;
+        ok = false;
+        j_response["message"] = "Cached network info is stale; cant get per kb dynamic fee esimate";
     }
-
-    uint64_t fee_estimated {0};
 
     j_info["fee_per_kb"] = per_kb_fee_estimated;
     j_info["fee_estimate"] = fee_estimated;
@@ -6577,7 +6575,7 @@ json_networkinfo()
 
     j_data = j_info;
 
-    j_response["status"]  = "success";
+    j_response["status"]  = ok ? "success" : "error";
 
     return j_response;
 }

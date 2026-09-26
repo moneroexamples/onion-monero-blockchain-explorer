@@ -259,7 +259,9 @@ MempoolStatus::read_network_info()
     local_copy.difficulty                 = rpc_network_info.difficulty;
     local_copy.difficulty_top64           = rpc_network_info.difficulty_top64;
     local_copy.target                     = rpc_network_info.target;
-    cryptonote::difficulty_type hash_rate = cryptonote::difficulty_type(rpc_network_info.wide_difficulty) / rpc_network_info.target;
+    cryptonote::difficulty_type hash_rate = rpc_network_info.target
+        ? cryptonote::difficulty_type(rpc_network_info.wide_difficulty) / rpc_network_info.target
+        : cryptonote::difficulty_type(0);
     local_copy.hash_rate                  = (hash_rate & 0xFFFFFFFFFFFFFFFF).convert_to<uint64_t>();
     local_copy.hash_rate_top64            = ((hash_rate >> 64) & 0xFFFFFFFFFFFFFFFF).convert_to<uint64_t>();
     local_copy.tx_count                   = rpc_network_info.tx_count;
