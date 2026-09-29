@@ -7173,6 +7173,10 @@ are_absolute_offsets_good(
         std::vector<uint64_t> const& absolute_offsets,
         txin_to_key const& in_key)
 {
+
+    if (absolute_offsets.empty())
+        return false;
+
     // before proceeding with geting the outputs based on the amount and absolute offset
     // check how many outputs there are for that amount
     uint64_t no_outputs = core_storage->get_db().get_num_outputs(in_key.amount);
