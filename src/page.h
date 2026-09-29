@@ -7393,6 +7393,8 @@ construct_mstch_mixin_timescales(
     // find min and maximum timestamps
     for (const vector<uint64_t>& mixn_timestamps : mixin_timestamp_groups)
     {
+        if (mixn_timestamps.empty())
+            continue;
 
         uint64_t min_found = *min_element(mixn_timestamps.begin(), mixn_timestamps.end());
         uint64_t max_found = *max_element(mixn_timestamps.begin(), mixn_timestamps.end());
@@ -7744,6 +7746,10 @@ are_absolute_offsets_good(
         std::vector<uint64_t> const& absolute_offsets,
         txin_to_key const& in_key)
 {
+
+    if (absolute_offsets.empty())
+        return false;
+
     // before proceeding with geting the outputs based on the amount and absolute offset
     // check how many outputs there are for that amount
     uint64_t no_outputs = core_storage->get_db().get_num_outputs(in_key.amount);
